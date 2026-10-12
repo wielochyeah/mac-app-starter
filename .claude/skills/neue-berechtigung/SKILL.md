@@ -16,7 +16,7 @@ description: Nimmt eine macOS-Berechtigung (Mikrofon, Bedienungshilfen, Bildschi
 | Schritt | `App/Sources/Kit/Onboarding/` | ein Onboarding-Schritt je Eintrag in `permissions` (order 300 und folgende) |
 | Muster | `App/Sources/Kit/Design/Patterns/OnboardingStatusSlot.swift` | `OnboardingSlotState` und `OnboardingStatusSlot` für jeden Zustand |
 
-Gültige Namen: `notifications`, `accessibility`, `inputMonitoring`, `screenRecording`, `microphone`, `camera`, `automation`, `speechRecognition`, `contacts`, `calendars`, `reminders`, `photos`, `location`, `bluetooth`, `localNetwork`.
+Gültige Namen: `notifications`, `accessibility`, `inputMonitoring`, `screenRecording`, `microphone`, `camera`, `automation:<bundleId>` (je gesteuerte App, etwa `automation:com.apple.mail`), `speechRecognition`, `contacts`, `calendars`, `reminders`, `photos`, `location`, `bluetooth`, `localNetwork`.
 
 ## Schritte
 

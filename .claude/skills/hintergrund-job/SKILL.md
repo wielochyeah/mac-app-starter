@@ -14,7 +14,7 @@ Gehört zum Modul `background`; `bin/starter remove background` entfernt diesen 
 | Aufgaben | `App/Sources/Modules/Background/BackgroundJobs.swift` | `BackgroundJobs.shared.register(id:title:interval:tolerance:qos:exact:run:)` mit `run: @Sendable () async throws -> JobOutcome` (`.done(note:)`, `.nothingToDo`, `.failed(_:)`), `runNow(_:)`, letzter Lauf, Ergebnis und Dauer werden gespeichert, Schalter je Aufgabe |
 | Anmeldeobjekt | `LoginItem` | `SMAppService.mainApp`; nur verfügbar, wenn die App aus einem installierten Ort läuft, nicht aus `build/` |
 | Einstellungen | Bereich „Hintergrund“ | Anmeldeobjekt, Liste der Aufgaben mit letztem Lauf, Ergebnis, Schalter und „Jetzt ausführen“ |
-| Onboarding | Schritt „Beim Anmelden starten“ (order 900) | nur, wenn `LoginItem.isAvailable` |
+| Onboarding | Schritt „Mit dem Mac starten“ (order 900) | nur, wenn `LoginItem.isAvailable` |
 
 ## Schritte
 

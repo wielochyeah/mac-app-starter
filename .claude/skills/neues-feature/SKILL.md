@@ -9,7 +9,7 @@ description: Baut eine Funktion des Projekts unter App/Sources/Features nach den
 
 | Vertrag | Datei | Rolle im Feature |
 |---|---|---|
-| Registry | `App/Sources/Kit/Core/Registry.swift` | `AppPage`, `SettingsPane`, `OnboardingStep`, `MenuItemContribution`, `RenderScene`, `GalleryEntry`, `SelfTestCheck`, `launchHooks`, `terminateHooks` |
+| Registry | `App/Sources/Kit/Core/Registry.swift` | `AppPage`, `SettingsPane`, `OnboardingStep`, `MenuItemContribution`, `RenderScene`, `GalleryEntry`, `SelfTestCheck`, `launchHooks`, `terminateHooks`, `onboardingFinishedHooks` |
 | Texte | `App/Sources/Kit/Core/Lang.swift` | `tr(en:de:)`, `Localizer.shared`, `Format` für Zahlen, Dauer und Datum |
 | Einstellungen | `App/Sources/Kit/Core/Settings.swift` | `SettingKey`, `Settings.shared[.schluessel]` |
 | Speicher | `App/Sources/Kit/Core/Database.swift`, `Paths.swift` | `Database(url:migrations:)`, `Paths.database(_:)` |
@@ -48,7 +48,7 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
    - globaler Kurzbefehl: `kurzbefehl` <!-- modul:hotkeys -->
    - lokale KI: `ki-funktion` <!-- modul:ai -->
 5. In `register()` für jeden sichtbaren Zustand eine `RenderScene` mit Kennung `<feature>.<zustand>` und Beispieldaten anlegen, die echt wirken, aber erfunden sind. Neue allgemeine Bausteine zusätzlich als `GalleryEntry`.
-6. Was beim Start laufen muss, in `Registry.launchHooks`; was beim Beenden aufräumen muss, in `Registry.terminateHooks`. Nichts startet Fenster oder fragt Berechtigungen an, wenn `RenderMode.isHeadless` gilt.
+6. Was beim Start laufen muss, in `Registry.launchHooks`; was beim Beenden aufräumen muss, in `Registry.terminateHooks`; was nach „Fertig“ in der Einrichtung geschehen soll, in `Registry.onboardingFinishedHooks` (`{ firstTime in … }`). Nichts startet Fenster oder fragt Berechtigungen an, wenn `RenderMode.isHeadless` gilt.
 7. Prüfbare Annahmen zur Laufzeit (Datei lesbar, Migration aktuell) als `SelfTestCheck` eintragen.
 8. Sobald das erste eigene Feature steht: `bin/starter strip-examples`. <!-- modul:examples -->
 

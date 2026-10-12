@@ -23,8 +23,8 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 ## window: Fenster-App
 
 - **Zweck:** Hauptfenster im Stil von Apple Music unter macOS 26: `NavigationSplitView` mit Seitenleiste aus Systemglas, Werkzeugleiste mit Suche, Seiten aus Bausteinen (großer Titel, Kopf mit Bild, Reihen von Kacheln, Raster, Listen, Detailseite). ⌘, öffnet die Einstellungen.
-- **Dateien:** `MainWindowController` (Fenster 1180 x 760, mindestens 900 x 600, Rahmen gespeichert, Dock-Klick öffnet wieder), `MainWindowView` (Seitenleiste aus `Registry.pages` nach `PageSection`, Auswahl gespeichert, Fußzeile der Seitenleiste, Suche über `\.windowSearch`), `MainMenu.swift` (App-, Ablage-, Bearbeiten-, Darstellung-, Fenster- und Hilfe-Menü), `Components/` (`PageScaffold`, `HeroHeader`, `Shelf`, `Tile`, `TileGrid`, `ItemList`, `DetailHeader`, `Artwork`, `EmptyPage`), `HomePage` als Startseite eines frischen Projekts.
-- **Einstellungen:** gewählte Seite (Präfix `window.`).
+- **Dateien:** `MainWindowController` (Fenster 1180 x 760, mindestens 900 x 600, Rahmen gespeichert, Dock-Klick öffnet wieder), `MainWindowView` (Seitenleiste aus `Registry.pages` nach `PageSection`, Auswahl gespeichert, Fußzeile der Seitenleiste über `WindowSidebarFooter.add(id:order:content:)`, Suchfeld in der Werkzeugleiste nur für Seiten mit `WindowSearch.enable(page:prompt:)`, der Suchtext kommt als `\.windowSearch` an), `WindowMainMenu` (ergänzt das Menü des Kits um Ablage, Suchen, Darstellung, ⌘0 im Fenster-Menü und Hilfe), `Components/` (`PageScaffold`, `HeroHeader`, `Shelf`, `Tile`, `TileGrid`, `ItemList`, `DetailHeader`, `Artwork`, `EmptyPage`, `NoResults`), `HomePage` als Startseite eines frischen Projekts.
+- **Einstellungen:** gewählte Seite und ausgeblendete Seitenleiste (Präfix `window.`; ein Zustand, „Einstellungen zurücksetzen“ behält sie).
 - **Onboarding:** keiner.
 - **Szenen:** `window.main` (ganzes Fenster), `window.home`, je Baustein eine Szene.
 - **Skill:** `neue-ansicht`.
@@ -34,7 +34,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 <!-- modul:menubar:anfang -->
 ## menubar: Menüleisten-App
 
-- **Zweck:** Statussymbol aus `app.symbol` mit den Zuständen `idle`, `busy` (dezente Bewegung, ruht bei reduzierter Bewegung) und `attention` (Punkt). Klick öffnet ein Panel im Stil der Module im Kontrollzentrum (abgerundet, Glas, 320 bis 360 pt breit) mit Kopf, Abschnitten und Fußzeile; Rechtsklick oder ⌥-Klick öffnet ein Menü aus `Registry.menuItems`.
+- **Zweck:** Statussymbol aus `app.symbol` mit den Zuständen `idle`, `busy` (dezente Bewegung, ruht bei reduzierter Bewegung) und `attention` (Punkt). Klick öffnet ein Panel im Stil der Module im Kontrollzentrum (abgerundet, Glas, 340 pt breit) mit Kopf, Abschnitten und Fußzeile; Rechtsklick oder ⌥-Klick öffnet ein Menü aus `Registry.menuItems`.
 - **Dateien:** `MenuBarController`, `MenuBarStatus.shared.state`, `MenuBarPanel.sections` (Abschnitte mit Kennung, Reihenfolge und View).
 - **Einstellungen:** Bereich „Menüleiste“ mit Statustext und Stil des Symbols (Präfix `menubar.`).
 - **Onboarding:** keiner.
@@ -45,10 +45,10 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 <!-- modul:island:anfang -->
 ## island: Insel und Kapsel
 
-- **Zweck:** Rückmeldung, die aus der Notch wächst (Insel), auf Macs ohne Notch eine Kapsel unter der Menüleiste. Zustände: Tätigkeit, Fortschritt (Sekundenzähler ab 5 s, Hinweis mit Abbruch ab 10 s), Pegel, Ergebniskarte mit Aufklappen beim Überfahren und Kopieren, Hinweis (Info, Warnung, Fehler, verschwindet nach 2,5 s). Mehrere Bildschirme, Selbstheilung nach Bildschirmwechseln, Töne standardmäßig aus, reduzierte Bewegung blendet über.
-- **Dateien:** `IslandScreenGeometry` (Notch je Bildschirm, Höhe der Menüleiste), `IslandPanel` (randloses, nicht aktivierendes Panel, durchklickbar, im Leerlauf ausgeblendet), `NotchShape`, `IslandView`, `CapsuleView`, `IslandContent`, `Island.shared` mit `present(_:)`, `update(_:)`, `dismiss()`, `isPresenting`.
-- **Einstellungen:** Bereich „Insel“ mit Darstellung (`island.style`: `auto`, `island`, `capsule`, mit Vorschau), Dauer der Ergebniskarte, Töne, Haptik und „Vorschau zeigen“.
-- **Onboarding:** „Darstellung“ (order 500), Kachelwahl Insel oder Kapsel mit den echten Ansichten.
+- **Zweck:** Rückmeldung, die aus der Notch wächst (Insel), auf Macs ohne Notch eine Kapsel unter der Menüleiste. Zustände: Tätigkeit, Fortschritt (Sekundenzähler ab 5 s, Hinweis mit Abbruch ab 10 s), Pegel (mit `recording: true` roter Aufnahmepunkt, in der Kapsel mit Laufzeit), Ergebniskarte mit Aufklappen beim Überfahren und Kopieren, Hinweis (Info, Erfolg, Warnung, Fehler, verschwindet nach 2,5 s). Mehrere Bildschirme, Selbstheilung nach Bildschirmwechseln, Töne standardmäßig aus, reduzierte Bewegung blendet über.
+- **Dateien:** `IslandScreenGeometry` (Notch je Bildschirm, Höhe der Menüleiste), `IslandPanel` (randloses, nicht aktivierendes Panel, durchklickbar, im Leerlauf ausgeblendet), `NotchShape`, `IslandView`, `CapsuleView`, `IslandContent`, `Island.shared` mit `present(_:)`, `update(_:)`, `dismiss()`, `isPresenting` und `notchBusy` (vom Projekt gesetzt: belegt eine andere App die Notch, erscheint `auto` als Kapsel unter der Notch).
+- **Einstellungen:** Bereich „Insel und Kapsel“ mit Darstellung (`island.style`: `auto`, `capsule`, dazu `island` nur, wenn `Island.shared.notchBusy` gesetzt ist; mit Vorschau), Dauer der Bestätigung, „Beim Überfahren ausklappen“, Töne, Trackpad-Rückmeldung, „Im Vollbild ausblenden“ und „Vorschau zeigen“.
+- **Onboarding:** „Insel und Kapsel“ (order 500, nur auf Macs mit Notch), Kachelwahl Insel oder Kapsel mit den echten Ansichten.
 - **Szenen:** jeder Zustand als `island.<zustand>` und `capsule.<zustand>`, dazu `island.pane`, `island.onboarding`.
 - **Skill:** `insel-zustand`. `--demo` durchläuft alle Zustände in der laufenden App (nur für die Person am Mac).
 <!-- modul:island:ende -->
@@ -57,9 +57,9 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 ## background: Hintergrund
 
 - **Zweck:** geplante Aufgaben über `NSBackgroundActivityScheduler` mit Intervall, Toleranz und Dienstgüte; letzter Lauf, Ergebnis und Dauer werden gespeichert; Schalter und „Jetzt ausführen“ je Aufgabe. Start beim Anmelden über `SMAppService.mainApp`, nur aus einem installierten Ort.
-- **Dateien:** `BackgroundJobs` (`register(id:title:interval:tolerance:qos:run:)`, `runNow(_:)`), `LoginItem` (`isAvailable` mit Begründung).
+- **Dateien:** `BackgroundJobs` (`register(id:title:interval:tolerance:qos:exact:run:)`, `runNow(_:)`), `LoginItem` (`isAvailable` mit Begründung).
 - **Einstellungen:** Bereich „Hintergrund“ mit Anmeldeobjekt und Liste der Aufgaben (Präfix `background.`).
-- **Onboarding:** „Beim Anmelden starten“ (order 900), nur wenn `LoginItem.isAvailable`.
+- **Onboarding:** „Mit dem Mac starten“ (order 900), nur wenn `LoginItem.isAvailable`; die Wahl gilt erst nach „Fertig“ (`Registry.onboardingFinishedHooks`).
 - **Szenen:** `background.pane`, `background.onboarding`.
 - **Skill:** `hintergrund-job`.
 <!-- modul:background:ende -->
@@ -70,7 +70,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Zweck:** globale Kurzbefehle über Carbon `RegisterEventHotKey` (ohne Berechtigung für Eingabeüberwachung), änderbar durch die Nutzerin, ohne Neustart neu angemeldet. Regeln lehnen Kurzbefehle des Systems, Standardbefehle von Apps, Kombinationen, die auf der aktuellen Belegung ein Zeichen tippen, und Doppelungen ab; jede Ablehnung nennt den Grund in beiden Sprachen und schlägt eine freie Variante vor.
 - **Dateien:** `KeyCombo` (Anzeige mit ⌃⌥⇧⌘ und Tastennamen der Belegung), `HotkeyCenter` (`register(id:title:default:action:)`), `ShortcutRules`, `ShortcutRecorder`.
 - **Einstellungen:** Bereich „Kurzbefehle“; Änderungen der Nutzerin mit Präfix `hotkeys.`.
-- **Onboarding:** „Kurzbefehl“ (order 600), nur wenn ein Kurzbefehl mit `showInOnboarding: true` angemeldet ist.
+- **Onboarding:** „Dein Kurzbefehl“ (order 600), nur wenn ein Kurzbefehl mit `showInOnboarding: true` angemeldet ist.
 - **Szenen:** `hotkeys.pane`, `hotkeys.recorder-states`, `hotkeys.onboarding`.
 - **Skill:** `kurzbefehl`.
 <!-- modul:hotkeys:ende -->

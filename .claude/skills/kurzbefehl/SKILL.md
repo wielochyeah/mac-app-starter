@@ -14,7 +14,7 @@ Gehört zum Modul `hotkeys`; `bin/starter remove hotkeys` entfernt diesen Skill 
 | Anmelden | `App/Sources/Modules/Hotkeys/HotkeyCenter.swift` | `HotkeyCenter.shared.register(id:title:subtitle:default:order:showInOnboarding:onRelease:action:)`, nur `id`, `title`, `default` und `action` sind Pflicht; Änderungen der Nutzerin liegen in den Einstellungen und greifen ohne Neustart |
 | Kombination | `KeyCombo` | `KeyCombo(keyCode:modifiers:)` mit virtuellem Tastencode (`kVK_*` aus Carbon, gleich auf jeder Belegung) und `KeyModifiers` (`.command`, `.shift`, `.option`, `.control`), Anzeige mit ⌃⌥⇧⌘ und dem Tastennamen der aktuellen Tastaturbelegung |
 | Regeln | `ShortcutRules` | lehnt Kurzbefehle des Systems, Standardbefehle von Apps (⌘W, ⌘Q, ⌃A …), Kombinationen, die auf der Belegung ein Zeichen tippen (⌥L ergibt @ auf deutscher Tastatur), und Doppelungen innerhalb der App ab; jede Ablehnung nennt den Grund und schlägt eine freie Variante vor |
-| Oberfläche | Bereich „Kurzbefehle“, `ShortcutRecorder`, Onboarding-Schritt „Kurzbefehl“ (order 600) | Aufnehmen, Prüfen, Standard wiederherstellen |
+| Oberfläche | Bereich „Kurzbefehle“, `ShortcutRecorder`, Onboarding-Schritt „Dein Kurzbefehl“ (order 600) | Aufnehmen, Prüfen, Standard wiederherstellen |
 
 Technisch läuft das über Carbon `RegisterEventHotKey`; das braucht keine Berechtigung für Eingabeüberwachung.
 
@@ -27,13 +27,13 @@ Technisch läuft das über Carbon `RegisterEventHotKey`; das braucht keine Berec
    ```swift
    #if MODUL_HOTKEYS
    HotkeyCenter.shared.register(id: "capture.start", title: { CaptureText.hotkeyTitle },
-                                default: KeyCombo(keyCode: UInt16(kVK_Space), modifiers: [.control, .option])) {
+                                default: KeyCombo(keyCode: UInt16(kVK_ANSI_C), modifiers: [.control, .option, .command])) {
        Capture.start()
    }
    #endif
    ```
 
-   Kennung mit Präfix des Features; Titel als Tätigkeit.
+   Kennung mit Präfix des Features; Titel als Tätigkeit. Die Konstanten `kVK_*` brauchen `import Carbon` in der Datei. ⌃⌥Leertaste wäre kein guter Standard: macOS wählt damit die nächste Eingabequelle.
 4. Die Aktion kehrt schnell zurück und stößt die Arbeit nur an; sie öffnet kein Fenster, ohne die App zu aktivieren.
 5. Ein Kurzbefehl, der in Renders oder Tests gebraucht wird, wird nur dort angemeldet, nie im Produktionscode für die Vorschau.
 6. Render-Szenen: `hotkeys.pane` zeigt alle Kurzbefehle; ist der neue Befehl der wichtigste der App, `showInOnboarding: true` und `hotkeys.onboarding` ansehen.

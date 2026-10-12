@@ -11,9 +11,9 @@ Gehört zum Modul `island`; `bin/starter remove island` entfernt diesen Skill mi
 
 | Vertrag | Datei | Rolle |
 |---|---|---|
-| Insel | `App/Sources/Modules/Island/` | `Island.shared.present(_:)`, `update(_:)`, `dismiss()`, `isPresenting` |
-| Inhalt | `IslandContent` | `.activity(symbol:title:detail:tint:)`, `.progress(title:fraction:…)` mit Sekundenzähler ab 5 s und Abbruchhinweis ab 10 s, `.levels([Float])` als Pegel, `.done(title:detail:body:actions:)` als Karte mit Aufklappen und Kopieren, `.notice(text:kind:)` mit `info`, `warning`, `error`, verschwindet nach 2,5 s |
-| Darstellung | Einstellung `island.style` | `auto` (Insel mit Notch, Kapsel ohne), `island`, `capsule`; mehrere Bildschirme, Selbstheilung nach Bildschirmwechsel |
+| Insel | `App/Sources/Modules/Island/` | `Island.shared.present(_:)`, `update(_:)`, `dismiss()`, `isPresenting`, `notchBusy` |
+| Inhalt | `IslandContent` | `.activity(symbol:title:detail:tint:)`, `.progress(title:fraction:…)` mit Sekundenzähler ab 5 s und Abbruchhinweis ab 10 s, `.levels(_:symbol:tint:recording:)` als Pegel (Bänder 0 bis 1; `recording: true` zeigt den roten Aufnahmepunkt, in der Kapsel dazu die Zeit seit `present`; nur für Apps, die wirklich Mikrofon oder Bildschirm aufnehmen), `.done(title:detail:body:actions:tint:)` als Karte mit Aufklappen und Kopieren, `.notice(text:kind:)` mit `info`, `success`, `warning`, `error`, verschwindet nach 2,5 s |
+| Darstellung | Einstellung `island.style` | `auto` (Insel mit Notch, Kapsel ohne), `island`, `capsule`; mehrere Bildschirme, Selbstheilung nach Bildschirmwechsel. `Island.shared.notchBusy` (`(() -> Bool)?`, Standard nil) meldet, dass gerade eine andere App die Notch belegt: dann erscheint eine neue Anzeige mit `auto` als Kapsel direkt unter der Notch (entschieden je `present`, nie mittendrin). Ohne `notchBusy` verhält sich `auto` wie `island`, und die Einstellungen bieten nur Automatisch und Kapsel |
 | Tokens | `App/Sources/Kit/Design/Island.swift` | `IslandPalette`, `IslandAccent`, `Radius.Island`, `Metrics.Island`, `Motion.Island` |
 
 ## Schritte
@@ -31,6 +31,8 @@ Gehört zum Modul `island`; `bin/starter remove island` entfernt diesen Skill mi
    ```
 
    Ein abgebrochener oder fehlgeschlagener Ablauf endet mit `.notice(text:kind: .error)` oder `dismiss()`, nie mit einer stehenbleibenden Insel.
+
+   Pegel live: einmal `Island.shared.present(.levels([], symbol: "mic.fill", recording: true))`, danach je Messung `Island.shared.update(.levels(bands, symbol: "mic.fill", recording: true))` mit gleichem `symbol`, `tint` und `recording`; nur dann tauscht die Insel allein die Bänder ohne neues Zeichnen. Den Aufnahmepunkt setzt nur dieser Inhalt, nicht `Island` oder das Modell. Belegte Notch: Weiß das Projekt, wann eine andere App die Notch nutzt, setzt es beim Start (im `register()` oder in `Registry.launchHooks`, in `#if MODUL_ISLAND`) `Island.shared.notchBusy = { NotchWatcher.shared.isBusy }`; der Starter selbst erkennt keine anderen Notch-Apps.
 4. Titel höchstens drei Wörter, Detail eine kurze Zeile; beide Sprachen passen in die Breite der Insel (Deutsch zuerst prüfen).
 5. Töne sind standardmäßig aus; die Insel respektiert reduzierte Bewegung selbst.
 6. Render-Szenen für jeden neuen Zustand in beiden Formen: `<feature>.island-<zustand>` und `<feature>.capsule-<zustand>` auf der Menüleisten-Kulisse des Moduls.
