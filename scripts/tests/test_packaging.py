@@ -74,6 +74,16 @@ class SettingsTests(unittest.TestCase):
         with self.assertRaises(pkg.PackagingError):
             pkg.settings(c, environ={"DMG_LANG": "fr"})
 
+    def test_anrede_follows_texts_and_is_checked(self):
+        c = config()
+        c["texts"].pop("anrede", None)
+        self.assertEqual(pkg.settings(c, environ={})["ANREDE"], "du")
+        c["texts"]["anrede"] = "sie"
+        self.assertEqual(pkg.settings(c, environ={})["ANREDE"], "sie")
+        c["texts"]["anrede"] = "ihr"
+        with self.assertRaises(pkg.PackagingError):
+            pkg.settings(c, environ={})
+
     def test_notarize_needs_a_real_identity(self):
         c = config()
         c["signing"] = {"identity": "-", "notarize": True}
@@ -221,6 +231,30 @@ class NotaryTests(unittest.TestCase):
             pkg.notary_plan("x.zip", self.ID, "p")
 
 
+class NotarizeScriptTests(unittest.TestCase):
+    def run_dry(self, stamp):
+        with tempfile.TemporaryDirectory() as tmp:
+            dmg = Path(tmp) / "App-1.0.0.dmg"
+            dmg.write_bytes(b"")
+            if stamp is not None:
+                (Path(tmp) / ".App-1.0.0.dmg.hint").write_text(stamp + "\n", encoding="utf-8")
+            return subprocess.run(
+                [str(ROOT / "scripts" / "notarize.sh"), "--dry-run", "--identity",
+                 "Developer ID Application: Example (AB12CD34EF)", "--profile", "p", str(dmg)],
+                capture_output=True, text=True)
+
+    def test_dmg_with_open_anyway_hint_is_refused(self):
+        res = self.run_dry("shown")
+        self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+        self.assertIn("signing.notarize", res.stderr)
+
+    def test_dmg_without_hint_or_stamp_is_planned(self):
+        for stamp in ("none", None):
+            res = self.run_dry(stamp)
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            self.assertIn("notarytool submit", res.stdout)
+
+
 class DMGLayoutTests(unittest.TestCase):
     def setUp(self):
         self.layout = json.loads((ROOT / "tools" / "dmg" / "layout.json").read_text(encoding="utf-8"))
@@ -267,13 +301,47 @@ class PinTests(unittest.TestCase):
         self.assertEqual(names, {"dmgbuild", "ds-store", "mac-alias"})
 
 
-class IconToolTests(unittest.TestCase):
+class ToolBuildTests(unittest.TestCase):
+    """Builds the icon and DMG tools (they compile against Kit/Design/Theme.swift and Tokens.swift)
+    and runs them, so a Kit change that breaks them fails make test, not the next release.
+    build_tool rebuilds only when a source changed, so this is quick after the first run."""
+
+    @classmethod
+    def setUpClass(cls):
+        script = (
+            'set -e; ROOT="$1"; cd "$ROOT"; source tools/lib/packaging.sh; pkg_env; '
+            "build_tool icon tools/icon/Icon.swift; "
+            "build_tool dmg-background tools/dmg/Background.swift tools/dmg/DMGText.swift"
+        )
+        # The python3 shim of the Command Line Tools exports xcrun's default SDKROOT (a beta SDK the
+        # compiler may not support); let scripts/pick-sdk.sh choose, as make build does.
+        env = {k: v for k, v in os.environ.items() if k != "SDKROOT"}
+        res = subprocess.run(["/bin/zsh", "-c", script, "zsh", str(ROOT)], capture_output=True, text=True, env=env)
+        if res.returncode != 0:
+            raise AssertionError("building the packaging tools failed:\n" + res.stdout + res.stderr)
+
     def test_icon_selftest(self):
-        tool = ROOT / "build" / "tools" / "icon"
-        if not tool.exists():
-            self.skipTest("icon tool not built (make icon)")
-        res = subprocess.run([str(tool), "selftest"], capture_output=True, text=True)
+        res = subprocess.run([str(ROOT / "build" / "tools" / "icon"), "selftest"], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+
+    def test_dmg_background_renders(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            res = subprocess.run(
+                [str(ROOT / "build" / "tools" / "dmg-background"), "--out", tmp,
+                 "--layout", str(ROOT / "tools" / "dmg" / "layout.json"),
+                 "--icon", str(ROOT / "App" / "Resources" / "AppIcon.icns"),
+                 "--name", "Photo Shelf", "--name-de", "Fotoablage", "--app-label", "PhotoShelf",
+                 "--lang", "de", "--anrede", "sie"],
+                capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            for name in ("background.png", "background@2x.png", "preview.png", "preview-dark.png"):
+                self.assertGreater((Path(tmp) / name).stat().st_size, 0, name)
+
+    def test_dmg_background_rejects_unknown_anrede(self):
+        res = subprocess.run([str(ROOT / "build" / "tools" / "dmg-background"), "--out", "x",
+                              "--layout", "y", "--anrede", "ihr"], capture_output=True, text=True)
+        self.assertNotEqual(res.returncode, 0)
+        self.assertIn("du|sie", res.stderr)
 
 
 if __name__ == "__main__":
