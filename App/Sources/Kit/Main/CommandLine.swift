@@ -3,7 +3,7 @@ import AppKit
 /// Command-line flags of the app binary.
 ///
 ///     <App> --render <dir> [--only <prefix>] [--lang en|de] [--appearance light|dark]
-///     <App> --selftest
+///     <App> --selftest [prefix]   prefix: only checks whose id starts with it, on-demand ones included
 ///     <App> --demo        normal launch, no onboarding, runs every `Registry.demoDrivers` entry
 ///                         (scripted loops such as the island's); fails when no module adds one
 ///
@@ -18,6 +18,8 @@ struct LaunchFlags: Equatable {
     var lang: Lang?
     var appearance: Appearance?
     var selftest = false
+    /// `--selftest ai`: only these checks (on-demand ones included).
+    var selftestOnly: String?
     var demo = false
     var errors: [String] = []
 
@@ -51,6 +53,10 @@ struct LaunchFlags: Equatable {
                 }
             case "--selftest":
                 flags.selftest = true
+                if i + 1 < arguments.count, !arguments[i + 1].hasPrefix("-") {
+                    i += 1
+                    flags.selftestOnly = arguments[i]
+                }
             case "--demo":
                 flags.demo = true
             default:
@@ -95,7 +101,7 @@ enum Launch {
             exit(RenderRunner.run(options))
         }
         if flags.selftest {
-            exit(SelfTestRunner.run())
+            exit(SelfTestRunner.run(only: flags.selftestOnly))
         }
 
         if flags.demo {
