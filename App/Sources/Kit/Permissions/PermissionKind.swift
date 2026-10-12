@@ -75,6 +75,11 @@ nonisolated enum PermissionKind: Hashable, Sendable {
     /// Screen Recording; notes vb-onboarding-hub §2.3, gotcha 11).
     var needsRestart: Bool { self == .inputMonitoring || self == .screenRecording }
 
+    /// The request returns only once macOS has an answer, or once it gave up without asking (the
+    /// target app of Automation is not running, a dismissed notification prompt). Location and
+    /// Bluetooth return at once and answer later; switch kinds wait for the person in Settings.
+    var requestWaitsForAnswer: Bool { prompt == .dialog && self != .location && self != .bluetooth }
+
     /// False where macOS offers no way to read the status (Local Network is asked on first use).
     var canCheck: Bool { self != .localNetwork }
 

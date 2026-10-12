@@ -157,12 +157,21 @@ struct PermissionStep: View {
     let kind: PermissionKind
     /// "Restart <App>" in the slot (persists the step first, then relaunches).
     var restart: () -> Void = {}
+    /// Runs before anything that can end in a restart: a restart kind's request or its System
+    /// Settings pane (macOS offers "Quit & Reopen" there), so the setup comes back at this step.
+    var willLeaveForRestart: () -> Void = {}
     @Environment(\.permissionMonitor) private var monitor
     @Environment(\.renderStatic) private var renderStatic
+    /// A dialog has been waiting longer than `answerPatience`: offer System Settings as a way out.
+    @State private var waitedLong = false
+
+    /// Seconds a dialog may stay unanswered before the slot offers System Settings.
+    static let answerPatience: Double = 5
 
     var body: some View {
         let status = monitor.status(kind)
-        let slot = Self.slot(for: kind, status: status, monitor: monitor, restart: restart)
+        let slot = Self.slot(for: kind, status: status, monitor: monitor, waitedLong: waitedLong,
+                             willLeaveForRestart: willLeaveForRestart, restart: restart)
         OnboardingPage {
             OnboardingHero(symbol: kind.symbol, tint: kind.tint).padding(.bottom, Space.m)
             OnboardingHeader(title: PermissionText.title(kind), subtitle: PermissionsKit.why(kind))
@@ -174,20 +183,37 @@ struct PermissionStep: View {
         }
         .task(id: kind) {
             guard !renderStatic else { return }
+            // shown again: a dialog asked earlier and never answered offers "Allow Access" again
+            monitor.forgetRequest(kind)
             await monitor.watch([kind])
+        }
+        .task(id: status) {
+            waitedLong = false
+            guard !renderStatic, status == .requested, kind.prompt == .dialog else { return }
+            try? await Task.sleep(for: .seconds(Self.answerPatience))
+            if !Task.isCancelled { waitedLong = true }
         }
     }
 
     /// What the slot shows for a status (VoiceBud OnboardingPermissionStep.slot).
     static func slot(for kind: PermissionKind, status: PermissionStatus, monitor: PermissionMonitor,
+                     waitedLong: Bool = false, willLeaveForRestart: @escaping () -> Void = {},
                      restart: @escaping () -> Void) -> OnboardingSlotState {
-        let openSettings = OnboardingSlotState.SlotButton.openSettings { monitor.openSettings(kind) }
+        let prepare = { if kind.needsRestart { willLeaveForRestart() } }
+        let openSettings = OnboardingSlotState.SlotButton.openSettings {
+            prepare()
+            monitor.openSettings(kind)
+        }
         switch status {
         case .missing:
-            return .action { monitor.request(kind) }
+            return .action {
+                prepare()
+                monitor.request(kind)
+            }
         case .requested:
-            // a dialog is on screen: nothing to click here; a switch: the way to it
-            return .waiting(PermissionText.waiting(kind), button: kind.prompt == .settingsSwitch ? openSettings : nil)
+            // a dialog is on screen: nothing to click (unless it stays unanswered); a switch: the way to it
+            let button = kind.prompt == .settingsSwitch || waitedLong ? openSettings : nil
+            return .waiting(PermissionText.waiting(kind), button: button)
         case .denied:
             return .denied(button: openSettings)
         case .granted:

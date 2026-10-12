@@ -136,21 +136,56 @@ final class PermissionsTests: TestSuite {
             expectEqual(PermissionRules.speech(.notDetermined), .missing)
         }
 
-        test("monitor: request marks requested at once, then follows the system") {
+        test("monitor: request marks requested at once, a switch kind keeps waiting, then follows the system") {
             let fake = FakePermissions()
             let monitor = PermissionMonitor(backend: fake)
-            expectEqual(monitor.status(.camera), .missing)
-            monitor.request(.camera)
-            expectEqual(monitor.status(.camera), .requested)
-            spin(1) { fake.requests == [.camera] && !fake.checks.isEmpty }
-            expectEqual(fake.requests, [.camera])
+            expectEqual(monitor.status(.screenRecording), .missing)
+            monitor.request(.screenRecording)
+            expectEqual(monitor.status(.screenRecording), .requested)
+            spin(1) { fake.requests == [.screenRecording] && !fake.checks.isEmpty }
+            spin(0.05)
+            expectEqual(fake.requests, [.screenRecording])
             expectEqual(fake.checks.last?.1, true, "a requested kind is checked fresh")
-            expectEqual(monitor.status(.camera), .requested, "macOS has not answered yet")
-            fake.answers[.camera] = .granted
+            expectEqual(monitor.status(.screenRecording), .requested, "the switch in System Settings is not on yet")
+            fake.answers[.screenRecording] = .granted
             var done = false
-            Task { await monitor.refresh([.camera]); done = true }
+            Task { await monitor.refresh([.screenRecording]); done = true }
             spin(1) { done }
+            expectEqual(monitor.status(.screenRecording), .granted)
+        }
+
+        test("monitor: a dialog that ends without a decision offers Allow Access again") {
+            // AEDeterminePermissionToAutomateTarget returns -600 at once when the target is not
+            // running; a dismissed prompt also returns undecided
+            let fake = FakePermissions()
+            let monitor = PermissionMonitor(backend: fake)
+            let mail = PermissionKind.automation(bundleId: "com.apple.mail")
+            monitor.request(mail)
+            expectEqual(monitor.status(mail), .requested, "while macOS asks")
+            spin(1) { !monitor.asked.contains(mail) }
+            expectEqual(monitor.status(mail), .missing)
+            let slot = PermissionStep.slot(for: mail, status: monitor.status(mail), monitor: monitor, restart: {})
+            expectEqual(slot.kind, .action)
+            monitor.request(mail)
+            spin(1) { fake.requests.count == 2 }
+            expectEqual(fake.requests, [mail, mail], "asking again reaches macOS again")
+            // answered: the refresh before forgetting the request has it, no flash of "missing"
+            fake.answers[.camera] = .granted
+            monitor.request(.camera)
+            spin(1) { !monitor.asked.contains(.camera) }
             expectEqual(monitor.status(.camera), .granted)
+        }
+
+        test("monitor: location answers later, so its request stays open until the step is shown again") {
+            let monitor = PermissionMonitor(backend: FakePermissions())
+            monitor.request(.location)
+            spin(0.1)
+            expectEqual(monitor.status(.location), .requested)
+            monitor.forgetRequest(.location)
+            expectEqual(monitor.status(.location), .missing)
+            monitor.markAsked(.accessibility)
+            monitor.forgetRequest(.accessibility)
+            expectEqual(monitor.status(.accessibility), .requested, "a switch kind keeps waiting for the switch")
         }
 
         test("monitor: polls only while watched, stops when the task ends") {

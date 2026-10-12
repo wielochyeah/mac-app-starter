@@ -82,7 +82,17 @@ import SwiftUI
         Task {
             await backend.request(kind)
             await refresh([kind])
+            // the dialog is gone: answered (the refresh has it) or never shown. Still undecided
+            // then reads `missing` again, so "Allow Access" comes back instead of a spinner forever
+            if kind.requestWaitsForAnswer { asked.remove(kind) }
         }
+    }
+
+    /// Forgets an earlier request of a dialog kind: a permission step shown again offers "Allow
+    /// Access" again (a prompt that was dismissed or never appeared must not wait forever).
+    /// Switch kinds keep waiting for the person's switch in System Settings.
+    func forgetRequest(_ kind: PermissionKind) {
+        if kind.prompt == .dialog, asked.contains(kind) { asked.remove(kind) }
     }
 
     /// Marks a kind as requested without asking (tests).

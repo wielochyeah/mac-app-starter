@@ -67,6 +67,10 @@ final class SystemPermissions: PermissionBackend {
     }
 
     func request(_ kind: PermissionKind) async {
+        // never a real macOS prompt from tests, renders, the self-test or STARTER_HEADLESS runs
+        guard !RenderMode.isHeadless, !RenderMode.isStatic else {
+            return Log.warn("permission request skipped in a headless run: \(kind.id)", "permissions")
+        }
         switch kind {
         case .microphone: _ = await AVCaptureDevice.requestAccess(for: .audio)
         case .camera: _ = await AVCaptureDevice.requestAccess(for: .video)

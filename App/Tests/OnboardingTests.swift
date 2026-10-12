@@ -153,6 +153,23 @@ final class OnboardingTests: TestSuite {
                 expectEqual(state.kind, slot, "\(kind.id) \(status)")
                 expectEqual(state.button != nil, hasButton, "\(kind.id) \(status)")
             }
+            // a dialog left unanswered for a while: System Settings as the way out
+            let late = PermissionStep.slot(for: .notifications, status: .requested, monitor: monitor, waitedLong: true, restart: {})
+            expectEqual(late.kind, .waiting)
+            expect(late.button != nil)
+        }
+
+        test("permission slot: a restart kind saves the setup before macOS can restart the app") {
+            let monitor = PermissionMonitor.preview([:])
+            var prepared: [PermissionKind] = []
+            for kind in [PermissionKind.inputMonitoring, .microphone] {
+                for status in [PermissionStatus.missing, .denied] {
+                    let state = PermissionStep.slot(for: kind, status: status, monitor: monitor,
+                                                    willLeaveForRestart: { prepared.append(kind) }, restart: {})
+                    state.button?.action()
+                }
+            }
+            expectEqual(prepared, [.inputMonitoring, .inputMonitoring], "only Input Monitoring and Screen Recording")
         }
 
         test("kit registration: steps, rules, scenes and checks are there") {
