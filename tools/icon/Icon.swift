@@ -13,6 +13,7 @@
 //   icon preview <out.png>                master at 640 px on light and dark grounds
 //   icon smallcheck <out.png>             downscaled master vs. small master, magnified, light and dark
 //   icon dock <out.png> [<png|icns|self>…]  128 / 64 / 32 px rows on light and dark docks
+//   icon selftest                         checks grid snapping, glyph placement and colour contrast
 // Options: --accent <violett|rot|blau|gruen|orange|graphit>  --symbol <SF Symbol name>
 
 import AppKit
@@ -54,10 +55,14 @@ struct IconColors {
         let p = AccentPalette.of(accent)
         brand = p.brand
         top = mix(p.gradientTop, into: p.brand, 0.55)
-        deep = mix(0x000000, into: p.brand, 0.26)
         surfaceTop = 0xFFFFFF
         surfaceMid = mix(p.brand, into: 0xF5F5F8, 0.035)
         surfaceBottom = mix(p.brand, into: 0xDFE0E6, 0.10)
+        // the glyph's dark end: the brand a quarter darker, more for light accents (orange) until
+        // it stands 3:1 off the surface
+        var shade = 0.26
+        while Contrast.ratio(mix(0x000000, into: p.brand, shade), surfaceBottom) < 3.1 && shade < 0.6 { shade += 0.02 }
+        deep = mix(0x000000, into: p.brand, shade)
         sheen = p.gradientTop
     }
 }
@@ -396,7 +401,8 @@ enum IconTool {
                 args.append(raw[i]); i += 1
             }
         }
-        let usage = IconError.usage("usage: icon master|small|iconset|preview|smallcheck|dock <out> … [--accent a] [--symbol s]")
+        let usage = IconError.usage("usage: icon master|small|iconset|preview|smallcheck|dock <out> … | selftest  [--accent a] [--symbol s]")
+        if args.first == "selftest" { return try selfTest(symbol: symbol) }
         guard args.count >= 2 else { throw usage }
         let c = IconColors(accent)
         let out = args[1]
@@ -480,5 +486,43 @@ enum IconTool {
         default:
             throw usage
         }
+    }
+}
+
+// MARK: - Self test (run by scripts/icon.sh and scripts/tests/test_packaging.py)
+
+func selfTest(symbol: String) throws {
+    var failures: [String] = []
+    func check(_ ok: Bool, _ message: @autoclosure () -> String) { if !ok { failures.append(message()) } }
+    func whole(_ v: CGFloat) -> Bool { abs(v - v.rounded()) < 0.001 }
+    let img = try symbolImage(symbol, weight: .semibold)
+    let ink = inkFractions(img)
+    check(ink.width > 0 && ink.width <= 1 && ink.height > 0 && ink.height <= 1, "ink bounds \(ink)")
+
+    for px in [16, 32, 64] {
+        let p = Params.small(px), s = CGFloat(px) / 1024
+        let body = CGRect(x: p.body.minX * s, y: p.body.minY * s, width: p.body.width * s, height: p.body.height * s)
+        check([body.minX, body.minY, body.maxX, body.maxY].allSatisfy(whole), "\(px) px: body \(body) not on whole pixels")
+        let r = glyphInkRect(p, ink: ink, img: img, px: px)
+        check([r.minX, r.minY, r.width, r.height].allSatisfy(whole), "\(px) px: glyph \(r) not on whole pixels")
+        check(abs(r.midX - body.midX) <= 0.5 && abs(r.midY - body.midY) <= 0.5, "\(px) px: glyph \(r) off centre")
+        check(body.insetBy(dx: 1, dy: 1).contains(r), "\(px) px: glyph \(r) touches the edge of \(body)")
+        let coverage = symbolCoverage(img, in: r, width: px, height: px).bytes.reduce(0) { $0 + Int($1) }
+        check(coverage > 0, "\(px) px: glyph mask is empty")
+    }
+    let master = Params(), r = glyphInkRect(master, ink: ink, img: img, px: 1024)
+    check(master.body.insetBy(dx: master.radius * 0.3, dy: master.radius * 0.3).contains(r), "master glyph \(r) too large")
+
+    // the glyph's dark end must stand out from the surface for every accent (>= 3:1)
+    for accent in AccentName.allCases {
+        let c = IconColors(accent)
+        let ratio = Contrast.ratio(c.deep, c.surfaceBottom)
+        check(ratio >= 3, "\(accent.rawValue): glyph \(String(format: "%.2f", ratio)):1 on the surface")
+        check(Contrast.luminance(c.surfaceTop) > Contrast.luminance(c.surfaceBottom), "\(accent.rawValue): surface not lighter at the top")
+    }
+    do { _ = try symbolImage("no.such.symbol.x", weight: .regular); failures.append("unknown symbol accepted") } catch {}
+
+    if failures.isEmpty { print("icon selftest: ok") } else {
+        throw IconError.usage("icon selftest: " + failures.joined(separator: "; "))
     }
 }

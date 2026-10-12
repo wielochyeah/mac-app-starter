@@ -17,6 +17,7 @@ out="${ICON_OUT:-App/Resources/AppIcon.icns}"
 work="build/icon"
 
 build_tool icon tools/icon/Icon.swift
+build/tools/icon selftest --symbol "$symbol" >/dev/null
 rm -rf "$work/AppIcon.iconset"
 mkdir -p "$work"
 opts=(--accent "$accent" --symbol "$symbol")
