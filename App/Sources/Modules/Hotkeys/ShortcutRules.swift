@@ -164,12 +164,19 @@ enum ShortcutRules {
                             _ layout: KeyboardLayout) -> ShortcutMeaning? {
         let token = layout.menuToken(code)
         let base = mods.subtracting(.shift)
-        return meanings.first { n in
-            let keyMatch = n.code.map { $0 == code } ?? (token != nil && n.token == token)
-            // the Terminal's ⌃ keys are the same with ⇧ (⌃⇧C is still an interrupt)
-            let modsMatch = n.modifiers == mods || (n.kind == .terminal && n.modifiers == .control && base == .control)
-            return keyMatch && modsMatch && scopes.contains(n.scope)
+        // a plain loop: the closure form of this search crashes the optimizer (Swift 6.3,
+        // CopyPropagation "Found ownership error") in release builds
+        for n in meanings where scopes.contains(n.scope) {
+            let keyMatch: Bool
+            switch n.key {
+            case .code(let c): keyMatch = c == code
+            case .token(let t): keyMatch = token == t
+            }
+            guard keyMatch else { continue }
+            // the Terminal's ⌃ keys are the same with ⇧ (⌃⇧W still deletes a word there)
+            if n.modifiers == mods || (n.kind == .terminal && n.modifiers == .control && base == .control) { return n }
         }
+        return nil
     }
 
     /// A character that is needed and cannot be typed another way (an ASCII sign, €, typographic marks).
