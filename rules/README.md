@@ -43,7 +43,7 @@ Die Zeichen der Mac-Tasten `⌘ ⌥ ⌃ ⇧ ⇥ ⇤ ⇪ ⏎ ↩ ⌤ ⌫ ⌦ ⎋ 
 
 | Schlüssel | Wirkung |
 |---|---|
-| `texts.anrede` | `du` (Standard) oder `sie`: wählt den Begriff im Paket `anrede`. Die Texte des Kits sind in der du-Form; mit `sie` meldet `make check-texts` jede du-Form in den `*Text.swift`-Dateien und in `App/Resources/InfoPlist.json` (beim Start des Starters 35 Stellen, mit allen Modulen mehr). Diese Dateien sind gemeinsame Pfade, die das Projekt umschreibt; die Baseline nimmt sie nicht auf. |
+| `texts.anrede` | `du` (Standard) oder `sie`: wählt den Begriff im Paket `anrede`. Die Texte des Kits sind in der du-Form; mit `sie` meldet `make check-texts` jede du-Form in den `*Text.swift`-Dateien und in `App/Resources/InfoPlist.json` (mit den Standardmodulen des Starters rund 130 Stellen, `bin/starter init --anrede sie` sagt es im Bericht). Diese Dateien sind gemeinsame Pfade, die das Projekt umschreibt; die Baseline nimmt sie nicht auf. |
 | `texts.zusatzpakete` | Pakete, die standardmäßig aus sind und eingeschaltet werden, etwa `["zeitwoerter"]` |
 | `texts.personen` | Namen, die in Code-Kommentaren nicht stehen sollen; sie ergänzen das Paket `kommentare` |
 
