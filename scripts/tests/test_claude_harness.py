@@ -26,6 +26,7 @@ def load(name, path):
 
 session_start = load("session_start", CLAUDE / "hooks" / "session-start.py")
 announce = load("announce_directives", CLAUDE / "hooks" / "announce-directives.py")
+guard = load("guard_git", CLAUDE / "hooks" / "guard-git.py")
 
 
 # Permission matching as Claude Code does it for Bash rules: "*" is any text, a trailing " *" or ":*" also matches the
@@ -49,6 +50,71 @@ def decision(settings, command):
         if any(rule_matches(rule, command) for rule in permissions.get(kind, [])):
             return kind
     return "none"
+
+
+GUARD_DENIES = [
+    "git -C . commit --no-verify -m x",
+    "git -C . commit -n -m x",
+    "git commit -a -n -m x",
+    "git commit -anm x",
+    "/usr/bin/git commit -n",
+    "cd App && git commit -n -m 'x'",
+    "git commit -m x --no-veri",
+    "git -C repo push origin feature --no-v",
+    "git merge --no-verify main",
+    "git rebase --no-verify main",
+    "git -C . config core.hooksPath /dev/null",
+    "git config --global core.hookspath /tmp/none",
+    "git config set core.hooksPath /tmp/none",
+    "git config --unset core.hooksPath",
+    "git -c core.hooksPath=/dev/null commit -m x",
+    "git -ccore.hookspath=/dev/null commit -m x",
+    "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/x git commit -m x",
+    "env GIT_CONFIG_PARAMETERS=\"'core.hooksPath'='/x'\" git commit -m y",
+    "bash -c 'git commit -n -m x'",
+    "zsh -lc \"git -C . commit --no-verify\"",
+]
+GUARD_ALLOWS = [
+    "git commit -m 'fix(island): keep -n out of the capsule'",
+    "git commit -m -n",
+    "git commit -am 'docs: x'",
+    "git commit -mx -- -n",
+    "git commit -F msg.txt",
+    "git commit --no-verbose -m x",
+    "git commit -m \"$(cat <<'EOF'\nfix: x\n\nbody -n\nEOF\n)\"",
+    "git push -n origin feature",
+    "git log --no-verify-signatures",
+    "git config --get core.hooksPath",
+    "git config core.hooksPath",
+    "grep -rn hooksPath scripts",
+    "echo 'git commit -n'",
+    "make check && git push origin feature",
+]
+
+
+class GuardGitTests(unittest.TestCase):
+    def test_hook_bypasses_are_refused(self):
+        for command in GUARD_DENIES:
+            self.assertIsNotNone(guard.check(command), command)
+
+    def test_everyday_git_commands_pass(self):
+        for command in GUARD_ALLOWS:
+            self.assertIsNone(guard.check(command), command)
+
+    def run_hook(self, payload):
+        result = subprocess.run([sys.executable, str(CLAUDE / "hooks" / "guard-git.py")], input=json.dumps(payload),
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def test_hook_answers_with_a_deny_decision(self):
+        out = json.loads(self.run_hook({"tool_name": "Bash", "tool_input": {"command": "git commit -anm x"}}))
+        decision = out["hookSpecificOutput"]
+        self.assertEqual(decision["hookEventName"], "PreToolUse")
+        self.assertEqual(decision["permissionDecision"], "deny")
+        self.assertIn("git commit -n", decision["permissionDecisionReason"])
+        self.assertEqual(self.run_hook({"tool_name": "Bash", "tool_input": {"command": "git status"}}), "")
+        self.assertEqual(self.run_hook({"tool_name": "Read", "tool_input": {"file_path": "x"}}), "")
 
 
 class SettingsTests(unittest.TestCase):
@@ -89,6 +155,13 @@ class SettingsTests(unittest.TestCase):
             ("make build MODULES=window,menubar", "allow"),
             ("make test ONLY=Settings", "allow"),
             ("make shots ONLY=island.", "allow"),
+            ("NO_BUILD=1 make shots ONLY=window.", "allow"),
+            ("make readme-shots", "allow"),
+            ("make hooks", "allow"),
+            ("git worktree add --detach /tmp/red-team-C feature", "allow"),
+            ("git worktree remove --force /tmp/red-team-C", "allow"),
+            ("git worktree remove --force ../wt/A", "none"),
+            ("pgrep -fl /tmp/red-team-C", "allow"),
             ("git status", "allow"),
             ("git diff origin/main...HEAD", "allow"),
             ("STARTER_HEADLESS=1 build/Starter.app/Contents/MacOS/Starter --selftest", "allow"),
@@ -103,6 +176,7 @@ class SettingsTests(unittest.TestCase):
             "open build/Starter.app",
             "git push origin main",
             "bin/starter remove island",
+            "bin/starter remove island --probelauf",
             "bin/starter init --name Notes",
             "tccutil reset All com.example.starter",
             "xcrun notarytool submit build/dmg/Starter-1.0.0.dmg --wait",
