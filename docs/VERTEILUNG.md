@@ -37,7 +37,7 @@ Wie aus dem Quellcode eine App wird, die jemand auf einem anderen Mac installier
 `make dmg` baut die Release-Fassung und daraus `build/dmg/<Name>-<version>.dmg`:
 
 - Fenster 640 x 432 pt (400 pt Hintergrund und 32 pt Titelleiste von macOS 26), App-Symbol links und die Verknüpfung „Applications“ rechts, je 112 pt groß, dazwischen ein gepunkteter Pfeil.
-- Hintergrund aus `tools/dmg/Background.swift` im Stil der App (Akzent aus `starter.json`), als TIFF mit 1x und 2x; bei ad hoc signierten Builds mit einem Hinweis auf „Dennoch öffnen“.
+- Hintergrund aus `tools/dmg/Background.swift` im Stil der App (Akzent aus `starter.json`), als TIFF mit 1x und 2x; solange das DMG nicht notarisiert ist, mit einem Hinweis auf „Dennoch öffnen“.
 - Layout über dmgbuild (Python-Paket in `build/tools-venv`, legt `make dmg` beim ersten Lauf an), ohne Finder-Skripte und ohne Automatisierungsrecht. `hide_extensions` bleibt aus: es setzt Finder-Informationen an der App, und eine signierte App mit solchen Informationen besteht die strenge Signaturprüfung nicht mehr („beschädigt“ statt „Dennoch öffnen“).
 - Der Hintergrund ist mit `chflags hidden` verborgen, das Abbild komprimiert (ULMO, ersatzweise UDZO), das Volume trägt das App-Symbol.
 - Prüfen ohne Finder: `hdiutil attach -nobrowse -readonly -mountpoint <ordner> <dmg>`, Inhalt ansehen, `codesign --verify --deep --strict <ordner>/<Name>.app`, `hdiutil detach <ordner>`.
@@ -49,7 +49,7 @@ DMGs gehören nie ins Repository (`.gitignore`); die CI legt das DMG eines Tags 
 Nur mit Developer ID und nur auf ausdrücklichen Wunsch. Der Weg zu einem notarisierten DMG ist `make dmg` mit drei Einstellungen:
 
 1. `signing.identity` nennt ein Zertifikat „Developer ID Application“ (`security find-identity -v -p codesigning`), `signing.teamId` die Team-ID.
-2. Einmal ein Profil für `notarytool` im Schlüsselbund anlegen: `xcrun notarytool store-credentials <profil> --apple-id <id> --team-id <team>` (fragt nach einem app-spezifischen Passwort und legt es im Schlüsselbund ab). Den Namen des Profils nennt `signing.notaryProfile` in `starter.json`; `NOTARY_PROFILE` in der Umgebung geht vor, ebenso `SIGN_IDENTITY` vor `signing.identity`.
+2. Einmal ein Profil für `notarytool` im Schlüsselbund anlegen: `xcrun notarytool store-credentials <profil> --apple-id <id> --team-id <team>` (fragt nach einem app-spezifischen Passwort und legt es im Schlüsselbund ab). Den Namen des Profils nennt `signing.notaryProfile` in `starter.json`; `NOTARY_PROFILE` in der Umgebung geht vor, ebenso `SIGN_IDENTITY` vor `signing.identity` (in `make build`, `make dmg` und `make notarize`).
 3. `signing.notarize: true`.
 
 `make dmg` signiert dann von innen nach außen mit Hardened Runtime, reicht die App mit `xcrun notarytool submit --wait` ein und heftet ihr Ticket an (`xcrun stapler staple`, damit auch die Kopie in /Programme es trägt), baut das DMG, signiert und notarisiert es ebenso und lässt den Hinweis auf „Dennoch öffnen“ im Fenster weg. Steht `signing.notarize` auf `true` und `signing.identity` auf `-`, sagt `make dmg` das und baut ein DMG ohne Notarisierung.
@@ -77,11 +77,11 @@ Verwaltete Macs (MDM) können nicht notarisierte Apps ganz sperren. Wer an solch
 
 ## 7. Anmeldeobjekt (Modul `background`)
 
-`SMAppService.mainApp` registriert die App als Anmeldeobjekt. Das geht nur aus einem installierten Ort (`/Applications` oder `~/Applications`, im Finder „Programme“), nicht aus `build/`; die App zeigt den Schalter sonst nicht und sagt, warum. Beim Bauen und Testen wird nie ein Anmeldeobjekt registriert. Die Nutzerin sieht und entfernt es in den Systemeinstellungen unter „Allgemein“, „Anmeldeobjekte“.
+`SMAppService.mainApp` registriert die App als Anmeldeobjekt. Das geht nur aus einem installierten Ort (`/Applications` oder `~/Applications`, im Finder „Programme“), nicht aus `build/`; sonst ist der Schalter in den Einstellungen gesperrt und eine Fußnote sagt, warum, und das Onboarding lässt den Schritt weg. Beim Bauen und Testen wird nie ein Anmeldeobjekt registriert. Die Nutzerin sieht und entfernt es in den Systemeinstellungen unter „Allgemein“, „Anmeldeobjekte“.
 
 ## 8. Vor der ersten Weitergabe
 
-- Eigenes App-Symbol: `make icon` setzt ein SF Symbol aus `app.symbol` auf eine Fläche im Akzent. Die Bedingungen für SF Symbols verbieten sie (und ähnlich aussehende Bilder) in App-Symbolen, Logos und jeder anderen Verwendung als Marke (Human Interface Guidelines, „SF Symbols“). Das erzeugte Symbol ist deshalb nur für die Entwicklung; `make icon` und `make dmg` sagen das bei jedem Lauf. Vor der ersten Weitergabe bekommt die App ein eigenes Motiv: eine eigene Zeichnung in `tools/icon/Icon.swift` (gemeinsamer Pfad, das Projekt darf ihn ändern) oder eine fertige `AppIcon.icns` mit Rechten des Projekts. Der DMG-Hintergrund zeigt das App-Symbol aus `App/Resources/AppIcon.icns` und ändert sich damit.
+- Eigenes App-Symbol: `make icon` setzt ein SF Symbol aus `app.symbol` auf eine Fläche im Akzent. Die Bedingungen für SF Symbols verbieten sie (und ähnlich aussehende Bilder) in App-Symbolen, Logos und jeder anderen Verwendung als Marke (Human Interface Guidelines, „SF Symbols“). Das erzeugte Symbol ist deshalb nur für die Entwicklung; `make icon` und `make dmg` sagen das bei jedem Lauf, solange `tools/icon/Icon.swift` ein SF Symbol zeichnet. Vor der ersten Weitergabe bekommt die App ein eigenes Motiv: eine eigene Zeichnung in `tools/icon/Icon.swift` (gemeinsamer Pfad, das Projekt darf ihn ändern) oder eine fertige `AppIcon.icns` mit Rechten des Projekts. Der DMG-Hintergrund zeigt das App-Symbol aus `App/Resources/AppIcon.icns` und ändert sich damit.
 - Modul `mlx`: noch nicht weitergebbar. `make dmg` bündelt weder den MLX-Worker noch ein Python; die App im DMG zeigt MLX als „Nicht enthalten“ ohne Download (`docs/KI.md`, „MLX in einer weitergegebenen App“). Für Empfänger bleibt Apple Foundation Models über `ai`. <!-- modul:mlx -->
 - `app.bundleId` endgültig wählen: sie bestimmt den Ort der Daten (`~/Library/Application Support/<bundleId>/`), die Einstellungen und die Berechtigungen. Ein späterer Wechsel beginnt bei null.
 - `app.version` und `app.build` setzen, `CHANGELOG.md` ergänzen, `THIRD_PARTY_NOTICES.md` um mitgelieferten Fremdcode ergänzen.

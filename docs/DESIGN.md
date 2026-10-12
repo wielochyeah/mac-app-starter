@@ -23,7 +23,7 @@ Vorbild sind VoiceBud und die Apps von macOS 26 (Musik, Systemeinstellungen, Kon
 | Linien | `separator` (Haarlinie 0,5 pt), `cardStroke`, `windowStroke`, `sidebarPanelStroke`, `capsuleStroke`, `tileEdge`, `squircleEdge` |
 | Text | `fg` (Haupttext), `fg2` (Nebentext), `fg3` (leise), `prose` (Fließtext im Onboarding), `sideGroup` (Gruppentitel der Seitenleiste) |
 | Akzent | `accent` (Bedienelemente), `accentText` (Text im Akzent, 4,5:1), `ring` (Fokus, Auswahl), `onAccent` (Schrift auf Akzent), `accentSoft`, `accentGradient` |
-| Zustand | `ok`, `warn`, `idle`, `okText`, `warnText`, `okSoft`, `warnSoft`, `strike` |
+| Zustand | `ok`, `warn`, `idle`, `okText`, `warnText`, `okSoft`, `warnSoft`; Fehler `strike` als Zeichen (Symbol, Punkt, Ring, mindestens 3:1) und `strikeText` als roter Text (mindestens 4,5:1) |
 | Bedienelemente | `switchOff`, `trackOff`, `knob`, `knobShadow`, `buttonSecondary`, `buttonSecondaryEdge`, `buttonPrimaryEdge`, `buttonShadow`, `rowHover`, `sideSel`, `detent` |
 | Renders | `glassStandIn`, `glassStroke`, `desk`, `deskShadow`, `panelShadow`, `wallpaper`, `menuBarTint`, `menuBarText`, `traffic*` |
 
@@ -49,7 +49,7 @@ Der Akzent färbt Bedienelemente, Auswahl, Fokus und das App-Symbol, nie große 
 | `Space` | `hair` 2, `xxs` 4, `xs` 8, `iconGap` 9, `s` 12, `m` 16, `l` 24, `xl` 32, `xxl` 48, `pane` 20, `rowX` 12, `rowY` 9 |
 | `Radius` | `keyCap` und `segment` 6, `chip` 7, `button`, `field`, `segmentTrack` 8, `row` 10, `tile` 11, `card` 13, `hero` 14, `ring` 15, `window` 16, `panel` 18, `windowGlass` 26, `squircle(size)` |
 | `TypeScale` | `display` 34 fett, `intro` 28 fett, `title` 22 fett, `headline` 17 halbfett, `paneTitle` 15,5 fett, `lede` 15, `reading` 13,5, `body` 13 (auch Medium, Semibold), `preview` 12,5, `groupLabel` 12,5 halbfett, `secondary` 12, `subtitle` 11,5, `caption` 11, `badge` 10,5 halbfett, `micro` 9,5 fett |
-| `Metrics` | Zeilenhöhe 44, Schalter 36 x 21, Onboarding 720 x 560, Einstellungen 900 x 620, Seitenleiste 224, Spalte im Onboarding 560 |
+| `Metrics` | Zeilenhöhe 44, Schalter 36 x 21, Onboarding 720 x 560, Einstellungen 900 x 620, Seitenleiste 224 (200 bis 280, erste Zeile 44 unter dem Panel: `Metrics.Sidebar`), Spalte im Onboarding 560, schmale Karte 460 (`onboardingCard`), Gesperrtes mit 45 % Deckkraft (`disabledOpacity`) |
 
 Raster 8, 12, 16, 24, 32. Abstände zwischen Blöcken nur aus `Space`, nie als Zahl. Radien sind durchgehend (`style: .continuous`). Linien sind Haarlinien (0,5 pt), Rahmen um jede Zeile gibt es nicht: Zeilen in einer Karte trennt `SettingsSection` mit Haarlinien.
 
@@ -71,7 +71,7 @@ Unter `Kit/Design/Components/`, in der Galerie und als Szenen `design.*`:
 | `SegmentedProgress`, `Spinner`, `StatusMark` | Schritte, laufend, Zustand mit Text |
 | `EmptyState` | Symbol, Titel, ein Satz, höchstens eine Aktion |
 | `GlassSurface(cornerRadius:) { }` | eigenes Glas; in Renders eine Fläche in Token-Farbe |
-| `StaticWindow`, `TrafficLights`, `RenderBoard`, `Specimen` | Fensterrahmen und Schreibtisch nur für Renders |
+| `StaticWindow`, `TrafficLights`, `RenderBoard`, `Specimen`, `staticSidebarPanel()` | Fensterrahmen, Schreibtisch und das Glas-Panel der Seitenleiste nur für Renders |
 
 ## 5. Muster
 
@@ -121,7 +121,7 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 | Hauptfenster (`window`) | `NavigationSplitView` mit Seitenleiste aus Systemglas und Gruppen (`PageSection`), Werkzeugleiste mit Suche, Seiten mit großem Titel; Bausteine wie in Musik: Kopf mit Bild (`HeroHeader`), Reihen von Kacheln (`Shelf`), Raster (`TileGrid`), Listen mit Index und Nebeninfo (`ItemList`), erzeugte Bilder aus Text und Symbol (`Artwork`), leere Seite (`EmptyPage`) |
 | Einstellungen (Kit) | eigenes Fenster 900 x 620 wie die Systemeinstellungen: Seitenleiste mit farbigen Squircle-Symbolen, oben Inhalte, darunter Einstellungen; Bereich nach dem Muster oben; die Pfeiltasten wechseln den Bereich |
 | Onboarding (Kit) | Fenster 720 x 560 mit durchsichtiger Titelleiste und nur dem Schließen-Knopf, Seiten gleiten 26 pt mit Feder, unter reduzierter Bewegung Überblendung |
-| Statusmenü (`menubar`) | Symbol als Vorlage, Zustände `idle`, `busy`, `attention`; Panel wie ein Modul im Kontrollzentrum: abgerundet, Glas, 320 bis 360 pt, Kopf mit App-Symbol und Statuszeile, Abschnitte, Fußzeile mit Einstellungen und Beenden |
+| Statusmenü (`menubar`) | Symbol als Vorlage, Zustände `idle`, `busy`, `attention`; Panel wie ein Modul im Kontrollzentrum: abgerundet, Glas, 340 pt (D-14 erlaubt 320 bis 360), Kopf mit App-Symbol und Statuszeile, Abschnitte, Fußzeile mit Einstellungen und Beenden |
 | Insel (`island`) | wächst aus der Notch mit konkaven Ohren, schwarz (`IslandPalette`), Breite und Höhe mit getrennten Federn (`Motion.Island`); ohne Notch eine Kapsel unter der Menüleiste; Inhalte kurz: Symbol, höchstens drei Wörter Titel, eine Zeile Detail |
 
 ## 7. Bewegung

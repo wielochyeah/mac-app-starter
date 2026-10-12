@@ -7,7 +7,7 @@ Die Module `ai` und `mlx` geben der App ein Sprachmodell, das auf dem Mac läuft
 | Anbieter | Modul | Download | Stärken | Grenzen |
 |---|---|---|---|---|
 | Apple Foundation Models | `ai` (an) | keiner, das Modell gehört zu macOS | sofort da, Deutsch und Englisch, strukturierte Antworten über `DynamicGenerationSchema`, kein zusätzlicher Speicher auf der Platte | braucht Apple Intelligence (eingeschaltet, Gerät geeignet, Modell geladen); Modell und Fähigkeiten legt Apple fest |
-| MLX | `mlx` (aus) | ein Modell nach Wahl, 1 bis mehrere GB | eigene Modelle (etwa Qwen in 4 Bit), unabhängig von Apple Intelligence | braucht Python 3.12 und `mlx-lm` in `ai-worker/.venv`, Download, Arbeitsspeicher | <!-- modul:mlx -->
+| MLX | `mlx` (aus) | ein Modell nach Wahl, 1 bis mehrere GB | eigene Modelle (etwa Qwen in 4 Bit), unabhängig von Apple Intelligence | braucht Python 3.11 bis 3.13 (bevorzugt 3.12) und `mlx-lm` in `ai-worker/.venv`, Download, Arbeitsspeicher | <!-- modul:mlx -->
 
 `mlx` braucht `ai`; `bin/starter remove ai` verlangt vorher `bin/starter remove mlx`. Die Einstellung „Anbieter“ im Bereich „Modelle“ wählt `Automatisch` (Apple, wenn verfügbar, sonst MLX), `Apple` oder `MLX` (nur mit Modul `mlx`).
 
@@ -42,8 +42,8 @@ Die App hält diese Zusagen ein; jede Funktion mit KI erbt sie:
 
 - Katalog: `ai-worker/models.json` mit Name, Rolle, Hugging-Face-Adresse und Größe; mindestens ein kleines Standardmodell (unter 1 GB, 4 Bit) und eine größere Wahl für bessere Antworten.
 - Download: nur auf Knopfdruck in den Einstellungen oder im Onboarding, mit Größe vorher, Fortschritt „x von y GB“, Pause und erneutem Versuch. Der Download läuft in einem eigenen Prozess (`ai-worker/download.py`) und misst den Fortschritt am Cache gegen die Gesamtgröße.
-- Ablage: unter `~/Library/Application Support/<bundleId>/Models/` (`Paths.models`); Modelle kommen nie ins Repository und lassen sich in den Einstellungen löschen.
-- Umgebung: `ai-worker/setup.sh` legt `ai-worker/.venv` mit Python 3.12 aus Homebrew oder uv an und installiert die festen Versionen aus `ai-worker/requirements.txt`. Das Skript installiert nie Homebrew oder uv selbst; fehlt beides, sagt es, welcher Befehl fehlt.
+- Ablage: unter `~/Library/Application Support/<bundleId>/Models/huggingface` (`MLXPaths.hfHome`, mit `STARTER_DATA_DIR` in dessen Ordner); Modelle kommen nie ins Repository und lassen sich in den Einstellungen löschen.
+- Umgebung: `ai-worker/setup.sh` legt `ai-worker/.venv` mit Python 3.12 an (aus Homebrew, sonst 3.11 oder 3.13, sonst über uv) und installiert die festen Versionen aus `ai-worker/requirements.lock`, ohne diese Datei aus `ai-worker/requirements.txt`; `ai-worker/setup.sh --check` prüft nur, `--lock` schreibt die Sperrdatei neu. Das Skript installiert nie Homebrew oder uv selbst; fehlt beides, sagt es, welcher Befehl fehlt.
 
 ## Der MLX-Worker
 
@@ -61,7 +61,7 @@ Noch nicht gebaut: `mlx` läuft nur in Entwickler-Builds aus dem Projekt (`make 
 
 Was für die Weitergabe fehlt, ist ein Skript `ai-worker/package.sh <Pfad zur .app>`, das `make dmg` aufruft, sobald es existiert:
 
-- ein eigenständiges Python 3.12 (etwa python-build-standalone) mit den festen Versionen aus `ai-worker/requirements.txt` nach `Contents/Resources/python`, die Dateien des Workers nach `Contents/Resources/ai-worker`;
+- ein eigenständiges Python 3.12 (etwa python-build-standalone) mit den festen Versionen aus `ai-worker/requirements.lock` nach `Contents/Resources/python`, die Dateien des Workers nach `Contents/Resources/ai-worker`;
 - jede `.so` und `.dylib` darin signieren, bevor `make dmg` die App signiert; mit Developer ID braucht die Hardened Runtime dann `com.apple.security.cs.disable-library-validation` in `tools/entitlements.plist` und einen Eintrag in `docs/DECISIONS.md`;
 - `LSMinimumSystemVersion` an die Mindestversion der Binaries von MLX anpassen (`make dmg` prüft `minos` und bricht sonst ab; MLX 0.32 braucht macOS 26.2).
 

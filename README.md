@@ -9,7 +9,7 @@ Fertig verdrahtet sind:
 - vier App-Formen, frei kombinierbar: Fenster-App im Stil von Musik unter macOS 26, Menüleisten-App mit Statussymbol und Panel, Insel an der Notch (Kapsel auf Macs ohne Notch), Hintergrund mit geplanten Aufgaben und Start beim Anmelden
 - Gestaltung im Stil von VoiceBud: Tokens für Farben, Abstände, Radien, Schrift und Bewegung, sechs Akzente mit geprüften Kontrasten, Bausteine und Muster für Einstellungen und Onboarding, hell und dunkel
 - Onboarding mit Sprache, Funktionen, Berechtigungen (mit allen Zuständen bis zum Neustart) und Abschluss
-- Einstellungsfenster wie die Systemeinstellungen, mit „Allgemein“, „Über“ und einer Galerie aller Bausteine
+- Einstellungsfenster wie die Systemeinstellungen, mit „Allgemein“, „Über“ und in Debug-Builds einer Galerie aller Bausteine
 - Englisch und Deutsch mit Wechsel ohne Neustart, deutsche Anrede einstellbar
 - globale Kurzbefehle mit Regeln gegen belegte und tippende Kombinationen
 - lokale KI mit Apple Foundation Models, optional eigene Modelle über MLX mit Download und Fortschritt
@@ -21,7 +21,7 @@ Fertig verdrahtet sind:
 | | |
 |---|---|
 | ![Einstellungen](docs/screenshots/de-dark-settings.window.png) | ![Onboarding](docs/screenshots/de-light-onboarding.welcome.png) |
-| ![Insel](docs/screenshots/en-dark-island.done-card.png) | ![Statusmenü](docs/screenshots/en-light-menubar.panel.png) |
+| ![Insel](docs/screenshots/en-dark-island.done.png) | ![Statusmenü](docs/screenshots/en-light-menubar.panel.png) |
 
 <!-- nur-im-starter:anfang -->
 ## Stand
@@ -82,12 +82,12 @@ Berechtigungen: <keine, Mitteilungen, Mikrofon …>. Lokale KI: <nein oder wofü
 | `App/Sources/Kit/` | immer dabei: Sprache, Einstellungen, Datenbank, Registry, Design, Onboarding, Einstellungsfenster, Berechtigungen, Galerie, Render, Start |
 | `App/Sources/Modules/` | entfernbare Module, je Ordner eines |
 | `App/Sources/Features/` | Funktionen des Projekts |
-| `App/Resources/` | Erklärtexte der Berechtigungen (`InfoPlist.json`), App-Symbol |
+| `App/Resources/` | Erklärtexte der Berechtigungen (`InfoPlist.json`), App-Symbol, Hinweise zu Fremdcode für „Über“ (`Notices/`) |
 | `App/Tests/` | Swift-Tests mit eigenem Harness |
 | `ai-worker/` | Python-Worker für MLX (Modul `mlx`) | <!-- modul:mlx -->
 | `tools/` | App-Symbol und DMG-Hintergrund in Swift, Einstellungen für dmgbuild |
 | `scripts/` | Build, Tests, Renders, Prüfungen, Hooks, Starter-Werkzeuge |
-| `bin/starter` | init, remove, strip-examples, sync, check-kit, modules |
+| `bin/starter` | init, remove, strip-examples, sync, check-kit, modules, doctor |
 | `docs/` | `UEBERGABE.md`, `DESIGN.md`, `ARCHITEKTUR.md`, `MODULE.md`, `VERTEILUNG.md`, `PROJECT.md`, `DECISIONS.md`, `STARTER_FEEDBACK.md`, `agents/`, `vorlagen/` |
 | `docs/KI.md` | lokale KI (Modul `ai`) | <!-- modul:ai -->
 | `.claude/` | Rechte, Hooks, Skills, Subagenten, Workflow `red-team` |
@@ -118,7 +118,7 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 | `make doctor` | Werkzeuge prüfen (Command Line Tools, Compiler, SDK, Python), installiert nichts |
 | `make build` | Debug-Build nach `build/<Name>.app`; `MODULES=a,b` wählt andere Module, `CONFIG=release` optimiert |
 | `make run` | bauen und die App starten |
-| `make test` | Swift-Tests (`build/tests/run-tests`) und Python-Tests; `ONLY=<präfix>` wählt aus |
+| `make test` | Swift-Tests (`build/tests/run-tests`) und Python-Tests; `ONLY=<präfix>` führt nur passende Swift-Tests aus |
 | `make check` | Regeln, Texte, Design, Kit, Build und Tests; vor jedem Push |
 | `make shots` | jede Szene in en und de, hell und dunkel nach `build/shots/` mit `index.html`; `ONLY=<präfix>` |
 | `make readme-shots` | Bilder aus `docs/screenshots/list.txt` nach `docs/screenshots/` kopieren |
@@ -135,7 +135,7 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 
 ## Betrieb
 
-Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Dennoch öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert erteilte Berechtigungen. Mit `signing.identity` in `starter.json` signiert der Build mit Developer ID und Hardened Runtime; `make notarize` notarisiert mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
+Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Dennoch öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert erteilte Berechtigungen. Mit `signing.identity` in `starter.json` signiert `make dmg` mit Developer ID und Hardened Runtime; mit `signing.notarize: true` notarisiert es App und DMG mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
 
 ## Pflege
 

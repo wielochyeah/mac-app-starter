@@ -15,14 +15,19 @@ Ablauf eines Starts:
 
    | Flag | Wirkung |
    |---|---|
-   | `--render <ordner> [--only <präfix>] [--lang en\|de] [--appearance light\|dark]` | rendert jede `RenderScene` nach `<ordner>/<sprache>-<erscheinung>/<szene>.png` und `index.html` |
-   | `--selftest` | führt jede `SelfTestCheck` aus `Registry.selfTests` aus, Exit 0 oder 1 |
-   | `--demo` | normaler Start ohne Onboarding, der jeden Eintrag aus `Registry.demoDrivers` ausführt (für die Person am Mac) |
+   | `--render <ordner> [--only <präfix>] [--lang en\|de] [--appearance light\|dark]` | rendert jede `RenderScene` nach `<ordner>/<sprache>-<erscheinung>/<szene>.png`, bei einem vollständigen Lauf (ohne `--only`, `--lang`, `--appearance`) dazu `index.html` |
+   | `--selftest [präfix]` | führt jede `SelfTestCheck` aus `Registry.selfTests` aus, außer den langsamen (`onDemand`); mit Präfix nur die passenden, langsame eingeschlossen. Exit 0 oder 1 |
+   | `--permission-probe <id>` | schreibt den Stand einer Berechtigung, wie ihn ein frischer Prozess sieht, und endet (Kit/Permissions fragt so die Bildschirmaufnahme ab) |
 
-   Unbekannte Flags mit `--` beenden mit Exit 2, damit ein vertipptes Werkzeug nie die App öffnet.
+   Unbekannte Flags mit `--` beenden mit Exit 2, damit ein vertipptes Werkzeug nie die App öffnet. Zwei Flags starten die App normal, aber anders:
+
+   | Flag | Wirkung |
+   |---|---|
+   | `--demo` | ohne Onboarding; jeder Eintrag aus `Registry.demoDrivers` läuft (für die Person am Mac) |
+   | `--background` | ohne Onboarding und ohne Hauptfenster (`Launch.isBackground`); ein Start als Anmeldeobjekt zählt ebenso |
 3. Sonst startet `NSApplication` mit `AppDelegate`: `Modules.registerAll()` hat Kit und Module registriert, `AppForm.applyActivationPolicy()` setzt `.regular` (mit `window`) oder `.accessory`, `MainMenu.install()` legt das Hauptmenü an, alle `Registry.launchHooks` laufen.
 4. Mit `STARTER_HEADLESS=1` endet der Start hier: Aktivierungsrichtlinie `.prohibited`, kein Fenster, kein Onboarding. So laufen Tests und Werkzeuge auf Macs, auf denen nichts aufgehen soll.
-5. Beim ersten Start öffnet das Onboarding, später das Hauptfenster (mit `window`). Menüleiste, Insel und Hintergrund laufen ohne Fenster weiter; die App endet nicht mit dem letzten Fenster.
+5. Beim ersten Start öffnet das Onboarding, später das Hauptfenster (mit `window`); mit `--background` und beim Start als Anmeldeobjekt keines von beiden. Menüleiste, Insel und Hintergrund laufen ohne Fenster weiter; die App endet nicht mit dem letzten Fenster.
 6. Beim Beenden laufen alle `Registry.terminateHooks` (Worker beenden, Daten schreiben).
 
 ## 2. Kit, Module, Features
@@ -31,7 +36,7 @@ Ablauf eines Starts:
 App/Sources/
   Kit/        immer dabei, gehört dem Starter
     Core/       Lang (tr, Localizer, Format), Settings, Database, Registry, RenderMode, Paths, Log, AppInfo, Version, Observing
-    Design/     Theme und Tokens, Komponenten, Patterns (Onboarding- und Einstellungsmuster), Island-Tokens, Katalog
+    Design/     Theme und Tokens, Komponenten, Patterns (Onboarding- und Einstellungsmuster), Seitenleiste (`Metrics.Sidebar`), Island-Tokens, Katalog
     Texts/      CommonText, KitText, DesignText
     Main/       Entry, CommandLine, AppDelegate, AppForm, AppActions, WindowHost, MainMenu, HeadlessWindows, Modules, SelfTest
     Onboarding/ Fenster, Ablauf, Kit-Schritte
@@ -60,16 +65,16 @@ App/Sources/
 | `onboardingSteps` | `OnboardingStep` (id, order, `isIncluded`, Inhalt mit `OnboardingContext`) | Onboarding |
 | `menuItems` | `MenuItemContribution` (id, order, Titel, Symbol, Tastenkürzel, Aktion) | Hauptmenü, Statusmenü |
 | `renderScenes` | `RenderScene` (id `<bereich>.<name>`, Größe, Inhalt) | `--render`, `make shots` |
-| `gallery` | `GalleryEntry` (id, Bereich, Titel, Inhalt) | Galerie in den Einstellungen |
+| `gallery` | `GalleryEntry` (id, Bereich, Titel, Inhalt) | Galerie in den Einstellungen (Debug-Builds oder `kit.showGallery`) |
 | `selfTests` | `SelfTestCheck` (id, Prüfung) | `--selftest` |
 | `launchHooks`, `terminateHooks`, `demoDrivers` | Funktionen | Start, Ende, `--demo` |
 | `onboardingFinishedHooks` | Funktionen mit `firstTime` | nach „Fertig“ in der Einrichtung (nicht beim Neustart für eine Freigabe); das Fenster-Modul öffnet so das Hauptfenster, das Hintergrund-Modul wendet die Wahl „Beim Anmelden starten“ an |
 
 `Registry.problems()` meldet doppelte Kennungen und Szenen ohne Bereichspräfix; ein Test prüft das.
 
-**Fenster öffnen** geht nur über `AppActions` (`openSettings(pane:)`, `openOnboarding()`, `openMainWindow()`, `showAbout()`, `quit()`). Kit und Module setzen beim Start die passenden Handler. Fehlt ein Handler (etwa ohne `window`), fällt die Aktion auf die Einstellungen zurück; Aufrufer brauchen kein `#if`.
+**Fenster öffnen** geht nur über `AppActions` (`openSettings(pane:)`, `openOnboarding()`, `openMainWindow()`, `showAbout()`, `quit()`). Kit und Module setzen beim Start die passenden Handler. Ohne Modul `window` fällt `openMainWindow()` auf die Einstellungen zurück; Aufrufer brauchen kein `#if`.
 
-**Fenster** entstehen über `WindowHost.show(id:style:size:minSize:title:configure:content:)`: `NSWindow` mit `NSHostingController`, Titel folgt der Sprache, die Mindestgröße eines größenveränderlichen Fensters hält die SwiftUI-Wurzel (ein bloßes `window.minSize` setzt `NSHostingController` beim ersten Layout zurück), Views werden beim Schließen freigegeben, `AppForm` zählt offene Fenster und schaltet eine Accessory-App vorübergehend auf `.regular`, bis das letzte Kit-Fenster zu ist.
+**Fenster** entstehen über `WindowHost.show(id:style:size:minSize:title:configure:content:)`: `NSWindow` mit `NSHostingController`, Titel folgt der Sprache, die Mindestgröße eines größenveränderlichen Fensters hält die SwiftUI-Wurzel (ein bloßes `window.minSize` setzt `NSHostingController` beim ersten Layout zurück), Views werden beim Schließen freigegeben, `AppForm` zählt offene Fenster und schaltet eine Accessory-App vorübergehend auf `.regular`, bis das letzte Kit-Fenster zu ist. `WindowHost.make(…)` baut ein Fenster, ohne es zu zeigen oder anzumelden; die Selbsttests `window.chrome` und `settings.window` prüfen damit Werkzeugleiste und Mindestgröße.
 
 ## 4. Sprache
 
@@ -99,16 +104,16 @@ Binary + Info.plist + Resources ──> build/<Name>.app ──codesign──> f
 - Flags: `-swift-version 6 -default-isolation MainActor`, `-target arm64-apple-macosx<minimumMacOS>`, `-parse-as-library`, je Modul `-D MODUL_<NAME>`, Frameworks AppKit, SwiftUI, ServiceManagement, Carbon, sqlite3, mit `ai` FoundationModels; Debug `-Onone -g`, Release `-O -wmo`.
 - `Info.plist` wird zusätzlich ins Binary eingebettet (`-sectcreate __TEXT __info_plist`).
 - Gebaut wird in einen temporären Ordner, danach ersetzt das neue Bundle das alte.
-- `make test` baut dieselben Quellen mit `App/Tests/**` und `-D TESTING` zu `build/tests/run-tests` und führt es mit `STARTER_HEADLESS=1` aus; danach laufen die Python-Tests in `scripts/tests/`.
+- `make test` baut dieselben Quellen mit `App/Tests/**` und `-D TESTING` zu `build/tests/run-tests` und führt es mit `STARTER_HEADLESS=1` aus; danach laufen die Python-Tests in `scripts/tests/` und `scripts/starter/tests/`.
 - Mit dem Modul `mlx` laufen in `make test` auch die Python-Tests in `ai-worker/tests/`. <!-- modul:mlx -->
 
 ## 9. Package.swift
 
-`Package.swift` ist der zweite Weg für Xcode oder ein intaktes SwiftPM: dieselben Quellen, dieselben Modul-Flags aus `starter.json`, `build/gen/AppConfig.swift` vorher mit `python3 scripts/gen_config.py` erzeugen. Tests laufen nur über `make test`. Weil SwiftPM auf Macs mit gemischten Command Line Tools abstürzt, prüft der Starter diesen Weg nur durch Typprüfung des Manifests; `make doctor` sagt, ob er auf dem eigenen Mac läuft.
+`Package.swift` ist der zweite Weg für Xcode oder ein intaktes SwiftPM: dieselben Quellen, dieselben Modul-Flags aus `starter.json`, `build/gen/AppConfig.swift` vorher mit `python3 scripts/gen_config.py` erzeugen. Tests laufen nur über `make test`. Weil SwiftPM auf Macs mit gemischten Command Line Tools abstürzt, wurde das Manifest beim Bau des Starters einmal typgeprüft; eine laufende Prüfung dieses Wegs gibt es nicht. `make doctor` sagt, ob SwiftPM auf dem eigenen Mac läuft.
 
 ## 10. Tests
 
 - Swift: `App/Tests/Harness/Harness.swift` stellt `TestSuite` mit `test("…") { … }`, `expect`, `expectEqual`, `expectThrows`, `fail`, `tempDir()` und `repoRoot` bereit; Testklassen werden über die ObjC-Laufzeit gefunden. `make test ONLY=<präfix>` wählt aus.
-- Python: `unittest` in `scripts/tests/` (Werkzeuge, Hooks, Workflow).
+- Python: `unittest` in `scripts/tests/` (Werkzeuge, Hooks, Workflow) und `scripts/starter/tests/` (`bin/starter`, check-kit); `make probe` führt die langsame Template-Probe aus `scripts/starter/tests/probe_starter.py` aus.
 - Python im Modul `mlx`: `unittest` in `ai-worker/tests/` (Worker). <!-- modul:mlx -->
 - Selbsttest: `--selftest` prüft zur Laufzeit, was nur im fertigen Bundle prüfbar ist (Symbol vorhanden, Konfiguration passt, Registry ohne Doppelungen, Module melden ihre Prüfungen an).
