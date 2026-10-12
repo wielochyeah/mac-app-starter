@@ -116,6 +116,10 @@ struct SelfTestCheck: Identifiable {
     static var gallery: [GalleryEntry] = []
     static var launchHooks: [() -> Void] = []
     static var terminateHooks: [() -> Void] = []
+    /// Run after the person pressed "Done" in the setup window (not when it restarts the app for a
+    /// permission: the new process starts with the setup done). `true` after the very first setup.
+    /// A step whose choice applies only at the end, or a window that should open then, hooks in here.
+    static var onboardingFinishedHooks: [(_ firstTime: Bool) -> Void] = []
     static var selfTests: [SelfTestCheck] = []
     /// Scripted loops for `--demo` (e.g. the island cycling through its states). Each runs once
     /// after launch hooks in a normal (non-tool) launch and drives itself from there.
@@ -169,12 +173,12 @@ struct SelfTestCheck: Identifiable {
     /// Runs `body` with empty contributions and restores them afterwards (tests).
     static func withScratch<T>(_ body: () throws -> T) rethrows -> T {
         let saved = (pages, settingsPanes, onboardingSteps, menuItems, renderScenes, gallery, launchHooks, terminateHooks, selfTests)
-        let savedDemo = demoDrivers
+        let (savedDemo, savedFinished) = (demoDrivers, onboardingFinishedHooks)
         pages = []; settingsPanes = []; onboardingSteps = []; menuItems = []; renderScenes = []
-        gallery = []; launchHooks = []; terminateHooks = []; selfTests = []; demoDrivers = []
+        gallery = []; launchHooks = []; terminateHooks = []; selfTests = []; demoDrivers = []; onboardingFinishedHooks = []
         defer {
             (pages, settingsPanes, onboardingSteps, menuItems, renderScenes, gallery, launchHooks, terminateHooks, selfTests) = saved
-            demoDrivers = savedDemo
+            (demoDrivers, onboardingFinishedHooks) = (savedDemo, savedFinished)
         }
         return try body()
     }

@@ -22,8 +22,12 @@ enum BackgroundModule {
         // headless test runs
         Registry.launchHooks.append {
             guard !RenderMode.isHeadless, !RenderMode.isStatic else { return }
-            LoginWish.watch()
+            LoginWish.applyIfDue()   // a wish left from an earlier run
             BackgroundJobs.shared.start()
+        }
+        Registry.onboardingFinishedHooks.append { _ in
+            guard !RenderMode.isHeadless, !RenderMode.isStatic else { return }
+            LoginWish.applyIfDue()
         }
         Registry.terminateHooks.append { BackgroundJobs.shared.stop() }
         Registry.selfTests.append(SelfTestCheck(id: "background.jobs") { BackgroundSelfTest.jobs(BackgroundJobs.shared.jobs) })

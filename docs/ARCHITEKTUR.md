@@ -63,6 +63,7 @@ App/Sources/
 | `gallery` | `GalleryEntry` (id, Bereich, Titel, Inhalt) | Galerie in den Einstellungen |
 | `selfTests` | `SelfTestCheck` (id, Prüfung) | `--selftest` |
 | `launchHooks`, `terminateHooks`, `demoDrivers` | Funktionen | Start, Ende, `--demo` |
+| `onboardingFinishedHooks` | Funktionen mit `firstTime` | nach „Fertig“ in der Einrichtung (nicht beim Neustart für eine Freigabe); das Fenster-Modul öffnet so das Hauptfenster, das Hintergrund-Modul wendet die Wahl „Beim Anmelden starten“ an |
 
 `Registry.problems()` meldet doppelte Kennungen und Szenen ohne Bereichspräfix; ein Test prüft das.
 

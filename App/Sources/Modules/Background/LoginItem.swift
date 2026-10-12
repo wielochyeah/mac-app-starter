@@ -151,9 +151,9 @@ enum LoginItemStepRule {
 }
 
 /// The first-setup choice of the onboarding step, applied only when onboarding is done (VoiceBud
-/// sends the login choice in `finish`, never earlier). Going back, closing the setup window or
-/// quitting halfway registers nothing; the wish waits for the next setup. A kit hook "onboarding
-/// finished" would replace the observation (wave 2 candidate).
+/// sends the login choice in `finish`, never earlier): at launch for a wish left from an earlier
+/// run, and from `Registry.onboardingFinishedHooks`. Going back, closing the setup window or
+/// quitting halfway registers nothing; the wish waits for the next setup.
 enum LoginWish {
     /// A pending wish is applied once onboarding is done (pure, tested).
     static func isDue(onboardingDone: Bool, pending: Bool?) -> Bool { onboardingDone && pending != nil }
@@ -173,12 +173,5 @@ enum LoginWish {
         login.refresh()
         if LoginItem.needsChange(to: wanted, from: login.status) { login.set(wanted) }
         return true
-    }
-
-    /// Launch hook of the real app: applies a wish left from an earlier run, then the moment
-    /// onboarding becomes done.
-    static func watch() {
-        applyIfDue()
-        Observing.track { _ = Settings.shared[.onboardingDone] } onChange: { applyIfDue() }
     }
 }

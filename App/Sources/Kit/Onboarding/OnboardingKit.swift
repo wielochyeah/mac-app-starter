@@ -176,12 +176,12 @@ enum OnboardingWindow {
         return flow
     }
 
-    /// After "Done": close, then restart when a permission waits for it, or open the main window
-    /// after the very first setup of a window app.
+    /// After "Done": close, then restart when a permission waits for it, else run the modules'
+    /// `Registry.onboardingFinishedHooks` (the window module opens the main window after the first setup).
     private static func finish(firstTime: Bool, restart: Bool) {
         WindowHost.close(id)
         if restart, AppRelaunch.relaunch() { return }
-        if firstTime && AppInfo.isEnabled("window") { AppActions.openMainWindow() }
+        for hook in Registry.onboardingFinishedHooks { hook(firstTime) }
     }
 
     /// "Restart <App>" on a permission step: save the step and the reopen marker, then relaunch.
