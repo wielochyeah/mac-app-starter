@@ -62,6 +62,10 @@ class InitTests(TempDirCase):
         self.assertEqual(lock["checksums"]["App/Sources/Kit/Main/Modules.swift"],
                          checksum(root, "App/Sources/Kit/Main/Modules.swift"))
 
+        self.assertNotIn("tagline", config["app"], "the starter's tagline would greet the project's users")
+        self.assertEqual(config["texts"]["anrede"], "du")
+        self.assertTrue(result.tagline_cleared)
+
         self.assertIsNone(init(root, options(name="Anders")), "second run changes nothing")
         self.assertEqual(self.json(root, "starter.json")["app"]["name"], "Notizen")
 
@@ -97,6 +101,36 @@ class InitTests(TempDirCase):
         self.assertEqual(self.read(root, "scripts/hooks/pre-push"), "#!/bin/zsh\nexec make check\n")
         self.assertIn("scripts/hooks/pre-push", result.blocks)
 
+    def test_anrede_people_and_rules(self):
+        """init writes the chosen address form, drops the starter author's names and regenerates the rules."""
+        import json as jsonlib
+        from starter.project import report
+        config = jsonlib.loads(base_files()["starter.json"])
+        config["texts"]["personen"] = ["Riad"]
+        sync = ("import json, pathlib\n"
+                "c = json.loads(pathlib.Path('starter.json').read_text())\n"
+                "pathlib.Path('rules/generated').mkdir(parents=True, exist_ok=True)\n"
+                "pathlib.Path('rules/generated/stand.json').write_text(json.dumps(c['texts']))\n")
+        root = self.repo({"starter.json": jsonlib.dumps(config, ensure_ascii=False, indent=2) + "\n",
+                          "scripts/rules_sync.py": sync})
+        result = init(root, options(anrede="sie"))
+        written = self.json(root, "starter.json")
+        self.assertEqual(written["texts"]["anrede"], "sie")
+        self.assertNotIn("personen", written["texts"])
+        self.assertNotIn("tagline", written["app"])
+        self.assertEqual(self.json(root, "rules/generated/stand.json"), written["texts"],
+                         "make rules ran on the new starter.json")
+        text = report(result, dry_run=False, build=False)
+        self.assertIn("app.tagline des Starters entfernt", text)
+        self.assertIn("Anrede Sie", text)
+        self.assertIn("make rules: CLAUDE.md Teil A", text)
+
+    def test_failed_rules_sync_is_a_note(self):
+        root = self.repo({"scripts/rules_sync.py": "import sys\nprint('texts.anrede kaputt')\nsys.exit(1)\n"})
+        result = init(root, options())
+        self.assertTrue(any("make rules ist gescheitert" in n and "texts.anrede kaputt" in n for n in result.notes))
+        self.assertFalse(result.rules_synced)
+
     def test_red_build_keeps_the_report(self):
         from starter.manifest import PENDING
         from starter.project import report
@@ -127,7 +161,7 @@ class InitTests(TempDirCase):
     def test_invalid_values(self):
         root = self.repo()
         for bad in [options(name="1App"), options(bundle_id="notizen"), options(accent="pink"),
-                    options(symbol="Not A Symbol")]:
+                    options(symbol="Not A Symbol"), options(anrede="ihr")]:
             with self.assertRaises(StarterError):
                 init(root, bad)
         self.assertEqual(git(root, "status", "--porcelain"), "")
@@ -166,7 +200,7 @@ class InitTests(TempDirCase):
         self.assertTrue(any("VORGABEN" in m for m in result.missing_templates))
 
     def test_interactive_questions_re_ask_until_valid(self):
-        answers = iter(["1abc", "Mein Tool", "", "pink", "rot", "Not Valid", "hammer",
+        answers = iter(["1abc", "Mein Tool", "", "pink", "rot", "Not Valid", "hammer", "ihr", "sie",
                         "j", "j", "x", "n", "j", "j", "j", "", "n"])
         asked = []
 
@@ -179,8 +213,8 @@ class InitTests(TempDirCase):
 
         m = manifest_obj()
         opts = interactive_values(m, {"app": {"accent": "violett", "symbol": "sparkles"}}, ask, list(m.modules))
-        self.assertEqual((opts.name, opts.bundle_id, opts.accent, opts.symbol),
-                         ("Mein Tool", "com.example.meintool", "rot", "hammer"))
+        self.assertEqual((opts.name, opts.bundle_id, opts.accent, opts.symbol, opts.anrede),
+                         ("Mein Tool", "com.example.meintool", "rot", "hammer", "sie"))
         self.assertEqual(opts.remove, ["island", "mlx", "examples"], "mlx is off in starter.json: default n")
         self.assertEqual(sum(1 for p in asked if p.startswith("Name")), 2)
 
@@ -203,13 +237,13 @@ class InitTests(TempDirCase):
 
     def test_interactive_drops_a_dependent_with_its_dependency(self):
         config = {"app": {}, "modules": {n: True for n in manifest_obj().modules}}
-        opts, asked, said = self.scripted(["App", "", "", "", "j", "j", "j", "j", "j", "n", "j"], config)
+        opts, asked, said = self.scripted(["App", "", "", "", "", "j", "j", "j", "j", "j", "n", "j"], config)
         self.assertEqual(opts.remove, ["ai", "mlx"])
         self.assertFalse(any(p.startswith("Modul mlx") for p in asked), "mlx is not asked once ai goes")
         self.assertTrue(any("mlx" in s and "mit entfernt" in s for s in said))
 
     def test_interactive_keeps_the_last_app_form(self):
-        opts, asked, said = self.scripted(["App", "", "", "", "n", "n", "j", "j", "j", "j", "j", "", "j"])
+        opts, asked, said = self.scripted(["App", "", "", "", "", "n", "n", "j", "j", "j", "j", "j", "", "j"])
         self.assertEqual(opts.remove, ["window", "mlx"])
         self.assertEqual(sum(1 for p in asked if p.startswith("Modul menubar")), 2)
         self.assertTrue(any("window, menubar" in s for s in said))

@@ -35,7 +35,7 @@ Schritt für Schritt in `docs/UEBERGABE.md`. Kurz:
 
 1. Auf GitHub beim Repository `mac-app-starter` „Use this template“ wählen, privat anlegen und auf einem Mac mit Apple Silicon und macOS 26 klonen.
 2. `make doctor` prüft die Werkzeuge (Command Line Tools genügen) und installiert nichts.
-3. `bin/starter init` legt Name, Bundle-ID, Akzent und Symbol fest, entfernt die Bauunterlagen des Starters und leert die Commit-Identität; danach die eigene Identität in `starter.json` eintragen und `make hooks`.
+3. `bin/starter init` legt Name, Bundle-ID, Akzent, Symbol und Anrede fest, entfernt die Bauunterlagen des Starters und leert die Commit-Identität; danach die eigene Identität in `starter.json` eintragen und `make hooks`.
 4. Nicht benötigte Module mit `bin/starter remove <modul>` entfernen, `docs/PROJECT.md` füllen.
 5. `make check`, `make shots`, dann `make run` und das Onboarding einmal selbst durchgehen.
 6. Einen Agenten mit dem Prompt unten starten und die Renders der ersten Stufe ansehen; Rückmeldungen kommen in `docs/agents/VORGABEN.md`.
