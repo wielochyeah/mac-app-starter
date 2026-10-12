@@ -11,7 +11,7 @@ This app contains software by other authors. Their licenses ask that the followi
 
 ## VoiceBud
 
-The design of this app and parts of its setup and settings windows are based on VoiceBud, a dictation app for macOS by Anas Riad, published under the MIT License.
+The design of this app and parts of its code (setup, settings and, where the app has them, the island, shortcuts, menu bar and local AI) are based on VoiceBud, a dictation app for macOS by Anas Riad, published under the MIT License.
 
 ```
 MIT License

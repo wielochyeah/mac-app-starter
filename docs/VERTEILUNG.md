@@ -25,7 +25,8 @@ Wie aus dem Quellcode eine App wird, die jemand auf einem anderen Mac installier
 | Weg | Einstellung in `starter.json` | Folge |
 |---|---|---|
 | ad hoc (Standard) | `signing.identity: "-"` | kostet nichts; Gatekeeper blockiert den ersten Start auf fremden Macs; Berechtigungen gelten nur für genau diesen Build |
-| Developer ID | `signing.identity: "Developer ID Application: <Name> (<Team-ID>)"`, `signing.teamId` | Hardened Runtime mit Entitlements aus `build/gen/App.entitlements`; mit Notarisierung startet die App ohne Warnung |
+| Developer ID | `signing.identity: "Developer ID Application: <Name> (<Team-ID>)"`, `signing.teamId` | Hardened Runtime mit Entitlements aus `build/gen/App.entitlements`; startet beim Empfänger erst ohne Warnung, wenn sie notarisiert ist |
+| Developer ID und Notarisierung | zusätzlich `signing.notarize: true` und `signing.notaryProfile` (oder `NOTARY_PROFILE`) | `make dmg` notarisiert App und DMG und heftet die Tickets an (Abschnitt 4) |
 
 **Ad hoc und Berechtigungen.** macOS verknüpft erteilte Berechtigungen (Mikrofon, Bedienungshilfen, Eingabeüberwachung, Bildschirmaufnahme) mit der Signatur des Builds. Ein ad hoc signierter neuer Build ist für macOS eine andere App: erteilte Berechtigungen gelten nicht mehr, die App fragt erneut oder zeigt sie als fehlend. Das betrifft die Entwicklung (jedes `make build`) und jede neue Fassung beim Empfänger. Abhilfe ist eine Developer ID; zum Testen setzt `tccutil reset All <bundleId>` den Stand nur dieser App zurück.
 
@@ -45,7 +46,17 @@ DMGs gehören nie ins Repository (`.gitignore`); die CI legt das DMG eines Tags 
 
 ## 4. Notarisierung
 
-Nur mit Developer ID und nur auf ausdrücklichen Wunsch. `make notarize` (`scripts/notarize.sh`) signiert mit Hardened Runtime, reicht das DMG mit `xcrun notarytool submit --wait` ein und heftet das Ergebnis mit `xcrun stapler staple` an. Zugangsdaten kommen aus einem Schlüsselbund-Profil (`xcrun notarytool store-credentials <profil>`), nie aus Dateien, Argumenten oder Umgebungsvariablen im Repository. Ohne Profil bricht das Skript mit einer klaren Meldung ab, statt still unsigniert zu verteilen.
+Nur mit Developer ID und nur auf ausdrücklichen Wunsch. Der Weg zu einem notarisierten DMG ist `make dmg` mit drei Einstellungen:
+
+1. `signing.identity` nennt ein Zertifikat „Developer ID Application“ (`security find-identity -v -p codesigning`), `signing.teamId` die Team-ID.
+2. Einmal ein Profil für `notarytool` im Schlüsselbund anlegen: `xcrun notarytool store-credentials <profil> --apple-id <id> --team-id <team>` (fragt nach einem app-spezifischen Passwort und legt es im Schlüsselbund ab). Den Namen des Profils nennt `signing.notaryProfile` in `starter.json`; `NOTARY_PROFILE` in der Umgebung geht vor, ebenso `SIGN_IDENTITY` vor `signing.identity`.
+3. `signing.notarize: true`.
+
+`make dmg` signiert dann von innen nach außen mit Hardened Runtime, reicht die App mit `xcrun notarytool submit --wait` ein und heftet ihr Ticket an (`xcrun stapler staple`, damit auch die Kopie in /Programme es trägt), baut das DMG, signiert und notarisiert es ebenso und lässt den Hinweis auf „Dennoch öffnen“ im Fenster weg. Steht `signing.notarize` auf `true` und `signing.identity` auf `-`, sagt `make dmg` das und baut ein DMG ohne Notarisierung.
+
+`make notarize` (`scripts/notarize.sh`) notarisiert nur, was `make dmg` schon mit Developer ID gebaut hat, etwa um eine abgebrochene Einreichung zu wiederholen; es baut und signiert keine App. Ein DMG, das mit `signing.notarize: false` entstand, zeigt den Hinweis im Fenster und wird abgelehnt: Schalter setzen und `make dmg` neu ausführen. `scripts/notarize.sh --dry-run` prüft die Einstellungen und zeigt die Befehle, ohne etwas einzureichen.
+
+Zugangsdaten stehen nur im Schlüsselbund-Profil, nie in Dateien, Argumenten oder Umgebungsvariablen im Repository; `NOTARY_PROFILE` und `signing.notaryProfile` nennen nur den Namen des Profils. Fehlt das Profil, bricht das Skript mit dem Befehl zum Anlegen ab, statt still ohne Notarisierung zu verteilen.
 
 Nach der Notarisierung: `spctl -a -vv <app>` meldet „Notarized Developer ID“, `xcrun stapler validate <dmg>` besteht.
 
@@ -70,7 +81,8 @@ Verwaltete Macs (MDM) können nicht notarisierte Apps ganz sperren. Wer an solch
 
 ## 8. Vor der ersten Weitergabe
 
-- Eigenes App-Symbol: `make icon` setzt ein SF Symbol aus `app.symbol` auf eine Fläche im Akzent. Apple untersagt SF Symbols in App-Symbolen und Logos; das erzeugte Symbol ist daher nur für die Entwicklung. Vor der ersten Weitergabe bekommt die App ein eigenes Motiv (eigene Zeichnung in `tools/icon/Icon.swift` oder eine fertige `AppIcon.icns`), ebenso der DMG-Hintergrund, falls er das Symbol zeigt.
+- Eigenes App-Symbol: `make icon` setzt ein SF Symbol aus `app.symbol` auf eine Fläche im Akzent. Die Bedingungen für SF Symbols verbieten sie (und ähnlich aussehende Bilder) in App-Symbolen, Logos und jeder anderen Verwendung als Marke (Human Interface Guidelines, „SF Symbols“). Das erzeugte Symbol ist deshalb nur für die Entwicklung; `make icon` und `make dmg` sagen das bei jedem Lauf. Vor der ersten Weitergabe bekommt die App ein eigenes Motiv: eine eigene Zeichnung in `tools/icon/Icon.swift` (gemeinsamer Pfad, das Projekt darf ihn ändern) oder eine fertige `AppIcon.icns` mit Rechten des Projekts. Der DMG-Hintergrund zeigt das App-Symbol aus `App/Resources/AppIcon.icns` und ändert sich damit.
+- Modul `mlx`: noch nicht weitergebbar. `make dmg` bündelt weder den MLX-Worker noch ein Python; die App im DMG zeigt MLX als „Nicht enthalten“ ohne Download (`docs/KI.md`, „MLX in einer weitergegebenen App“). Für Empfänger bleibt Apple Foundation Models über `ai`. <!-- modul:mlx -->
 - `app.bundleId` endgültig wählen: sie bestimmt den Ort der Daten (`~/Library/Application Support/<bundleId>/`), die Einstellungen und die Berechtigungen. Ein späterer Wechsel beginnt bei null.
 - `app.version` und `app.build` setzen, `CHANGELOG.md` ergänzen, `THIRD_PARTY_NOTICES.md` um mitgelieferten Fremdcode ergänzen.
 - Auf einem zweiten Mac oder Benutzer installieren und das Onboarding einmal ganz durchgehen (`docs/vorlagen/ABNAHME.md`, AK-60).

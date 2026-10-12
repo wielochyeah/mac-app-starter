@@ -13,6 +13,7 @@ description: Legt eine Einstellung mit typisiertem Schlüssel an und zeigt sie i
 | Bereich | `App/Sources/Kit/Core/Registry.swift` | `SettingsPane(id:group:order:title:symbol:tint:content:)`, Gruppen `.content` (oben) und `.settings` (unten) |
 | Muster | `App/Sources/Kit/Design/Patterns/PaneScaffold.swift`, `SettingsRows.swift`, `InlineNotice.swift`, `TilePicker.swift`, `ProgressRow.swift`, `ListCard.swift` | `PaneScaffold`, `SettingsSection`, `ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `LinkRow`, `NavigationRow`, `InlineNotice`, `TilePicker`, `ListCard` |
 | Deep Link | `App/Sources/Kit/Main/AppActions.swift` | `AppActions.openSettings(pane: "<id>")` |
+| Zurücksetzen | `App/Sources/Kit/Settings/GeneralPane.swift` | `SettingsReset.keep(_:)` für Zustände, `SettingsReset.didReset` für Werte im Speicher |
 
 Einstellungen liegen als JSON in `~/Library/Application Support/<bundleId>/settings.json`, atomar geschrieben, unbekannte Schlüssel bleiben erhalten, kaputte Werte fallen auf den Standard zurück.
 
@@ -27,7 +28,7 @@ Einstellungen liegen als JSON in `~/Library/Application Support/<bundleId>/setti
    ```
 
    Name mit Präfix des Besitzers (`notes.`, `island.`), nie ein Name, den ein anderes Modul nutzt. Eigene Werttypen sind `nonisolated struct …: Codable, Sendable` (Swift 6 mit MainActor als Standard).
-2. Nur Einstellungen, die wirklich wirken. Jede Einstellung greift sofort; wer sie liest, beobachtet `Settings.shared` (in SwiftUI automatisch, außerhalb über `Observing.track`).
+2. Nur Einstellungen, die wirklich wirken. Jede Einstellung greift sofort; wer sie liest, beobachtet `Settings.shared` (in SwiftUI automatisch, außerhalb über `Observing.track`). Einstellung oder Zustand? „Einstellungen zurücksetzen“ (Bereich „Allgemein“) entfernt jeden Schlüssel. Hält er keinen gewählten Wert, sondern einen Zustand (wo die Person war, was schon geschehen ist), meldet `register()` ihn mit `SettingsReset.keep("notes.lastOpened")` an (ein Präfix wie `"notes.state."` geht auch, E-23). Wer Werte im Speicher hält, liest sie in `SettingsReset.didReset.append { … }` neu.
 3. Bereich bauen:
 
    ```swift

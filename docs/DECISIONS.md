@@ -94,7 +94,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 ### E-15 (12.10.2026): Ad hoc signiert, Developer ID als Schalter
 
-- **Entscheidung:** Standard ist die Ad-hoc-Signatur; mit `signing.identity` in `starter.json` signiert der Build mit Developer ID und Hardened Runtime, `make notarize` notarisiert.
+- **Entscheidung:** Standard ist die Ad-hoc-Signatur; mit `signing.identity` in `starter.json` signiert `make dmg` mit Developer ID und Hardened Runtime, mit `signing.notarize: true` und einem Profil aus dem Schlüsselbund (`signing.notaryProfile`) notarisiert es App und DMG.
 - **Grund:** Ohne Apple-Mitgliedschaft muss der Starter bauen und laufen; mit Mitgliedschaft genügt ein Wert.
 - **Folgen:** Ad hoc signierte Builds verlieren Berechtigungen bei jedem neuen Build und brauchen beim Empfänger „Dennoch öffnen“ (`docs/VERTEILUNG.md`).
 
@@ -123,3 +123,29 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 - **Entscheidung:** Jede Szene wird in Englisch und Deutsch, hell und dunkel gerendert und mit dem Werkzeug Read angesehen, bevor eine Ansicht als fertig gilt. Ohne Bilder lautet eine Prüfung „nicht geprüft“, nie „ohne Befund“.
 - **Grund:** Code zeigt weder abgeschnittene deutsche Texte noch graue Kästen auf Grau; nur Bilder zeigen das.
 - **Folgen:** Jede sichtbare Änderung bringt Render-Szenen mit; der Workflow `red-team` rendert vor der Prüfung.
+
+## Nach der Zusammenführung von Welle 1
+
+### E-20 (12.10.2026): Eigene Funktionen melden sich in `Features.register()` an
+
+- **Entscheidung:** `Modules.registerAll()` (Kit-Pfad) ruft als letzte Zeile `Features.register()` aus `App/Sources/Features/Features.swift` auf. Das ist ein Projektpfad: jede eigene Funktion bekommt dort eine Zeile wie `NotesFeature.register()` und trägt sich wie ein Modul in `Registry` ein. Tests eigener Funktionen liegen unter `App/Tests/Features/`.
+- **Grund:** `Modules.swift` gehört dem Kit und bleibt im Projekt unverändert (A-06), `bin/starter sync` überschreibt es. Ohne einen Haken im Projektpfad hätte ein Projekt keinen Ort, an dem sich seine Funktionen anmelden.
+- **Folgen:** Funktionen laufen nach Kit und Modulen an und dürfen jedes eingebaute Modul in `#if MODUL_<NAME>` nutzen. Das Beispielmodul `examples` ist ein Modul, keine Funktion: `bin/starter strip-examples` entfernt es, `Features.swift` bleibt leer.
+
+### E-21 (12.10.2026): Die Komponenten-Galerie ist ein Bereich der Einstellungen
+
+- **Entscheidung:** Die Galerie aller `Registry.gallery`-Einträge ist der Bereich „Galerie“ (Inhaltsgruppe) im Einstellungsfenster, kein eigenes Fenster. Sie erscheint in Debug-Builds und in Release-Builds nur mit `kit.showGallery: true` in `settings.json`; dafür gibt es bewusst keinen Schalter in der Oberfläche.
+- **Grund:** Ein zweites Fenster mit derselben Ansicht wäre nur ein zweiter Einstieg mit eigener Fensterlogik. Im Einstellungsfenster gelten Seitenleiste, Suche, ⌘F und Fensterverwaltung schon.
+- **Folgen:** `AppActions.openSettings(pane: "gallery")` öffnet sie. Endnutzer sehen sie nicht; „Einstellungen zurücksetzen“ behält `kit.showGallery`.
+
+### E-22 (12.10.2026): Ausgewogene Zweizeiler nur als Unterzeile unter einem Titel
+
+- **Entscheidung:** Ein fester Umbruch in einem UI-Text (`\n` mitten im Satz) ist erlaubt, wenn er eine Unterzeile direkt unter dem Titel eines Onboarding-Schritts oder Einstellungsbereichs in zwei etwa gleich lange Zeilen teilt, wie bei VoiceBud. Er steht an einer Satzgrenze (nach einem Komma oder vor einer Ergänzung), in jeder Sprache an ihrer eigenen Stelle, und `// umbruch: Grund` steht direkt über dem `tr`. Überall sonst (Knöpfe, Zeilen, Fußnoten, Fließtext, Menüs, Mitteilungen) bleibt jeder Umbruch mitten im Satz ein Befund (D-10).
+- **Grund:** Unter einem zentrierten Titel in einer festen Spalte bricht ein langer Satz sonst mit einem einzelnen Wort in der zweiten Zeile um; das wirkt unfertig. Außerhalb solcher Unterzeilen hängt die Zeilenlänge von Fensterbreite und Sprache ab, ein fester Umbruch wäre dort falsch.
+- **Folgen:** Jeder Zweizeiler wird in den Renders mit `de` und `en` angesehen; passt eine Zeile nicht mehr in die Spalte, fällt der Umbruch weg. Die Prüfung lässt den Umbruch nur unter dem Kommentar `// umbruch:` durch, alle anderen Regeln gelten für den Text weiter.
+
+### E-23 (12.10.2026): „Einstellungen zurücksetzen“ behält Zustände
+
+- **Entscheidung:** Zurücksetzen entfernt jede Einstellung, die die Person gewählt hat, und behält Zustände, die festhalten, wo sie war oder was schon geschehen ist: `onboarding.*`, `kit.showGallery`, die Nutzung der lokalen KI (`ai.usage`), ob nach dem Anmeldeobjekt schon gefragt wurde (`background.loginItemAsked`) und die gewählte Seite und Seitenleiste des Hauptfensters (`window.*`). Module melden solche Schlüssel mit `SettingsReset.keep(_:)` in `register()` an.
+- **Grund:** Ein Zurücksetzen soll Vorlieben auf Anfang stellen, nicht die Einrichtung erneut starten, Fragen wiederholen oder das Fenster an eine andere Stelle springen lassen.
+- **Folgen:** Wer einen neuen Schlüssel einführt, entscheidet beim Anlegen, ob er Einstellung oder Zustand ist (Skill `neue-einstellung`); Module, die Werte im Speicher halten, lesen sie in `SettingsReset.didReset` neu.

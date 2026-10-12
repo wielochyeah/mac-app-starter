@@ -4,6 +4,8 @@
 #   ICON_OUT=<file.icns>   write somewhere else (e.g. to try an accent without touching the repo)
 #   ICON_ACCENT=… ICON_SYMBOL=…   override starter.json for one run
 # Also writes build/icon/{preview,smallcheck,dock}.png to look at. No network, nothing installed.
+# The glyph is an SF Symbol: fine while developing, not for an app that is handed out (Apple's terms
+# prohibit SF Symbols in app icons), see docs/VERTEILUNG.md.
 set -euo pipefail
 ROOT="${0:A:h:h}"
 cd "$ROOT"
@@ -30,3 +32,6 @@ iconutil -c icns "$work/AppIcon.iconset" -o "$work/AppIcon.icns"
 mv -f "$work/AppIcon.icns" "$out"
 build/tools/icon dock "$work/dock.png" self "$out" "${opts[@]}"
 print "icon: $out ($accent, $symbol, $(( $(stat -f %z "$out") / 1024 )) KB); previews in $work/"
+# Apple's terms for SF Symbols prohibit them in app icons, logos and any other trademarked use.
+print "icon: for development only: the glyph is the SF Symbol $symbol, which Apple does not allow in app icons;" \
+  "draw an own motif in tools/icon/Icon.swift or ship an own AppIcon.icns before handing the app out (docs/VERTEILUNG.md, section 8)"

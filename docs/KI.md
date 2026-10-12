@@ -54,6 +54,18 @@ Ein Python-Prozess (`ai-worker/`), den `MLXWorkerClient` startet und überwacht:
 - Zeitlimits zählen ab `started`, nicht ab dem Absenden; ein Modell zu laden dauert beim ersten Mal länger.
 - Der Worker beendet sich nach 5 Minuten ohne Anfrage und gibt den Speicher frei; der Client startet ihn bei Bedarf neu, nach Abstürzen mit wachsender Pause (0, 5, 30, 300 s).
 - Er beendet sich mit der App (`Registry.terminateHooks`).
+
+## MLX in einer weitergegebenen App
+
+Noch nicht gebaut: `mlx` läuft nur in Entwickler-Builds aus dem Projekt (`make build` und `ai-worker/setup.sh`). Ein Release-Build sucht den Worker nur in `Contents/Resources/ai-worker` und Python nur in `Contents/Resources/python/bin/python3` seines eigenen Bundles, nie im Projekt oder über Umgebungsvariablen. `make dmg` legt beides noch nicht hinein und sagt das in der Ausgabe; die App im DMG zeigt MLX deshalb als „Nicht enthalten“, ohne Download-Knöpfe. Apple Foundation Models (`ai`) funktioniert im DMG wie gewohnt.
+
+Was für die Weitergabe fehlt, ist ein Skript `ai-worker/package.sh <Pfad zur .app>`, das `make dmg` aufruft, sobald es existiert:
+
+- ein eigenständiges Python 3.12 (etwa python-build-standalone) mit den festen Versionen aus `ai-worker/requirements.txt` nach `Contents/Resources/python`, die Dateien des Workers nach `Contents/Resources/ai-worker`;
+- jede `.so` und `.dylib` darin signieren, bevor `make dmg` die App signiert; mit Developer ID braucht die Hardened Runtime dann `com.apple.security.cs.disable-library-validation` in `tools/entitlements.plist` und einen Eintrag in `docs/DECISIONS.md`;
+- `LSMinimumSystemVersion` an die Mindestversion der Binaries von MLX anpassen (`make dmg` prüft `minos` und bricht sonst ab; MLX 0.32 braucht macOS 26.2).
+
+Bis dahin ist ein DMG mit `mlx` kein Fehler, aber für Empfänger ohne MLX.
 <!-- modul:mlx:ende -->
 
 ## Prompts
