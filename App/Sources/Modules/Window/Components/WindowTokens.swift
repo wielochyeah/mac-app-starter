@@ -103,15 +103,12 @@ extension Theme {
     // design-ausnahme: fixed button edge on artwork, same in both schemes
     var artworkButtonEdge: Color { Color.white.opacity(0.22) }
     /// A hovered list row: clearly darker than the stripe (`rowHover`) in both schemes.
-    // design-ausnahme: list hover tint, per scheme
     var listHover: Color { dark ? .white.opacity(Self.listHoverDark) : .black.opacity(Self.listHoverLight) }
     static let listHoverLight = 0.09
     static let listHoverDark = 0.12
     /// Hairline around artwork.
-    // design-ausnahme: hairline around generated artwork, per scheme
     var artworkEdge: Color { dark ? .white.opacity(0.08) : .black.opacity(0.08) }
     /// Shadow of artwork and of glyphs on it.
-    // design-ausnahme: artwork shadow, per scheme
     var artworkShadow: Color { .black.opacity(dark ? 0.4 : 0.22) }
 }
 

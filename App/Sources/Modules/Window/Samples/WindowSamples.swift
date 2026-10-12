@@ -41,7 +41,7 @@ enum WindowSamples {
         Route(id: "rheinsteig", name: { WindowSampleText.routeRheinsteig }, region: { WindowSampleText.regionMiddleRhine }, km: 21.0,
               symbol: "signpost.right.fill"),
         Route(id: "vineyard", name: { WindowSampleText.routeVineyard }, region: { WindowSampleText.regionRheingau }, km: 9.8, symbol: "leaf.fill"),
-        Route(id: "ridge", name: { WindowSampleText.routeRidge }, region: { WindowSampleText.regionRhoen }, km: 16.4, symbol: "mountain.2.fill"),
+        Route(id: "ridge", name: { WindowSampleText.routeRidge }, region: { WindowSampleText.regionSpessart }, km: 16.4, symbol: "mountain.2.fill"),
         Route(id: "lake", name: { WindowSampleText.routeLake }, region: { WindowSampleText.regionVogelsberg }, km: 7.3, symbol: "drop.fill"),
     ]
 

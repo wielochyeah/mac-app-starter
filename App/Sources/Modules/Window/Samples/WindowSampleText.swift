@@ -69,7 +69,7 @@ enum WindowSampleText {
     static var regionLahn: String { tr(en: "Lahn Valley", de: "Lahntal") }
     static var regionMiddleRhine: String { tr(en: "Middle Rhine", de: "Mittelrhein") }
     static var regionRheingau: String { tr(en: "Rheingau", de: "Rheingau") }
-    static var regionRhoen: String { tr(en: "Rhön", de: "Rhön") }
+    static var regionSpessart: String { tr(en: "Spessart", de: "Spessart") }
     static var regionVogelsberg: String { tr(en: "Vogelsberg", de: "Vogelsberg") }
 
     // MARK: Search

@@ -89,7 +89,7 @@ struct HeroBackdrop: View {
     @Environment(\.colorScheme) private var scheme
 
     /// Width the text column needs, insets included.
-    static var textColumn: CGFloat { Metrics.Window.heroTextWidth + 2 * Space.l }
+    static var textColumn: CGFloat { Metrics.Window.heroTextWidth + Space.l + Space.l }
 
     /// The glyph needs the text column plus its own width and trailing distance.
     static func showsGlyph(width: CGFloat, height: CGFloat) -> Bool {
