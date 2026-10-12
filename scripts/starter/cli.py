@@ -10,7 +10,7 @@ from typing import List, Optional
 
 from . import config as cfg
 from . import kitcheck, project, remove, sync
-from .common import StarterError, repo_root, working_files
+from .common import StarterError, build_env, repo_root, working_files
 from .manifest import is_project, read_lock, read_manifest
 
 DESCRIPTION = """Werkzeuge des mac-app-starter: aus der Vorlage ein Projekt machen, Module entfernen,
@@ -120,17 +120,20 @@ def _split_modules(values: List[str]) -> List[str]:
     return [m.strip() for v in values for m in v.split(",") if m.strip()]
 
 
-def _ask(prompt: str, default: Optional[str]) -> str:
+def _ask(prompt: str, default: Optional[str], check=None) -> str:
     suffix = f" [{default}]" if default else ""
     while True:
         try:
             answer = input(f"{prompt}{suffix}: ").strip()
         except EOFError:
             raise StarterError("Eingabe beendet; mit --non-interactive und --name aufrufen")
-        if answer:
+        answer = answer or (default or "")
+        if not answer:
+            continue
+        reason = check(answer) if check else None
+        if reason is None:
             return answer
-        if default:
-            return default
+        print(f"  {reason}")
 
 
 def cmd_init(root: Path, a) -> int:
@@ -220,7 +223,7 @@ def modules_table(root: Path) -> str:
 def cmd_doctor(root: Path) -> int:
     code = 0
     if (root / "scripts" / "doctor.sh").exists():
-        code = subprocess.run(["make", "doctor"], cwd=str(root)).returncode
+        code = subprocess.run(["make", "doctor"], cwd=str(root), env=build_env()).returncode
     lock = read_lock(root)
     config = cfg.read_config(root)
     commit = config.get("commit") or {}

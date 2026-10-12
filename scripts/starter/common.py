@@ -192,5 +192,27 @@ TEXT_FILE = re.compile(r"\.(swift|py|sh|zsh|md|txt|yml|yaml|json|toml|cfg|html|c
 TEXT_NAMES = {"Makefile", ".gitignore", ".editorconfig"}
 
 
+def build_env() -> Dict[str, str]:
+    """The environment for `make build` and friends. /usr/bin/python3 is an xcrun shim that exports
+    SDKROOT=<xcrun's default SDK> into this process when it was unset; passed on, scripts/pick-sdk.sh
+    would take it as the user's choice and build against a beta SDK the compiler cannot read. An
+    SDKROOT equal to xcrun's default is therefore dropped (pick-sdk tries that SDK first anyway);
+    any other SDKROOT stays. MODULES/CONFIG/ONLY of an outer make do not leak into the build."""
+    env = {k: v for k, v in os.environ.items() if k not in ("MODULES", "CONFIG", "ONLY", "MAKEFLAGS", "MFLAGS",
+                                                             "MAKELEVEL")}
+    sdk = env.get("SDKROOT")
+    if sdk:
+        clean = {k: v for k, v in env.items() if k != "SDKROOT"}
+        try:
+            default = subprocess.run(["xcrun", "--sdk", "macosx", "--show-sdk-path"], env=clean,
+                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=20).stdout
+            default_path = default.decode().strip()
+        except (OSError, subprocess.TimeoutExpired):
+            default_path = ""
+        if default_path and os.path.realpath(default_path) == os.path.realpath(sdk):
+            env = clean
+    return env
+
+
 def checksums(root: Path, files: Sequence[str]) -> Dict[str, str]:
     return {f: checksum(root, f) for f in sorted(files) if (root / f).is_file()}

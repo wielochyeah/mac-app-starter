@@ -1,12 +1,16 @@
 """Globs, the manifest (schema and path classes), the lock and starter.json."""
 import copy
 import json
+import os
+import shutil
+import subprocess
 import unittest
+from unittest import mock
 
 from starter.tests.helpers import STARTER_JSON, manifest_obj, real_manifest
 from starter import config as cfg
 from starter import globs
-from starter.common import StarterError, checksum_bytes, cut_blocks, is_safe_repo_path, is_starter_origin
+from starter.common import StarterError, build_env, checksum_bytes, cut_blocks, is_safe_repo_path, is_starter_origin
 from starter.manifest import parse_manifest
 
 
@@ -43,6 +47,18 @@ class CommonTests(unittest.TestCase):
     def test_checksum_ignores_line_endings_of_text_only(self):
         self.assertEqual(checksum_bytes(b"a\r\nb\n"), checksum_bytes(b"a\nb\n"))
         self.assertNotEqual(checksum_bytes(b"\0a\r\n"), checksum_bytes(b"\0a\n"))
+
+    @unittest.skipIf(shutil.which("xcrun") is None, "xcrun fehlt")
+    def test_build_env_drops_the_sdkroot_xcrun_injected(self):
+        env = {k: v for k, v in os.environ.items() if k != "SDKROOT"}
+        default = subprocess.run(["xcrun", "--sdk", "macosx", "--show-sdk-path"], env=env,
+                                 stdout=subprocess.PIPE).stdout.decode().strip()
+        with mock.patch.dict(os.environ, {"SDKROOT": default, "MODULES": "window"}):
+            built = build_env()
+            self.assertNotIn("SDKROOT", built)
+            self.assertNotIn("MODULES", built)
+        with mock.patch.dict(os.environ, {"SDKROOT": "/opt/MyChosen.sdk"}):
+            self.assertEqual(build_env()["SDKROOT"], "/opt/MyChosen.sdk")
 
     def test_cut_blocks(self):
         text = "a\n\n<!-- s -->\nx\n<!-- e -->\n\nb\n"

@@ -16,7 +16,7 @@ from typing import Dict, List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, inside, is_starter_origin, is_text_path, origin_url, remove_empty_dirs,
+from .common import (StarterError, build_env, inside, is_starter_origin, is_text_path, origin_url, remove_empty_dirs,
                      working_files, write_text)
 from .manifest import LOCK, Manifest, is_project, kit_checksums, read_lock, read_manifest, write_lock
 from .markers import dangling_references, transform
@@ -139,15 +139,15 @@ def apply_removal(root: Path, plan: RemovalPlan, manifest: Manifest) -> None:
         write_lock(root, lock)
 
 
-def run_make(root: Path, target: str, env: Optional[dict] = None) -> bool:
-    res = subprocess.run(["make", target], cwd=str(root), env=env)
+def run_make(root: Path, target: str) -> bool:
+    res = subprocess.run(["make", target], cwd=str(root), env=build_env())
     return res.returncode == 0
 
 
 def remove_module(root: Path, name: str, dry_run: bool = False, build: bool = True,
                   check_origin: bool = True) -> RemovalPlan:
     manifest = read_manifest(root)
-    if check_origin:
+    if check_origin and not dry_run:
         refuse_in_starter(root, manifest, f"bin/starter remove {name}")
     plan = plan_removal(root, name, manifest)
     if plan.already_removed or dry_run or plan.dangling:

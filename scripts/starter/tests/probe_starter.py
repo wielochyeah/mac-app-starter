@@ -22,10 +22,10 @@ from pathlib import Path
 
 from starter.tests.helpers import GIT_ID, ROOT
 from starter import kitcheck
+from starter.common import build_env
 from starter.manifest import read_lock, read_manifest
 
-CLEAN_ENV = {k: v for k, v in os.environ.items() if k not in ("MODULES", "CONFIG", "ONLY", "NO_BUILD", "MAKEFLAGS",
-                                                                "MFLAGS", "MAKELEVEL")}
+CLEAN_ENV = build_env()
 
 
 def sh(args, cwd, check=False):
