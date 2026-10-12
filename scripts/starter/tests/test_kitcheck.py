@@ -73,8 +73,10 @@ class StarterFixtureTests(TempDirCase):
 
 
 class ProjectTests(TempDirCase):
-    def project(self):
-        root = make_repo(self.tmp / "p", base_files())
+    def project(self, extra=None):
+        files = base_files()
+        files.update(extra or {})
+        root = make_repo(self.tmp / "p", files)
         init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
         return root
 
@@ -105,6 +107,13 @@ class ProjectTests(TempDirCase):
         text = problems_text(kitcheck.run(root))
         self.assertIn("docs/bau/x.md", text)
         self.assertIn("AGENTS.md", text)
+
+    def test_hook_with_the_repository_root_passes(self):
+        root = self.project({"scripts/hooks/commit-msg": '#!/bin/zsh\nset -euo pipefail\n'
+                                                        'ROOT="$(git rev-parse --show-toplevel)"\n'
+                                                        'exec python3 "$ROOT/scripts/check_commit_msg.py" "$1"\n'})
+        f = kitcheck.run(root)
+        self.assertEqual(f.problems, [], problems_text(f))
 
     def test_missing_check_scripts_fail_in_a_project(self):
         root = self.project()
@@ -145,6 +154,21 @@ class SwitchTests(unittest.TestCase):
     def test_contains_command(self):
         self.assertTrue(kitcheck.contains_command("exec make check", "make check"))
         self.assertFalse(kitcheck.contains_command("make check-kit", "make check"))
+        self.assertFalse(kitcheck.contains_command("# make check", "make check"))
+        self.assertFalse(kitcheck.contains_command('print "pre-push: make check"', "make check"))
+
+    def test_contains_command_with_path_forms(self):
+        """G1's commit-msg hook calls the script through the repository root, in quotes."""
+        script = "scripts/check_commit_msg.py"
+        hook = ('#!/bin/zsh\nset -euo pipefail\nROOT="$(git rev-parse --show-toplevel)"\n'
+                'exec python3 "$ROOT/scripts/check_commit_msg.py" "$1"\n')
+        self.assertTrue(kitcheck.contains_command(hook, script))
+        self.assertTrue(kitcheck.contains_command('python3 "scripts/check_commit_msg.py" "$1"', script))
+        self.assertTrue(kitcheck.contains_command("python3 ./scripts/check_commit_msg.py $1", script))
+        self.assertTrue(kitcheck.contains_command("python3 ${ROOT}/scripts/check_commit_msg.py", script))
+        self.assertFalse(kitcheck.contains_command("python3 scripts/check_commit_msg.py.bak", script))
+        self.assertFalse(kitcheck.contains_command("# exec python3 \"$ROOT/scripts/check_commit_msg.py\"", script))
+        self.assertFalse(kitcheck.contains_command("echo scripts/check_commit_msg.py", script))
 
     def test_run_values(self):
         text = "steps:\n  - run: make a\n  - name: x\n    run: |\n      make b\n      # c\n      make d\n  - run: e\n"

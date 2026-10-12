@@ -206,9 +206,16 @@ def check_starter(root: Path, manifest: Manifest, lock: dict, files: Sequence[st
 _WEAK = re.compile(r"\|\|\s*(?:true|:)(?=$|[\s;)])|;\s*true\b|--no-verify")
 
 
+_NOT_RUN = re.compile(r"^\s*(?:#|(?:echo|print|printf)\b)")
+
+
 def contains_command(text: str, command: str) -> bool:
-    """A command as whole words: "make check" is not found in "make check-kit"."""
-    return re.search(r"(?:^|[\s;&|(])" + re.escape(command) + r"(?=$|[\s;&|)])", text, re.M) is not None
+    """A command as whole words on a line that runs something: "make check" is not found in
+    "make check-kit", in a comment or in an echo/print line. A script path may stand in quotes and
+    behind a folder (`"$ROOT/scripts/check_commit_msg.py"`, `./scripts/…`)."""
+    before = r"""(?:^|[\s;&|("'`/])""" if "/" in command else r"""(?:^|[\s;&|("'`])"""
+    pattern = re.compile(before + re.escape(command) + r"""(?=$|[\s;&|)"'`])""")
+    return any(pattern.search(line) for line in text.split("\n") if not _NOT_RUN.match(line))
 
 
 def makefile_targets(text: str) -> Dict[str, Dict[str, str]]:
