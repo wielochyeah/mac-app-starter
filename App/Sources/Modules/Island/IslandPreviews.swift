@@ -97,7 +97,9 @@ struct IslandStyleTile: View {
     let style: IslandStyle
     @Environment(\.colorScheme) private var scheme
 
-    static var content: IslandContent { .levels(IslandPreviewModel.speechBands, symbol: AppInfo.symbol) }
+    /// Neutral: the app's symbol and a spinner (no recording dot, no text, nothing app-specific),
+    /// as narrow as the compact island so it fits half a tile.
+    static var content: IslandContent { .progress(title: "", symbol: AppInfo.symbol) }
 
     var body: some View {
         switch style {
@@ -119,7 +121,7 @@ struct IslandStyleTile: View {
 }
 
 /// The live stage above the style tiles (settings, onboarding): the island and the capsule
-/// morph with the real springs when the style changes. Kapsel: the island shrinks back behind the
+/// morph with the real springs when the style changes. Capsule: the island shrinks back behind the
 /// notch while the capsule grows out of its seed below the menu bar.
 struct IslandStyleStage: View {
     let style: IslandStyle
@@ -143,33 +145,40 @@ struct IslandStyleStage: View {
     private var capsuleShown: Bool { style == .capsule }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            IslandBackdrop()
-            if !renderStatic || !capsuleShown {
-                IslandView(model: island)
+        // The backdrop takes the offered width; the island and the capsule sit in an overlay, so
+        // their fixed canvas never widens the stage (both are centred, the overflow is clipped).
+        IslandBackdrop()
+            .frame(maxWidth: .infinity)
+            .frame(height: IslandLook.stageHeight)
+            .overlay(alignment: .top) {
+                ZStack(alignment: .top) {
+                    if !renderStatic || !capsuleShown {
+                        IslandView(model: island)
+                    }
+                    if !renderStatic || capsuleShown {
+                        IslandView(model: capsule)
+                            // the capsule's seed must not linger once it shrank back
+                            .opacity(capsuleShown ? 1 : 0)
+                            .animation(capsuleShown ? Motion.Island.cardIn : Motion.Island.cardOut.delay(Motion.Island.cardOutDelay),
+                                       value: capsuleShown)
+                    }
+                }
             }
-            if !renderStatic || capsuleShown {
-                IslandView(model: capsule)
-                    // the capsule's seed must not linger once it shrank back
-                    .opacity(capsuleShown ? 1 : 0)
-                    .animation(capsuleShown ? Motion.Island.cardIn : Motion.Island.cardOut.delay(Motion.Island.cardOutDelay),
-                               value: capsuleShown)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: IslandLook.stageHeight)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
-        .onAppear { sync() }
-        .onChange(of: style) { sync() }
-        .onChange(of: reduceMotion) { sync() }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(IslandText.style(style))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+            .onAppear { sync() }
+            .onChange(of: style) { sync() }
+            .onChange(of: reduceMotion) { sync() }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(IslandText.style(style))
     }
 
     private func sync() {
         island.reduceMotion = reduceMotion
         capsule.reduceMotion = reduceMotion
-        island.presented = style != .capsule
-        capsule.presented = style == .capsule
+        // Reduce Motion: the surfaces do not morph, they cross-fade (like the live island)
+        withAnimation(reduceMotion ? Motion.Island.crossFade : nil) {
+            island.presented = style != .capsule
+            capsule.presented = style == .capsule
+        }
     }
 }

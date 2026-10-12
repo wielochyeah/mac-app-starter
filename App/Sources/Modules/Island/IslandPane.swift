@@ -7,13 +7,17 @@ struct IslandPane: View {
 
     private let settings = Settings.shared
 
+    private let demo = IslandDemo.state
+
     var body: some View {
-        let style = IslandStyle(rawValue: settings[.islandStyle]) ?? .auto
+        let dodges = Island.shared.notchBusy != nil
+        let style = (IslandStyle(rawValue: settings[.islandStyle]) ?? .auto).shown(dodges: dodges)
         PaneScaffold(title: IslandText.pane, symbol: Self.symbol, tint: .black) {
             IslandStyleStage(style: style)
-            SettingsSection(footnote: IslandText.styleNote(style), footnoteLines: 2) {
-                TilePicker(IslandStyle.allCases.map { TileOption($0, title: IslandText.style($0)) },
-                           selection: binding(.islandStyle, map: { IslandStyle(rawValue: $0) ?? .auto }, back: \.rawValue),
+            SettingsSection(footnote: IslandText.styleNote(style, dodges: dodges), footnoteLines: 2) {
+                TilePicker(IslandStyle.offered(dodges: dodges).map { TileOption($0, title: IslandText.style($0)) },
+                           selection: binding(.islandStyle, map: { (IslandStyle(rawValue: $0) ?? .auto).shown(dodges: dodges) },
+                                              back: \.rawValue),
                            tone: .settings) { IslandStyleTile(style: $0) }
                 PickerRow(IslandText.confirmation, subtitle: IslandText.confirmationDetail,
                           options: IslandPrefs.confirmChoices.map { ($0, IslandText.confirmChoice($0)) },
@@ -27,7 +31,11 @@ struct IslandPane: View {
             }
             SettingsSection {
                 ButtonRow(IslandText.preview, subtitle: IslandText.previewDetail, symbol: "play.fill", tint: .black,
-                          button: IslandText.showPreview) { IslandDemo.play(loop: false) }
+                          button: demo.previewing ? IslandText.stopPreview : IslandText.showPreview) {
+                    demo.previewing ? IslandDemo.stop() : IslandDemo.preview()
+                }
+                // the app's own content is up: the preview would replace it
+                .disabled(!demo.previewing && Island.shared.model.content != nil)
             }
         }
     }

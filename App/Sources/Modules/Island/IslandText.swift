@@ -24,7 +24,6 @@ enum IslandText {
     // MARK: Settings pane
 
     static var pane: String { tr(en: "Island & Capsule", de: "Insel und Kapsel") }
-    static var shape: String { tr(en: "Shape", de: "Form") }
 
     static func style(_ style: IslandStyle) -> String {
         switch style {
@@ -34,14 +33,19 @@ enum IslandText {
         }
     }
 
-    static func styleNote(_ style: IslandStyle) -> String {
-        switch style {
+    /// The footnote under the style tiles. `dodges`: the app reports when another app uses the
+    /// notch (`Island.shared.notchBusy`); only then do Automatic and Island differ.
+    static func styleNote(_ style: IslandStyle, dodges: Bool) -> String {
+        switch style.shown(dodges: dodges) {
+        case .auto where dodges:
+            tr(en: "Grows out of the notch on a Mac that has one and moves below it while another app uses the notch. Screens without a notch get the capsule below the menu bar.",
+               de: "Wächst auf einem Mac mit Notch seitlich aus ihr heraus und rückt darunter, solange eine andere App sie nutzt. Bildschirme ohne Notch bekommen die Kapsel unter der Menüleiste.")
         case .auto:
-            tr(en: "Grows out of the notch on a Mac that has one and makes room when another app uses the notch. Screens without a notch get the capsule below the menu bar.",
-               de: "Wächst auf einem Mac mit Notch seitlich aus der Notch und macht Platz, wenn eine andere App die Notch nutzt. Bildschirme ohne Notch bekommen die Kapsel unter der Menüleiste.")
+            tr(en: "Grows out of the notch on a Mac that has one. Screens without a notch get the capsule below the menu bar.",
+               de: "Wächst auf einem Mac mit Notch seitlich aus ihr heraus. Bildschirme ohne Notch bekommen die Kapsel unter der Menüleiste.")
         case .island:
-            tr(en: "Always grows out of the notch, also when another app uses it. Screens without a notch still get the capsule.",
-               de: "Wächst immer aus der Notch, auch wenn eine andere App sie nutzt. Bildschirme ohne Notch bekommen trotzdem die Kapsel.")
+            tr(en: "Always grows out of the notch, even while another app uses it. Screens without a notch still get the capsule.",
+               de: "Wächst immer aus der Notch, auch solange eine andere App sie nutzt. Bildschirme ohne Notch bekommen trotzdem die Kapsel.")
         case .capsule:
             tr(en: "Floats as a capsule below the menu bar, on every screen.",
                de: "Schwebt auf jedem Bildschirm als Kapsel unter der Menüleiste.")
@@ -58,8 +62,8 @@ enum IslandText {
 
     static var hoverExpand: String { tr(en: "Expand on hover", de: "Beim Überfahren ausklappen") }
     static var hoverExpandDetail: String {
-        tr(en: "The card then shows the whole text and stays open while the pointer is on it.",
-           de: "Die Karte zeigt dann den ganzen Text und bleibt offen, solange der Zeiger darauf ist.")
+        tr(en: "The card then shows the whole text with Copy and stays open while the pointer is on it. Off: the card stays small and shows only its buttons.",
+           de: "Die Karte zeigt dann den ganzen Text mit Kopieren und bleibt offen, solange der Zeiger darauf ist. Aus: Die Karte bleibt klein und zeigt nur ihre Knöpfe.")
     }
 
     static var feedback: String { tr(en: "Feedback", de: "Rückmeldung") }
@@ -67,8 +71,8 @@ enum IslandText {
     static var soundsDetail: String { tr(en: "A quiet sound when something starts and when it is done", de: "Ein leiser Ton beim Start und wenn etwas fertig ist") }
     static var haptics: String { tr(en: "Trackpad feedback", de: "Trackpad-Rückmeldung") }
     static var hapticsDetail: String {
-        tr(en: "A light tick when the pointer reaches a card (Force Touch trackpads)",
-           de: "Ein leichtes Klicken, wenn der Zeiger eine Karte erreicht (Force-Touch-Trackpads)")
+        tr(en: "A light tick on the trackpad when the pointer reaches a card or a button (Force Touch trackpads)",
+           de: "Ein spürbarer Tipp im Trackpad, wenn der Zeiger eine Karte oder einen Knopf erreicht (Force-Touch-Trackpads)")
     }
     static var hideInFullscreen: String { tr(en: "Hide in full screen", de: "Im Vollbild ausblenden") }
     static var hideInFullscreenDetail: String {
@@ -77,19 +81,22 @@ enum IslandText {
 
     static var preview: String { tr(en: "Preview", de: "Vorschau") }
     static var previewDetail: String {
-        tr(en: "Plays every state once at the top of this screen", de: "Spielt jeden Zustand einmal oben auf diesem Bildschirm ab")
+        tr(en: "Plays a short sequence at the top of this screen", de: "Spielt eine kurze Folge oben auf diesem Bildschirm ab")
     }
     static var showPreview: String { tr(en: "Show Preview", de: "Vorschau zeigen") }
+    static var stopPreview: String { tr(en: "Stop Preview", de: "Vorschau stoppen") }
 
     // MARK: Onboarding
 
-    static var onboardingTitle: String { tr(en: "Appearance", de: "Darstellung") }
+    static var onboardingTitle: String { pane }
     static var onboardingSubtitle: String {
         tr(en: "How \(AppInfo.displayName) shows what it is doing.", de: "So zeigt \(AppInfo.displayName), was gerade passiert.")
     }
     static var onboardingNote: String {
-        tr(en: "Macs without a notch always show the capsule. You can change this later in Settings.",
-           de: "Macs ohne Notch zeigen immer die Kapsel. Du kannst das später in den Einstellungen ändern.")
+        // the pane's name never breaks across lines
+        let place = pane.replacingOccurrences(of: " ", with: "\u{00A0}")
+        return tr(en: "Screens without a notch always show the capsule. You can change this later in Settings › \(place).",
+                  de: "Bildschirme ohne Notch zeigen immer die Kapsel. Du kannst das später unter Einstellungen › \(place) ändern.")
     }
 
     // MARK: Gallery
@@ -114,7 +121,7 @@ enum IslandSampleText {
         tr(en: """
             Quarterly report.pdf, the slides and the chart sheet are in Documents › Reports. The originals stay in the project folder.
 
-            The report has 14 pages. Charts 3 and 5 now use the new colours, the table on page 9 is split in two so it fits the page again.
+            The report has 14 pages. Charts 3 and 5 now use the new colors, the table on page 9 is split in two so it fits the page again.
 
             Two notes are still open: the source for the market figures on page 4, and whether the appendix should list every interview. Both are marked yellow in the slides.
 

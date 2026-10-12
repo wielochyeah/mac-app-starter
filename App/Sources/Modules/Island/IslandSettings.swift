@@ -3,13 +3,25 @@ import Foundation
 /// How the island appears (setting `island.style`).
 nonisolated enum IslandStyle: String, CaseIterable, Sendable {
     /// The island at the notch; below the notch as a capsule while another notch app shows
-    /// something (`Island.notchBusy`); the capsule on screens without a notch.
+    /// something (`Island.notchBusy`, which the app has to provide; without it `auto` behaves
+    /// like `island`); the capsule on screens without a notch.
     case auto
     /// Always the island at the notch (screens without a notch still get the capsule: the
     /// island never draws a fake notch).
     case island
     /// Always the capsule below the menu bar.
     case capsule
+
+    /// The styles settings offer: "Island at the Notch" only when the app reports a busy notch
+    /// (`dodges`); otherwise it would look and behave exactly like Automatic.
+    static func offered(dodges: Bool) -> [IslandStyle] {
+        dodges ? allCases : [.auto, .capsule]
+    }
+
+    /// The tile that stands for this stored style (`island` shows as Automatic where it is not offered).
+    func shown(dodges: Bool) -> IslandStyle {
+        self == .island && !dodges ? .auto : self
+    }
 }
 
 extension SettingKey {

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Onboarding step "Appearance" (order 500, VoiceBud onboarding-08-darstellung): the live stage
-/// and two tiles, island at the notch or capsule. The island tile stores `auto` (island where
+/// Onboarding step "Island & Capsule" (order 500, only on Macs with a notch; VoiceBud
+/// onboarding-08-darstellung): the live stage and two tiles, island at the notch or capsule. The island tile stores `auto` (island where
 /// there is a notch), the capsule tile `capsule`.
 struct IslandOnboardingStep: View {
     private let settings = Settings.shared
