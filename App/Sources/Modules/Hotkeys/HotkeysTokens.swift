@@ -37,7 +37,7 @@ extension Space {
 
 extension TypeScale {
     /// The word under a modifier glyph on a large key cap ("ctrl", "shift").
-    static let keyWord = Font.system(size: 9.5, weight: .medium)
+    static let keyWord = Font.system(size: 9.5, weight: .medium)   // design-ausnahme: module token for the large key caps (VoiceBud OnboardingBigKeys), Kit candidate
     /// A letter or number on a large key cap (VoiceBud 19 x 0.95).
-    static let keyLetter = Font.system(size: 18)
+    static let keyLetter = Font.system(size: 18)   // design-ausnahme: module token for the large key caps (VoiceBud OnboardingBigKeys), Kit candidate
 }

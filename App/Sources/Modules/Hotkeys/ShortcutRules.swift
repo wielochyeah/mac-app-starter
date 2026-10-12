@@ -54,20 +54,21 @@ enum ShortcutRules {
         // the app's own other hotkeys
         if let why = clash(combo, others: ctx.others) { return .refuse(why) }
         // what always belongs to macOS (app switcher, Force Quit, lock screen, log out)
-        if let n = meanings.first(where: { $0.kind == .always && $0.code == code && $0.modifiers == mods && $0.text != nil }) {
-            return .refuse(HotkeysText.alwaysMacOS(keys, n.text!()))
+        if let n = meanings.first(where: { $0.kind == .always && $0.code == code && $0.modifiers == mods && $0.text != nil }),
+           let text = n.text {
+            return .refuse(HotkeysText.alwaysMacOS(keys, text()))
         }
         // switched on in macOS: refused; a known one that is switched off here: a note
         let entries = ctx.system.filter { $0.keyCode == code && $0.modifiers == mods }
-        let named = meanings.first { $0.kind == .system && $0.code == code && $0.modifiers == mods && $0.text != nil }
+        let named = meanings.first { $0.kind == .system && $0.code == code && $0.modifiers == mods && $0.text != nil }?.text
         if entries.contains(where: \.enabled) {
-            if let named { return .refuse(HotkeysText.systemNamed(keys, named.text!())) }
+            if let named { return .refuse(HotkeysText.systemNamed(keys, named())) }
             return .refuse(HotkeysText.systemUnnamed(keys))
         }
         if let named, !entries.isEmpty {
-            note = HotkeysText.systemOffNote(keys, named.text!())
+            note = HotkeysText.systemOffNote(keys, named())
         }
-        // ⌘ with one key: the apps' menus (with an arrow, ⌫ or ↩ the text rules below say more)
+        // ⌘ with one key: the apps' menus (with an arrow, delete or return the text rules below say more)
         if mods == .command && !KeyCodes.editingKeys.contains(code) {
             if let n = hit(code, mods, [.allApps], layout), let text = n.text {
                 return .refuse(HotkeysText.everyApp(keys, text(), app: ctx.appName))
@@ -139,14 +140,16 @@ enum ShortcutRules {
         return .take(combo, note: note)
     }
 
-    /// A free variant on the same key: ⌃⌥⌘, ⌃⇧⌘, ⌥⇧⌘, ⌃⌥⇧⌘, the first one with nothing to say.
-    static func suggestion(for keyCode: UInt16, in ctx: Context) -> KeyCombo? {
+    /// A free variant on the same key: ⌃⌥⌘, ⌃⇧⌘, ⌥⇧⌘, ⌃⌥⇧⌘, the first one with nothing to say
+    /// that `isFree` accepts (the recorder asks macOS whether another app holds it).
+    static func suggestion(for keyCode: UInt16, in ctx: Context,
+                           isFree: (KeyCombo) -> Bool = { _ in true }) -> KeyCombo? {
         if KeyCodes.editingKeys.contains(keyCode) || KeyCodes.mediaKeys.contains(keyCode) { return nil }
         let candidates: [KeyModifiers] = [[.control, .option, .command], [.control, .shift, .command],
                                           [.option, .shift, .command], [.control, .option, .shift, .command]]
         for mods in candidates {
             let combo = KeyCombo(keyCode: keyCode, modifiers: mods)
-            if case .take(_, nil) = judge(combo, in: ctx) { return combo }
+            if case .take(_, nil) = judge(combo, in: ctx), isFree(combo) { return combo }
         }
         return nil
     }

@@ -77,10 +77,10 @@ enum ShortcutCatalogText {
         e(.code(97), [.control], .system, .system) { tr(en: "moves focus to the floating window", de: "setzt den Fokus auf das schwebende Fenster") },  // ⌃F6
         e(.code(98), [.control], .system, .system) { tr(en: "changes the way Tab moves focus", de: "ändert, wie der Tabulator den Fokus bewegt") },  // ⌃F7
         e(.code(100), [.control], .system, .system) { tr(en: "moves focus to the status menus", de: "setzt den Fokus auf die Statusmenüs") },  // ⌃F8
-        e(.code(118), [.control, .shift], .system, .system) { tr(en: "probably moves focus to the previous window", de: "setzt vermutlich den Fokus auf das vorige Fenster") },  // ⌃⇧F4
+        e(.code(118), [.control, .shift], .system, .system, nil),  // ⌃⇧F4
         e(.code(96), [.command], .system, .system) { tr(en: "turns VoiceOver on or off", de: "schaltet VoiceOver ein oder aus") },  // ⌘F5
         e(.code(96), [.option, .command], .system, .system) { tr(en: "shows the Accessibility controls", de: "öffnet die Steuerung für Bedienungshilfen") },  // ⌥⌘F5
-        e(.code(122), [.command], .system, .system) { tr(en: "probably mirrors the displays", de: "spiegelt vermutlich die Bildschirme") },  // ⌘F1
+        e(.code(122), [.command], .system, .system, nil),  // ⌘F1
         e(.code(101), [.control], .system, .system, nil),  // ⌃F9
         e(.code(2), [.option, .command], .system, .system) { tr(en: "turns Dock hiding on or off", de: "blendet das Dock ein oder aus") },  // ⌥⌘D
         e(.code(2), [.control, .command], .system, .system) { tr(en: "looks up the word in the Dictionary", de: "schlägt das Wort im Lexikon nach") },  // ⌃⌘D
@@ -93,7 +93,7 @@ enum ShortcutCatalogText {
         e(.code(47), [.control, .option, .shift, .command], .always, .system) { tr(en: "starts a system diagnosis (sysdiagnose)", de: "startet eine Systemdiagnose (sysdiagnose)") },  // ⌃⌥⇧⌘.
         e(.code(12), [.control, .option, .shift, .command], .system, .system, nil),  // ⌃⌥⇧⌘Q
         e(.code(1), [.control, .command], .system, .system, nil),  // ⌃⌘S
-        e(.code(3), [.shift, .command], .system, .system) { tr(en: "probably searches with Spotlight", de: "sucht vermutlich mit Spotlight") },  // ⇧⌘F
+        e(.code(3), [.shift, .command], .system, .system, nil),  // ⇧⌘F
         e(.code(28), [.option, .command], .system, .system) { tr(en: "turns Zoom on or off", de: "schaltet den Zoom ein oder aus") },  // ⌥⌘8
         e(.code(24), [.option, .command], .system, .system) { tr(en: "zooms in", de: "vergrößert mit dem Zoom") },  // ⌥⌘= (DE ⌥⌘´)
         e(.code(27), [.option, .command], .system, .system) { tr(en: "zooms out", de: "verkleinert mit dem Zoom") },  // ⌥⌘- (DE ⌥⌘ß)

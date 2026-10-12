@@ -5,7 +5,8 @@ import Observation
 // chords: Carbon hotkeys need a key). A key with modifiers is taken when the key goes down;
 // `ShortcutRules` decides, and a refusal stays on screen with its reason (and a free variant)
 // while the row keeps listening. Meanwhile every hotkey of the app is paused, so the keys pressed
-// here start nothing, and the keys type nothing (the local event monitor swallows them).
+// here start nothing, and the keys type nothing (the local event monitor swallows them). Only one
+// recorder listens at a time (settings pane and onboarding step may both be open).
 
 @Observable final class ShortcutRecorder {
     struct Problem: Equatable {
@@ -19,7 +20,7 @@ import Observation
     enum Event: Equatable {
         /// The modifiers held now (a flagsChanged event).
         case modifiers(KeyModifiers)
-        /// The fn / 🌐 key went down or up.
+        /// The fn (globe) key went down or up.
         case fn(down: Bool)
         case keyDown(UInt16, KeyModifiers, isRepeat: Bool = false)
         case keyUp(UInt16, KeyModifiers)
@@ -64,6 +65,10 @@ import Observation
     @ObservationIgnored private var keysDown: Set<UInt16> = []
     @ObservationIgnored private var fnDown = false
     @ObservationIgnored private var fnAlone = false
+    /// This recorder holds one of the center's pauses.
+    @ObservationIgnored private var holdsPause = false
+    /// The recorder listening right now: starting another one cancels it.
+    @ObservationIgnored private static weak var active: ShortcutRecorder?
 
     /// Seconds without a try after which the recording ends by itself.
     static let idleTimeout: Duration = .seconds(25)
@@ -87,7 +92,10 @@ import Observation
         fnAlone = false
         live = []
         system = systemShortcuts()
+        if let other = Self.active, other !== self { other.cancel() }
+        Self.active = self
         center.pause(true)
+        holdsPause = true
         guard listensToEvents else { return }
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged, .keyDown, .keyUp]) { [weak self] event in
             MainActor.assumeIsolated {
@@ -117,7 +125,11 @@ import Observation
         timeout = nil
         target = nil
         live = []
-        center.pause(false)                              // registers the (new) keys again
+        if Self.active === self { Self.active = nil }
+        if holdsPause {
+            holdsPause = false
+            center.pause(false)                          // registers the (new) keys again
+        }
     }
 
     private func armTimeout() {
@@ -191,7 +203,8 @@ import Observation
             if keysDown.remove(code) == nil {
                 // its press never came: macOS or another app took the keys first
                 let combo = KeyCombo(keyCode: code, modifiers: mods)
-                refuse(target, HotkeysText.caughtEarlier(layout.label(combo)), keys: layout.caps(combo))
+                refuse(target, HotkeysText.caughtEarlier(layout.label(combo)), keys: layout.caps(combo),
+                       suggestion: suggestion(for: code, in: context(for: target)))
             }
         }
     }
@@ -206,13 +219,19 @@ import Observation
         let verdict = ShortcutRules.judge(combo, in: ctx)
         apply(verdict, keys: center.layout.caps(combo))
         if verdict.isRefusal, var p = problem, p.target == target {
-            p.suggestion = ShortcutRules.suggestion(for: combo.keyCode, in: ctx)
+            p.suggestion = suggestion(for: combo.keyCode, in: ctx)
             problem = p
         }
     }
 
-    private func refuse(_ target: String, _ text: String, keys: [String]) {
-        problem = Problem(target: target, text: text, keys: keys)
+    /// A free variant on the same key that the rules take without a note and macOS has not given
+    /// to another app.
+    private func suggestion(for keyCode: UInt16, in ctx: ShortcutRules.Context) -> KeyCombo? {
+        ShortcutRules.suggestion(for: keyCode, in: ctx) { [center] in center.probe($0) == nil }
+    }
+
+    private func refuse(_ target: String, _ text: String, keys: [String], suggestion: KeyCombo? = nil) {
+        problem = Problem(target: target, text: text, keys: keys, suggestion: suggestion)
         live = []
         haptic(.generic)
         armTimeout()
@@ -235,7 +254,10 @@ import Observation
                 center.set(target, before)
                 note = nil
                 undo = nil
-                problem = Problem(target: target, text: why, keys: keys)
+                // keep listening, with a free variant: the person picks another one right here
+                start(target)
+                problem = Problem(target: target, text: why, keys: keys,
+                                  suggestion: suggestion(for: combo.keyCode, in: context(for: target)))
                 haptic(.generic)
                 return
             }
@@ -272,7 +294,10 @@ import Observation
         undo = (target, before)
     }
 
-    func canUndo(_ target: String) -> Bool { undo?.target == target && note?.target == target }
+    /// "Undo" shows only when it brings back something "Default" would not.
+    func canUndo(_ target: String) -> Bool {
+        undo?.target == target && note?.target == target && undo?.previous != .standard
+    }
 
     func undoLast() {
         guard let undo else { return }

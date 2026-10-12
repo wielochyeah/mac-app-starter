@@ -31,9 +31,10 @@ enum HotkeyStatus: Equatable {
     case active
     /// No combination (none chosen, or no standard).
     case off
-    /// Not registered right now: not started (renders, tests, headless), paused while recording,
-    /// or its combination is already another hotkey's of this app.
+    /// Not registered right now: not started (renders, tests, headless) or paused while recording.
     case inactive
+    /// Another hotkey of this app (the id) has the same keys and gets them; this one does nothing.
+    case duplicate(of: String)
     /// Another app registered the same keys exclusively; this app gets no presses until it lets go.
     case heldElsewhere
     /// macOS refused the combination (status code).
@@ -99,6 +100,9 @@ final class MemoryHotkeyStore: HotkeyStore {
     private(set) var layoutRevision = 0
     private(set) var isPaused = false
     private(set) var isStarted = false
+    /// Standards that are no shortcut (a key without ⌃, ⌥ or ⌘ that is not an F-key): dropped at
+    /// `register`, reported by the selftest.
+    private(set) var droppedStandards: [String: KeyCombo] = [:]
 
     @ObservationIgnored let backend: HotkeyBackend
     @ObservationIgnored let store: HotkeyStore
@@ -108,6 +112,12 @@ final class MemoryHotkeyStore: HotkeyStore {
     /// What is registered with the backend right now.
     @ObservationIgnored private var registered: [String: KeyCombo] = [:]
     @ObservationIgnored private var layoutObserver: NSObjectProtocol?
+    /// Recorders that paused the hotkeys (two windows may record at once).
+    @ObservationIgnored private var pauses = 0
+    /// Ends the observation of the store started by the previous `start`.
+    @ObservationIgnored private var followGeneration = 0
+    /// Called after every `register` (the module adds its settings pane with the first hotkey).
+    @ObservationIgnored var onRegister: (() -> Void)?
 
     init(backend: HotkeyBackend, store: HotkeyStore) {
         self.backend = backend
@@ -122,24 +132,46 @@ final class MemoryHotkeyStore: HotkeyStore {
     func register(id: String, title: @escaping () -> String, subtitle: (() -> String)? = nil, default standard: KeyCombo?,
                   order: Int = 0, showInOnboarding: Bool = false, onRelease: (() -> Void)? = nil,
                   action: @escaping () -> Void) {
+        var standard = standard
+        droppedStandards[id] = nil
+        if let combo = standard, !combo.isShortcut {
+            // a plain key as a global hotkey could no longer be typed in any app
+            Log.warn("hotkeys: \(id) standard \(layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, dropped", "hotkeys")
+            droppedStandards[id] = combo
+            standard = nil
+        }
         let definition = HotkeyDefinition(id: id, order: order, title: title, subtitle: subtitle, standard: standard,
                                           showInOnboarding: showInOnboarding, onPress: action, onRelease: onRelease)
         definitions.removeAll { $0.id == id }
         definitions.append(definition)
         definitions.sort { ($0.order, $0.id) < ($1.order, $1.id) }
-        choices[id] = store.load(id)
+        choices[id] = load(id)
         if numbers[id] == nil {
             numbers[id] = nextNumber
             nextNumber += 1
         }
+        if let why = standardProblem(id) {
+            Log.warn("hotkeys: \(id) standard: \(why)", "hotkeys")
+        }
         apply()
+        onRegister?()
     }
 
     func unregister(id: String) {
         definitions.removeAll { $0.id == id }
         choices[id] = nil
+        droppedStandards[id] = nil
         apply()
         status[id] = nil
+    }
+
+    /// Why the rules would refuse a hotkey's standard if a person pressed it (the selftest reports
+    /// it; a standard like ⌘Q would break Quit in every app). nil: fine or no standard.
+    func standardProblem(_ id: String, layout: KeyboardLayout? = nil) -> String? {
+        guard let standard = definition(id)?.standard else { return nil }
+        let ctx = ShortcutRules.Context(layout: layout ?? self.layout, system: [], others: others(than: id, standardsOnly: true))
+        if case .refuse(let why) = ShortcutRules.judge(standard, in: ctx) { return why }
+        return nil
     }
 
     func definition(_ id: String) -> HotkeyDefinition? { definitions.first { $0.id == id } }
@@ -163,6 +195,10 @@ final class MemoryHotkeyStore: HotkeyStore {
     /// the standard (so a later change of the standard reaches the person).
     func set(_ id: String, _ choice: HotkeyChoice) {
         guard let definition = definition(id) else { return }
+        if case .combo(let combo) = choice, !combo.isShortcut {
+            Log.warn("hotkeys: \(id) \(layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, not set", "hotkeys")
+            return
+        }
         var value = choice
         if case .combo(let combo) = choice, combo == definition.standard { value = .standard }
         choices[id] = value
@@ -171,10 +207,50 @@ final class MemoryHotkeyStore: HotkeyStore {
     }
 
     /// The other hotkeys' combinations, for the rule engine (display order).
-    func others(than id: String) -> [ShortcutRules.Other] {
+    func others(than id: String, standardsOnly: Bool = false) -> [ShortcutRules.Other] {
         definitions.compactMap { d in
-            guard d.id != id, let combo = combo(d.id) else { return nil }
+            guard d.id != id, let combo = standardsOnly ? d.standard : combo(d.id) else { return nil }
             return ShortcutRules.Other(id: d.id, title: d.title(), combo: combo)
+        }
+    }
+
+    /// The stored choice, a combination that is no shortcut (a hand edit like `{"keyCode": 0}`,
+    /// plain A) read as the standard.
+    private func load(_ id: String) -> HotkeyChoice {
+        let choice = store.load(id)
+        if case .combo(let combo) = choice, !combo.isShortcut {
+            Log.warn("hotkeys: stored \(id) \(layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, using the standard", "hotkeys")
+            return .standard
+        }
+        return choice
+    }
+
+    /// Reads every choice from the store again (settings.json changed underneath: "Reset all
+    /// settings", a hand edit with `Settings.reload()`) and re-registers what changed.
+    func reloadChoices() {
+        var changed = false
+        for d in definitions {
+            let choice = load(d.id)
+            if choices[d.id] != choice {
+                choices[d.id] = choice
+                changed = true
+            }
+        }
+        if changed { apply() }
+    }
+
+    /// Follows the store while started: a store backed by `Settings` is observable, so a reset or
+    /// reload reaches the registrations at once (an in-memory store never changes underneath).
+    private func followStore() {
+        followGeneration += 1
+        let generation = followGeneration
+        Observing.track { [weak self] in
+            guard let self else { return }
+            for d in self.definitions { _ = self.store.load(d.id) }
+        } while: { [weak self] in
+            self?.followGeneration == generation
+        } onChange: { [weak self] in
+            self?.reloadChoices()
         }
     }
 
@@ -196,21 +272,25 @@ final class MemoryHotkeyStore: HotkeyStore {
     func startForTesting() {
         isStarted = true
         backend.install()
+        followStore()
         apply()
     }
 
     /// Unregisters everything (app quits).
     func stop() {
         isStarted = false
+        followGeneration += 1
         apply()
         if let layoutObserver { DistributedNotificationCenter.default().removeObserver(layoutObserver) }
         layoutObserver = nil
     }
 
     /// While a shortcut is being recorded nothing may fire: the keys pressed there start nothing.
+    /// Counted: every `pause(true)` needs its `pause(false)`, the hotkeys come back with the last.
     func pause(_ on: Bool) {
-        guard isPaused != on else { return }
-        isPaused = on
+        pauses = max(0, pauses + (on ? 1 : -1))
+        guard isPaused != (pauses > 0) else { return }
+        isPaused = pauses > 0
         apply()
     }
 
@@ -220,7 +300,7 @@ final class MemoryHotkeyStore: HotkeyStore {
     // MARK: Registration with macOS
 
     /// What should be registered: every hotkey with a combination, a combination used twice only
-    /// for the first hotkey (display order). Pure (tests).
+    /// for the first hotkey (display order; the later one gets `.duplicate`). Pure (tests).
     static func plan(_ definitions: [HotkeyDefinition], choices: [String: HotkeyChoice]) -> [String: KeyCombo] {
         var want: [String: KeyCombo] = [:]
         var taken = Set<KeyCombo>()
@@ -249,7 +329,12 @@ final class MemoryHotkeyStore: HotkeyStore {
         var next: [String: HotkeyStatus] = [:]
         for d in definitions {
             guard let wanted = planned[d.id] else {
-                next[d.id] = self.combo(d.id) == nil ? .off : .inactive
+                if let mine = self.combo(d.id) {
+                    let owner = definitions.first { planned[$0.id] == mine }
+                    next[d.id] = owner.map { .duplicate(of: $0.id) } ?? .inactive
+                } else {
+                    next[d.id] = .off
+                }
                 continue
             }
             guard want[d.id] != nil else {

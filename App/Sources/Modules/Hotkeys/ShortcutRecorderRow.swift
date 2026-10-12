@@ -4,7 +4,9 @@ import SwiftUI
 /// last try was refused, in red, or the note of the new one), and on the right its key caps with
 /// "Undo", "Default" and "Change"; while recording the held keys, a free variant and "Cancel".
 /// Works in the settings pane and on the onboarding step (the subtitle tone comes from the
-/// enclosing `SettingsSection`).
+/// enclosing `SettingsSection`). On the step (onboarding tone) the large key caps above already
+/// show the keys, so the row leaves them out, and while recording the instructions and reasons
+/// run under the title at the full width of the card, the free variant below them.
 struct ShortcutRecorderRow: View {
     let id: String
     let center: HotkeyCenter
@@ -18,22 +20,52 @@ struct ShortcutRecorderRow: View {
         self.recorder = recorder
     }
 
+    private var onStep: Bool { tone == .onboarding }
+    private var recording: Bool { recorder.target == id }
+    private var problem: ShortcutRecorder.Problem? { recorder.problem?.target == id ? recorder.problem : nil }
+
     var body: some View {
         let t = Theme(scheme)
         if let definition = center.definition(id) {
             let (text, color) = subtitle(definition, t)
-            Row(definition.title(), subtitle: text, subtitleColor: color, tone: tone) {
-                trailing(t)
+            if onStep && recording {
+                stacked(definition, text: text, color: color, t)
+            } else {
+                Row(definition.title(), subtitle: text, subtitleColor: color, tone: tone) {
+                    trailing(t)
+                }
             }
         }
+    }
+
+    /// Title and controls on one line, the text and the free variant below at full width.
+    private func stacked(_ definition: HotkeyDefinition, text: String?, color: Color?, _ t: Theme) -> some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            HStack(spacing: Space.s) {
+                Text(definition.title()).font(TypeScale.body).foregroundStyle(t.fg)
+                Spacer(minLength: Space.s)
+                trailing(t)
+            }
+            if let text {
+                Text(text)
+                    .font(tone.small)
+                    .foregroundStyle(color ?? tone.smallColor(t))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let free = problem?.suggestion {
+                Chip(HotkeysText.use(center.layout.label(free))) { recorder.use(free) }
+            }
+        }
+        .padding(.horizontal, Space.rowX)
+        .padding(.vertical, Space.rowY)
+        .frame(minHeight: Metrics.rowMinHeight)
     }
 
     /// What the row says while it records, why the last try was refused, the note of the new
     /// shortcut, a registration problem, or what the hotkey does.
     private func subtitle(_ definition: HotkeyDefinition, _ t: Theme) -> (String?, Color?) {
-        let problem = recorder.problem?.target == id ? recorder.problem : nil
-        if recorder.target == id {
-            if let problem { return (problem.text + "\n" + HotkeysText.tryAnother, t.strike) }
+        if recording {
+            if let problem { return (problem.text + " " + HotkeysText.escToCancel, t.strike) }
             if !recorder.live.isEmpty { return (HotkeysText.recordHolding, nil) }
             return (HotkeysText.recordPrompt, nil)
         }
@@ -43,6 +75,9 @@ struct ShortcutRecorderRow: View {
             switch center.status[id] {
             case .heldElsewhere?: return (HotkeysText.heldElsewhereStatus(keys), t.strike)
             case .failed(let code)?: return (HotkeysText.failedStatus(keys, Int(code)), t.strike)
+            case .duplicate(let other)?:
+                let title = center.definition(other)?.title() ?? other
+                return (HotkeysText.duplicateStatus(keys, of: title), t.strike)
             default: break
             }
         }
@@ -50,12 +85,11 @@ struct ShortcutRecorderRow: View {
     }
 
     @ViewBuilder private func trailing(_ t: Theme) -> some View {
-        let recording = recorder.target == id
         HStack(spacing: Space.shortcutRowGap) {
             if recording {
                 if !recorder.live.isEmpty {
                     ringed(KeyCaps(recorder.live), t.accent)
-                } else if let problem = recorder.problem, problem.target == id, !problem.keys.isEmpty {
+                } else if let problem, !problem.keys.isEmpty {
                     ringed(KeyCaps(problem.keys), t.strike)            // what was pressed, refused
                 } else {
                     Text(HotkeysText.pressKeys)
@@ -66,17 +100,17 @@ struct ShortcutRecorderRow: View {
                         .background(RoundedRectangle(cornerRadius: Radius.keyCap, style: .continuous)
                             .strokeBorder(t.accent, lineWidth: Metrics.Hotkeys.recordingRingLine))
                 }
-                if let problem = recorder.problem, problem.target == id, let free = problem.suggestion {
+                if !onStep, let free = problem?.suggestion {
                     Chip(HotkeysText.use(center.layout.label(free))) { recorder.use(free) }
                 }
                 Chip(HotkeysText.cancel) { recorder.cancel() }
             } else {
-                caps(t)
+                if !onStep { caps(t) }
                 if recorder.target == nil {
                     if recorder.canUndo(id) {
                         Chip(HotkeysText.undo) { recorder.undoLast() }
                     }
-                    if center.choice(id) != .standard {
+                    if center.choice(id) != .standard, center.combo(id) != center.definition(id)?.standard {
                         Chip(HotkeysText.standard) { recorder.restore(id, to: .standard) }
                             .help(HotkeysText.standardHelp)
                     }
@@ -95,7 +129,7 @@ struct ShortcutRecorderRow: View {
         } else {
             Text(HotkeysText.none)
                 .font(TypeScale.secondaryMedium)
-                .foregroundStyle(t.fg3)
+                .foregroundStyle(t.fg2)
                 .frame(minHeight: Metrics.keyCap)
         }
     }

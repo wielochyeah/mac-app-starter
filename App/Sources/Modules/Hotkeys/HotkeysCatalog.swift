@@ -3,6 +3,7 @@ import SwiftUI
 // Render scenes (`hotkeys.*`) and gallery entries. Sample hotkeys live only here, in a center with
 // a fake backend and an in-memory store: nothing is registered with macOS and nothing is saved.
 // Reasons and notes come from the real rule engine, so the renders show what the app would say.
+// Everything reads through the fixed US layout, so the PNGs are the same on every Mac.
 
 enum HotkeysCatalog {
     static func register() {
@@ -14,6 +15,11 @@ enum HotkeysCatalog {
             ("hotkeys.onboarding", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .waiting)) }),
             ("hotkeys.onboarding-pressed", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .pressed)) }),
             ("hotkeys.onboarding-refused", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .refused)) }),
+            ("hotkeys.onboarding-refused-long", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .refusedLong)) }),
+            ("hotkeys.onboarding-caught", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .caught)) }),
+            ("hotkeys.onboarding-recording", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .recording)) }),
+            ("hotkeys.onboarding-held", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .held)) }),
+            ("hotkeys.onboarding-off", .zero, { HotkeysText.galleryStep }, { AnyView(SampleStep(state: .off)) }),
         ]
         for scene in scenes {
             Registry.renderScenes.append(RenderScene(id: scene.id, size: scene.size, content: scene.view))
@@ -36,10 +42,15 @@ private enum Sample {
     static let pause = KeyCombo(keyCode: 105, modifiers: [])                                 // F13
     static let closeWindow = KeyCombo(keyCode: 13, modifiers: .command)                       // ⌘W
     static let deleteWord = KeyCombo(keyCode: 13, modifiers: .control)                        // ⌃W
+    static let screenshotOptions = KeyCombo(keyCode: 23, modifiers: [.shift, .command])       // ⇧⌘5
+    /// macOS's list as on a new Mac, for the refusals of switched-on system shortcuts.
+    static let system = [SystemShortcut(keyCode: 23, modifiers: [.shift, .command], enabled: true)]
+    static let layout = TableKeyboardLayout.us
 
     /// A center with the three sample hotkeys; `choices` as if the person had changed them.
     static func center(_ choices: [String: HotkeyChoice] = [:]) -> HotkeyCenter {
         let center = HotkeyCenter(backend: FakeHotkeyBackend(), store: MemoryHotkeyStore(choices))
+        center.layout = layout
         center.register(id: "quick", title: { HotkeysSampleText.quickWindow }, subtitle: { HotkeysSampleText.quickWindowDetail },
                         default: quick, order: 0, showInOnboarding: true) {}
         center.register(id: "capture", title: { HotkeysSampleText.captureSelection },
@@ -55,7 +66,7 @@ private enum Sample {
     }
 
     static func context(_ center: HotkeyCenter, for id: String) -> ShortcutRules.Context {
-        ShortcutRules.Context(layout: center.layout, system: [], others: center.others(than: id))
+        ShortcutRules.Context(layout: center.layout, system: system, others: center.others(than: id))
     }
 
     /// The refusal the rules give for `combo`, with their free variant.
@@ -93,7 +104,11 @@ private struct SamplePane: View {
 }
 
 private struct SampleEmptyPane: View {
-    private let center = HotkeyCenter(backend: FakeHotkeyBackend(), store: MemoryHotkeyStore())
+    private let center: HotkeyCenter = {
+        let center = HotkeyCenter(backend: FakeHotkeyBackend(), store: MemoryHotkeyStore())
+        center.layout = Sample.layout
+        return center
+    }()
 
     var body: some View { HotkeysPane(center: center) }
 }
@@ -108,14 +123,17 @@ private struct RecorderStates: View {
         let title: String
         let center: HotkeyCenter
         let recorder: ShortcutRecorder
+        /// The hotkey whose row is shown.
+        var row = "quick"
     }
 
     private var items: [Item] {
-        func item(_ title: String, _ choices: [String: HotkeyChoice] = [:], _ configure: (HotkeyCenter, ShortcutRecorder) -> Void) -> Item {
+        func item(_ title: String, _ choices: [String: HotkeyChoice] = [:], row: String = "quick",
+                  _ configure: (HotkeyCenter, ShortcutRecorder) -> Void) -> Item {
             let center = Sample.center(choices)
             let recorder = Sample.recorder(center)
             configure(center, recorder)
-            return Item(id: title, title: title, center: center, recorder: recorder)
+            return Item(id: title, title: title, center: center, recorder: recorder, row: row)
         }
         return [
             item(HotkeysSampleText.stateIdle) { _, _ in },
@@ -128,15 +146,16 @@ private struct RecorderStates: View {
                 r.preview(note: Sample.note(c, "quick", Sample.deleteWord), undoable: true)
             },
             item(HotkeysSampleText.stateHeld) { c, _ in c.previewStatus("quick", .heldElsewhere) },
+            item(HotkeysSampleText.stateDuplicate, ["capture": .combo(Sample.quick)], row: "capture") { _, _ in },
             item(HotkeysSampleText.stateOff, ["quick": .off]) { _, _ in },
         ]
     }
 
     var body: some View {
-        Specimen(width: Metrics.settingsColumn + 2 * Space.pane) {
+        Specimen(width: Sample.paneSize.width) {
             ForEach(items) { item in
                 SettingsSection(item.title) {
-                    ShortcutRecorderRow("quick", center: item.center, recorder: item.recorder)
+                    ShortcutRecorderRow(item.row, center: item.center, recorder: item.recorder)
                 }
             }
         }
@@ -147,7 +166,7 @@ private struct RecorderStates: View {
 
 private struct BigKeysSample: View {
     var body: some View {
-        let layout = SystemKeyboardLayout.current
+        let layout = Sample.layout
         Specimen(width: Metrics.onboardingColumn) {
             VStack(spacing: Space.l) {
                 BigKeyCaps(keys: layout.caps(Sample.quick))
@@ -163,7 +182,7 @@ private struct BigKeysSample: View {
 // MARK: - Onboarding step
 
 private struct SampleStep: View {
-    enum State { case waiting, pressed, refused }
+    enum State { case waiting, pressed, refused, refusedLong, caught, recording, held, off }
     private let center = Sample.center()
     private let recorder: ShortcutRecorder
 
@@ -173,6 +192,19 @@ private struct SampleStep: View {
         case .waiting: break
         case .pressed: center.previewPress("quick")
         case .refused: recorder.preview(target: "quick", problem: Sample.refusal(center, "quick", Sample.closeWindow))
+        case .refusedLong:
+            // a long reason with a free variant: ⇧⌘5 is switched on in macOS on every Mac
+            recorder.preview(target: "quick", problem: Sample.refusal(center, "quick", Sample.screenshotOptions))
+        case .caught:
+            // the longest reason the recorder gives (the keys never arrived)
+            let caught = Sample.layout.label(Sample.screenshotOptions)
+            let suggestion = ShortcutRules.suggestion(for: Sample.screenshotOptions.keyCode, in: Sample.context(center, for: "quick"))
+            recorder.preview(target: "quick", problem: ShortcutRecorder.Problem(
+                target: "quick", text: HotkeysText.caughtEarlier(caught), keys: Sample.layout.caps(Sample.screenshotOptions),
+                suggestion: suggestion))
+        case .recording: recorder.preview(target: "quick")
+        case .held: center.previewStatus("quick", .heldElsewhere)
+        case .off: center.set("quick", .off)
         }
     }
 

@@ -12,6 +12,14 @@ protocol KeyboardLayout {
     func translate(_ keyCode: UInt16, modifiers: KeyModifiers) -> (text: String, dead: Bool)?
 }
 
+extension KeyCombo {
+    /// Something that can be a global hotkey at all: a key with ⌃, ⌥ or ⌘, or an F-key (with or
+    /// without modifiers). A key alone or with ⇧ only would stop typing in every app.
+    var isShortcut: Bool {
+        !modifiers.isDisjoint(with: [.control, .option, .command]) || KeyCodes.functionKeys.contains(keyCode)
+    }
+}
+
 /// Keys whose meaning does not depend on the layout (positions are fixed on every Mac keyboard).
 enum KeyCodes {
     static let `return`: UInt16 = 36, tab: UInt16 = 48, space: UInt16 = 49, delete: UInt16 = 51
@@ -45,7 +53,7 @@ extension KeyboardLayout {
         translate(keyCode, modifiers: modifiers)?.text
     }
 
-    /// How the key reads on its cap: "W", "2", "F5", "←", "ß" (stays ß, not SS), "Space".
+    /// How the key reads on its cap: "W", "2", "F5", the left arrow, "ß" (stays ß, not SS), "Space".
     func keyName(_ keyCode: UInt16) -> String? {
         if keyCode == KeyCodes.space { return HotkeysText.space }
         if let name = KeyCodes.specialNames[keyCode] { return name }
@@ -127,8 +135,8 @@ enum SystemShortcuts {
                   let raw = (item[kHISymbolicHotKeyModifiers as String] as? NSNumber)?.uint32Value,
                   code >= 0, code < 0xFFFF else { return nil }
             let key = UInt16(code)
-            // the fn bit comes by itself with F-keys and arrows; on other keys it is a 🌐 shortcut of
-            // its own (🌐Q, 🌐F), not the same keys without 🌐
+            // the fn bit comes by itself with F-keys and arrows; on other keys it is a fn/globe
+            // shortcut of its own (fn Q, fn F), not the same keys without fn
             if raw & fnFlag != 0 && !KeyCodes.functionKeys.contains(key) && !KeyCodes.editingKeys.contains(key) { return nil }
             let mods = KeyModifiers(rawValue: raw)
             if key == 111 && (mods.isEmpty || mods == .shift) { return nil }    // F12 and ⇧F12: Dashboard, gone

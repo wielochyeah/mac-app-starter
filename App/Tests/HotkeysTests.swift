@@ -6,54 +6,10 @@ import AppKit
 // results do not depend on the Mac running them), key names, persistence, the center's
 // registration with a fake backend, and the recorder fed with synthetic key events.
 
-/// A keyboard layout from a table: base, ⇧, ⌥ and ⌥⇧ layers; "~" prefixed entries are dead keys.
-/// ⌘ types the base layer (menus match ⌘ shortcuts by it), ⌃ types nothing.
-private struct TableLayout: KeyboardLayout {
-    let base: [UInt16: String]
-    let shift: [UInt16: String]
-    let option: [UInt16: String]
-    let optionShift: [UInt16: String]
-
-    func translate(_ keyCode: UInt16, modifiers: KeyModifiers) -> (text: String, dead: Bool)? {
-        if modifiers.contains(.control) { return nil }
-        let entry: String?
-        if modifiers.contains(.command) {
-            entry = base[keyCode]
-        } else if modifiers.contains(.option) {
-            entry = modifiers.contains(.shift) ? optionShift[keyCode] : option[keyCode]
-        } else {
-            entry = modifiers.contains(.shift) ? shift[keyCode] : base[keyCode]
-        }
-        guard let entry, !entry.isEmpty else { return nil }
-        if entry.count > 1, entry.hasPrefix("~") { return (String(entry.dropFirst()), true) }
-        return (entry, false)
-    }
-
-    private static let keypad: [UInt16: String] = [82: "0", 83: "1", 84: "2", 85: "3", 86: "4", 87: "5", 88: "6", 89: "7",
-                                                    91: "8", 92: "9", 65: ".", 67: "*", 69: "+", 75: "/", 78: "-", 81: "="]
-
-    private static func merged(_ main: [UInt16: String]) -> [UInt16: String] {
-        main.merging(keypad) { a, _ in a }.merging([49: " "]) { a, _ in a }
-    }
-
-    /// Mac "U.S." (main keys; ⌥ layer as on macOS).
-    static let us = TableLayout(
-        base: merged([0: "a", 1: "s", 2: "d", 3: "f", 4: "h", 5: "g", 6: "z", 7: "x", 8: "c", 9: "v", 10: "§", 11: "b", 12: "q",
-                      13: "w", 14: "e", 15: "r", 16: "y", 17: "t", 18: "1", 19: "2", 20: "3", 21: "4", 22: "6", 23: "5", 24: "=",
-                      25: "9", 26: "7", 27: "-", 28: "8", 29: "0", 30: "]", 31: "o", 32: "u", 33: "[", 34: "i", 35: "p", 37: "l",
-                      38: "j", 39: "'", 40: "k", 41: ";", 42: "\\", 43: ",", 44: "/", 45: "n", 46: "m", 47: ".", 50: "`"]),
-        shift: merged([0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X", 8: "C", 9: "V", 10: "±", 11: "B", 12: "Q",
-                       13: "W", 14: "E", 15: "R", 16: "Y", 17: "T", 18: "!", 19: "@", 20: "#", 21: "$", 22: "^", 23: "%", 24: "+",
-                       25: "(", 26: "&", 27: "_", 28: "*", 29: ")", 30: "}", 31: "O", 32: "U", 33: "{", 34: "I", 35: "P", 37: "L",
-                       38: "J", 39: "\"", 40: "K", 41: ":", 42: "|", 43: "<", 44: "?", 45: "N", 46: "M", 47: ">", 50: "~"]),
-        option: [0: "å", 1: "ß", 2: "∂", 3: "ƒ", 4: "˙", 5: "©", 6: "Ω", 7: "≈", 8: "ç", 9: "√", 11: "∫", 12: "œ", 13: "∑",
-                 14: "~´", 15: "®", 16: "¥", 17: "†", 18: "¡", 19: "™", 20: "£", 21: "¢", 22: "§", 23: "∞", 24: "≠", 25: "ª",
-                 26: "¶", 27: "–", 28: "•", 29: "º", 30: "‘", 31: "ø", 32: "~¨", 33: "“", 34: "~ˆ", 35: "π", 37: "¬", 38: "∆",
-                 39: "æ", 40: "˚", 41: "…", 42: "«", 43: "≤", 44: "÷", 45: "~˜", 46: "µ", 47: "≥", 50: "~`", 49: "\u{00A0}"],
-        optionShift: [49: "\u{00A0}"])
-
+/// The Mac "German" layout as a table (the US one is in the module, for the render scenes).
+extension TableKeyboardLayout {
     /// Mac "German" (Y and Z swapped, umlauts, dead ^ ´ `; ⌥L is @).
-    static let german = TableLayout(
+    static let german = TableKeyboardLayout(
         base: merged([0: "a", 1: "s", 2: "d", 3: "f", 4: "h", 5: "g", 6: "y", 7: "x", 8: "c", 9: "v", 10: "~^", 11: "b", 12: "q",
                       13: "w", 14: "e", 15: "r", 16: "z", 17: "t", 18: "1", 19: "2", 20: "3", 21: "4", 22: "6", 23: "5", 24: "~´",
                       25: "9", 26: "7", 27: "ß", 28: "8", 29: "0", 30: "+", 31: "o", 32: "u", 33: "ü", 34: "i", 35: "p", 37: "l",
@@ -80,11 +36,11 @@ private enum HK {
         .init(keyCode: 28, modifiers: [.option, .command], enabled: false), .init(keyCode: 103, modifiers: [], enabled: true),
     ]
 
-    static func ctx(_ layout: KeyboardLayout = TableLayout.us, others: [ShortcutRules.Other] = [], voiceOver: Bool = false) -> ShortcutRules.Context {
+    static func ctx(_ layout: KeyboardLayout = TableKeyboardLayout.us, others: [ShortcutRules.Other] = [], voiceOver: Bool = false) -> ShortcutRules.Context {
         ShortcutRules.Context(layout: layout, system: system, others: others, voiceOver: voiceOver, appName: "Starter")
     }
 
-    static func judge(_ code: UInt16, _ mods: KeyModifiers, _ layout: KeyboardLayout = TableLayout.us,
+    static func judge(_ code: UInt16, _ mods: KeyModifiers, _ layout: KeyboardLayout = TableKeyboardLayout.us,
                       others: [ShortcutRules.Other] = [], voiceOver: Bool = false) -> ShortcutRules.Verdict {
         ShortcutRules.judge(KeyCombo(keyCode: code, modifiers: mods), in: ctx(layout, others: others, voiceOver: voiceOver))
     }
@@ -107,11 +63,17 @@ private enum HK {
     static func center(_ choices: [String: HotkeyChoice] = [:], start: Bool = false) -> (HotkeyCenter, FakeHotkeyBackend) {
         let backend = FakeHotkeyBackend()
         let center = HotkeyCenter(backend: backend, store: MemoryHotkeyStore(choices))
-        center.layout = TableLayout.us
+        center.layout = TableKeyboardLayout.us
         center.register(id: "quick", title: { "Quick" }, default: quick, order: 0, showInOnboarding: true) {}
         center.register(id: "capture", title: { "Capture" }, default: capture, order: 1) {}
         if start { center.startForTesting() }
         return (center, backend)
+    }
+
+    /// Runs the main run loop until `done` holds (Observation callbacks arrive in a main-actor task).
+    static func spin(until done: () -> Bool, timeout: TimeInterval = 2) {
+        let end = Date().addingTimeInterval(timeout)
+        while !done(), Date() < end { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
     }
 
     static func recorder(_ center: HotkeyCenter) -> ShortcutRecorder {
@@ -142,17 +104,17 @@ final class HotkeysRulesTests: TestSuite {
         }
 
         test("menus match ⌘ shortcuts by character, so the layout decides") {
-            expect(HK.refused(HK.judge(6, c, TableLayout.us), "undoes"), "US: code 6 is Z")
-            expect(HK.refused(HK.judge(16, c, TableLayout.german), "undoes"), "German: Z sits on code 16")
-            expect(HK.refused(HK.judge(6, c, TableLayout.german), "shows the history"), "German: code 6 is Y")
-            expect(HK.refused(HK.judge(44, [s, c], TableLayout.us), "opens Help"), "US ⇧⌘/ is ⇧⌘?")
-            expect(HK.refused(HK.judge(27, [s, c], TableLayout.german), "opens Help"), "German ⇧⌘ß is ⇧⌘?")
+            expect(HK.refused(HK.judge(6, c, TableKeyboardLayout.us), "undoes"), "US: code 6 is Z")
+            expect(HK.refused(HK.judge(16, c, TableKeyboardLayout.german), "undoes"), "German: Z sits on code 16")
+            expect(HK.refused(HK.judge(6, c, TableKeyboardLayout.german), "shows the history"), "German: code 6 is Y")
+            expect(HK.refused(HK.judge(44, [s, c], TableKeyboardLayout.us), "opens Help"), "US ⇧⌘/ is ⇧⌘?")
+            expect(HK.refused(HK.judge(27, [s, c], TableKeyboardLayout.german), "opens Help"), "German ⇧⌘ß is ⇧⌘?")
         }
 
         test("keys that type are refused without a modifier") {
             expect(HK.refused(HK.judge(13, []), "types “w”"), "W alone")
             expect(HK.refused(HK.judge(13, s), "types “W”"), "⇧W")
-            expect(HK.refused(HK.judge(41, [], TableLayout.german), "types “ö”"), "Ö alone on German")
+            expect(HK.refused(HK.judge(41, [], TableKeyboardLayout.german), "types “ö”"), "Ö alone on German")
             expect(HK.refused(HK.judge(49, []), "space bar"), "Space alone")
         }
 
@@ -198,20 +160,20 @@ final class HotkeysRulesTests: TestSuite {
         }
 
         test("⌥ characters: needed ones refused, rare ones noted (German)") {
-            expect(HK.refused(HK.judge(37, o, TableLayout.german), "“@”"), "⌥L is @")
-            expect(HK.refused(HK.judge(23, o, TableLayout.german), "“[”"), "⌥5 is [")
-            expect(HK.refused(HK.judge(14, o, TableLayout.german), "“€”"), "⌥E is €")
-            expect(HK.refused(HK.judge(26, [o, s], TableLayout.german), "“\\”"), "⌥⇧7 is backslash")
-            expect(HK.refused(HK.judge(45, o, TableLayout.german), "accent “~”"), "⌥N is the only ~ accent")
-            expect(HK.taken(HK.judge(6, o, TableLayout.german), note: "“¥”"), "⌥Y is ¥")
-            expect(HK.refused(HK.judge(42, o, TableLayout.german), "“‘”"), "⌥# is a typographic quote")
+            expect(HK.refused(HK.judge(37, o, TableKeyboardLayout.german), "“@”"), "⌥L is @")
+            expect(HK.refused(HK.judge(23, o, TableKeyboardLayout.german), "“[”"), "⌥5 is [")
+            expect(HK.refused(HK.judge(14, o, TableKeyboardLayout.german), "“€”"), "⌥E is €")
+            expect(HK.refused(HK.judge(26, [o, s], TableKeyboardLayout.german), "“\\”"), "⌥⇧7 is backslash")
+            expect(HK.refused(HK.judge(45, o, TableKeyboardLayout.german), "accent “~”"), "⌥N is the only ~ accent")
+            expect(HK.taken(HK.judge(6, o, TableKeyboardLayout.german), note: "“¥”"), "⌥Y is ¥")
+            expect(HK.refused(HK.judge(42, o, TableKeyboardLayout.german), "“‘”"), "⌥# is a typographic quote")
         }
 
         test("⌥ characters (US)") {
-            expect(HK.taken(HK.judge(37, o, TableLayout.us), note: "“¬”"), "⌥L is ¬")
-            expect(HK.taken(HK.judge(16, o, TableLayout.us), note: "password fields"), "⌥Y is ¥")
-            expect(HK.refused(HK.judge(14, o, TableLayout.us), "accent “´”"), "⌥E sets the acute")
-            expect(HK.refused(HK.judge(50, o, TableLayout.us), "accent “`”"), "⌥` is the only dead grave")
+            expect(HK.taken(HK.judge(37, o, TableKeyboardLayout.us), note: "“¬”"), "⌥L is ¬")
+            expect(HK.taken(HK.judge(16, o, TableKeyboardLayout.us), note: "password fields"), "⌥Y is ¥")
+            expect(HK.refused(HK.judge(14, o, TableKeyboardLayout.us), "accent “´”"), "⌥E sets the acute")
+            expect(HK.refused(HK.judge(50, o, TableKeyboardLayout.us), "accent “`”"), "⌥` is the only dead grave")
             expect(HK.taken(HK.judge(49, o), note: "no-break space"), "⌥Space")
         }
 
@@ -271,37 +233,37 @@ final class HotkeysFormatTests: TestSuite {
     override class func register() {
         test("caps and labels in macOS order ⌃⌥⇧⌘") {
             let combo = KeyCombo(keyCode: 40, modifiers: [.command, .shift, .option, .control])
-            expectEqual(TableLayout.us.caps(combo), ["⌃", "⌥", "⇧", "⌘", "K"])
-            expectEqual(TableLayout.us.label(combo), "⌃⌥⇧⌘K")
-            expectEqual(TableLayout.us.label(KeyCombo(keyCode: 96, modifiers: [.shift, .command])), "⇧⌘F5")
-            expectEqual(TableLayout.us.label(KeyCombo(keyCode: 123, modifiers: .option)), "⌥←")
+            expectEqual(TableKeyboardLayout.us.caps(combo), ["⌃", "⌥", "⇧", "⌘", "K"])
+            expectEqual(TableKeyboardLayout.us.label(combo), "⌃⌥⇧⌘K")
+            expectEqual(TableKeyboardLayout.us.label(KeyCombo(keyCode: 96, modifiers: [.shift, .command])), "⇧⌘F5")
+            expectEqual(TableKeyboardLayout.us.label(KeyCombo(keyCode: 123, modifiers: .option)), "⌥←")
         }
 
         test("key names follow the layout") {
-            expectEqual(TableLayout.us.keyName(6), "Z")
-            expectEqual(TableLayout.german.keyName(6), "Y")
-            expectEqual(TableLayout.german.keyName(27), "ß", "ß stays ß, not SS")
-            expectEqual(TableLayout.german.keyName(41), "Ö")
-            expectEqual(TableLayout.us.keyName(105), "F13")
-            expectEqual(TableLayout.us.keyName(53), "Esc")
-            expect(TableLayout.us.keyName(200) == nil, "unknown key")
+            expectEqual(TableKeyboardLayout.us.keyName(6), "Z")
+            expectEqual(TableKeyboardLayout.german.keyName(6), "Y")
+            expectEqual(TableKeyboardLayout.german.keyName(27), "ß", "ß stays ß, not SS")
+            expectEqual(TableKeyboardLayout.german.keyName(41), "Ö")
+            expectEqual(TableKeyboardLayout.us.keyName(105), "F13")
+            expectEqual(TableKeyboardLayout.us.keyName(53), "Esc")
+            expect(TableKeyboardLayout.us.keyName(200) == nil, "unknown key")
         }
 
         test("space and keypad names are translated") {
             let saved = Localizer.shared.forced
             defer { Localizer.shared.forced = saved }
             Localizer.shared.forced = .en
-            expectEqual(TableLayout.us.keyName(49), "Space")
-            expectEqual(TableLayout.us.keyName(83), "Keypad 1")
+            expectEqual(TableKeyboardLayout.us.keyName(49), "Space")
+            expectEqual(TableKeyboardLayout.us.keyName(83), "Keypad 1")
             Localizer.shared.forced = .de
-            expectEqual(TableLayout.us.keyName(49), "Leertaste")
-            expectEqual(TableLayout.us.keyName(83), "Ziffernblock 1")
+            expectEqual(TableKeyboardLayout.us.keyName(49), "Leertaste")
+            expectEqual(TableKeyboardLayout.us.keyName(83), "Ziffernblock 1")
         }
 
         test("menu tokens come from the ⌘ layer, none for named keys") {
-            expectEqual(TableLayout.german.menuToken(16), "z")
-            expect(TableLayout.us.menuToken(123) == nil, "arrow")
-            expect(TableLayout.us.menuToken(49) == nil, "space")
+            expectEqual(TableKeyboardLayout.german.menuToken(16), "z")
+            expect(TableKeyboardLayout.us.menuToken(123) == nil, "arrow")
+            expect(TableKeyboardLayout.us.menuToken(49) == nil, "space")
         }
 
         test("modifier sets from names and flags") {
@@ -409,7 +371,97 @@ final class HotkeysCenterTests: TestSuite {
             let (center, backend) = HK.center(["capture": .combo(HK.quick)], start: true)
             expectEqual(Array(backend.registered.values), [HK.quick])
             expectEqual(center.status["quick"], .active)
-            expectEqual(center.status["capture"], .inactive)
+            expectEqual(center.status["capture"], .duplicate(of: "quick"))
+        }
+
+        test("pauses are counted: the hotkeys come back with the last resume") {
+            let (center, backend) = HK.center(start: true)
+            center.pause(true)
+            center.pause(true)
+            center.pause(false)
+            expect(center.isPaused && backend.registered.isEmpty, "one pause still held")
+            center.pause(false)
+            expect(!center.isPaused)
+            expectEqual(Set(backend.registered.values), [HK.quick, HK.capture])
+            center.pause(false)
+            center.pause(true)
+            expect(center.isPaused, "an extra resume does not make the count negative")
+        }
+
+        test("a reset in the settings file reaches the registrations") {
+            let settings = Settings(fileURL: tempDir().appendingPathComponent("settings.json"))
+            let backend = FakeHotkeyBackend()
+            let center = HotkeyCenter(backend: backend, store: SettingsHotkeyStore(settings: settings))
+            center.layout = TableKeyboardLayout.us
+            center.register(id: "quick", title: { "Quick" }, default: HK.quick) {}
+            center.startForTesting()
+            defer { center.stop() }
+            let custom = KeyCombo(keyCode: 40, modifiers: [.control, .option, .command])
+            center.set("quick", .combo(custom))
+            expectEqual(Array(backend.registered.values), [custom])
+            settings.reset(.hotkey("quick"))                 // what "Reset all settings" does to the key
+            HK.spin { center.choice("quick") == .standard }
+            expectEqual(center.choice("quick"), .standard)
+            expectEqual(Array(backend.registered.values), [HK.quick])
+        }
+
+        test("reloadChoices picks up a changed store") {
+            let store = MemoryHotkeyStore()
+            let backend = FakeHotkeyBackend()
+            let center = HotkeyCenter(backend: backend, store: store)
+            center.layout = TableKeyboardLayout.us
+            center.register(id: "quick", title: { "Quick" }, default: HK.quick) {}
+            center.startForTesting()
+            store.values["quick"] = .off
+            center.reloadChoices()
+            expectEqual(center.status["quick"], .off)
+            expect(backend.registered.isEmpty)
+        }
+
+        test("a stored combination that is no shortcut is read as the standard") {
+            let plainA = KeyCombo(keyCode: 0, modifiers: [])
+            let (center, backend) = HK.center(["quick": .combo(plainA), "capture": .combo(KeyCombo(keyCode: 0, modifiers: .shift))],
+                                              start: true)
+            expectEqual(center.choice("quick"), .standard)
+            expectEqual(center.choice("capture"), .standard)
+            expectEqual(Set(backend.registered.values), [HK.quick, HK.capture])
+            center.set("quick", .combo(plainA))
+            expectEqual(center.choice("quick"), .standard, "set ignores it too")
+        }
+
+        test("standards: a plain key is dropped, ⌘Q is reported, the samples pass") {
+            let center = HotkeyCenter(backend: FakeHotkeyBackend(), store: MemoryHotkeyStore())
+            center.layout = TableKeyboardLayout.us
+            center.register(id: "quick", title: { "Quick" }, default: HK.quick) {}
+            center.register(id: "f13", title: { "F13" }, default: KeyCombo(keyCode: 105, modifiers: [])) {}
+            expect(HotkeysModule.standardsProblems(center) == nil, HotkeysModule.standardsProblems(center) ?? "")
+            center.register(id: "plain", title: { "Plain" }, default: KeyCombo(keyCode: 0, modifiers: [])) {}
+            expect(center.definition("plain")?.standard == nil, "dropped")
+            expect(center.combo("plain") == nil)
+            center.register(id: "quit", title: { "Quit" }, default: KeyCombo(keyCode: 12, modifiers: .command)) {}
+            let problems = HotkeysModule.standardsProblems(center) ?? ""
+            expect(problems.contains("plain:") && problems.contains("quit:") && !problems.contains("quick:"), problems)
+        }
+
+        test("KeyCombo.isShortcut") {
+            expect(HK.quick.isShortcut)
+            expect(KeyCombo(keyCode: 105, modifiers: []).isShortcut, "F13 alone")
+            expect(KeyCombo(keyCode: 96, modifiers: .shift).isShortcut, "⇧F5")
+            expect(!KeyCombo(keyCode: 0, modifiers: []).isShortcut, "A")
+            expect(!KeyCombo(keyCode: 0, modifiers: .shift).isShortcut, "⇧A")
+            expect(!KeyCombo(keyCode: 123, modifiers: []).isShortcut, "←")
+            expect(KeyCombo(keyCode: 0, modifiers: .control).isShortcut, "⌃A")
+        }
+
+        test("the module adds its settings pane with the first hotkey") {
+            Registry.withScratch {
+                let center = HotkeyCenter(backend: FakeHotkeyBackend(), store: MemoryHotkeyStore())
+                center.onRegister = { HotkeysModule.includePane() }
+                expect(Registry.settingsPanes.isEmpty)
+                center.register(id: "quick", title: { "Quick" }, default: HK.quick) {}
+                center.register(id: "capture", title: { "Capture" }, default: HK.capture) {}
+                expectEqual(Registry.settingsPanes.map(\.id), ["hotkeys"], "once")
+            }
         }
 
         test("held by another app and refused by macOS are reported") {
@@ -514,7 +566,8 @@ final class HotkeysRecorderTests: TestSuite {
         }
 
         test("taken with a note: the note shows and Undo brings the old choice back") {
-            let (center, _) = HK.center()
+            let own = KeyCombo(keyCode: 40, modifiers: [.control, .option, .command])
+            let (center, _) = HK.center(["quick": .combo(own)])
             let r = HK.recorder(center)
             r.start("quick")
             r.handle(.keyDown(13, .control))
@@ -522,8 +575,17 @@ final class HotkeysRecorderTests: TestSuite {
             expect(r.note?.text.contains("Terminal") == true)
             expect(r.canUndo("quick"))
             r.undoLast()
-            expectEqual(center.choice("quick"), .standard)
+            expectEqual(center.choice("quick"), .combo(own))
             expect(r.note == nil && !r.canUndo("quick"))
+        }
+
+        test("Undo is left out when it would do what Default does") {
+            let (center, _) = HK.center()
+            let r = HK.recorder(center)
+            r.start("quick")
+            r.handle(.keyDown(13, .control))
+            expect(r.note != nil && !r.canUndo("quick"), "the previous choice was the standard")
+            expect(center.choice("quick") != .standard, "Default shows")
         }
 
         test("modifiers alone, two keys, fn, and a release without its press are refused") {
@@ -569,13 +631,16 @@ final class HotkeysRecorderTests: TestSuite {
             r.start("quick")
             r.handle(.keyDown(51, []))
             expectEqual(center.choice("quick"), .off)
-            expect(r.canUndo("quick"))
-            r.undoLast()
-            expectEqual(center.choice("quick"), .standard)
-            r.start("quick")
-            r.handle(.keyDown(51, []))
+            expect(r.note != nil && !r.canUndo("quick"), "from the standard: Default brings it back")
             r.restore("quick", to: .standard)
             expectEqual(center.combo("quick"), HK.quick)
+            let own = KeyCombo(keyCode: 40, modifiers: [.control, .option, .command])
+            center.set("quick", .combo(own))
+            r.start("quick")
+            r.handle(.keyDown(51, []))
+            expect(r.canUndo("quick"), "from an own combination: Undo")
+            r.undoLast()
+            expectEqual(center.choice("quick"), .combo(own))
         }
 
         test("another hotkey's keys are refused; Default is checked the same way") {
@@ -602,7 +667,52 @@ final class HotkeysRecorderTests: TestSuite {
             r.handle(.keyDown(40, all))
             expectEqual(center.choice("quick"), .standard, "rolled back")
             expect(r.problem?.text.contains("Another app already holds") == true)
+            expectEqual(r.target, "quick", "still recording")
+            let free = r.problem?.suggestion
+            expect(free != nil && free != held, "a free variant")
+            expect(center.isPaused)
+            r.cancel()
             expectEqual(center.status["quick"], .active)
+        }
+
+        test("the free variant skips keys another app holds") {
+            let (center, backend) = HK.center(start: true)
+            backend.taken = [KeyCombo(keyCode: 13, modifiers: [.control, .option, .command])]
+            let r = HK.recorder(center)
+            r.start("quick")
+            r.handle(.keyDown(13, .command))
+            expectEqual(r.problem?.suggestion, KeyCombo(keyCode: 13, modifiers: [.control, .shift, .command]))
+            r.cancel()
+        }
+
+        test("only one recorder listens: starting a second one cancels the first") {
+            let (center, backend) = HK.center(start: true)
+            let a = HK.recorder(center), b = HK.recorder(center)
+            a.start("quick")
+            b.start("capture")
+            expect(a.target == nil, "first one stopped")
+            expectEqual(b.target, "capture")
+            expect(center.isPaused && backend.registered.isEmpty, "still paused for the second")
+            b.cancel()
+            expect(!center.isPaused)
+            expectEqual(Set(backend.registered.values), [HK.quick, HK.capture])
+        }
+
+        test("the step's status line follows the real state") {
+            let (center, _) = HK.center(start: true)
+            let r = HK.recorder(center)
+            @MainActor func line(tried: Bool = false) -> StatusMark.Kind { HotkeysOnboardingStep.statusLine(center: center, recorder: r, id: "quick", tried: tried).kind }
+            expectEqual(line(), .idle)
+            expectEqual(line(tried: true), .ok)
+            r.start("quick")
+            expectEqual(line(tried: true), .busy, "recording")
+            r.cancel()
+            center.previewStatus("quick", .heldElsewhere)
+            expectEqual(line(tried: true), .warn, "held elsewhere")
+            center.set("quick", .off)
+            let off = HotkeysOnboardingStep.statusLine(center: center, recorder: r, id: "quick", tried: true)
+            expectEqual(off.kind, .warn)
+            expectEqual(off.text, HotkeysText.stepNoShortcutDefault)
         }
 
         test("NSEvent conversion") {
@@ -654,10 +764,13 @@ final class HotkeysSceneTests: TestSuite {
                 HotkeysModule.register()
                 let scenes = Set(Registry.renderScenes.map(\.id))
                 for id in ["hotkeys.pane", "hotkeys.pane-empty", "hotkeys.recorder-states", "hotkeys.big-keys", "hotkeys.onboarding",
-                           "hotkeys.onboarding-pressed", "hotkeys.onboarding-refused"] {
+                           "hotkeys.onboarding-pressed", "hotkeys.onboarding-refused", "hotkeys.onboarding-refused-long",
+                           "hotkeys.onboarding-caught", "hotkeys.onboarding-recording", "hotkeys.onboarding-held",
+                           "hotkeys.onboarding-off"] {
                     expect(scenes.contains(id), id)
                 }
-                expectEqual(Registry.settingsPanes.map(\.id), ["hotkeys"])
+                // no hotkey registered: no pane (it comes with the first one)
+                expect(Registry.settingsPanes.isEmpty, "the app registers no hotkey itself")
                 expectEqual(Registry.onboardingSteps.first?.order, 600)
                 expect(Registry.problems().isEmpty, Registry.problems().joined(separator: "; "))
                 // the app registers no hotkey itself, so the step stays out
