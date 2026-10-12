@@ -527,7 +527,7 @@ private struct SampleLanguageStep: View {
                     }
                     OnboardingFootnote(PatternsSampleText.languageFootnote, lines: 2)
                 }
-                .frame(width: Metrics.onboardingNarrow + 60)
+                .frame(width: Metrics.onboardingCard)
             }
         }
     }

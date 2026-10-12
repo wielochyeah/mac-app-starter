@@ -26,8 +26,8 @@ struct StaticMainWindow<Detail: View>: View {
         StaticWindow(size: size) {
             HStack(spacing: 0) {
                 StaticSidebar(groups: MainWindowModel.groups(pages), selection: selection)
-                    .frame(width: Metrics.Window.sidebarIdeal)
-                    .padding(Metrics.Window.sidebarInset)
+                    .frame(width: Metrics.sidebarWidth)
+                    .padding(Metrics.Sidebar.panelInset)
                 VStack(spacing: 0) {
                     StaticToolbar(query: query, prompt: searchPrompt)
                     detail
@@ -39,7 +39,7 @@ struct StaticMainWindow<Detail: View>: View {
     }
 }
 
-/// The floating sidebar panel (radius 18, 8 pt from the window edge, hairline, soft shadow).
+/// The floating sidebar panel of the main window as renders draw it (`staticSidebarPanel`).
 struct StaticSidebar: View {
     let groups: [SidebarGroup]
     let selection: String?
@@ -47,7 +47,6 @@ struct StaticSidebar: View {
 
     var body: some View {
         let t = Theme(scheme)
-        let shape = RoundedRectangle(cornerRadius: Radius.panel, style: .continuous)
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Spacer()
@@ -56,7 +55,7 @@ struct StaticSidebar: View {
                     .foregroundStyle(t.fg2)
             }
             .frame(height: Metrics.trafficLight)
-            .padding(.top, Metrics.trafficInset - Metrics.Window.sidebarInset)
+            .padding(.top, Metrics.trafficInset - Metrics.Sidebar.panelInset)
             .padding(.trailing, Space.s)
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(groups) { group in
@@ -64,25 +63,23 @@ struct StaticSidebar: View {
                         Text(group.section.title)
                             .font(TypeScale.secondarySemibold)
                             .foregroundStyle(t.sideGroup)
-                            .frame(height: Metrics.Window.sidebarSectionHeight, alignment: .bottom)
-                            .padding(.top, Metrics.Window.sidebarSectionTop)
-                            .padding(.leading, Metrics.Window.sidebarContentInset - Space.xs)
+                            .frame(height: Metrics.Sidebar.sectionHeight, alignment: .bottom)
+                            .padding(.top, Metrics.Sidebar.sectionTop)
+                            .padding(.leading, Metrics.Sidebar.contentInset - Space.xs)
                     }
                     ForEach(group.pages) { page in
                         StaticSidebarRow(title: page.title(), symbol: page.symbol, selected: page.id == selection)
                     }
                 }
             }
-            .padding(.top, Metrics.Window.sidebarTop - Metrics.trafficInset - Metrics.trafficLight)
+            // the traffic light row above starts `trafficInset` below the window top, the panel `panelInset`
+            .padding(.top, Metrics.Sidebar.top - (Metrics.trafficInset - Metrics.Sidebar.panelInset) - Metrics.trafficLight)
             .padding(.horizontal, Space.xs)
             Spacer(minLength: 0)
             SidebarFooterView()
         }
         .frame(maxHeight: .infinity)
-        .background(shape.fill(t.sidebarPanel))
-        .overlay(shape.strokeBorder(t.sidebarPanelStroke, lineWidth: Metrics.hairline))
-        .compositingGroup()
-        .shadow(color: t.panelShadow, radius: Space.xs, y: Metrics.hairline)
+        .staticSidebarPanel()
     }
 }
 
@@ -96,9 +93,9 @@ private struct StaticSidebarRow: View {
         let t = Theme(scheme)
         HStack(spacing: Space.xs) {
             Image(systemName: symbol)
-                .symbolFont(Metrics.Window.sidebarSymbol)
+                .symbolFont(Metrics.Sidebar.symbol)
                 .foregroundStyle(t.accent)
-                .frame(width: Metrics.Window.sidebarSymbolColumn)
+                .frame(width: Metrics.Sidebar.symbolColumn)
             Text(title)
                 .font(TypeScale.body)
                 .foregroundStyle(t.fg)
@@ -106,7 +103,7 @@ private struct StaticSidebarRow: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, Space.xs)
-        .frame(height: Metrics.Window.sidebarRow)
+        .frame(height: Metrics.Sidebar.listRow)
         .background {
             if selected { RoundedRectangle(cornerRadius: Radius.row, style: .continuous).fill(t.sideSel) }
         }

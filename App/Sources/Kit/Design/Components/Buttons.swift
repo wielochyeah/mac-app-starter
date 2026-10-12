@@ -82,7 +82,7 @@ private struct KitButtonBody<Label: View>: View {
             .overlay(shape.strokeBorder(primary ? t.buttonPrimaryEdge : t.buttonSecondaryEdge, lineWidth: Metrics.hairline))
             .shadow(color: primary ? .clear : t.buttonShadow, radius: 0.5, y: 0.5)
             .contentShape(shape)
-            .opacity(enabled ? 1 : 0.45)
+            .opacity(enabled ? 1 : Metrics.disabledOpacity)
             .scaleEffect(pressed ? Motion.pressScale : 1)
             .animation(Motion.press, value: pressed)
             .animation(Motion.page, value: primary)

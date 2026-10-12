@@ -51,8 +51,8 @@ enum WindowCatalog {
             // parts
             Item(id: "sidebar", title: { WindowText.gallerySidebar }) {
                 AnyView(StaticSidebar(groups: MainWindowModel.groups(WindowSamples.sidebarPages), selection: "hikes")
-                    .frame(width: Metrics.Window.sidebarIdeal, height: Metrics.Window.minSize.height)
-                    .padding(Metrics.Window.sidebarInset)
+                    .frame(width: Metrics.sidebarWidth, height: Metrics.Window.minSize.height)
+                    .padding(Metrics.Sidebar.panelInset)
                     .background(SceneBackground()))
             },
             Item(id: "page-scaffold", title: { WindowCodeNames.pageScaffold }, size: CGSize(width: 760, height: 440)) {
@@ -175,14 +175,10 @@ enum WindowCatalog {
         if !hadSearch { WindowSearch.enable(page: pageID) }
         defer { if !hadSearch { WindowSearch.disable(page: pageID) } }
 
-        let window = NSWindow(contentRect: NSRect(origin: .zero, size: Metrics.Window.size),
-                              styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
-        window.isReleasedWhenClosed = false
-        let host = NSHostingController(rootView: MainWindowController.content(model: model))
-        host.sizingOptions = []
-        window.contentViewController = host
-        window.setContentSize(Metrics.Window.size)
-        MainWindowController.configure(window)
+        let window = WindowHost.make(id: "window-selftest", style: .main, size: Metrics.Window.size, minSize: Metrics.Window.minSize,
+                                     title: AppInfo.displayName, configure: MainWindowController.configure) {
+            MainWindowController.content(model: model)
+        }
         window.layoutIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.4))
         defer {

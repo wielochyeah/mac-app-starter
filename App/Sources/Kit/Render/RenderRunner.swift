@@ -65,8 +65,21 @@ enum RenderRunner {
         return failures == 0 ? 0 : 1
     }
 
-    /// One PNG of `view` at `scale` (default 2x, independent of the screen).
+    /// One PNG of `view` at `scale` (default 2x, independent of the screen). The hosting views live
+    /// in a pool of their own, so many renders in a row (tests, `make shots`) do not leave seconds of
+    /// SwiftUI work queued on the main actor.
     static func png(_ view: AnyView, size: CGSize, appearance: Appearance, lang: Lang, scale: CGFloat = 2) -> Data? {
+        autoreleasepool { draw(view, size: size, appearance: appearance, lang: lang, scale: scale) }
+    }
+
+    /// The width a measured scene (`size: .zero`) is laid out in: its ideal width rounded up to whole
+    /// points plus one. Given exactly its ideal width, an HStack of two shrinkable texts truncates one of
+    /// them. The PNG keeps the measured width; the content is centred, so its edges stay opaque.
+    nonisolated static func layoutWidth(measured width: CGFloat) -> CGFloat {
+        (width - 0.001).rounded(.up) + 1
+    }
+
+    private static func draw(_ view: AnyView, size: CGSize, appearance: Appearance, lang: Lang, scale: CGFloat) -> Data? {
         let root = view
             .environment(\.colorScheme, appearance.scheme)
             .environment(\.renderStatic, true)
@@ -74,24 +87,27 @@ enum RenderRunner {
             // without a window the backing scale is 1: SwiftUI would snap layout to whole points
             // and drop 0.5 pt hairlines that fall on a half point
             .environment(\.displayScale, scale)
-        let host = NSHostingView(rootView: AnyView(root))
-        host.appearance = NSAppearance(named: appearance == .dark ? .darkAqua : .aqua)
+        var content = AnyView(root)
         var target = size
         if target == .zero {
             // The SwiftUI size, not NSView.fittingSize: that one rounds 142.5 pt up to 143 and the
             // content then sits half a point down, leaving a transparent pixel row at the top.
-            let measured = NSHostingController(rootView: AnyView(root)).sizeThatFits(in: CGSize(width: CGFloat.infinity, height: CGFloat.infinity))
-            if measured.width.isFinite, measured.height.isFinite, measured.width >= 1, measured.height >= 1 {
-                target = measured
+            let ideal = NSHostingController(rootView: content).sizeThatFits(in: CGSize(width: CGFloat.infinity, height: CGFloat.infinity))
+            if ideal.width.isFinite, ideal.height.isFinite, ideal.width >= 1, ideal.height >= 1 {
+                target = ideal
             } else {
-                host.frame = NSRect(x: 0, y: 0, width: 10, height: 10)
-                target = host.fittingSize
+                let probe = NSHostingView(rootView: content)
+                probe.frame = NSRect(x: 0, y: 0, width: 10, height: 10)
+                target = probe.fittingSize
             }
+            content = AnyView(root.frame(width: layoutWidth(measured: target.width)))
         }
         // Whole pixels, rounded down: never an empty edge row; a sliver of background is trimmed.
         let pixels = (width: Int((target.width * scale + 0.001).rounded(.down)), height: Int((target.height * scale + 0.001).rounded(.down)))
         guard pixels.width >= 1, pixels.height >= 1 else { return nil }
         target = CGSize(width: CGFloat(pixels.width) / scale, height: CGFloat(pixels.height) / scale)
+        let host = NSHostingView(rootView: content)
+        host.appearance = NSAppearance(named: appearance == .dark ? .darkAqua : .aqua)
         host.frame = NSRect(origin: .zero, size: target)
         host.layoutSubtreeIfNeeded()
         guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil,

@@ -17,11 +17,12 @@ struct Row<Trailing: View>: View {
     var symbol: String?
     var tint: TintName = .accent
     var dot: Color?
-    /// A subtitle that must be seen (a refused shortcut, an error): pass `Theme(scheme).strike`.
+    /// A subtitle that must be seen (a refused shortcut, an error): pass `Theme(scheme).strikeText`.
     var subtitleColor: Color?
     var tone: TextTone = .settings
     let trailing: Trailing
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.isEnabled) private var enabled
 
     init(_ title: String, subtitle: String? = nil, symbol: String? = nil, tint: TintName = .accent,
          dot: Color? = nil, subtitleColor: Color? = nil, tone: TextTone = .settings, @ViewBuilder trailing: () -> Trailing) {
@@ -38,19 +39,23 @@ struct Row<Trailing: View>: View {
     var body: some View {
         let t = Theme(scheme)
         HStack(spacing: Space.s) {
-            if let dot { Circle().fill(dot).frame(width: Metrics.dot, height: Metrics.dot) }
-            if let symbol { SquircleIcon(symbol: symbol, tint: tint, size: 24) }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(TypeScale.body).foregroundStyle(t.fg)
-                if let subtitle {
-                    Text(subtitle)
-                        .font(tone.small)
-                        .foregroundStyle(subtitleColor ?? tone.smallColor(t))
-                        .lineSpacing(1)
-                        .fixedSize(horizontal: false, vertical: true)
+            // a disabled row dims its label like the control dims itself, so the row reads as off
+            HStack(spacing: Space.s) {
+                if let dot { Circle().fill(dot).frame(width: Metrics.dot, height: Metrics.dot) }
+                if let symbol { SquircleIcon(symbol: symbol, tint: tint, size: 24) }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(TypeScale.body).foregroundStyle(t.fg)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(tone.small)
+                            .foregroundStyle(subtitleColor ?? tone.smallColor(t))
+                            .lineSpacing(1)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
+                .padding(.leading, dot == nil ? 0 : -3)
             }
-            .padding(.leading, dot == nil ? 0 : -3)
+            .opacity(enabled ? 1 : Metrics.disabledOpacity)
             Spacer(minLength: Space.s)
             trailing
         }

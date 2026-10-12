@@ -49,6 +49,23 @@ final class WindowTests: TestSuite {
             expectEqual(MainWindowModel(settings: Settings(fileURL: settings.fileURL)).selection, "library")
         }
 
+        test("the first setup closes into the main window, a setup shown again does not") {
+            let saved = AppActions.mainWindowHandler
+            var opened = 0
+            AppActions.mainWindowHandler = { opened += 1 }
+            defer { AppActions.mainWindowHandler = saved }
+            for hook in Registry.onboardingFinishedHooks { hook(false) }
+            expectEqual(opened, 0)
+            for hook in Registry.onboardingFinishedHooks { hook(true) }
+            expectEqual(opened, 1)
+        }
+
+        test("reset settings keeps the selected page and the sidebar state") {
+            expectEqual(SettingsReset.keys(in: [SettingKey<String>.windowPage.name, SettingKey<Bool>.windowSidebarHidden.name,
+                                                SettingKey<String>.appAppearance.name]),
+                        [SettingKey<String>.appAppearance.name])
+        }
+
         test("model: selecting nil or the same page changes nothing") {
             let settings = scratchSettings()
             let model = MainWindowModel(settings: settings)
@@ -239,8 +256,8 @@ final class WindowTests: TestSuite {
                     expect(width(c.name(), 13, .medium) <= Metrics.Window.tileMin, "\(lang) \(c.name())")
                 }
                 // sidebar title column: ideal width minus panel insets, symbol column and gap
-                let titleColumn = Metrics.Window.sidebarIdeal - 2 * Metrics.Window.sidebarContentInset
-                    - Metrics.Window.sidebarSymbolColumn - Space.xs
+                let titleColumn = Metrics.sidebarWidth - 2 * Metrics.Sidebar.contentInset
+                    - Metrics.Sidebar.symbolColumn - Space.xs
                 for p in WindowSamples.sidebarPages {
                     expect(width(p.title(), 13) <= titleColumn, "\(lang) \(p.title())")
                 }

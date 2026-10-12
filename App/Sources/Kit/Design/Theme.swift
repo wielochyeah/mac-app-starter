@@ -89,6 +89,10 @@ nonisolated enum ThemeHex {
     static let okSoftDark = 0.2
     static let warn: UInt32 = 0xFF9F0A
     static let warnTextLight: UInt32 = 0x8A4B00
+    /// Errors: the mark (symbols, dots, rings; >= 3:1) and the text-grade red (>= 4.5:1).
+    static let strikeLight: UInt32 = 0xD9363E
+    static let strikeDark: UInt32 = 0xFF6B6B
+    static let strikeTextLight: UInt32 = 0xC4162E
     static let warnSoftLight = 0.16
     static let warnSoftDark = 0.2
     /// Chip and neutral badge: black (light) / white (dark) at these opacities.
@@ -197,13 +201,15 @@ struct Theme {
     var glassStroke: Color { dark ? .white.opacity(0.12) : .black.opacity(0.08) }
 
     // MARK: Status
-    var strike: Color { dark ? Color(hex: 0xFF6B6B) : Color(hex: 0xD9363E) }
+    /// Errors as a mark: symbols, dots, rings (>= 3:1). Text in red uses `strikeText`.
+    var strike: Color { Color(hex: dark ? ThemeHex.strikeDark : ThemeHex.strikeLight) }
     var ok: Color { Color(hex: ThemeHex.ok) }
     var warn: Color { Color(hex: ThemeHex.warn) }
     var idle: Color { fg3 }
     /// Status colours as text on window/card backgrounds and on their badge tints (>= 4.5:1).
     var okText: Color { dark ? ok : Color(hex: ThemeHex.okTextLight) }
     var warnText: Color { dark ? warn : Color(hex: ThemeHex.warnTextLight) }
+    var strikeText: Color { dark ? strike : Color(hex: ThemeHex.strikeTextLight) }
     /// Badge tints (`Badge`): the tone's colour at a low opacity.
     var okSoft: Color { ok.opacity(dark ? ThemeHex.okSoftDark : ThemeHex.okSoftLight) }
     var warnSoft: Color { warn.opacity(dark ? ThemeHex.warnSoftDark : ThemeHex.warnSoftLight) }

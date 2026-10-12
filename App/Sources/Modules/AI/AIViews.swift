@@ -276,7 +276,7 @@ struct AITrialSection: View {
     private func answer(_ t: Theme) -> some View {
         VStack(alignment: .leading, spacing: Space.xs) {
             if let error = trial.error {
-                Text(AIText.error(error)).font(TypeScale.body).foregroundStyle(t.strike)
+                Text(AIText.error(error)).font(TypeScale.body).foregroundStyle(t.strikeText)
             } else if trial.answer.isEmpty {
                 StatusMark(.busy, AIText.thinking)
             } else {

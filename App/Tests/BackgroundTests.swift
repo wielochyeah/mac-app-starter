@@ -446,22 +446,6 @@ final class BackgroundTests: TestSuite {
             expectEqual(login.status, .disabled)
         }
 
-        test("a login launch is told by the launch Apple event") {
-            let open = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEOpenApplication),
-                                              targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID),
-                                              transactionID: AETransactionID(kAnyTransactionID))
-            expect(!LoginItem.isLoginLaunch(open), "a plain launch")
-            open.setParam(NSAppleEventDescriptor(enumCode: OSType(keyAELaunchedAsLogInItem)), forKeyword: AEKeyword(keyAEPropData))
-            expect(LoginItem.isLoginLaunch(open), "opened as a login item")
-            let reopen = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEReopenApplication),
-                                                targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID),
-                                                transactionID: AETransactionID(kAnyTransactionID))
-            reopen.setParam(NSAppleEventDescriptor(enumCode: OSType(keyAELaunchedAsLogInItem)), forKeyword: AEKeyword(keyAEPropData))
-            expect(!LoginItem.isLoginLaunch(reopen), "only the open event counts")
-            expect(!LoginItem.isLoginLaunch(nil))
-            expect(!LoginItem.launchedAtLogin, "tests are not launched at login")
-        }
-
         test("a preview login model changes only what it shows") {
             let model = LoginItemModel(status: .disabled)
             model.set(true)

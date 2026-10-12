@@ -55,7 +55,8 @@
         "(?:(?<=[^\\W\\d_])|(?<=[),.“\"]))[ \\t\\u00A0\\u202F\\u2009]+\\u2013[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W_]|[(„\"])",
         "(?<=\\d)[ \\t\\u00A0\\u202F\\u2009]+\\u2013[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W\\d_]|[(„\"])(?![A-ZÄÖÜ]\\d)",
         "(?:(?<=[^\\W\\d_])|(?<=[,)“\"]))[ \\t\\u00A0\\u202F\\u2009]+-[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W\\d_]|[„\"])",
-        "(?<=[^\\W_])(?:[ \\t]+--[ \\t]+|--)(?=[^\\W\\d_])"
+        "(?<=[^\\W_])[ \\t]+--[ \\t]+(?=[^\\W\\d_])",
+        "(?<![\\w/<>.\\-])[^\\W\\d_]+--[^\\W\\d_]+(?![\\w/<>\\-]|\\.\\w)"
       ],
       "flags": "",
       "bereiche": [
@@ -74,6 +75,7 @@
           "Umsatz 2025 – leicht gestiegen",
           "alt -- neu",
           "alt--neu",
+          "erst--dann.",
           "Saved - restart to apply"
         ],
         "erlaubt": [
@@ -86,10 +88,12 @@
           "Punkt\n- Liste",
           "make check --streng",
           "mit --only design. rendern",
-          "width = 900 - sidebar 224 - inset 8"
+          "width = 900 - sidebar 224 - inset 8",
+          "models--org--name",
+          "<hub>/models--<org>--<name>"
         ]
       },
-      "umsetzung": "Der Bindestrich mit Leerzeichen zählt nur nach einem Buchstaben, damit Rechnungen wie „900 - sidebar 224“ in Kommentaren nicht als Satzzeichen gelten; Code in Backticks ist in Kommentaren und Doku ausgeblendet."
+      "umsetzung": "Der Bindestrich mit Leerzeichen zählt nur nach einem Buchstaben, damit Rechnungen wie „900 - sidebar 224“ in Kommentaren nicht als Satzzeichen gelten; Code in Backticks ist in Kommentaren und Doku ausgeblendet. Ein doppelter Bindestrich ohne Leerzeichen zählt nur zwischen genau zwei Wörtern (`alt--neu`), nicht in Pfaden und Namen wie dem Cache-Ordner `models--org--name` von Hugging Face."
     },
     {
       "id": "pfeil",

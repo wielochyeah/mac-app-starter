@@ -63,12 +63,13 @@ App/Sources/
 | `gallery` | `GalleryEntry` (id, Bereich, Titel, Inhalt) | Galerie in den Einstellungen |
 | `selfTests` | `SelfTestCheck` (id, Prüfung) | `--selftest` |
 | `launchHooks`, `terminateHooks`, `demoDrivers` | Funktionen | Start, Ende, `--demo` |
+| `onboardingFinishedHooks` | Funktionen mit `firstTime` | nach „Fertig“ in der Einrichtung (nicht beim Neustart für eine Freigabe); das Fenster-Modul öffnet so das Hauptfenster, das Hintergrund-Modul wendet die Wahl „Beim Anmelden starten“ an |
 
 `Registry.problems()` meldet doppelte Kennungen und Szenen ohne Bereichspräfix; ein Test prüft das.
 
 **Fenster öffnen** geht nur über `AppActions` (`openSettings(pane:)`, `openOnboarding()`, `openMainWindow()`, `showAbout()`, `quit()`). Kit und Module setzen beim Start die passenden Handler. Fehlt ein Handler (etwa ohne `window`), fällt die Aktion auf die Einstellungen zurück; Aufrufer brauchen kein `#if`.
 
-**Fenster** entstehen über `WindowHost.show(id:style:size:minSize:title:content:)`: `NSWindow` mit `NSHostingController`, Titel folgt der Sprache, Views werden beim Schließen freigegeben, `AppForm` zählt offene Fenster und schaltet eine Accessory-App vorübergehend auf `.regular`, bis das letzte Kit-Fenster zu ist.
+**Fenster** entstehen über `WindowHost.show(id:style:size:minSize:title:configure:content:)`: `NSWindow` mit `NSHostingController`, Titel folgt der Sprache, die Mindestgröße eines größenveränderlichen Fensters hält die SwiftUI-Wurzel (ein bloßes `window.minSize` setzt `NSHostingController` beim ersten Layout zurück), Views werden beim Schließen freigegeben, `AppForm` zählt offene Fenster und schaltet eine Accessory-App vorübergehend auf `.regular`, bis das letzte Kit-Fenster zu ist.
 
 ## 4. Sprache
 

@@ -69,6 +69,9 @@ def build_parser() -> Parser:
     i.add_argument("--bundle-id", dest="bundle_id", help="Bundle-ID, etwa de.beispiel.notizen")
     i.add_argument("--accent", help="Akzentfarbe: violett, rot, blau, gruen, orange oder graphit")
     i.add_argument("--symbol", help="SF-Symbol für das App-Icon, etwa note.text")
+    i.add_argument("--anrede", choices=["du", "sie"],
+                   help="Anrede der deutschen Texte (Standard: wie in starter.json, im Starter du); bei sie "
+                        "listet make check-texts die du-Texte des Kits, die umzuschreiben sind")
     i.add_argument("--module-aus", dest="module_aus", action="append", default=[], metavar="MODUL",
                    help="Modul entfernen; mehrfach oder mit Komma (--module-aus island,examples)")
     i.add_argument("--non-interactive", action="store_true", help="nichts fragen; --name ist dann Pflicht")
@@ -172,7 +175,7 @@ def cmd_init(root: Path, a) -> int:
             raise StarterError("--non-interactive braucht --name")
         opts = project.InitOptions(name=a.name, bundle_id=a.bundle_id or project.default_bundle_id(a.name),
                                    accent=a.accent, symbol=a.symbol, remove=_split_modules(a.module_aus),
-                                   bundle_id_defaulted=not a.bundle_id)
+                                   bundle_id_defaulted=not a.bundle_id, anrede=a.anrede)
     else:
         if not sys.stdin.isatty():
             raise StarterError("kein Terminal für Fragen; mit --non-interactive --name <Name> aufrufen")
@@ -184,6 +187,8 @@ def cmd_init(root: Path, a) -> int:
         opts.remove += _split_modules(a.module_aus)
         if a.bundle_id:
             opts.bundle_id = a.bundle_id
+        if a.anrede:
+            opts.anrede = a.anrede
         print(project.summary(opts), end="")
         confirm = _ask("Fortfahren? j/n", "n")
         if not confirm.lower().startswith("j"):

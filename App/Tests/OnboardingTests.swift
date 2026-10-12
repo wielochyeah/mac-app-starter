@@ -107,6 +107,12 @@ final class OnboardingTests: TestSuite {
             event.setParam(NSAppleEventDescriptor(enumCode: OSType(keyAELaunchedAsLogInItem)), forKeyword: AEKeyword(keyAEPropData))
             expect(Launch.isLoginItemLaunch(event))
             expect(!Launch.isLoginItemLaunch(nil))
+            let reopen = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEReopenApplication),
+                                                targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID),
+                                                transactionID: AETransactionID(kAnyTransactionID))
+            reopen.setParam(NSAppleEventDescriptor(enumCode: OSType(keyAELaunchedAsLogInItem)), forKeyword: AEKeyword(keyAEPropData))
+            expect(!Launch.isLoginItemLaunch(reopen), "only the open event counts")
+            expect(!Launch.isBackground, "tests are not launched at login")
         }
 
         test("registry steps: filtered by isIncluded, sorted by order then id") {

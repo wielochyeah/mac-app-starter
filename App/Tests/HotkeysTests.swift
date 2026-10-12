@@ -787,10 +787,7 @@ final class HotkeysSceneTests: TestSuite {
                 defer { RenderMode.isStatic = false }
                 for scene in Registry.renderScenes {
                     for appearance in [Appearance.light, .dark] {
-                        // in a pool of its own: the hosting view is gone right after, not at the end of the run
-                        let png = autoreleasepool {
-                            RenderRunner.png(scene.content(), size: scene.size, appearance: appearance, lang: .de, scale: 1)
-                        }
+                        let png = RenderRunner.png(scene.content(), size: scene.size, appearance: appearance, lang: .de, scale: 1)
                         expect(png != nil && (png?.count ?? 0) > 1000, "\(scene.id) \(appearance)")
                     }
                 }

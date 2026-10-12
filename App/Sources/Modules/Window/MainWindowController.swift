@@ -24,26 +24,15 @@ enum MainWindowController {
     static func close() { WindowHost.close(id) }
 
     static func content(model: MainWindowModel = .shared) -> AnyView {
-        // The hosting controller keeps the window's minimum in sync with this frame (a plain
-        // `window.minSize` is reset to zero by NSHostingController on its first layout). The
-        // toolbar band sits above the SwiftUI content, so the content asks for that much less.
-        // `maxWidth`/`maxHeight: .infinity` make this frame the minimum, not the split view's own.
-        AnyView(MainWindowView(model: model)
-            .frame(minWidth: Metrics.Window.minSize.width, maxWidth: .infinity,
-                   minHeight: Metrics.Window.minSize.height - Metrics.Window.toolbarBand, maxHeight: .infinity))
+        AnyView(MainWindowView(model: model))
     }
 
     /// The chrome of a new main window (also used by the self-test on a window it builds itself).
+    /// `WindowHost` holds the 900 x 600 minimum through the SwiftUI root.
     static func configure(_ window: NSWindow) {
         window.styleMask.insert(.fullSizeContentView)
         window.titleVisibility = .hidden
         window.toolbarStyle = .unified
         window.collectionBehavior.insert(.fullScreenPrimary)
-        // The hosting controller sets the minimum from the SwiftUI frame. A minimum already on the
-        // window (WindowHost sets one) is converted with the 32 pt title bar and then grows by the
-        // toolbar, which ended at 900 x 620; clearing it first lands on exactly 900 x 600.
-        window.minSize = .zero
-        window.contentMinSize = .zero
-        (window.contentViewController as? NSHostingController<AnyView>)?.sizingOptions = [.minSize]
     }
 }

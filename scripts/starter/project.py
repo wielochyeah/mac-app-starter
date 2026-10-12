@@ -14,6 +14,8 @@ from __future__ import annotations
 import datetime
 import re
 import shutil
+import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
@@ -42,6 +44,7 @@ class InitOptions:
     today: Optional[str] = None
     starter_commit: Optional[str] = None
     bundle_id_defaulted: bool = False
+    anrede: Optional[str] = None
 
 
 @dataclass
@@ -58,6 +61,9 @@ class InitResult:
     commit: Optional[str] = None
     checksums: int = 0
     notes: List[str] = field(default_factory=list)
+    tagline_cleared: bool = False
+    anrede: str = "du"
+    rules_synced: bool = False
     build_ok: Optional[bool] = None                     # None: not built
     dirty: List[str] = field(default_factory=list)      # uncommitted changes before init
 
@@ -126,7 +132,15 @@ def project_config(config: dict, opts: InitOptions, today: str) -> dict:
     if opts.symbol:
         app["symbol"] = opts.symbol
     app["copyright"] = f"© {today[:4]}"
+    # The starter's own tagline would greet the project's users; without one the welcome step shows the name.
+    app.pop("tagline", None)
     out["app"] = app
+    texts = dict(out.get("texts") or {})
+    if opts.anrede:
+        texts["anrede"] = opts.anrede
+    # Names the starter author keeps out of comments mean nothing in the project.
+    texts.pop("personen", None)
+    out["texts"] = texts
     out["commit"] = {"name": "", "email": ""}
     signing = dict(out.get("signing") or {})
     signing.update({"identity": "-", "teamId": "", "notarize": False})
@@ -141,7 +155,8 @@ def check_options(opts: InitOptions) -> None:
     for flag, value, check in (("--name", opts.name, check_name), ("--bundle-id", opts.bundle_id, check_bundle_id),
                                ("--accent", opts.accent, lambda v: None if v in accents else
                                 "eine von " + ", ".join(accents)),
-                               ("--symbol", opts.symbol, check_symbol)):
+                               ("--symbol", opts.symbol, check_symbol),
+                               ("--anrede", opts.anrede, check_anrede)):
         if value is not None and check(value):
             raise StarterError(f"{flag} „{value}“: {check(value)}")
 
@@ -175,7 +190,9 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
                            f"{', '.join(order)}:\n  " + "\n  ".join(dangling)
                            + "\nDiese Stellen mit #if MODUL_<NAME> … #endif umschließen, dann erneut aufrufen.")
 
-    result = InitResult(project=opts.name, version=lock["version"], modules_removed=order)
+    result = InitResult(project=opts.name, version=lock["version"], modules_removed=order,
+                        tagline_cleared="tagline" in (config.get("app") or {}),
+                        anrede=(new_config.get("texts") or {}).get("anrede", "du"))
     if opts.bundle_id_defaulted:
         result.notes.append(f"keine --bundle-id angegeben, gesetzt ist {opts.bundle_id}; vor dem ersten Release in "
                             "starter.json (app.bundleId) ändern")
@@ -241,6 +258,12 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
             raise StarterError(dangling_report(plan).rstrip())
         apply_removal(root, plan, manifest)
     result.checksums = len(read_lock(root)["checksums"])
+    failed = sync_rules(root)
+    if failed is not None:
+        result.notes.append("make rules ist gescheitert; von Hand ausführen, sonst ist make check rot:\n    "
+                            + "\n    ".join(failed.strip().splitlines()))
+    else:
+        result.rules_synced = (root / "scripts" / "rules_sync.py").is_file()
 
     if opts.build:
         if (root / "scripts" / "icon.sh").exists():
@@ -249,6 +272,17 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
         result.build_ok = run_make(root, "build")
         set_pending_build(root, None if result.build_ok else "bin/starter init")
     return result
+
+
+def sync_rules(root: Path) -> Optional[str]:
+    """make rules: CLAUDE.md part A and the word lists follow texts.anrede and texts.personen of the new
+    starter.json (both shared paths, so the kit checksums stay valid). Returns the output when it failed."""
+    script = root / "scripts" / "rules_sync.py"
+    if not script.is_file():
+        return None
+    res = subprocess.run([sys.executable, str(script)], cwd=str(root), stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, universal_newlines=True)
+    return None if res.returncode == 0 else res.stdout
 
 
 def report(result: InitResult, dry_run: bool, build: bool) -> str:
@@ -272,6 +306,16 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
         lines.append(f"  {result.checksums} Prüfsummen der Kit-Dateien in starter.lock.json")
     lines.append(f"  starter.json: Name, Bundle-ID, Version {NEW_VERSION}; Commit-Identität {cleared} "
                  "(commit.name und commit.email eintragen, sonst lehnt der Hook commit-msg jeden Commit ab)")
+    if result.tagline_cleared:
+        lines.append("  starter.json: app.tagline des Starters entfernt; einen eigenen Satz als "
+                     "app.tagline {\"en\": …, \"de\": …} eintragen, sonst zeigt der Willkommensschritt nur den Namen")
+    if result.rules_synced:
+        lines.append(f"  make rules: CLAUDE.md Teil A und die Wortlisten der Prüfungen neu geschrieben (Anrede "
+                     f"{result.anrede})")
+    if result.anrede == "sie":
+        lines.append("  Anrede Sie: die deutschen Texte des Kits sind in der du-Form geschrieben; make check-texts "
+                     "listet jede Stelle in den *Text.swift-Dateien und in App/Resources/InfoPlist.json, die "
+                     "umzuschreiben ist (S-05)")
     lines += [f"  Hinweis: {n}" for n in result.notes]
     if result.dirty:
         lines.append(f"  Hinweis: {len(result.dirty)} Datei(en) hatten schon vorher nicht committete Änderungen.")
@@ -283,8 +327,8 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
                          "Änderungen): git restore --source=HEAD --staged --worktree -- .")
         elif not build:
             lines.append("  Danach: make icon und make build (mit --ohne-build übersprungen)")
-        lines.append("Danach: commit.name und commit.email in starter.json eintragen, make hooks, make rules, "
-                     "make check, docs/PROJECT.md füllen und alles committen.")
+        lines.append("Danach: commit.name und commit.email in starter.json eintragen, make hooks, make check, "
+                     "docs/PROJECT.md füllen und alles committen.")
     return "\n".join(lines) + "\n"
 
 
@@ -299,6 +343,10 @@ def check_bundle_id(value: str) -> Optional[str]:
     if not re.fullmatch(r"[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+", value):
         return "Form wie de.firma.app"
     return None
+
+
+def check_anrede(value: str) -> Optional[str]:
+    return None if value in ("du", "sie") else "du oder sie"
 
 
 def check_symbol(value: str) -> Optional[str]:
@@ -322,6 +370,8 @@ def interactive_values(manifest: Manifest, config: dict, ask, present: List[str]
     accent = ask(f"Akzentfarbe ({', '.join(accents)})", app.get("accent", "violett"),
                  lambda v: None if v in accents else "eine der genannten Farben")
     symbol = ask("SF Symbol für das App-Icon", app.get("symbol", "sparkles"), check_symbol)
+    anrede = ask("Anrede der deutschen Texte (du oder sie)", (config.get("texts") or {}).get("anrede", "du"),
+                 check_anrede)
     remove: List[str] = []
     for m in manifest.modules.values():
         if m.name not in present:
@@ -348,11 +398,13 @@ def interactive_values(manifest: Manifest, config: dict, ask, present: List[str]
                    "j" if on else "n", check)
         if keep.lower().startswith("n"):
             remove.append(m.name)
-    return InitOptions(name=name, bundle_id=bundle, accent=accent, symbol=symbol, remove=remove)
+    return InitOptions(name=name, bundle_id=bundle, accent=accent, symbol=symbol, remove=remove, anrede=anrede)
 
 
 def summary(opts: InitOptions) -> str:
     """What init will do with the interactive answers, shown before "Fortfahren?"."""
-    return (f"Zusammenfassung: App {opts.name}, Bundle-ID {opts.bundle_id}, Akzent {opts.accent}, Symbol {opts.symbol}\n"
+    return (f"Zusammenfassung: App {opts.name}, Bundle-ID {opts.bundle_id}, Akzent {opts.accent}, Symbol {opts.symbol}, "
+            f"Anrede {opts.anrede or 'du'}\n"
             f"  Module entfernen: {', '.join(opts.remove) if opts.remove else 'keine'}\n"
-            "  Außerdem: Bauunterlagen des Starters löschen, Commit-Identität leeren, starter.lock.json schreiben\n")
+            "  Außerdem: Bauunterlagen des Starters löschen, Commit-Identität und Tagline leeren, starter.lock.json "
+            "schreiben, make rules\n")

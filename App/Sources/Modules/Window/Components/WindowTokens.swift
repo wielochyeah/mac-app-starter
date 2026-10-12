@@ -1,29 +1,14 @@
 import SwiftUI
 
 // Sizes and colours of the main window and its content blocks, on top of Kit/Design. They live
-// next to the window module (removed with it) and are candidates for Kit/Design once a second
-// area needs them. Values follow macOS 26 Music / Finder and VoiceBud's hub where it has one.
+// next to the window module (removed with it); the sidebar shares `Metrics.Sidebar` with the
+// settings window. Values follow macOS 26 Music / Finder and VoiceBud's hub where it has one.
 
 extension Metrics {
     enum Window {
         /// Default and minimum size of the main window.
         static let size = CGSize(width: 1180, height: 760)
         static let minSize = CGSize(width: 900, height: 600)
-        /// Sidebar column widths (native NavigationSplitView).
-        static let sidebarMin: CGFloat = 200
-        static let sidebarIdeal: CGFloat = Metrics.sidebarWidth
-        static let sidebarMax: CGFloat = 280
-        /// The floating sidebar panel macOS 26 draws, imitated in renders: inset from the window edge.
-        static let sidebarInset: CGFloat = 8
-        /// First sidebar row starts below the traffic lights.
-        static let sidebarTop: CGFloat = 48
-        static let sidebarRow: CGFloat = 30
-        static let sidebarSymbol: CGFloat = 15
-        static let sidebarSymbolColumn: CGFloat = 22
-        /// Leading inset of sidebar content from the panel edge (section titles, row symbols, footer).
-        static var sidebarContentInset: CGFloat { 2 * Space.xs }
-        static let sidebarSectionTop: CGFloat = 14
-        static let sidebarSectionHeight: CGFloat = 24
         /// The toolbar band above the detail column (macOS 26 unified toolbar, 52 pt like the hub).
         static let toolbarBand: CGFloat = Metrics.paneHeader
         /// Toolbar search field in renders (macOS 26 draws a glass capsule).
@@ -55,8 +40,6 @@ extension Metrics {
         static let artworkGlyphShadow: CGFloat = 0.05
         static let artworkGlyphShadowY: CGFloat = 0.015
         static let artworkGlyphTrailing: CGFloat = 0.3
-        /// Disabled buttons on artwork (the kit buttons use the same 45 %).
-        static let disabledOpacity: Double = 0.45
         /// Opacity of the shade spot at its centre.
         static let artworkShadeStrength: Double = 0.75
         /// Below this side length artwork uses the small radius.

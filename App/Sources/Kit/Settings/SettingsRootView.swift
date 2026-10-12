@@ -20,7 +20,6 @@ struct SettingsRootView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .toolbar(removing: .sidebarToggle)
-        .frame(minWidth: Metrics.settingsWindowMin.width, minHeight: Metrics.settingsWindowMin.height)
     }
 }
 
@@ -31,18 +30,13 @@ struct SettingsStaticWindow: View {
     let hub: SettingsHub
     var size: CGSize = Metrics.settingsWindow
     var footer: (() -> AnyView)? = SettingsHubExtras.sidebarFooter
-    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        let t = Theme(scheme)
-        let panel = RoundedRectangle(cornerRadius: Radius.panel, style: .continuous)
         StaticWindow(size: size, chrome: .settings) {
             HStack(spacing: 0) {
                 SettingsSidebar(hub: hub, footer: footer)
                     .frame(width: Metrics.sidebarWidth)
-                    .background(panel.fill(t.sidebarPanel))
-                    .overlay(panel.strokeBorder(t.sidebarPanelStroke, lineWidth: Metrics.hairline))
-                    .shadow(color: t.panelShadow, radius: Metrics.Sidebar.panelShadowRadius, y: Metrics.Sidebar.panelShadowY)
+                    .staticSidebarPanel()
                     .padding([.leading, .top, .bottom], Metrics.Sidebar.panelInset)
                 SettingsDetail(hub: hub)
             }

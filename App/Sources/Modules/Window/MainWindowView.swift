@@ -18,8 +18,8 @@ struct MainWindowView: View {
         NavigationSplitView(columnVisibility: $model.columnVisibility) {
             MainSidebar(groups: MainWindowModel.groups(model.pages),
                         selection: Binding(get: { model.currentPage?.id }, set: { model.select($0) }))
-                .navigationSplitViewColumnWidth(min: Metrics.Window.sidebarMin, ideal: Metrics.Window.sidebarIdeal,
-                                                max: Metrics.Window.sidebarMax)
+                .navigationSplitViewColumnWidth(min: Metrics.Sidebar.minWidth, ideal: Metrics.sidebarWidth,
+                                                max: Metrics.Sidebar.maxWidth)
         } detail: {
             detail(t)
         }
@@ -105,7 +105,7 @@ struct SidebarFooterView: View {
                 Separator()
                 ForEach(items) { item in item.content() }
             }
-            .padding(.horizontal, Metrics.Window.sidebarContentInset)
+            .padding(.horizontal, Metrics.Sidebar.contentInset)
             .padding(.bottom, Space.s)
         }
     }
@@ -121,7 +121,7 @@ struct SidebarStatusLine: View {
         let t = Theme(scheme)
         HStack(spacing: Space.xs) {
             Circle().fill(ok ? t.ok : t.warn).frame(width: Metrics.dot, height: Metrics.dot)
-                .frame(width: Metrics.Window.sidebarSymbolColumn)
+                .frame(width: Metrics.Sidebar.symbolColumn)
             Text(text).font(TypeScale.subtitle).foregroundStyle(t.fg2).lineLimit(1)
         }
         .accessibilityElement(children: .combine)
