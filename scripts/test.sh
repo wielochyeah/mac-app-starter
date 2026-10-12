@@ -31,7 +31,7 @@ if [[ -z "${ONLY:-}" ]]; then
   python3 -m unittest discover -s scripts/tests -t . -p 'test_*.py' 2>&1 | tail -3
   if [[ -d ai-worker/tests ]]; then
     PY=python3
-    [[ -x ai-worker/.venv/bin/python ]] && PY=ai-worker/.venv/bin/python
+    [[ -x "$ROOT/ai-worker/.venv/bin/python" ]] && PY="$ROOT/ai-worker/.venv/bin/python"
     (cd ai-worker && "$PY" -m unittest discover -s tests -p 'test_*.py' 2>&1 | tail -3)
   fi
 fi
