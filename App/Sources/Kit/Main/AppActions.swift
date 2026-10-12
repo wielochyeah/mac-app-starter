@@ -1,7 +1,7 @@
 import AppKit
 
 /// App-wide actions. Kit areas and modules install the handlers at registration
-/// (e.g. `AppActions.settingsHandler = { pane in SettingsWindow.show(pane: pane) }`); callers only
+/// (e.g. `AppActions.settingsHandler = { pane in SettingsController.show(pane: pane) }`); callers only
 /// use the static functions, so a module can be removed without breaking its callers.
 enum AppActions {
     /// Opens the settings window, optionally at a pane id. Installed by Kit/Settings.

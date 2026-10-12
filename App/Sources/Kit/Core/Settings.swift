@@ -6,7 +6,7 @@ import Observation
 ///     extension SettingKey {
 ///         static var islandStyle: SettingKey<String> { .init("island.style", default: "auto") }
 ///     }
-///     Settings.shared[.islandStyle] = "notch"
+///     Settings.shared[.islandStyle] = "capsule"
 ///
 /// Names are dotted, module first (`island.style`). Custom value types must be declared
 /// `nonisolated struct …: Codable, Sendable` (the app builds with default MainActor isolation, and a

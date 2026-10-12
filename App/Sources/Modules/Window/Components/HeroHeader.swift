@@ -122,7 +122,7 @@ struct HeroBackdrop: View {
 /// feature at the top of Music "Home"). Same picture in light and dark; the text is always white.
 ///
 ///     HeroHeader(eyebrow: T.featured, title: c.name, subtitle: c.summary, seed: c.id, symbol: c.symbol,
-///                primary: HeaderAction(CommonText.open, symbol: "arrow.right") { open(c) })
+///                primary: HeaderAction(T.open, symbol: "arrow.right") { open(c) })
 struct HeroHeader: View {
     var eyebrow: String?
     let title: String

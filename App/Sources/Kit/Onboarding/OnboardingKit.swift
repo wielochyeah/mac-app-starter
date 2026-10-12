@@ -10,7 +10,7 @@ import SwiftUI
 enum OnboardingKit {
     /// How a step's footer button behaves, by step id (default: primary "Continue", "Done" on the
     /// last step). A step that holds its own primary action makes the footer quiet:
-    ///     OnboardingKit.advanceRules["hotkeys"] = { _ in OnboardingAdvance(isPrimary: false, title: HotkeysText.skip) }
+    ///     OnboardingKit.advanceRules["hotkeys"] = { _ in OnboardingAdvance(isPrimary: false, title: CommonText.skip) }
     static var advanceRules: [String: (PermissionMonitor) -> OnboardingAdvance] = [:]
 
     enum StepID {

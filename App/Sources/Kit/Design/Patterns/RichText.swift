@@ -5,7 +5,7 @@ import SwiftUI
 /// Only `app://` links are links; everything else (other brackets, stray Markdown, web URLs) is
 /// shown exactly as written. Font, colour and alignment come from the caller's modifiers.
 ///
-///     OnboardingRichText(OnboardingText.revealHint) { action in
+///     OnboardingRichText(PermissionText.revealHint) { action in
 ///         if action == "reveal" { NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL]) }
 ///     }
 struct OnboardingRichText: View {

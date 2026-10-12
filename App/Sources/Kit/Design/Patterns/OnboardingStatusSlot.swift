@@ -59,7 +59,7 @@ extension OnboardingSlotState.SlotButton {
 /// and a slight scale (VoiceBud stateKey transition), so nothing below it moves.
 ///
 ///     OnboardingStatusSlot(grant == .granted ? .granted() : .action { request() })
-///     OnboardingStatusSlot(.denied(button: .openSettings { open(kind.settingsURL) }))
+///     OnboardingStatusSlot(.denied(button: .openSettings { monitor.openSettings(kind) }))
 ///     OnboardingHint(hintLines, key: slot.key).padding(.top, Space.s)
 struct OnboardingStatusSlot: View {
     let state: OnboardingSlotState

@@ -4,7 +4,7 @@ import SwiftUI
 /// over name (12 `prose` / 11.5 `fg2`), on the right the size, "1.4 of 3.0 GB", or a status; a
 /// 4 pt bar indented 40 pt under the text while running (tint colour) or paused (grey).
 ///
-///     ProgressRow(role: AIText.speech, name: "Whisper turbo", symbol: "waveform", tint: .violet,
+///     ProgressRow(role: MyText.speechModel, name: "Whisper turbo", symbol: "waveform", tint: .violet,
 ///                 phase: .running(done: 1_400_000_000, total: 3_000_000_000))
 struct ProgressRow: View {
     enum Phase: Equatable {

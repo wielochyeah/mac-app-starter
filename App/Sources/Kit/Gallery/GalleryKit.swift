@@ -5,8 +5,8 @@ import SwiftUI
 ///
 /// Modules add their components with
 ///
-///     Registry.gallery.append(GalleryEntry(id: "island.done-card", area: "island",
-///                                          title: { IslandText.doneCard }) { AnyView(DoneCardSample()) })
+///     Registry.gallery.append(GalleryEntry(id: "island.states", area: "island",
+///                                          title: { IslandText.galleryStates }) { AnyView(StatesSample()) })
 enum GalleryKit {
     static var isVisible: Bool {
         GalleryModel.isVisible(debug: GalleryModel.isDebugBuild, setting: Settings.shared[.showGallery])

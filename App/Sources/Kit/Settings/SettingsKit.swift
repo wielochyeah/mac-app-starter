@@ -2,10 +2,10 @@ import SwiftUI
 
 /// The settings window (hub) and its kit panes. Modules add panes with
 ///
-///     Registry.settingsPanes.append(SettingsPane(id: "island", group: .settings, order: 100,
-///         title: { IslandText.pane }, symbol: "capsule.fill", tint: .black) { AnyView(IslandPane()) })
+///     Registry.settingsPanes.append(SettingsPane(id: "notes", group: .settings, order: 300,
+///         title: { NotesText.pane }, symbol: "note.text", tint: .yellow) { AnyView(NotesPane()) })
 ///
-/// and open the window with `AppActions.openSettings(pane: "island")`. Content panes (`.content`)
+/// and open the window with `AppActions.openSettings(pane: "notes")`. Content panes (`.content`)
 /// sit on top of the sidebar, setting panes below the "Settings" label; General is order 0 and
 /// About order 1000 of the settings group, so module panes go in between.
 enum SettingsKit {

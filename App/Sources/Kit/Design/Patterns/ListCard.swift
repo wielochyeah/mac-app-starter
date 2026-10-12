@@ -5,7 +5,7 @@ import SwiftUI
 /// to it, VoiceBud history); a calm empty state ("No apps yet" or "No results").
 ///
 ///     ListCard(MyText.apps, items: apps, query: $query, searchPrompt: MyText.searchApps,
-///              matches: { app, q in ListSearch.matches(app.name, q) },
+///              matches: { app, q in ListSearch.matches(app.name, query: q) },
 ///              emptyTitle: MyText.noApps, emptyMessage: MyText.noAppsDetail) { app, hovered in
 ///         Row(app.name, symbol: app.symbol) { if hovered { Chip(CommonText.remove) { remove(app) } } }
 ///     }

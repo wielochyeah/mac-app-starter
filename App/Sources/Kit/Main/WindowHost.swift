@@ -5,7 +5,7 @@ import SwiftUI
 /// (`AppForm`) and releases each window's views when it closes (memory stays low while idle).
 ///
 ///     WindowHost.show(id: "settings", style: .settings, title: { CommonText.settings }) {
-///         AnyView(SettingsRoot())
+///         AnyView(SettingsRootView(hub: hub))
 ///     }
 enum WindowHost {
     enum Style {

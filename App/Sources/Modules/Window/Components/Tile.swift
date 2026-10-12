@@ -18,7 +18,7 @@ struct ArtworkAction {
 /// draws the accent ring 4 pt outside the artwork. Width comes from the container (shelf, grid).
 ///
 ///     Tile(title: c.name, subtitle: CollectionText.count(c.items), seed: c.id, symbol: c.symbol,
-///          action: ArtworkAction(symbol: "play.fill", label: CommonText.open) { play(c) }) { open(c) }
+///          action: ArtworkAction(symbol: "play.fill", label: T.play) { play(c) }) { open(c) }
 struct Tile: View {
     let title: String
     var subtitle: String?
