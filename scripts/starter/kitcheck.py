@@ -61,7 +61,8 @@ def kit_differences(root: Path, lock: dict, manifest: Manifest, files: Sequence[
 def check_project(root: Path, manifest: Manifest, lock: dict, files: Sequence[str], f: Findings) -> None:
     diffs = kit_differences(root, lock, manifest, files)
     if diffs:
-        f.problems.append(f"{len(diffs)} Kit-Dateien weichen von Starter {lock['version']} ab:")
+        f.problems.append(f"{len(diffs)} Kit-Datei weicht von Starter {lock['version']} ab:" if len(diffs) == 1 else
+                          f"{len(diffs)} Kit-Dateien weichen von Starter {lock['version']} ab:")
         f.problems += [f"  {d}" for d in diffs]
         f.problems.append(
             "Kit-Dateien kommen aus dem Starter (Liste kit in starter.manifest.json) und bleiben im Projekt "
@@ -342,8 +343,8 @@ def check_switches(root: Path, manifest: Manifest, in_project: bool, f: Findings
         else:
             f.warnings.append(msg + " (im Starter noch im Bau; in einem Projekt ist das ein Fehler)")
     if problems:
-        f.problems.append(f"{len(problems)} Abweichungen von der Soll-Liste der Prüfungen (checks in "
-                          "starter.manifest.json):")
+        f.problems.append(f"{len(problems)} {'Abweichung' if len(problems) == 1 else 'Abweichungen'} von der "
+                          "Soll-Liste der Prüfungen (checks in starter.manifest.json):")
         f.problems += [f"  {p}" for p in problems]
         f.problems.append("Diese Dateien schalten die Prüfungen ein. Das Ziel, den Hook oder den Schritt "
                           "wiederherstellen; braucht das Projekt eine Ausnahme, steht sie mit Grund in "

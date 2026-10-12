@@ -88,6 +88,17 @@ class CliTests(TempDirCase):
         self.assertEqual(code, 1)
         self.assertIn("bin/starter init", err)
 
+    def test_init_flag_errors_are_german_and_change_nothing(self):
+        root = make_repo(self.tmp / "r", base_files())
+        for flags, part in ((["--name", "Bücher"], "Umlaute danach in starter.json"),
+                            (["--name", "Notizen", "--accent", "lila"], "--accent „lila“: eine von"),
+                            (["--name", "Notizen", "--bundle-id", "notizen"], "--bundle-id „notizen“")):
+            code, out, err = run(["init", "--non-interactive", "--ohne-build", "--ohne-netz", *flags], root)
+            self.assertEqual(code, 1, flags)
+            self.assertIn(part, err)
+            self.assertNotIn("must", err)
+            self.assertNotIn("Hinweis", out, "no bundle id hint when init fails")
+
     def test_init_refuses_in_this_repository(self):
         if "wielochyeah/mac-app-starter" not in subprocess.run(
                 ["git", "remote", "get-url", "origin"], cwd=str(ROOT), stdout=subprocess.PIPE).stdout.decode():

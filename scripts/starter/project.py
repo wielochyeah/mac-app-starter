@@ -41,6 +41,7 @@ class InitOptions:
     offline: bool = False
     today: Optional[str] = None
     starter_commit: Optional[str] = None
+    bundle_id_defaulted: bool = False
 
 
 @dataclass
@@ -80,7 +81,7 @@ def starter_commit_for(root: Path, repository: str, version: str, offline: bool)
         return None
     try:
         out = git(root, ["ls-remote", "--tags", f"https://github.com/{repository}.git", f"refs/tags/v{version}"],
-                  check=False, timeout=15)
+                  check=False, timeout=15, env={"GIT_TERMINAL_PROMPT": "0"})
     except StarterError:
         return None
     m = re.match(r"^([0-9a-f]{40})\s", out or "")
@@ -133,9 +134,16 @@ def project_config(config: dict, opts: InitOptions, today: str) -> dict:
     return out
 
 
-def _check_symbol(symbol: Optional[str]) -> None:
-    if symbol is not None and check_symbol(symbol):
-        raise StarterError(f"--symbol {symbol}: {check_symbol(symbol)}")
+def check_options(opts: InitOptions) -> None:
+    """The values in German before scripts/gen_config.py sees them (its messages are English and name
+    starter.json, while the user typed flags)."""
+    accents = cfg.gen_config().ACCENTS
+    for flag, value, check in (("--name", opts.name, check_name), ("--bundle-id", opts.bundle_id, check_bundle_id),
+                               ("--accent", opts.accent, lambda v: None if v in accents else
+                                "eine von " + ", ".join(accents)),
+                               ("--symbol", opts.symbol, check_symbol)):
+        if value is not None and check(value):
+            raise StarterError(f"{flag} „{value}“: {check(value)}")
 
 
 def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[InitResult]:
@@ -147,7 +155,7 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
         refuse_in_starter(root, manifest, "bin/starter init")
     today = opts.today or datetime.date.today().isoformat()
     config = cfg.read_config(root)
-    _check_symbol(opts.symbol)
+    check_options(opts)
     new_config = project_config(config, opts, today)
     cfg.validate_config(new_config)
 
@@ -168,6 +176,9 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
                            + "\nDiese Stellen mit #if MODUL_<NAME> … #endif umschließen, dann erneut aufrufen.")
 
     result = InitResult(project=opts.name, version=lock["version"], modules_removed=order)
+    if opts.bundle_id_defaulted:
+        result.notes.append(f"keine --bundle-id angegeben, gesetzt ist {opts.bundle_id}; vor dem ersten Release in "
+                            "starter.json (app.bundleId) ändern")
     result.identity_cleared = bool((config.get("commit") or {}).get("name") or (config.get("commit") or {}).get("email"))
     result.removed = [f for f in files if globs.matches(f, manifest.starter_only_paths) and f not in manifest.replace]
     moves = [(src, dst) for src, dst in manifest.move.items() if (root / src).is_file()]
@@ -279,7 +290,8 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
 
 def check_name(value: str) -> Optional[str]:
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9 ]*", value):
-        return "mit einem Buchstaben beginnen, nur Buchstaben, Ziffern und Leerzeichen"
+        return ("beginnt mit einem Buchstaben, dann nur A–Z, a–z, Ziffern und Leerzeichen; Umlaute danach in "
+                "starter.json unter app.displayName")
     return None
 
 

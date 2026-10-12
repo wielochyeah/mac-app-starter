@@ -35,6 +35,8 @@ from .manifest import LOCK, MANIFEST, Manifest, is_project, parse_manifest, read
 from .markers import transform
 
 BASE_REF = "refs/starter/basis"
+# Git must not wait for a password at a prompt nobody sees; a private source uses SSH or the credential helper.
+NO_PROMPT = {"GIT_TERMINAL_PROMPT": "0"}
 TARGET_REF = "refs/starter/ziel"
 NEVER_MERGED = {LOCK, cfg.CONFIG}
 EXECUTABLE = [
@@ -163,7 +165,11 @@ def sync(root: Path, target: str, source: Optional[str] = None, base: Optional[s
     if base is not None and base.startswith("-"):
         raise StarterError("--basis darf nicht mit einem Bindestrich beginnen.")
     fetch = ["-c", "transfer.fsckObjects=true", "fetch", "--quiet", "--no-tags", source]
-    git(root, fetch + [f"+refs/tags/{target}:{TARGET_REF}"])
+    try:
+        git(root, fetch + [f"+refs/tags/{target}:{TARGET_REF}"], env=NO_PROMPT)
+    except StarterError as e:
+        raise StarterError(f"{e}. Den Tag {target} gibt es in {source} nicht oder die Quelle ist nicht erreichbar; "
+                           f"vorhandene Tags zeigt git ls-remote --tags {source}")
     if base:
         base_spec = base if re.fullmatch(r"[0-9a-f]{40}", base) else f"refs/tags/{base}"
     elif lock.get("commit"):
@@ -171,7 +177,7 @@ def sync(root: Path, target: str, source: Optional[str] = None, base: Optional[s
     else:
         base_spec = f"refs/tags/v{lock['version']}"
     try:
-        git(root, fetch + [f"+{base_spec}:{BASE_REF}"])
+        git(root, fetch + [f"+{base_spec}:{BASE_REF}"], env=NO_PROMPT)
     except StarterError as e:
         raise StarterError(f"{e}. Basis {base_spec} nicht gefunden: den Tag v{lock['version']} im Starter "
                            "veröffentlichen oder --basis <tag-oder-commit> angeben.")

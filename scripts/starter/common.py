@@ -24,12 +24,13 @@ def repo_root(start: Optional[Path] = None) -> Path:
                        "im Wurzelordner des Projekts aufrufen")
 
 
-def git(root: Path, args: Sequence[str], check: bool = True, timeout: Optional[float] = None) -> str:
+def git(root: Path, args: Sequence[str], check: bool = True, timeout: Optional[float] = None,
+        env: Optional[Dict[str, str]] = None) -> str:
     """Runs git in root and returns stdout. Errors name the git subcommand and the last stderr line,
-    never the arguments (a source URL may carry an address)."""
+    never the arguments (a source URL may carry an address). env adds variables to the environment."""
     try:
         res = subprocess.run(["git", *args], cwd=str(root), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             timeout=timeout)
+                             timeout=timeout, env=dict(os.environ, **env) if env else None)
     except subprocess.TimeoutExpired:
         raise StarterError(f"git {_subcommand(args)}: keine Antwort nach {int(timeout or 0)} s")
     if res.returncode != 0:

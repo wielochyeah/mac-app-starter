@@ -78,8 +78,8 @@ def build_parser() -> Parser:
                    help="den Starter-Commit nicht per git ls-remote nachschlagen")
 
     r = sub.add_parser("remove", help="ein Modul entfernen",
-                       description="Entfernt ein Modul: seine Pfade aus starter.manifest.json, die "
-                                   "#if MODUL_<NAME>-Blöcke in allen Swift-Dateien (ein #else-Zweig bleibt), "
+                       description="Entfernt ein Modul: löscht die Pfade, die starter.manifest.json dem Modul "
+                                   "zuordnet, die #if MODUL_<NAME>-Blöcke in allen Swift-Dateien (ein #else-Zweig bleibt), "
                                    "die Markierungen modul:<name> in anderen Dateien und den Schalter in "
                                    "starter.json, dann make build. Vorher prüft es Abhängigkeiten (mlx braucht ai; "
                                    "window oder menubar bleibt) und ob andere Dateien Typen des Moduls nutzen; "
@@ -169,9 +169,8 @@ def cmd_init(root: Path, a) -> int:
         if not a.name:
             raise StarterError("--non-interactive braucht --name")
         opts = project.InitOptions(name=a.name, bundle_id=a.bundle_id or project.default_bundle_id(a.name),
-                                   accent=a.accent, symbol=a.symbol, remove=_split_modules(a.module_aus))
-        if not a.bundle_id:
-            print(f"Hinweis: keine --bundle-id, nutze {opts.bundle_id}; vor dem ersten Release ändern.")
+                                   accent=a.accent, symbol=a.symbol, remove=_split_modules(a.module_aus),
+                                   bundle_id_defaulted=not a.bundle_id)
     else:
         if not sys.stdin.isatty():
             raise StarterError("kein Terminal für Fragen; mit --non-interactive --name <Name> aufrufen")
