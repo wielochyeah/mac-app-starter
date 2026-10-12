@@ -317,7 +317,45 @@ def frontmatter(path):
     return dict(line.split(": ", 1) for line in match.group(1).splitlines() if ": " in line)
 
 
+# Kit skills stay in every project. A module skill goes with its module (bin/starter remove deletes it with the
+# module folder), so it is expected only while App/Sources/Modules/<folder>/ exists.
+KIT_SKILLS = {
+    "neues-feature", "neue-einstellung", "neuer-onboarding-schritt", "neue-berechtigung", "screenshots", "red-team",
+    "starter-rueckfluss", "release-dmg",
+}
+MODULE_SKILLS = {
+    "neue-ansicht": "Window", "menueleisten-app": "MenuBar", "insel-zustand": "Island", "hintergrund-job": "Background",
+    "kurzbefehl": "Hotkeys", "ki-funktion": "AI",
+}
+
+
+def expected_skills(root):
+    modules = root / "App" / "Sources" / "Modules"
+    return KIT_SKILLS | {skill for skill, folder in MODULE_SKILLS.items() if (modules / folder).is_dir()}
+
+
 class AgentsAndSkillsTests(unittest.TestCase):
+    def test_module_skills_are_expected_only_with_their_module(self):
+        self.assertEqual(expected_skills(ROOT), KIT_SKILLS | set(MODULE_SKILLS))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for folder in ("Window", "MenuBar", "Background", "Hotkeys", "AI"):
+                (root / "App" / "Sources" / "Modules" / folder).mkdir(parents=True)
+            self.assertEqual(expected_skills(root), KIT_SKILLS | set(MODULE_SKILLS) - {"insel-zustand"})
+            shutil.rmtree(root / "App" / "Sources" / "Modules")
+            self.assertEqual(expected_skills(root), KIT_SKILLS)
+
+    def test_manifest_removes_each_module_skill_with_its_module(self):
+        path = ROOT / "starter.manifest.json"
+        if not path.is_file():
+            self.skipTest("starter.manifest.json (strand K) not in this tree")
+        modules = json.loads(path.read_text(encoding="utf-8"))["modules"]
+        for skill, folder in MODULE_SKILLS.items():
+            owners = [m for m in modules.values() if m.get("folder") == folder]
+            self.assertEqual(len(owners), 1, folder)
+            self.assertIn(".claude/skills/{}/**".format(skill), owners[0].get("paths", []), skill)
+
+
     def test_agents_are_read_only_and_named_like_their_file(self):
         agents = sorted((CLAUDE / "agents").glob("*.md"))
         names = {path.stem for path in agents}
@@ -329,10 +367,7 @@ class AgentsAndSkillsTests(unittest.TestCase):
             self.assertIn("Ändert nichts", meta.get("description", ""), path)
 
     def test_skills_have_front_matter_and_steps(self):
-        expected = {
-            "neues-feature", "neue-ansicht", "neue-einstellung", "neuer-onboarding-schritt", "neue-berechtigung", "insel-zustand",
-            "menueleisten-app", "hintergrund-job", "kurzbefehl", "ki-funktion", "screenshots", "red-team", "starter-rueckfluss", "release-dmg",
-        }
+        expected = expected_skills(ROOT)
         found = {path.parent.name for path in (CLAUDE / "skills").glob("*/SKILL.md")}
         self.assertTrue(expected <= found, expected - found)
         for name in found:
