@@ -80,25 +80,16 @@ private struct NotesOnboardingSample: View {
 }
 
 #if MODUL_MENUBAR
-/// The status menu panel with the notes section, hanging under a menu bar on the desktop.
+/// The status menu panel with the notes section, hanging under the menu bar on the desktop (the
+/// menu bar module's stage), with "Save Clipboard as Note" among the actions.
 private struct NotesPanelSample: View {
     let store: NotesStore
-    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        let t = Theme(scheme)
         let capture = MenuItemContribution(id: "notes.capture", order: 100, title: { NotesText.captureAction },
                                            symbol: "doc.on.clipboard", shortcut: nil) {}
-        HStack {
-            Spacer(minLength: 0)
-            MenuBarPanelView(close: {}, sections: [NotesMenuBar.section { store }], actions: [capture], status: MenuBarStatus(),
-                             showsWindowAction: AppInfo.isEnabled("window"))
-        }
-        .padding(.top, Space.xl)
-        .padding(.trailing, Space.xs)
-        .padding(.bottom, Space.xxl)
-        .padding(.leading, Space.xxl)
-        .background(t.wallpaper)
+        MenuBarPanelStage(status: MenuBarStatus(), sections: [NotesMenuBar.section { store }], actions: [capture],
+                          showsWindowAction: AppInfo.isEnabled("window"))
     }
 }
 #endif

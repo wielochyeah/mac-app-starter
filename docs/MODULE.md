@@ -39,7 +39,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Dateien:** `MenuBarController`, `MenuBarStatus.shared.state`, `MenuBarPanel.sections` (Abschnitte mit Kennung, Reihenfolge und View).
 - **Einstellungen:** Bereich „Menüleiste“ mit Statustext und Stil des Symbols (Präfix `menubar.`).
 - **Onboarding:** keiner.
-- **Szenen:** `menubar.panel`, `menubar.icon-states`.
+- **Szenen:** `menubar.panel`, `menubar.icon-states`. Eigene Abschnitte rendern Features auf `MenuBarPanelStage` (Menüleiste, Schreibtisch, Panel).
 - **Skill:** `menueleisten-app`.
 <!-- modul:menubar:ende -->
 

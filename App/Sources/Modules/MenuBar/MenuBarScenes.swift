@@ -11,18 +11,18 @@ enum MenuBarScenes {
     static func register() {
         Registry.renderScenes.append(RenderScene(id: "menubar.icon-states", size: .zero) { AnyView(IconStatesBoard()) })
         Registry.renderScenes.append(RenderScene(id: "menubar.panel", size: .zero) {
-            AnyView(PanelStage(status: MenuBarStatus(), sections: MenuBarSamples.sections, actions: MenuBarSamples.actions))
+            AnyView(MenuBarPanelStage(status: MenuBarStatus(), sections: MenuBarSamples.sections, actions: MenuBarSamples.actions))
         })
         Registry.renderScenes.append(RenderScene(id: "menubar.panel-busy", size: .zero) {
-            AnyView(PanelStage(status: MenuBarStatus(state: .busy, message: MenuBarSampleText.importing),
+            AnyView(MenuBarPanelStage(status: MenuBarStatus(state: .busy, message: MenuBarSampleText.importing),
                                sections: MenuBarSamples.sections, actions: MenuBarSamples.actions, itemState: .busy))
         })
         Registry.renderScenes.append(RenderScene(id: "menubar.panel-empty", size: .zero) {
-            AnyView(PanelStage(status: MenuBarStatus(state: .attention), sections: [], actions: [], itemState: .attention))
+            AnyView(MenuBarPanelStage(status: MenuBarStatus(state: .attention), sections: [], actions: [], itemState: .attention))
         })
         // without the window module: no "Open Window" in the panel, no "Show in menu bar" switch
         Registry.renderScenes.append(RenderScene(id: "menubar.panel-nowindow", size: .zero) {
-            AnyView(PanelStage(status: MenuBarStatus(), sections: MenuBarSamples.sections, actions: MenuBarSamples.actions,
+            AnyView(MenuBarPanelStage(status: MenuBarStatus(), sections: MenuBarSamples.sections, actions: MenuBarSamples.actions,
                                showsWindowAction: false))
         })
         Registry.renderScenes.append(RenderScene(id: "menubar.status-text", size: .zero) { AnyView(StatusTextBoard()) })
@@ -132,14 +132,26 @@ private struct MenuBarStrip: View {
 }
 
 /// The panel hanging under the menu bar on the desktop, kept inside the screen edge like the
-/// real placement does near the right corner.
-private struct PanelStage: View {
+/// real placement does near the right corner. Features render their own panel section on it:
+///
+///     MenuBarPanelStage(status: MenuBarStatus(), sections: [ExportMenuBar.section(store: sample)], actions: [run],
+///                       showsWindowAction: AppInfo.isEnabled("window"))
+struct MenuBarPanelStage: View {
     let status: MenuBarStatus
     let sections: [MenuBarSection]
     let actions: [MenuItemContribution]
-    var itemState: MenuBarState = .idle
-    var showsWindowAction = true
+    let itemState: MenuBarState
+    let showsWindowAction: Bool
     @Environment(\.colorScheme) private var scheme
+
+    init(status: MenuBarStatus, sections: [MenuBarSection], actions: [MenuItemContribution], itemState: MenuBarState = .idle,
+         showsWindowAction: Bool = true) {
+        self.status = status
+        self.sections = sections
+        self.actions = actions
+        self.itemState = itemState
+        self.showsWindowAction = showsWindowAction
+    }
 
     var body: some View {
         let t = Theme(scheme)
