@@ -4,10 +4,12 @@
 #   MODULES=a,b           module override, as for make build
 #   DMG_LANG=en|de|both   language of the window texts (default: both when the project has both)
 #   DMG_FORMAT=ULMO|UDZO  compression (default ULMO = lzma, smallest; falls back to UDZO)
-#   NO_BUILD=1            package the existing build/<Name>.app (must be a release build)
+#   DMG_NO_BUILD=1        package the existing build/<Name>.app; refused when it is a debug build
+#                         (NO_BUILD, which make exports for shots and tests, is ignored here)
 #   KEEP_WORK=1           keep build/dmg/work.noindex (staged app, background, writable image)
 # Signing follows starter.json: ad hoc by default; with signing.identity a Developer ID signature
 # with hardened runtime, and with signing.notarize also scripts/notarize.sh for app and DMG.
+# SIGN_IDENTITY and NOTARY_PROFILE in the environment override starter.json (tools/packaging/pkg.py).
 # Network: only once, to install the pinned dmgbuild into build/tools-venv.
 set -euo pipefail
 ROOT="${0:A:h:h}"
@@ -70,12 +72,24 @@ if [[ ! -f App/Resources/AppIcon.icns ]]; then
   step "App/Resources/AppIcon.icns is missing, rendering it (scripts/icon.sh)"
   scripts/icon.sh
 fi
-if [[ -z "${NO_BUILD:-}" ]]; then
+if [[ -z "${DMG_NO_BUILD:-}" ]]; then
   CONFIG=release scripts/build.sh
 fi
-source build/gen/app.env
+# Only these two from app.env: sourcing all of it would overwrite an exported SIGN_IDENTITY with
+# starter.json's value, and scripts/notarize.sh (a child) would then see the wrong identity.
+APP_NAME="$(source build/gen/app.env; print -r -- "$APP_NAME")"
+MODULES_ENABLED="$(source build/gen/app.env; print -r -- "$MODULES_ENABLED")"
 SRC="build/$APP_NAME.app"
 [[ -d "$SRC" ]] || fail "$SRC is missing (make build CONFIG=release)"
+if [[ -n "${DMG_NO_BUILD:-}" ]]; then
+  # A debug build (-g) carries a debug map (OSO stabs); a release build has none.
+  # (grep -c reads everything: grep -q would close the pipe early and pipefail would hide the match)
+  debug_map="$(nm -ap "$SRC/Contents/MacOS/$APP_NAME" 2>/dev/null | grep -c ' OSO ' || true)"
+  if (( ${debug_map:-0} > 0 )); then
+    fail "$SRC is a debug build; DMG_NO_BUILD=1 needs make build CONFIG=release first (or drop DMG_NO_BUILD)"
+  fi
+  step "DMG_NO_BUILD=1: packaging the existing $SRC (release, built $(stat -f '%Sm' -t '%Y-%m-%d %H:%M' "$SRC/Contents/MacOS/$APP_NAME"))"
+fi
 
 rm -rf "$WORK"
 mkdir -p "$WORK"
@@ -103,8 +117,11 @@ else
 fi
 python3 tools/packaging/pkg.py minos "$APP"
 
+# Identity and profile passed on explicitly, so an environment override reaches notarize.sh as is.
+notary_args=(--identity "$PKG_IDENTITY")
+[[ -n "$PKG_NOTARY_PROFILE" ]] && notary_args+=(--profile "$PKG_NOTARY_PROFILE")
 if [[ "$PKG_NOTARIZE" == 1 ]]; then
-  scripts/notarize.sh "$APP"
+  scripts/notarize.sh "${notary_args[@]}" "$APP"
 elif [[ "$PKG_NOTARIZE_WANTED" == 1 ]]; then
   step "signing.notarize is true, but signing.identity is \"-\": the DMG is not notarized"
 fi
@@ -113,7 +130,7 @@ fi
 build_tool dmg-background tools/dmg/Background.swift tools/dmg/DMGText.swift
 bg_args=(--out "$WORK/background" --layout tools/dmg/layout.json --icon App/Resources/AppIcon.icns
          --name "$PKG_DISPLAY_EN" --name-de "$PKG_DISPLAY_DE" --app-label "$APP_NAME"
-         --version "$PKG_VERSION" --min-macos "$PKG_MIN_MACOS" --accent "$PKG_ACCENT" --lang "$PKG_DMG_LANG")
+         --version "$PKG_VERSION" --min-macos "$PKG_MIN_MACOS" --accent "$PKG_ACCENT" --lang "$PKG_DMG_LANG" --anrede "$PKG_ANREDE")
 # The Gatekeeper hint only for builds that are not notarized (they need "Open Anyway" once).
 [[ "$PKG_NOTARIZE" == 1 ]] && bg_args+=(--no-hint)
 build/tools/dmg-background "${bg_args[@]}"
@@ -121,7 +138,7 @@ build/tools/dmg-background "${bg_args[@]}"
 tiffutil -cathidpicheck "$WORK/background/background.png" "$WORK/background/background@2x.png" \
   -out "$WORK/background.tiff" >/dev/null 2>&1 || fail "tiffutil could not merge the backgrounds"
 mkdir -p "$OUT"
-cp "$WORK/background/preview.png" "$OUT/preview.png"
+cp "$WORK/background/preview.png" "$WORK/background/preview-dark.png" "$OUT/"
 
 # 5. Lay out the window (dmgbuild writes .DS_Store, no Finder scripting) -----------------------
 ensure_dmgbuild
@@ -142,17 +159,23 @@ detach
 # 6. Compress, sign, notarize ------------------------------------------------------------------
 FORMAT="${DMG_FORMAT:-ULMO}"
 FINAL="$OUT/$APP_NAME-$PKG_VERSION.dmg"
-rm -f "$FINAL"
+# Whether the window shows the "Open Anyway" hint; scripts/notarize.sh refuses such a DMG.
+HINT_STAMP="$OUT/.${FINAL:t}.hint"
+rm -f "$FINAL" "$HINT_STAMP"
 if ! hdiutil convert -quiet "$RW" -format "$FORMAT" -o "$FINAL" 2>/dev/null; then
   step "$FORMAT not available, using UDZO"
   FORMAT=UDZO
   hdiutil convert -quiet "$RW" -format UDZO -imagekey zlib-level=9 -o "$FINAL"
 fi
-if [[ "$PKG_IDENTITY" != "-" ]]; then
-  codesign --force --timestamp --sign "$PKG_IDENTITY" "$FINAL" || fail "signing the DMG failed"
-fi
 if [[ "$PKG_NOTARIZE" == 1 ]]; then
-  scripts/notarize.sh "$FINAL"
+  print -r -- none > "$HINT_STAMP"
+  # notarize.sh signs the DMG itself before it submits it
+  scripts/notarize.sh "${notary_args[@]}" "$FINAL"
+else
+  print -r -- shown > "$HINT_STAMP"
+  if [[ "$PKG_IDENTITY" != "-" ]]; then
+    codesign --force --timestamp --sign "$PKG_IDENTITY" "$FINAL" || fail "signing the DMG failed"
+  fi
 fi
 
 # 7. Check what people will get ------------------------------------------------------------------
@@ -176,4 +199,4 @@ detach
 hint="Gatekeeper hint shown"
 [[ "$PKG_NOTARIZE" == 1 ]] && hint="notarized, no hint"
 step "${FINAL#$ROOT/} ($(du -h "$FINAL" | cut -f1 | tr -d ' '), $FORMAT, signed $signed, $hint, texts $PKG_DMG_LANG)"
-step "window preview: ${OUT#$ROOT/}/preview.png"
+step "window preview: ${OUT#$ROOT/}/preview.png (white labels: preview-dark.png)"
