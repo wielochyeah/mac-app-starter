@@ -40,15 +40,16 @@ enum DMGText {
     /// no longer gets past Gatekeeper; the way is System Settings > Privacy & Security, and the
     /// button only shows there after macOS has blocked a launch, hence the question first.
     static let blocked = DMGCopy(en: "Blocked on first launch?", de: "Beim ersten Start blockiert?")
-    static let settingsPath = DMGCopy(en: "System Settings › Privacy & Security › ",
-                                      de: "Systemeinstellungen › Datenschutz & Sicherheit › ")
+    static let settingsPath = DMGCopy(en: "System Settings > Privacy & Security > ",
+                                      de: "Systemeinstellungen > Datenschutz & Sicherheit > ")
     /// The button's name in System Settings (macOS 26: SecurityPrivacyExtension "Open Anyway",
     /// German „Dennoch öffnen“), shown bold.
     static let openAnyway = DMGCopy(en: "“Open Anyway”", de: "„Dennoch öffnen“")
 
-    /// The line with the app version and the minimum macOS: the same in both languages.
+    /// The line with the app version and the minimum macOS: the same in both languages, a comma
+    /// between the two (never a middle dot).
     static func versionLine(_ version: String, minimumMacOS: String) -> String {
         let macOS = minimumMacOS.hasSuffix(".0") ? String(minimumMacOS.dropLast(2)) : minimumMacOS
-        return "Version \(version) · macOS \(macOS)+"
+        return "Version \(version), macOS \(macOS)+"
     }
 }

@@ -120,15 +120,20 @@ struct Hints: View {
                 }
             }
             if o.hint {
-                // the question once (both languages on one line), then the path per language
+                // the question once (both languages on one line, apart by space, not by a dot), then
+                // the path per language
                 VStack(spacing: Space.hair) {
                     HStack(alignment: .firstTextBaseline, spacing: Space.xxs + Space.hair) {
                         Image(systemName: "lock.open.fill")
                             .symbolFont(Art.lockSize, weight: .semibold)
                             .foregroundStyle(t.accentText)
-                        Text(langs.map { DMGText.blocked.text($0) }.joined(separator: " · "))
-                            .font(TypeScale.caption.weight(.medium))
-                            .foregroundStyle(t.prose)
+                        HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+                            ForEach(langs, id: \.self) { lang in
+                                Text(DMGText.blocked.text(lang))
+                            }
+                        }
+                        .font(TypeScale.caption.weight(.medium))
+                        .foregroundStyle(t.prose)
                     }
                     ForEach(langs, id: \.self) { lang in
                         Text("\(DMGText.settingsPath.text(lang))\(Text(DMGText.openAnyway.text(lang)).fontWeight(.semibold))")
