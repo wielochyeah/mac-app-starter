@@ -101,6 +101,21 @@ class ProjectTests(TempDirCase):
         self.assertNotIn("CommonText", text)
         self.assertIn("App/Tests/Features/", text)
 
+    def test_project_places_keep_check_kit_green(self):
+        """A feature, its tests, a smaller baseline and an own icon drawing change no kit file."""
+        root = self.project({"rules/baseline/texte.json": '{\n  "App/Sources/Kit/Settings/SettingsText.swift": []\n}\n',
+                             "tools/icon/Icon.swift": "// starter icon\n"})
+        write_files(root, {
+            "App/Sources/Features/Features.swift": "enum Features { static func register() { NotesFeature.register() } }\n",
+            "App/Sources/Features/Notes/NotesFeature.swift": "enum NotesFeature { static func register() {} }\n",
+            "App/Tests/Features/NotesTests.swift": "#if TESTING\n#endif\n",
+            "rules/baseline/texte.json": "{}\n",
+            "tools/icon/Icon.swift": "// own drawing\n",
+            "scripts/projekt/seed.py": "print('seed')\n",
+        })
+        f = kitcheck.run(root)
+        self.assertEqual(f.problems, [], problems_text(f))
+
     def test_starter_leftovers(self):
         root = self.project()
         write_files(root, {"docs/bau/x.md": "x\n", "AGENTS.md": "<!-- nur-im-starter:anfang -->\n<!-- nur-im-starter:ende -->\n"})

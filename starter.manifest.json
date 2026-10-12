@@ -2,7 +2,7 @@
   "version": 1,
   "starter": "mac-app-starter",
   "repository": "wielochyeah/mac-app-starter",
-  "description": "Grenze zwischen Starter und Projekt. Kit-Pfade gehören dem Starter und bleiben in Projekten unverändert; bin/starter sync übernimmt neue Stände, bin/starter check-kit vergleicht sie mit den Prüfsummen in starter.lock.json. Gemeinsame Pfade (shared) liefert der Starter, das Projekt darf sie ändern; sync führt beide Seiten per Drei-Wege-Merge zusammen. Projekt-Pfade gehören allein dem Projekt, kein Werkzeug fasst sie an.",
+  "description": "Grenze zwischen Starter und Projekt. Kit-Pfade gehören dem Starter und bleiben in Projekten unverändert; bin/starter sync übernimmt neue Stände, bin/starter check-kit vergleicht sie mit den Prüfsummen in starter.lock.json. Gemeinsame Pfade (shared) liefert der Starter, das Projekt darf sie ändern; sync führt beide Seiten per Drei-Wege-Merge zusammen. Projekt-Pfade gehören allein dem Projekt, kein Werkzeug fasst sie an: eigener Code nach App/Sources/Features/ (angemeldet in Features.register()), eigene Tests nach App/Tests/Features/, eigene Skripte nach scripts/projekt/, eigene Regeln nach rules/projekt/. Die Baselines der Prüfungen (rules/baseline/), die Zeichnung des App-Symbols (tools/icon/Icon.swift) und der DMG-Hintergrund (tools/dmg/Background.swift) sind gemeinsam: ein Projekt passt sie an.",
   "order": ["starterOnly", "shared", "project", "kit"],
   "orderRule": "Ein Pfad gehört zur ersten Liste in order, deren Muster ihn trifft; ein Pfad, den keine Liste trifft, gehört in einem Projekt dem Projekt, im Starter meldet check-kit ihn als unklassifiziert. Gemeinsame und Projekt-Pfade stehen vor den Kit-Pfaden, damit Textdateien (*Text.swift) und Projektordner (App/Tests/Features, scripts/projekt, rules/projekt) innerhalb eines Kit-Ordners liegen können. Muster sind Globs relativ zum Repository: ** trifft beliebig viele Ordner, * bleibt in einem Ordner, ein Muster ohne / trifft den Dateinamen in jedem Ordner, ./ verankert es an der Wurzel.",
   "kit": [
@@ -44,6 +44,9 @@
     ".claude/agents/**",
     ".claude/workflows/**",
     "rules/generated/**",
+    "rules/baseline/**",
+    "tools/icon/Icon.swift",
+    "tools/dmg/Background.swift",
     "App/Resources/InfoPlist.json",
     "App/Sources/Kit/**/*Text.swift",
     "App/Sources/Modules/**/*Text.swift",

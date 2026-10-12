@@ -9,6 +9,7 @@ then `make build` unless --ohne-build. When the guard finds a use of a module ty
 """
 from __future__ import annotations
 
+import json
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -93,6 +94,7 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
             if new != text:
                 plan.edited[path] = new
 
+    prune_baselines(plan, remaining)
     gone = {p: (root / p).read_text(encoding="utf-8", errors="replace") for p in plan.deleted + plan.emptied
             if p.endswith(".swift")}
     plan.dangling = dangling_references(gone, remaining)
@@ -111,6 +113,25 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
     plan.config = new_config
     plan.next_steps = list(module.next_steps)
     return plan
+
+
+BASELINES = ["rules/baseline/*.json"]
+
+
+def prune_baselines(plan: RemovalPlan, remaining: Dict[str, str]) -> None:
+    """Drops the entries of deleted files from the check baselines ({file: [finding, …]}): the checks
+    fail on entries whose finding is gone, and a removed module's files are gone."""
+    gone = set(plan.deleted) | set(plan.emptied)
+    for path, text in list(remaining.items()):
+        if not globs.matches(path, BASELINES):
+            continue
+        try:
+            data = json.loads(text)
+        except ValueError:
+            continue
+        if isinstance(data, dict) and gone.intersection(data):
+            new = json.dumps({k: v for k, v in data.items() if k not in gone}, ensure_ascii=False, indent=2) + "\n"
+            remaining[path] = plan.edited[path] = new
 
 
 def read_texts(root: Path, files: List[str]) -> Dict[str, str]:

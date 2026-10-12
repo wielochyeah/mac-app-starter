@@ -53,6 +53,16 @@ class RemoveTests(TempDirCase):
         self.assertNotIn("Modules.swift", text, "the removal's own edit is recorded")
         self.assertNotIn("HotkeysModule.swift", text)
 
+    def test_baseline_entries_of_deleted_files_go(self):
+        baseline = {"App/Sources/Kit/Core/Lang.swift": ["a | b | c"],
+                    "App/Sources/Modules/Island/IslandText.swift": ["d | e | f"],
+                    "App/Tests/IslandTests.swift": ["g | h | i"]}
+        root = self.repo({"rules/baseline/texte.json": json.dumps(baseline, indent=2) + "\n"})
+        plan = self.remove(root, "island")
+        self.assertIn("rules/baseline/texte.json", plan.edited)
+        self.assertEqual(self.json(root, "rules/baseline/texte.json"),
+                         {"App/Sources/Kit/Core/Lang.swift": ["a | b | c"]})
+
     def test_dry_run_writes_nothing(self):
         root = self.repo()
         plan = self.remove(root, "island", dry_run=True)
