@@ -1,6 +1,6 @@
 ---
 name: hintergrund-job
-description: Legt eine geplante Aufgabe an, die die App im Hintergrund regelmäßig ausführt (BackgroundJobs.register mit Intervall, Toleranz und Ergebnis, Schalter je Aufgabe, Jetzt ausführen, Start beim Anmelden). Nutzen, wenn etwas ohne Zutun der Nutzerin wiederholt laufen soll. Gehört zum Modul background.
+description: Legt eine geplante Aufgabe an, die die App im Hintergrund regelmäßig ausführt (BackgroundJobs.shared.register mit Intervall, Toleranz und Ergebnis, Schalter je Aufgabe, Jetzt ausführen, Start beim Anmelden). Nutzen, wenn etwas ohne Zutun der Nutzerin wiederholt laufen soll. Gehört zum Modul background.
 ---
 
 # Hintergrund-Aufgabe
@@ -11,7 +11,7 @@ Gehört zum Modul `background`; `bin/starter remove background` entfernt diesen 
 
 | Vertrag | Datei | Rolle |
 |---|---|---|
-| Aufgaben | `App/Sources/Modules/Background/` | `BackgroundJobs.register(id:title:interval:tolerance:qos:run:)` mit `run: @Sendable () async throws -> JobOutcome`, `runNow(_:)`, letzter Lauf, Ergebnis und Dauer werden gespeichert, Schalter je Aufgabe |
+| Aufgaben | `App/Sources/Modules/Background/BackgroundJobs.swift` | `BackgroundJobs.shared.register(id:title:interval:tolerance:qos:exact:run:)` mit `run: @Sendable () async throws -> JobOutcome` (`.done(note:)`, `.nothingToDo`, `.failed(_:)`), `runNow(_:)`, letzter Lauf, Ergebnis und Dauer werden gespeichert, Schalter je Aufgabe |
 | Anmeldeobjekt | `LoginItem` | `SMAppService.mainApp`; nur verfügbar, wenn die App aus einem installierten Ort läuft, nicht aus `build/` |
 | Einstellungen | Bereich „Hintergrund“ | Anmeldeobjekt, Liste der Aufgaben mit letztem Lauf, Ergebnis, Schalter und „Jetzt ausführen“ |
 | Onboarding | Schritt „Beim Anmelden starten“ (order 900) | nur, wenn `LoginItem.isAvailable` |
@@ -23,16 +23,16 @@ Gehört zum Modul `background`; `bin/starter remove background` entfernt diesen 
 
    ```swift
    #if MODUL_BACKGROUND
-   BackgroundJobs.register(id: "cleanup.cache", title: { CleanupText.jobTitle }, interval: 6 * 3600, tolerance: 1800,
-                           qos: .utility) {
+   BackgroundJobs.shared.register(id: "cleanup.cache", title: { CleanupText.jobTitle }, interval: 6 * 3600,
+                                  tolerance: 1800, qos: .utility) {
        let removed = try await CacheCleaner.run()
-       return .ok(detail: CleanupText.removed(removed))
+       return removed > 0 ? .done(note: CleanupText.removed(removed)) : .nothingToDo
    }
    #endif
    ```
 
    Die Arbeit läuft außerhalb des MainActors, ist abbrechbar (`Task.checkCancellation()`) und schreibt Ergebnisse atomar. Kein Netz, außer die Nutzerin hat es für genau diese Aufgabe eingeschaltet.
-3. Ergebnis ehrlich melden: Erfolg mit kurzem Detail, Fehler mit Grund in Alltagssprache. Nutzerinhalte stehen nie im Protokoll.
+3. Ergebnis ehrlich melden: `.done(note:)` mit kurzem Detail, `.nothingToDo`, wenn es nichts zu tun gab, `.failed(_:)` (oder ein geworfener Fehler) mit Grund in Alltagssprache. Nutzerinhalte stehen nie im Protokoll.
 4. Kennung mit Präfix des Features, Titel als Tätigkeit (`Cache aufräumen`).
 5. Tests: die Logik der Aufgabe für sich, mit eingespeister Uhr und temporärem Ordner; nie auf den echten Planer warten.
 6. Render-Szenen: der Bereich `background.pane` zeigt die Aufgaben mit Beispieldaten; neue Zustände bekommen eine eigene Szene.

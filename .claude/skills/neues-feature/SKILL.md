@@ -37,7 +37,16 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
 1. `docs/DESIGN.md` und `docs/ARCHITEKTUR.md` lesen; Ziel, Ansichten und Daten in `docs/PROJECT.md` (Abschnitte 3 und 4) eintragen.
 2. Texte zuerst: `<Name>Text.swift` mit beiden Sprachen, Anrede wie `texts.anrede` in `starter.json`, kurz und konkret, ohne Floskeln und Ausrufezeichen. Deutsch ist etwa 30 % länger; Layouts müssen das tragen.
 3. Daten und Logik mit Tests: Erwartungswerte aus der Anforderung oder einer Handrechnung, eingespeiste Uhr statt `Date()` in Logik, die Zeit braucht.
-4. Ansichten mit dem passenden Skill: Seite im Hauptfenster mit `neue-ansicht`, Einstellungsbereich mit `neue-einstellung`, Onboarding-Schritt mit `neuer-onboarding-schritt`, Berechtigung mit `neue-berechtigung`.
+4. Ansichten und Bezüge zu Modulen mit dem passenden Skill:
+   - Einstellungsbereich: `neue-einstellung`
+   - Onboarding-Schritt: `neuer-onboarding-schritt`
+   - Berechtigung: `neue-berechtigung`
+   - Seite im Hauptfenster: `neue-ansicht` <!-- modul:window -->
+   - Abschnitt im Statusmenü: `menueleisten-app` <!-- modul:menubar -->
+   - Rückmeldung in der Insel: `insel-zustand` <!-- modul:island -->
+   - geplante Aufgabe: `hintergrund-job` <!-- modul:background -->
+   - globaler Kurzbefehl: `kurzbefehl` <!-- modul:hotkeys -->
+   - lokale KI: `ki-funktion` <!-- modul:ai -->
 5. In `register()` für jeden sichtbaren Zustand eine `RenderScene` mit Kennung `<feature>.<zustand>` und Beispieldaten anlegen, die echt wirken, aber erfunden sind. Neue allgemeine Bausteine zusätzlich als `GalleryEntry`.
 6. Was beim Start laufen muss, in `Registry.launchHooks`; was beim Beenden aufräumen muss, in `Registry.terminateHooks`. Nichts startet Fenster oder fragt Berechtigungen an, wenn `RenderMode.isHeadless` gilt.
 7. Prüfbare Annahmen zur Laufzeit (Datei lesbar, Migration aktuell) als `SelfTestCheck` eintragen.

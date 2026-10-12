@@ -4,21 +4,22 @@ Jedes Modul ist ein Ordner unter `App/Sources/Modules/<Name>/` mit `<Name>Module
 
 | Modul | Form oder Aufgabe | Standard | braucht | Entfernen |
 |---|---|---|---|---|
-| `window` | Fenster-App mit Seitenleiste im Stil von Apple Music | an | | `bin/starter remove window` |
-| `menubar` | Menüleisten-App mit Statussymbol und Panel | an | | `bin/starter remove menubar` |
-| `island` | Insel an der Notch, Kapsel ohne Notch | an | | `bin/starter remove island` |
-| `background` | geplante Aufgaben, Start beim Anmelden | an | | `bin/starter remove background` |
-| `hotkeys` | globale Kurzbefehle | an | | `bin/starter remove hotkeys` |
-| `ai` | lokale KI mit Apple Foundation Models | an | | `bin/starter remove ai` (nach `mlx`) |
-| `mlx` | eigene Modelle über einen MLX-Worker in Python | aus | `ai` | `bin/starter remove mlx` |
-| `examples` | Beispiel-Feature, das alle Module nutzt | an | | `bin/starter strip-examples` |
+| `window` | Fenster-App mit Seitenleiste im Stil von Apple Music | an | | `bin/starter remove window` | <!-- modul:window -->
+| `menubar` | Menüleisten-App mit Statussymbol und Panel | an | | `bin/starter remove menubar` | <!-- modul:menubar -->
+| `island` | Insel an der Notch, Kapsel ohne Notch | an | | `bin/starter remove island` | <!-- modul:island -->
+| `background` | geplante Aufgaben, Start beim Anmelden | an | | `bin/starter remove background` | <!-- modul:background -->
+| `hotkeys` | globale Kurzbefehle | an | | `bin/starter remove hotkeys` | <!-- modul:hotkeys -->
+| `ai` | lokale KI mit Apple Foundation Models | an | | `bin/starter remove ai` (nach `mlx`) | <!-- modul:ai -->
+| `mlx` | eigene Modelle über einen MLX-Worker in Python | aus | `ai` | `bin/starter remove mlx` | <!-- modul:mlx -->
+| `examples` | Beispiel-Feature, das alle Module nutzt | an | | `bin/starter strip-examples` | <!-- modul:examples -->
 
 Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nicht erreichbar, und `bin/starter remove` lehnt das ab. Mit `window` hat die App ein Dock-Symbol (`.regular`), ohne `window` lebt sie nur in der Menüleiste (`.accessory`, `LSUIElement`).
 
-`bin/starter remove <modul>` löscht den Ordner des Moduls und alles, was `starter.manifest.json` ihm zuordnet (Tests, Skills, Werkzeuge), entfernt jeden `#if MODUL_<NAME>` … `#endif`-Block in allen Swift-Dateien (bei `#else` bleibt dieser Teil), Zeilen mit `<!-- modul:<name> -->` in Markdown und das Modul aus `starter.json`; danach baut es (`--ohne-build` lässt das aus, `--probelauf` zeigt nur, was passieren würde). Ein Commit je entferntem Modul.
+`bin/starter remove <modul>` löscht den Ordner des Moduls und alles, was `starter.manifest.json` ihm zuordnet (Tests, Skills, Werkzeuge), entfernt jeden `#if MODUL_<NAME>` … `#endif`-Block in allen Swift-Dateien (bei `#else` bleibt dieser Teil), Zeilen mit `<!-- modul:<name> -->` und Abschnitte zwischen `<!-- modul:<name>:anfang -->` und `<!-- modul:<name>:ende -->` in Markdown (in YAML, Shell und Python `# modul:<name>`) und das Modul aus `starter.json`; danach baut es (`--ohne-build` lässt das aus, `--probelauf` zeigt nur, was passieren würde). Ein Commit je entferntem Modul.
 
 `make build MODULES=a,b` baut eine andere Auswahl, ohne `starter.json` zu ändern.
 
+<!-- modul:window:anfang -->
 ## window: Fenster-App
 
 - **Zweck:** Hauptfenster im Stil von Apple Music unter macOS 26: `NavigationSplitView` mit Seitenleiste aus Systemglas, Werkzeugleiste mit Suche, Seiten aus Bausteinen (großer Titel, Kopf mit Bild, Reihen von Kacheln, Raster, Listen, Detailseite). ⌘, öffnet die Einstellungen.
@@ -28,7 +29,9 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Szenen:** `window.main` (ganzes Fenster), `window.home`, je Baustein eine Szene.
 - **Skill:** `neue-ansicht`.
 - **Ohne das Modul:** `AppActions.openMainWindow()` öffnet die Einstellungen; die App läuft als Menüleisten-App.
+<!-- modul:window:ende -->
 
+<!-- modul:menubar:anfang -->
 ## menubar: Menüleisten-App
 
 - **Zweck:** Statussymbol aus `app.symbol` mit den Zuständen `idle`, `busy` (dezente Bewegung, ruht bei reduzierter Bewegung) und `attention` (Punkt). Klick öffnet ein Panel im Stil der Module im Kontrollzentrum (abgerundet, Glas, 320 bis 360 pt breit) mit Kopf, Abschnitten und Fußzeile; Rechtsklick oder ⌥-Klick öffnet ein Menü aus `Registry.menuItems`.
@@ -37,7 +40,9 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Onboarding:** keiner.
 - **Szenen:** `menubar.panel`, `menubar.icon-states`.
 - **Skill:** `menueleisten-app`.
+<!-- modul:menubar:ende -->
 
+<!-- modul:island:anfang -->
 ## island: Insel und Kapsel
 
 - **Zweck:** Rückmeldung, die aus der Notch wächst (Insel), auf Macs ohne Notch eine Kapsel unter der Menüleiste. Zustände: Tätigkeit, Fortschritt (Sekundenzähler ab 5 s, Hinweis mit Abbruch ab 10 s), Pegel, Ergebniskarte mit Aufklappen beim Überfahren und Kopieren, Hinweis (Info, Warnung, Fehler, verschwindet nach 2,5 s). Mehrere Bildschirme, Selbstheilung nach Bildschirmwechseln, Töne standardmäßig aus, reduzierte Bewegung blendet über.
@@ -46,7 +51,9 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Onboarding:** „Darstellung“ (order 500), Kachelwahl Insel oder Kapsel mit den echten Ansichten.
 - **Szenen:** jeder Zustand als `island.<zustand>` und `capsule.<zustand>`, dazu `island.pane`, `island.onboarding`.
 - **Skill:** `insel-zustand`. `--demo` durchläuft alle Zustände in der laufenden App (nur für die Person am Mac).
+<!-- modul:island:ende -->
 
+<!-- modul:background:anfang -->
 ## background: Hintergrund
 
 - **Zweck:** geplante Aufgaben über `NSBackgroundActivityScheduler` mit Intervall, Toleranz und Dienstgüte; letzter Lauf, Ergebnis und Dauer werden gespeichert; Schalter und „Jetzt ausführen“ je Aufgabe. Start beim Anmelden über `SMAppService.mainApp`, nur aus einem installierten Ort.
@@ -55,7 +62,9 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Onboarding:** „Beim Anmelden starten“ (order 900), nur wenn `LoginItem.isAvailable`.
 - **Szenen:** `background.pane`, `background.onboarding`.
 - **Skill:** `hintergrund-job`.
+<!-- modul:background:ende -->
 
+<!-- modul:hotkeys:anfang -->
 ## hotkeys: Kurzbefehle
 
 - **Zweck:** globale Kurzbefehle über Carbon `RegisterEventHotKey` (ohne Berechtigung für Eingabeüberwachung), änderbar durch die Nutzerin, ohne Neustart neu angemeldet. Regeln lehnen Kurzbefehle des Systems, Standardbefehle von Apps, Kombinationen, die auf der aktuellen Belegung ein Zeichen tippen, und Doppelungen ab; jede Ablehnung nennt den Grund in beiden Sprachen und schlägt eine freie Variante vor.
@@ -64,7 +73,9 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Onboarding:** „Kurzbefehl“ (order 600), nur wenn ein Kurzbefehl mit `showInOnboarding: true` angemeldet ist.
 - **Szenen:** `hotkeys.pane`, `hotkeys.recorder-states`, `hotkeys.onboarding`.
 - **Skill:** `kurzbefehl`.
+<!-- modul:hotkeys:ende -->
 
+<!-- modul:ai:anfang -->
 ## ai: lokale KI
 
 - **Zweck:** Sprachmodell auf dem Mac über Apple Foundation Models: Antwort, Streaming, strukturierte Antworten, Abbruch, Verfügbarkeit mit Text für die Nutzerin. Einzelheiten in `docs/KI.md`.
@@ -74,7 +85,9 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Szenen:** `ai.pane` (verfügbar, nicht verfügbar), `ai.onboarding`, `ai.download-rows`.
 - **Skill:** `ki-funktion`.
 - **Entfernen:** zuerst `mlx`, falls vorhanden.
+<!-- modul:ai:ende -->
 
+<!-- modul:mlx:anfang -->
 ## mlx: Modelle über MLX
 
 - **Zweck:** eigene Modelle über einen Python-Worker mit `mlx-lm`, Modellkatalog, Downloads mit Fortschritt. Aus im Starter.
@@ -82,11 +95,14 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Einstellungen:** Download-Zeilen im Bereich „Modelle“ (Präfix `mlx.`).
 - **Onboarding:** Download-Zeilen im Schritt „Lokale KI“.
 - **Einschalten:** `"mlx": true` in `starter.json`, `ai-worker/setup.sh` ausführen (Python 3.12 aus Homebrew oder uv, wird nicht automatisch installiert).
+<!-- modul:mlx:ende -->
 
+<!-- modul:examples:anfang -->
 ## examples: Beispiele
 
 - **Zweck:** ein vollständiges Beispiel-Feature, das Seite, Einstellung, Onboarding-Schritt, Insel, Statusmenü, Hintergrund-Aufgabe, Kurzbefehl und KI nutzt, jeweils in eigenen `#if`-Blöcken, mit Texten, Speicher, Szenen und Tests. Vorlage für das erste eigene Feature.
 - **Entfernen:** `bin/starter strip-examples`, sobald das erste eigene Feature steht.
+<!-- modul:examples:ende -->
 
 ## Kit (nicht entfernbar)
 

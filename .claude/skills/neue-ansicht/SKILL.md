@@ -5,7 +5,8 @@ description: Legt eine Seite im Hauptfenster an (Eintrag in der Seitenleiste üb
 
 # Neue Ansicht im Hauptfenster
 
-Gehört zum Modul `window`; `bin/starter remove window` entfernt diesen Skill mit dem Modul. Ohne Hauptfenster zeigt eine Menüleisten-App ihre Inhalte im Statusmenü (Skill `menueleisten-app`) oder in den Einstellungen (Skill `neue-einstellung`).
+Gehört zum Modul `window`; `bin/starter remove window` entfernt diesen Skill mit dem Modul.
+Ohne Hauptfenster zeigt eine Menüleisten-App ihre Inhalte im Statusmenü (Skill `menueleisten-app`) oder in den Einstellungen (Skill `neue-einstellung`). <!-- modul:menubar -->
 
 ## Verträge und Dateien
 
@@ -24,7 +25,7 @@ Gehört zum Modul `window`; `bin/starter remove window` entfernt diesen Skill mi
 4. Suche: die Ansicht liest `@Environment(\.windowSearch)` und filtert mit `ListSearch.matches(_:query:)`; ohne Treffer `EmptyPage` mit dem Text aus `PatternsText`.
 5. Registrieren im `register()` des Features: `Registry.pages.append(AppPage(id: "<feature>", section: .main, order: 10, title: { <Name>Text.title }, symbol: "<sf.symbol>", content: { AnyView(<Name>View()) }))`. Die Kennung ist eindeutig; die Startseite `home` hat `order: 0` und wird im Projekt ersetzt, sobald die erste eigene Seite steht.
 6. Texte nur aus `<Name>Text`, Maße nur aus Tokens, Bewegung aus `Motion`, Hover und Auswahl mit den Zuständen der Bausteine.
-7. Render-Szenen: `<feature>.page` in der Fenstergröße 1180 x 760 mit Beispieldaten, dazu je Zustand (leer, Suche ohne Treffer) eine Szene.
+7. Render-Szenen: `<feature>.page` in der Fenstergröße 1180 x 760 mit Beispieldaten, dazu je Zustand eine Szene (`<feature>.empty`, `<feature>.no-results`).
 
 ## Prüfen
 

@@ -1,6 +1,6 @@
 ---
 name: kurzbefehl
-description: Legt einen globalen Kurzbefehl an, den die Nutzerin ändern kann (HotkeyCenter.register mit Standard und Aktion, Regeln gegen belegte und tippende Kombinationen, Eintrag im Bereich Kurzbefehle, optional im Onboarding). Nutzen, wenn eine Funktion aus jeder App heraus per Tastatur erreichbar sein soll. Gehört zum Modul hotkeys.
+description: Legt einen globalen Kurzbefehl an, den die Nutzerin ändern kann (HotkeyCenter.shared.register mit Standard und Aktion, Regeln gegen belegte und tippende Kombinationen, Eintrag im Bereich Kurzbefehle, optional im Onboarding). Nutzen, wenn eine Funktion aus jeder App heraus per Tastatur erreichbar sein soll. Gehört zum Modul hotkeys.
 ---
 
 # Kurzbefehl
@@ -11,8 +11,8 @@ Gehört zum Modul `hotkeys`; `bin/starter remove hotkeys` entfernt diesen Skill 
 
 | Vertrag | Datei | Rolle |
 |---|---|---|
-| Anmelden | `App/Sources/Modules/Hotkeys/` | `HotkeyCenter.register(id:title:default:action:)`, optional `showInOnboarding: true`; Änderungen der Nutzerin liegen in den Einstellungen und greifen ohne Neustart |
-| Kombination | `KeyCombo` | Tastencode und Umschalttasten, Anzeige mit ⌃⌥⇧⌘ und dem Tastennamen der aktuellen Tastaturbelegung |
+| Anmelden | `App/Sources/Modules/Hotkeys/HotkeyCenter.swift` | `HotkeyCenter.shared.register(id:title:subtitle:default:order:showInOnboarding:onRelease:action:)`, nur `id`, `title`, `default` und `action` sind Pflicht; Änderungen der Nutzerin liegen in den Einstellungen und greifen ohne Neustart |
+| Kombination | `KeyCombo` | `KeyCombo(keyCode:modifiers:)` mit virtuellem Tastencode (`kVK_*` aus Carbon, gleich auf jeder Belegung) und `KeyModifiers` (`.command`, `.shift`, `.option`, `.control`), Anzeige mit ⌃⌥⇧⌘ und dem Tastennamen der aktuellen Tastaturbelegung |
 | Regeln | `ShortcutRules` | lehnt Kurzbefehle des Systems, Standardbefehle von Apps (⌘W, ⌘Q, ⌃A …), Kombinationen, die auf der Belegung ein Zeichen tippen (⌥L ergibt @ auf deutscher Tastatur), und Doppelungen innerhalb der App ab; jede Ablehnung nennt den Grund und schlägt eine freie Variante vor |
 | Oberfläche | Bereich „Kurzbefehle“, `ShortcutRecorder`, Onboarding-Schritt „Kurzbefehl“ (order 600) | Aufnehmen, Prüfen, Standard wiederherstellen |
 
@@ -26,8 +26,10 @@ Technisch läuft das über Carbon `RegisterEventHotKey`; das braucht keine Berec
 
    ```swift
    #if MODUL_HOTKEYS
-   HotkeyCenter.register(id: "capture.start", title: { CaptureText.hotkeyTitle },
-                         default: KeyCombo(key: .space, modifiers: [.control, .option])) { Capture.start() }
+   HotkeyCenter.shared.register(id: "capture.start", title: { CaptureText.hotkeyTitle },
+                                default: KeyCombo(keyCode: UInt16(kVK_Space), modifiers: [.control, .option])) {
+       Capture.start()
+   }
    #endif
    ```
 

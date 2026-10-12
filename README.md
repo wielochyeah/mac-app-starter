@@ -84,11 +84,12 @@ Berechtigungen: <keine, Mitteilungen, Mikrofon …>. Lokale KI: <nein oder wofü
 | `App/Sources/Features/` | Funktionen des Projekts |
 | `App/Resources/` | Erklärtexte der Berechtigungen (`InfoPlist.json`), App-Symbol |
 | `App/Tests/` | Swift-Tests mit eigenem Harness |
-| `ai-worker/` | Python-Worker für MLX (Modul `mlx`) |
+| `ai-worker/` | Python-Worker für MLX (Modul `mlx`) | <!-- modul:mlx -->
 | `tools/` | App-Symbol und DMG-Hintergrund in Swift, Einstellungen für dmgbuild |
 | `scripts/` | Build, Tests, Renders, Prüfungen, Hooks, Starter-Werkzeuge |
 | `bin/starter` | init, remove, strip-examples, sync, check-kit, modules |
-| `docs/` | `UEBERGABE.md`, `DESIGN.md`, `ARCHITEKTUR.md`, `MODULE.md`, `KI.md`, `VERTEILUNG.md`, `PROJECT.md`, `DECISIONS.md`, `STARTER_FEEDBACK.md`, `agents/`, `vorlagen/` |
+| `docs/` | `UEBERGABE.md`, `DESIGN.md`, `ARCHITEKTUR.md`, `MODULE.md`, `VERTEILUNG.md`, `PROJECT.md`, `DECISIONS.md`, `STARTER_FEEDBACK.md`, `agents/`, `vorlagen/` |
+| `docs/KI.md` | lokale KI (Modul `ai`) | <!-- modul:ai -->
 | `.claude/` | Rechte, Hooks, Skills, Subagenten, Workflow `red-team` |
 
 ## Regeln
