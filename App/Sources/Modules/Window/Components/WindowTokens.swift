@@ -74,16 +74,19 @@ extension Radius {
     static var artworkSmall: CGFloat { keyCap }
 }
 
+// Generated artwork looks the same in light and dark, so the colours that sit on it are fixed
+// (white text and glyphs, a dark scrim) instead of following the scheme.
 extension Theme {
-    // design-ausnahme: generated artwork looks the same in light and dark, so the colours that sit
-    // on it are fixed (white text and glyphs, a dark scrim) instead of following the scheme.
     /// Text and glyphs on generated artwork.
     var onArtwork: Color { squircleGlyph }
     var onArtworkSecondary: Color { squircleGlyph.opacity(0.82) }
     /// Scrim under text on artwork (hero) and under hover buttons (tiles).
+    // design-ausnahme: fixed scrim on artwork, same in both schemes
     var artworkScrim: Color { Color.black.opacity(0.55) }
+    // design-ausnahme: fixed scrim on artwork, same in both schemes
     var artworkScrimLight: Color { Color.black.opacity(0.28) }
     /// Round buttons on artwork (tile hover).
+    // design-ausnahme: fixed button fill on artwork, same in both schemes
     var artworkButton: Color { Color.black.opacity(0.42) }
     /// Hairline around artwork.
     var artworkEdge: Color { dark ? .white.opacity(0.08) : .black.opacity(0.08) }
@@ -91,7 +94,7 @@ extension Theme {
 }
 
 extension Color {
-    // design-ausnahme: artwork colours are computed from the accent palette (ArtworkRecipe.colors)
+    /// Artwork colours are computed from the accent palette (`ArtworkRecipe.colors`).
     init(artwork c: ArtworkRGB) {
         self.init(.sRGB, red: c.r, green: c.g, blue: c.b, opacity: 1)
     }
