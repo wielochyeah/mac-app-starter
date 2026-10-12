@@ -74,7 +74,10 @@ def is_starter_origin(url: str, repository: str) -> bool:
 
 def working_files(root: Path) -> List[str]:
     """Tracked and new files of the working tree, without ignored ones, that exist on disk."""
-    out = git(root, ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], check=False)
+    if git(root, ["rev-parse", "--is-inside-work-tree"], check=False) != "true":
+        raise StarterError(f"{root} ist kein Git-Repository; zuerst git init, git add -A und einen ersten "
+                           "Commit anlegen (die Werkzeuge lesen die Dateiliste aus Git)")
+    out = git(root, ["ls-files", "-z", "--cached", "--others", "--exclude-standard"])
     files = sorted({f for f in out.split("\0") if f})
     return [f for f in files if (root / f).is_file()]
 

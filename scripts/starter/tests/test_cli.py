@@ -41,6 +41,16 @@ class CliTests(TempDirCase):
         self.assertIn("kein Starter-Repository", err)
         self.assertNotIn("Traceback", err)
 
+    def test_needs_git(self):
+        root = self.tmp / "nogit"
+        root.mkdir()
+        for name, text in base_files().items():
+            if name in ("starter.json", "starter.manifest.json", "starter.lock.json"):
+                (root / name).write_text(text, encoding="utf-8")
+        code, _, err = run(["check-kit"], root)
+        self.assertEqual(code, 1)
+        self.assertIn("kein Git-Repository", err)
+
     def test_init_needs_a_name_or_a_terminal(self):
         root = make_repo(self.tmp / "r", base_files())
         code, _, err = run(["init", "--non-interactive"], root)
