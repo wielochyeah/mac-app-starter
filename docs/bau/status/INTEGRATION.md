@@ -187,4 +187,104 @@ Nicht ausgeführt: `make probe` (Template-Probe, rund 4 Minuten; K hat sie auf e
 
 - Die Verschmelzung von A und D im `AppDelegate` ist nur über die reinen Regeln getestet (`BackgroundLaunchTests`, `OnboardingTests`); Start, Dock-Klick und Fortsetzen nach Neustart im echten Fenster prüft die Leitung.
 - `AppIconImage` zeigt auf der Startseite des Fensters das Squircle jetzt im Icon-Verhältnis (kleiner als As Fassung); nur `window.home` en-hell angesehen.
-- Die Umbruch-Ausnahmen in `PermissionText.swift` setzen Ds Absicht um; die grundsätzliche Entscheidung (R8) ist offen.
+- Die Umbruch-Ausnahmen in `PermissionText.swift` setzen Ds Absicht um; die grundsätzliche Entscheidung (R8) ist im Abgleich gefallen (E-22).
+
+## Abgleich (Reconcile) nach Welle 1
+
+Stand: 2026-10-12, Branch `main`, Start `70daae3`. Alle offenen Punkte der Liste oben sind bearbeitet; jeder Commit hat das Format `type(scope): subject` und besteht `check_commit_msg.py --bereich 70daae3..HEAD`. Nichts gepusht. Strang I (`strang/I`, Worktree `wt/I`) ist nicht angefasst.
+
+### Ergebnis je Punkt
+
+| Nr. | Punkt | Stand | Was und warum |
+|---|---|---|---|
+| 1 | `--quelle` für private Starter | erledigt | `docs/UEBERGABE.md` nennt `bin/starter sync --quelle git@github.com:wielochyeah/mac-app-starter.git` (`02f139b`) |
+| 2 | `gen_config.py`: Module ohne Ordner ablehnen | erledigt | `MODULES=island` nach `remove island` bricht mit Meldung ab, Test in `test_gen_config.py` (`803712c`) |
+| 3 | `init`: `make rules`, `texts.personen`, Hinweis bei `sie` | erledigt | `init` führt `scripts/rules_sync.py` aus (Fehler als Hinweis im Bericht), leert `texts.personen`, nimmt `--anrede du\|sie` (auch als Frage) und sagt bei `sie`, dass `make check-texts` die du-Texte des Kits listet (im Starter rund 130 Stellen, alle in `*Text.swift` und `InfoPlist.json`); ohne `--non-interactive` werden `--accent`, `--symbol`, `--anrede` zu Vorschlägen der Fragen (`f356c2d`, `3bd337b`) |
+| 4 | `init`: `app.tagline` | erledigt | `init` entfernt die Unterzeile des Starters und sagt im Bericht, wie eine eigene gesetzt wird; ohne Unterzeile zeigt der Willkommensschritt nur den Namen (`f356c2d`) |
+| 5 | 20 Baseline-Befunde | erledigt | alle behoben, `rules/baseline/texte.json` und `design.json` sind leer (`57c3b8c`); `check_texts`/`check_design` mit `--streng` und `--ci` ohne Befund |
+| 6 | R8, ausgewogene Zweizeiler | entschieden | ja, aber nur als Unterzeile direkt unter dem Titel eines Schritts oder Bereichs, an einer Satzgrenze, mit `// umbruch:` (E-22 in `docs/DECISIONS.md`); die Fälle in `PermissionText` und `PatternsText` passen dazu |
+| 7 | DECISIONS für `Features.register()` und Galerie | erledigt | E-20 und E-21, dazu E-23 (Reset-Vertrag) (`6813f05`) |
+| 8 | `make icon` und SF Symbols | erledigt | Wortlaut der Human Interface Guidelines geprüft („prohibition against using symbols … in app icons, logos, or any other trademarked use“). `make icon` sagt es nach jedem Lauf, `make dmg` erinnert, solange `tools/icon/Icon.swift` ein SF Symbol zeichnet; `docs/VERTEILUNG.md` nennt die zwei Wege zu einem eigenen Motiv (`d7867b3`, `300cb55`) |
+| 9 | `docs/screenshots/list.txt` | erledigt | `island.done-card` gab es nicht, jetzt `island.done`; alle fünf Einträge liegen nach `make shots` in `build/shots` (`57758ef`). `make readme-shots` und die PNGs bleiben für Welle 2 (X) |
+| 10 | Skill-Beispiele und `MODULE.md` typprüfen, `WindowSearch.enable`, `notchBusy`, `recording` | erledigt | jedes Swift-Beispiel aus `docs/MODULE.md`, den Skills und den Doku-Kommentaren mit `swiftc -typecheck` gegen alle Quellen geprüft (Subagent, außerhalb des Repos); neun Beispiele kompilierten nicht, sieben Angaben stimmten nicht, alle korrigiert. `neue-ansicht` erklärt `WindowSearch.enable(page:prompt:)`, `\.windowSearch`, `NoResults` und den Ersatz der Startseite; `insel-zustand` und `MODULE.md` erklären `Island.shared.notchBusy` und `.levels(…, recording: true)` (`f3af185`, `2748517`) |
+| 11 | `THIRD_PARTY_NOTICES.md` | erledigt | Übernahmen aus VoiceBud je Bereich (Onboarding, Einstellungen, Fenster, Menüleiste, Hintergrund, Insel, Kurzbefehle, lokale KI, Symbol und DMG); der Satz zu „Über“ nennt jetzt `App/Resources/Notices/<lang>.md`, die die App zeigt (`495bc5d`) |
+| 12 | Signier-Doku | erledigt | `docs/VERTEILUNG.md` Abschnitt 4, `release-dmg`, README und E-15: notarisiert wird über `make dmg` mit `signing.notarize: true` und `signing.notaryProfile` oder `NOTARY_PROFILE`; `make notarize` reicht nur erneut ein (`188a1a0`). `SIGN_IDENTITY` gilt jetzt auch in `make build` (`300cb55`) |
+| 13 | `ai-worker/package.sh` | dokumentiert, nicht gebaut | `docs/KI.md` „MLX in einer weitergegebenen App“: Release-Builds finden Worker und Python nur im eigenen Bundle, `make dmg` legt beides nicht hinein, die App zeigt MLX als „Nicht enthalten“; was `package.sh` tun muss (eigenständiges Python, signierte Bibliotheken, `disable-library-validation` mit Entscheidung, Mindest-macOS). `make dmg` sagt es in der Ausgabe (`f347b6e`) |
+| 14 | `LSHasLocalizedDisplayName` | erledigt | Info.plist mit `LSHasLocalizedDisplayName` und dem Dateinamen als Grundwert von `CFBundleDisplayName`; der übersetzte Name kommt aus `<lang>.lproj/InfoPlist.strings`. Die Zieh-Zeile des DMG nennt den Namen je Sprache (`--app-label-de`) (`e769beb`) |
+| 15 | Finder dunkel, Icon-Rahmen auf macOS 26 | übersprungen | nur interaktiv, Sache der Leitung |
+| 16 | `OnboardingTokens.swift` und 460-pt-Karte | erledigt | Inhalt nach `Kit/Design/Patterns/PatternTokens.swift`, `Metrics.onboardingCard = 460` als eigenes Token; Muster-Beispiel und Anmelde-Schritt nutzen es, `BackgroundMetrics` und seine Design-Ausnahme entfallen (`bdec6c6`) |
+| 17 | `RenderRunner`: Breite, `autoreleasepool` | erledigt | eine gemessene Szene wird in ihrer Breite aufgerundet plus 1 pt gelayoutet, das PNG behält die gemessene Breite (Ränder bleiben deckend, Test „design scenes have opaque edges“ grün); jeder `png`-Aufruf läuft in einem eigenen Pool (`1dba864`) |
+| 18 | Reset-Vertrag `window.page`, `window.sidebarHidden` | entschieden | Zustand: `SettingsReset.keep("window.")`, Test in `WindowTests`, E-23 (`5319177`) |
+| 19 | `Metrics.Window.sidebar*` und `sidebarTop` | erledigt | eine `Metrics.Sidebar` in `Kit/Design/Sidebar.swift`; erster Eintrag 44 pt unter dem Panel in beiden Fenstern (Hauptfenster vorher 48 ab Fensterkante, jetzt 52); `staticSidebarPanel()` zeichnet das Panel für Einstellungen, Galerie-Beispiel und Hauptfenster (`ac4ebe9`) |
+| 20 | Mindestgröße des Einstellungsfensters | erledigt | `WindowHost` hält die Mindestgröße jedes größenveränderlichen Fensters über die SwiftUI-Wurzel und misst das Werkzeugleisten-Band des Fensters (Hauptfenster 52 pt, Einstellungen 66 pt); neuer Selbsttest `settings.window` verlangt genau 760 x 500, `window.chrome` weiter 900 x 600 (`955d3e0`) |
+| 21 | Login-Start nur über `Launch.isBackground` | erledigt | `LoginItem.launchedAtLogin` und `isLoginLaunch` entfernt, der Fall „reopen“ des Tests liegt jetzt bei `Launch.isLoginItemLaunch` (`0bb17d0`) |
+| 22 | Kit-Kandidaten mit zwei oder mehr Bereichen | zum Teil | übernommen: `Row` dimmt gesperrte Zeilen (Hintergrund, Insel), `Theme.strikeText` als textfähiges Rot mit Kontrasttest (Kit, Kurzbefehle, KI), `Metrics.disabledOpacity` (Kit, Fenster), `Registry.onboardingFinishedHooks` (Fenster, Hintergrund), das Seitenleisten-Panel (Einstellungen, Fenster), `InlineNotice(actionBelow:)` für schmale Karten (`2defbc0`, `c62fc80`, `81fb60b`). Übersprungen, weil nur ein Bereich sie nutzt: `Motion`-Sekunden für AppKit (nur das Menüleisten-Panel; die Ausblendzeiten der Insel gehören zu ihrer Choreografie), `IslandLook` (nur die Insel, geht mit `remove island`), `BigKeyCaps` (nur Kurzbefehle), gemeinsame Symbolgröße von `Row` und `ProgressRow` (nur der Bereich „Modelle“ mit `mlx` mischt beide; 4 pt Versatz bleibt dort), `WindowTokens`, `PageScroll`, `Artwork`, `ProgressRow.notStarted`, `AIWait`, Eingabefeld der KI, Unterleiste der Galerie, destruktiver Knopfstil |
+| 23 | Welle 2 (B) | übersprungen | gehört zum Beispielstrang |
+| 24 | Fehlalarm `--` in `models--org--name` | erledigt | der doppelte Bindestrich ohne Leerzeichen zählt nur noch zwischen genau zwei Wörtern (`alt--neu`, auch vor einem Punkt), nicht in Pfaden und Namen; Beispiele im Paket und Tests in `test_check_texts.py` (`dc8b4ac`) |
+
+### Weitere Korrekturen
+
+- **Doku gegen den Code (Punkt 3 des Auftrags):** ein Subagent hat README, `CLAUDE.md` Teil B und die Werkzeug-Tabelle, `AGENTS.md`, `CONTRIBUTING.md`, alle `docs/*.md`, `tools/README.md`, `App/Sources/Features/README.md` und die CI-Dateien Satz für Satz gegen Code, Makefile und Skripte geprüft, ein zweiter die Skills, Subagenten und `docs/MODULE.md`. 25 und 16 Abweichungen, alle behoben (`ea4a29a`, `a1318cf`, `f3af185`, `2748517`), darunter: `--permission-probe` und `--background` fehlten in `ARCHITEKTUR.md`, `--demo` stand bei den Werkzeug-Flags, `index.html` entsteht nur bei vollständigem Lauf, `Package.swift` wird nicht laufend geprüft, `requirements.lock` statt `requirements.txt`, Python 3.11 bis 3.13, der „Dennoch öffnen“-Hinweis gilt für jedes nicht notarisierte DMG, die Werkzeug-Tabelle nennt `SelfTestRunner` und alle Befehle von `bin/starter`.
+- **Renders (Punkt 5):** `make shots` komplett (640 PNGs), Kontaktbögen je Bereich in en-hell und de-dunkel angesehen, dazu Einzelbilder. Behoben: die Freigabe-Notiz im Schritt „Mit dem Mac starten“ quetschte den deutschen Text neben dem Knopf in vier kurze Zeilen (jetzt Knopf unter dem Text); `island.pane` endete auf Deutsch an der Bildkante (Szene 40 pt höher). `island.done-hover` ist nicht abgeschnitten: die Karte hängt wie die echte Insel an der Bildschirmkante, und der lange Beispieltext läuft auf Deutsch bewusst in die Ausblendkante (scrollbar, Absicht von C).
+- `CHANGELOG.md`: Hinweise für Projekte zu `init`, Finder-Namen, Notarisierung und `mlx` (`1cc0ec8`).
+
+### Geänderte öffentliche APIs (für Strang I beim Merge von `main`)
+
+- `Metrics.Window.sidebarMin`, `sidebarIdeal`, `sidebarMax`, `sidebarInset`, `sidebarTop`, `sidebarRow`, `sidebarSymbol`, `sidebarSymbolColumn`, `sidebarContentInset`, `sidebarSectionTop`, `sidebarSectionHeight` heißen jetzt `Metrics.Sidebar.minWidth`, `Metrics.sidebarWidth`, `Metrics.Sidebar.maxWidth`, `.panelInset`, `.top` (44 ab Panel), `.listRow`, `.symbol`, `.symbolColumn`, `.contentInset`, `.sectionTop`, `.sectionHeight`.
+- `Metrics.Window.disabledOpacity` heißt `Metrics.disabledOpacity`.
+- Entfernt: `LoginItem.launchedAtLogin`, `LoginItem.isLoginLaunch` (statt dessen `Launch.isBackground`, `Launch.isLoginItemLaunch`), `LoginWish.watch()`, `BackgroundMetrics.stepCard` (statt dessen `Metrics.onboardingCard`).
+- `Kit/Onboarding/OnboardingTokens.swift` gibt es nicht mehr; dieselben Namen stehen in `Kit/Design/Patterns/PatternTokens.swift`.
+- `MainWindowController.content(model:)` setzt keinen Mindestrahmen mehr und `configure` keine Größenoptionen; das tut `WindowHost` für jedes größenveränderliche Fenster.
+- Neu: `Registry.onboardingFinishedHooks`, `Theme.strikeText`, `Metrics.disabledOpacity`, `Metrics.onboardingCard` (jetzt 460 fest), `View.staticSidebarPanel()`, `WindowHost.make(…)`, `InlineNotice(…, actionBelow:)`, `RenderRunner.layoutWidth(measured:)`, `SettingsController.checkWindow()`.
+- Verhalten: `Row` dimmt gesperrte Zeilen; „Einstellungen zurücksetzen“ behält `window.*`; nach „Fertig“ öffnet das Hauptfenster über den Hook des Fenster-Moduls statt über `OnboardingWindow`.
+
+### Prüfung (2026-10-12, auf dem Stand dieses Berichts)
+
+```
+make check                     -> grün (1:06 min): rules_sync gültig; check_texts 286 Dateien, keine Befunde;
+                                  check_design 187 Dateien, keine Befunde; Baselines leer ({}); check-kit: Starter,
+                                  alle Dateien klassifiziert (Kit 274, gemeinsam 63, Projekt 16, nur im Starter 14),
+                                  8 von 8 Modulen entfernbar, Hooks und CI erfüllt; Build; Swift "355 tests, 0 failures",
+                                  scripts/tests 220 OK, scripts/starter/tests 118 OK, ai-worker 23 OK
+check_texts/check_design mit --ci und --streng -> keine Befunde
+check_commit_msg.py --bereich 70daae3..HEAD    -> Autor und Format aller Commits passen
+MODULES=menubar make test      -> Swift "165 tests, 0 failures", Python OK
+MODULES=<alle inkl. mlx> make test -> Swift "386 tests, 0 failures", Python OK
+python3 .github/ci_plan.py     -> combos window | menubar | window,menubar | menubar,island | menubar,background |
+                                  window,hotkeys | window,ai | window,ai,mlx | alle
+Build-Matrix (je make build MODULES=…, codesign --verify --strict, --selftest headless mit eigenem Datenordner):
+  starter.json                  -> ok, codesign ok, 28 checks, 0 failures
+  window                        -> ok, codesign ok, 20 checks, 0 failures
+  menubar                       -> ok, codesign ok, 17 checks, 0 failures
+  window,menubar                -> ok, codesign ok, 21 checks, 0 failures
+  menubar,island                -> ok, codesign ok, 19 checks, 0 failures
+  menubar,background            -> ok, codesign ok, 18 checks, 0 failures
+  window,hotkeys                -> ok, codesign ok, 23 checks, 0 failures
+  window,ai                     -> ok, codesign ok, 21 checks, 0 failures
+  window,ai,mlx                 -> ok, codesign ok, 22 checks, 0 failures
+  alle inkl. mlx und examples   -> ok, codesign ok, 29 checks, 0 failures
+  CONFIG=release                -> ok, codesign ok, 28 checks, 0 failures
+make probe (2:44 min)          -> "Ran 6 tests … OK": init grün, remove je Modul grün, ai vor mlx abgelehnt,
+                                  menubar nach window abgelehnt, erstes Feature hält check-kit grün
+Kopie mit init --non-interactive --anrede sie --ohne-netz --ohne-build:
+                                  Bericht nennt Tagline, make rules (Anrede sie) und den Hinweis zu sie; check-rules
+                                  gültig; check-texts listet 127 du-Stellen, alle in *Text.swift und InfoPlist.json;
+                                  check-kit 275 Kit-Dateien unverändert
+bin/starter strip-examples in dieser Kopie -> Build grün, --selftest 28 checks 0 failures, check-kit grün,
+                                  keine Reste von Modules/Examples
+make shots                     -> 640 PNGs + index.html (160 Szenen); angesehen: Kontaktbögen aller Bereiche en-light
+                                  und de-dark, Einzelbilder island.done-hover de-dark, window.main en-light,
+                                  settings.window de-dark, background.pane-unavailable de-light,
+                                  hotkeys.recorder-states en-light, background.onboarding-approval de-dark,
+                                  patterns.inline-notice de-light, island.pane de-dark (unterer Rand)
+pgrep (Starter.app, run-tests, worker.py) -> nichts übrig
+```
+
+### Bekannte Schwächen des Abgleichs
+
+- Das Werkzeugleisten-Band des echten Einstellungsfensters misst 66 pt (`contentLayoutRect`), Kopfband und Seitenleiste sind auf 52 pt gestaltet. Ob Ampeln und Kopfband im echten Fenster auf einer Linie sitzen, prüft die Leitung interaktiv.
+- Die Mindestgrößen sind nur im unsichtbaren Fenster gemessen (Selbsttests), nicht durch Ziehen am echten Fenster.
+- Finder mit `LSHasLocalizedDisplayName` nicht angesehen; laut Apple zeigt Finder den übersetzten Namen nur, solange das Bundle seinen Dateinamen behält.
+- Die README-Bilder fehlen noch (`make readme-shots` in Welle 2); bis dahin zeigen die fünf Bildverweise in `README.md` ins Leere.
+- Im Bereich „Modelle“ mit `mlx` stehen die Texte von Anbieter- und Modellzeilen weiter 4 pt versetzt (Punkt 22, übersprungen).
+- `make dmg` und `make notarize` nicht ausgeführt (kein Developer-ID-Zertifikat, keine Notarisierung ohne Auftrag); geprüft sind die Skripte über `test_packaging.py` und `zsh -n`.
