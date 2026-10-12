@@ -100,7 +100,9 @@ def build_parser() -> Parser:
                                    "git merge-file zusammen, Projektdateien bleiben, entfernte Module bleiben "
                                    "entfernt. Es committet nichts. Exit-Code 2: Konflikte sind offen.")
     y.add_argument("--ziel", required=True, help="Tag des Starters, etwa v1.1.0 (eine Version ohne v wird ergänzt)")
-    y.add_argument("--quelle", help="Repository des Starters (URL oder Pfad); Standard: source aus starter.lock.json")
+    y.add_argument("--quelle", help="Repository des Starters (URL oder Pfad), etwa "
+                                    "git@github.com:wielochyeah/mac-app-starter.git für SSH; Standard: source aus "
+                                    "starter.lock.json auf GitHub, per SSH, wenn origin des Projekts SSH nutzt")
     y.add_argument("--basis", help="Tag oder Commit der bisherigen Starter-Version, falls der Tag fehlt")
     y.add_argument("--probelauf", action="store_true", help="zeigen, was sich ändern würde, nichts schreiben")
 

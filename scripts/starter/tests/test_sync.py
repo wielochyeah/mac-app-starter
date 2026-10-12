@@ -141,6 +141,23 @@ class SyncTests(TempDirCase):
         result = self.run_sync(base=self.base_commit)
         self.assertEqual(result.taken, ["App/Sources/Kit/Core/New.swift"])
 
+    def test_sources(self):
+        from starter.sync import check_source, default_source
+        check_source("ssh://git@github.com/wielochyeah/mac-app-starter.git", "v1.1.0")
+        check_source("git@github.com:wielochyeah/mac-app-starter.git", "v1.1.0")
+        check_source("https://github.com/wielochyeah/mac-app-starter.git", "v1.1.0")
+        for bad in ("https://token@github.com/a/b.git", "https://u:p@github.com/a/b.git", "ssh://git:pw@host/a.git"):
+            with self.assertRaises(StarterError):
+                check_source(bad, "v1.1.0")
+        self.assertEqual(default_source(self.project, "a/b"), "https://github.com/a/b.git")
+        git(self.project, "remote", "add", "origin", "git@github.com:beispiel/notizen.git")
+        self.assertEqual(default_source(self.project, "a/b"), "git@github.com:a/b.git")
+
+    def test_missing_target_tag_explains(self):
+        with self.assertRaises(StarterError) as e:
+            sync(self.project, "v9.9.9", source=str(self.starter))
+        self.assertIn("git ls-remote --tags", str(e.exception))
+
     def test_refusals(self):
         with self.assertRaises(StarterError):
             sync(self.project, "v1.1.0", source="https://user:token@github.com/x/y.git")

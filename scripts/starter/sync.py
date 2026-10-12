@@ -30,7 +30,7 @@ from typing import Dict, List, Optional, Tuple
 from . import config as cfg
 from . import globs
 from .common import (StarterError, checksum, cut_blocks, git, git_bytes, has_block, inside, is_binary,
-                     is_safe_repo_path, is_script_text, is_text_path, to_lf)
+                     is_safe_repo_path, is_script_text, is_text_path, origin_url, to_lf)
 from .manifest import LOCK, MANIFEST, Manifest, is_project, parse_manifest, read_lock, write_lock
 from .markers import transform
 
@@ -145,10 +145,22 @@ def synced_checksums(root: Path, target_m: Manifest, old: Dict[str, str], synced
     return dict(sorted(sums.items()))
 
 
+def default_source(root: Path, repository: str) -> str:
+    """The starter on GitHub, over SSH when the project's own origin uses SSH (then the user has a key
+    for GitHub, and a private starter needs no password), else over HTTPS."""
+    origin = origin_url(root)
+    if origin.startswith("git@") or origin.startswith("ssh://"):
+        return f"git@github.com:{repository}.git"
+    return f"https://github.com/{repository}.git"
+
+
 def check_source(source: str, target: str) -> None:
-    if re.match(r"^[a-z][a-z0-9+.-]*://[^/]*@", source, re.I):
-        raise StarterError("--quelle mit Zugangsdaten in der Adresse ist nicht erlaubt; für private Quellen den "
-                           "Credential-Helper von Git nutzen.")
+    """Refuses credentials in the address (a password, or a token as the user of an http(s) URL); the
+    plain SSH user (`ssh://git@host/…`, `git@host:…`) is no secret."""
+    m = re.match(r"^([a-z][a-z0-9+.-]*)://([^/]*)@", source, re.I)
+    if m and (":" in m.group(2) or "ssh" not in m.group(1).lower()):
+        raise StarterError("--quelle mit Zugangsdaten in der Adresse ist nicht erlaubt; für private Quellen SSH "
+                           "(git@github.com:<besitzer>/<name>.git) oder den Credential-Helper von Git nutzen.")
     if target.startswith("-") or source.startswith("-"):
         raise StarterError("--ziel und --quelle dürfen nicht mit einem Bindestrich beginnen.")
 
@@ -160,7 +172,7 @@ def sync(root: Path, target: str, source: Optional[str] = None, base: Optional[s
         raise StarterError("starter.lock.json nennt kein Projekt; zuerst bin/starter init.")
     if re.match(r"^\d", target):
         target = "v" + target
-    source = source or f"https://github.com/{lock.get('source') or ''}.git"
+    source = source or default_source(root, lock.get("source") or "")
     check_source(source, target)
     if base is not None and base.startswith("-"):
         raise StarterError("--basis darf nicht mit einem Bindestrich beginnen.")
