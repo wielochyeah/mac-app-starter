@@ -18,6 +18,11 @@ struct EmptyPage: View {
         self.action = action
     }
 
+    /// The main window before any module or feature registered a page.
+    static var noPages: EmptyPage {
+        EmptyPage(symbol: "sidebar.left", title: WindowText.noPagesTitle, message: WindowText.noPagesMessage)
+    }
+
     static func noResults(_ query: String) -> EmptyPage {
         EmptyPage(symbol: "magnifyingglass", title: WindowText.noResultsTitle, message: WindowText.noResultsMessage(query))
     }
@@ -27,5 +32,21 @@ struct EmptyPage: View {
             .padding(Space.xl)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme(scheme).windowBg)
+    }
+}
+
+/// A search without hits inside a `PageScaffold`: the page keeps its title and result line, this
+/// block takes the place of the content.
+///
+///     PageScaffold(T.title, subtitle: T.results(found.count, query)) {
+///         if found.isEmpty { NoResults(query: query) } else { TileGrid(…) }
+///     }
+struct NoResults: View {
+    let query: String
+
+    var body: some View {
+        EmptyState(symbol: "magnifyingglass", title: WindowText.noResultsTitle, message: WindowText.noResultsMessage(query))
+            .frame(maxWidth: .infinity)
+            .padding(.top, Space.xxl)
     }
 }

@@ -30,25 +30,26 @@ enum WindowSamples {
     struct Route {
         let id: String
         let name: () -> String
-        let region: String
+        let region: () -> String
         let km: Double
         let symbol: String
     }
 
     static let routes: [Route] = [
-        Route(id: "feldberg", name: { WindowSampleText.routeFeldberg }, region: "Taunus", km: 14.2, symbol: "mountain.2.fill"),
-        Route(id: "lahn", name: { WindowSampleText.routeLahn }, region: "Lahntal", km: 18.5, symbol: "water.waves"),
-        Route(id: "rheinsteig", name: { WindowSampleText.routeRheinsteig }, region: "Mittelrhein", km: 21.0, symbol: "signpost.right.fill"),
-        Route(id: "vineyard", name: { WindowSampleText.routeVineyard }, region: "Rheingau", km: 9.8, symbol: "leaf.fill"),
-        Route(id: "ridge", name: { WindowSampleText.routeRidge }, region: "Rhön", km: 16.4, symbol: "mountain.2.fill"),
-        Route(id: "lake", name: { WindowSampleText.routeLake }, region: "Vogelsberg", km: 7.3, symbol: "drop.fill"),
+        Route(id: "feldberg", name: { WindowSampleText.routeFeldberg }, region: { WindowSampleText.regionTaunus }, km: 14.2, symbol: "mountain.2.fill"),
+        Route(id: "lahn", name: { WindowSampleText.routeLahn }, region: { WindowSampleText.regionLahn }, km: 18.5, symbol: "water.waves"),
+        Route(id: "rheinsteig", name: { WindowSampleText.routeRheinsteig }, region: { WindowSampleText.regionMiddleRhine }, km: 21.0,
+              symbol: "signpost.right.fill"),
+        Route(id: "vineyard", name: { WindowSampleText.routeVineyard }, region: { WindowSampleText.regionRheingau }, km: 9.8, symbol: "leaf.fill"),
+        Route(id: "ridge", name: { WindowSampleText.routeRidge }, region: { WindowSampleText.regionRhoen }, km: 16.4, symbol: "mountain.2.fill"),
+        Route(id: "lake", name: { WindowSampleText.routeLake }, region: { WindowSampleText.regionVogelsberg }, km: 7.3, symbol: "drop.fill"),
     ]
 
     static var totalKm: Double { routes.reduce(0) { $0 + $1.km } }
 
     static var routeItems: [ItemListItem] {
         routes.map { r in
-            ItemListItem(id: r.id, title: r.name(), secondary: r.region, meta: WindowSampleText.km(r.km), seed: "route-\(r.id)", symbol: r.symbol)
+            ItemListItem(id: r.id, title: r.name(), secondary: r.region(), meta: WindowSampleText.km(r.km), seed: "route-\(r.id)", symbol: r.symbol)
         }
     }
 
@@ -93,7 +94,8 @@ enum WindowSamples {
     }
 }
 
-/// The overview: hero, a shelf of recently opened collections, a list of frequently used ones.
+/// The overview: hero, a shelf of recently opened collections, a list of frequently used ones
+/// (a lower hero, so the list starts inside the rendered window and reads as "scroll for more").
 struct SampleOverviewPage: View {
     var body: some View {
         let hikes = WindowSamples.collection("hikes")
@@ -101,7 +103,8 @@ struct SampleOverviewPage: View {
             HeroHeader(eyebrow: WindowSampleText.featured, title: hikes.name(), subtitle: WindowSampleText.hikesSummary,
                        seed: "hero-\(hikes.id)", symbol: hikes.symbol,
                        primary: HeaderAction(WindowSampleText.open) {},
-                       secondary: HeaderAction(WindowSampleText.addFavorite, symbol: "star") {})
+                       secondary: HeaderAction(WindowSampleText.addFavorite, symbol: "star") {},
+                       height: Metrics.Window.heroHeightCompact)
             Shelf(WindowSampleText.recent, seeAll: {}, items: WindowSamples.collections) { c in
                 WindowSamples.tile(c, hover: c.id == "recipes")
             }
@@ -121,7 +124,7 @@ struct SampleDetailPage: View {
             DetailHeader(eyebrow: WindowSampleText.collection, title: hikes.name(), subtitle: hikes.kind(),
                          meta: WindowSampleText.hikesMeta(WindowSamples.routes.count, km: WindowSamples.totalKm),
                          description: WindowSampleText.hikesDescription, seed: hikes.id, symbol: hikes.symbol,
-                         primary: HeaderAction(WindowSampleText.open) {},
+                         primary: HeaderAction(WindowSampleText.addRoute, symbol: "plus") {},
                          secondary: HeaderAction(WindowSampleText.addFavorite, symbol: "star") {})
             ItemList(items: WindowSamples.routeItems, leading: .index,
                      columns: ItemListColumns(title: WindowSampleText.columnTitle, secondary: WindowSampleText.columnRegion,
@@ -131,17 +134,19 @@ struct SampleDetailPage: View {
     }
 }
 
-/// All collections as a grid, filtered by the toolbar search (`\.windowSearch`).
+/// All collections as a grid, filtered by the toolbar search (`\.windowSearch`). With no match the
+/// page keeps its title and result line and shows the no-results block where the grid was, so
+/// nothing jumps while typing.
 struct SampleLibraryPage: View {
     @Environment(\.windowSearch) private var query
 
     var body: some View {
         let found = WindowSamples.matching(query)
-        if found.isEmpty {
-            EmptyPage.noResults(query)
-        } else {
-            PageScaffold(WindowSampleText.allEntries,
-                         subtitle: query.isEmpty ? WindowSampleText.entries(found.count) : WindowSampleText.results(found.count, query)) {
+        PageScaffold(WindowSampleText.allEntries,
+                     subtitle: query.isEmpty ? WindowSampleText.entries(found.count) : WindowSampleText.results(found.count, query)) {
+            if found.isEmpty {
+                NoResults(query: query)
+            } else {
                 TileGrid(items: found) { c in WindowSamples.tile(c, selected: c.id == "garden") }
             }
         }

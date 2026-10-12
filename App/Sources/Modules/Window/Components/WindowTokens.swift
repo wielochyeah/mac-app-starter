@@ -37,6 +37,8 @@ extension Metrics {
         static let tileButton: CGFloat = 30
         static let tileButtonGlyph: CGFloat = 12
         static let heroHeight: CGFloat = 280
+        /// A lower hero when more of the page should show above the fold.
+        static let heroHeightCompact: CGFloat = 220
         static let heroTextWidth: CGFloat = 460
         static let detailArtwork: CGFloat = 220
         static let listArtwork: CGFloat = 32

@@ -64,15 +64,16 @@ enum WindowText {
     }
 
     /// Short descriptions of the building blocks on the start page and in the gallery.
-    static var blockPageScaffold: String { tr(en: "Page frame with large title", de: "Seitenrahmen mit großem Titel") }
-    static var blockHero: String { tr(en: "Artwork with title and actions", de: "Bild mit Titel und Aktionen") }
-    static var blockShelf: String { tr(en: "Row of tiles that scrolls", de: "Kachelreihe zum Blättern") }
-    static var blockTile: String { tr(en: "Artwork, title, hover action", de: "Bild, Titel, Hover-Aktion") }
-    static var blockTileGrid: String { tr(en: "Tiles that fill the width", de: "Kacheln über die ganze Breite") }
-    static var blockItemList: String { tr(en: "Rows like a track list", de: "Zeilen wie eine Titelliste") }
-    static var blockDetailHeader: String { tr(en: "Header of a detail page", de: "Kopf einer Detailseite") }
-    static var blockArtwork: String { tr(en: "Generated art, no image files", de: "Erzeugte Bilder ohne Bilddateien") }
-    static var blockEmptyPage: String { tr(en: "Empty and no-results state", de: "Leerer Zustand und keine Treffer") }
+    /// One line under a 168 pt tile in both languages (WindowTests measures them).
+    static var blockPageScaffold: String { tr(en: "Page frame, large title", de: "Seitenrahmen, großer Titel") }
+    static var blockHero: String { tr(en: "Artwork, title, actions", de: "Bild, Titel, Aktionen") }
+    static var blockShelf: String { tr(en: "Row of tiles to scroll", de: "Kachelreihe zum Blättern") }
+    static var blockTile: String { tr(en: "Artwork with quick action", de: "Bild mit Schnellaktion") }
+    static var blockTileGrid: String { tr(en: "Tiles in a grid", de: "Kacheln im Raster") }
+    static var blockItemList: String { tr(en: "Rows like a track list", de: "Zeilen wie Titellisten") }
+    static var blockDetailHeader: String { tr(en: "Top of a detail page", de: "Kopf einer Detailseite") }
+    static var blockArtwork: String { tr(en: "Generated, no image files", de: "Erzeugt, ohne Bilddateien") }
+    static var blockEmptyPage: String { tr(en: "Empty, no results", de: "Leer, keine Treffer") }
 
     // MARK: Gallery titles
     static var galleryMain: String { tr(en: "Main window", de: "Hauptfenster") }
@@ -81,6 +82,7 @@ enum WindowText {
     static var gallerySearch: String { tr(en: "Search results", de: "Suchergebnisse") }
     static var gallerySidebar: String { tr(en: "Sidebar", de: "Seitenleiste") }
     static var galleryTileStates: String { tr(en: "Tile states", de: "Kachelzustände") }
+    static var galleryNoPages: String { tr(en: "Window without pages", de: "Fenster ohne Seiten") }
 }
 
 /// Code identifiers and paths shown on the start page. Same in every language (not UI copy).

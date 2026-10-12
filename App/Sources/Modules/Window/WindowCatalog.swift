@@ -41,6 +41,13 @@ enum WindowCatalog {
             Item(id: "search-empty", title: { WindowText.noResultsTitle }) {
                 window(selection: "all", query: WindowSampleText.queryNone) { SampleLibraryPage() }
             },
+            Item(id: "no-pages", title: { WindowText.galleryNoPages }) {
+                AnyView(RenderBoard {
+                    StaticMainWindow(pages: [], selection: nil) {
+                        EmptyPage.noPages
+                    }
+                })
+            },
             // parts
             Item(id: "sidebar", title: { WindowText.gallerySidebar }) {
                 AnyView(StaticSidebar(groups: MainWindowModel.groups(WindowSamples.sidebarPages), selection: "hikes")
@@ -49,8 +56,9 @@ enum WindowCatalog {
                     .background(SceneBackground()))
             },
             Item(id: "page-scaffold", title: { WindowCodeNames.pageScaffold }, size: CGSize(width: 760, height: 440)) {
-                AnyView(PageScaffold(WindowSampleText.allEntries, subtitle: WindowSampleText.entries(WindowSamples.collections.count)) {
-                    TileGrid(items: Array(WindowSamples.collections.prefix(4))) { c in WindowSamples.tile(c) }
+                let shown = Array(WindowSamples.collections.prefix(4))
+                return AnyView(PageScaffold(WindowSampleText.allEntries, subtitle: WindowSampleText.entries(shown.count)) {
+                    TileGrid(items: shown) { c in WindowSamples.tile(c) }
                 })
             },
             Item(id: "hero-header", title: { WindowCodeNames.heroHeader }) {
@@ -147,7 +155,7 @@ enum WindowCatalog {
 
     /// Every SF Symbol the module draws itself (pages registered by others are checked by them).
     static var symbols: [String] {
-        ["house.fill", "sidebar.left", "magnifyingglass", "arrow.up.right", "ellipsis", "star"]
+        ["house.fill", "sidebar.left", "plus", "magnifyingglass", "arrow.up.right", "ellipsis", "star"]
             + BuildingBlock.all.map(\.symbol)
             + WindowSamples.collections.map(\.symbol)
             + WindowSamples.routes.map(\.symbol)

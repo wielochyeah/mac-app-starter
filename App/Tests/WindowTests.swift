@@ -224,6 +224,29 @@ final class WindowTests: TestSuite {
             expect(dark >= 1.1, "dark \(dark)")
         }
 
+        test("texts: tile lines and sidebar titles fit without truncation in both languages") {
+            let saved = Localizer.shared.forced
+            defer { Localizer.shared.forced = saved }
+            @MainActor func width(_ text: String, _ size: CGFloat, _ weight: NSFont.Weight = .regular) -> CGFloat {
+                (text as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: size, weight: weight)]).width
+            }
+            for lang in Lang.allCases {
+                Localizer.shared.forced = lang
+                for block in BuildingBlock.all {   // start page shelf: 168 pt tiles, 12 pt subtitle
+                    expect(width(block.detail(), 12) <= Metrics.Window.tile, "\(lang) \(block.detail()) \(width(block.detail(), 12))")
+                }
+                for c in WindowSamples.collections {   // grid tiles can shrink to 150 pt; 13 pt medium title
+                    expect(width(c.name(), 13, .medium) <= Metrics.Window.tileMin, "\(lang) \(c.name())")
+                }
+                // sidebar title column: ideal width minus panel insets, symbol column and gap
+                let titleColumn = Metrics.Window.sidebarIdeal - 2 * Metrics.Window.sidebarContentInset
+                    - Metrics.Window.sidebarSymbolColumn - Space.xs
+                for p in WindowSamples.sidebarPages {
+                    expect(width(p.title(), 13) <= titleColumn, "\(lang) \(p.title())")
+                }
+            }
+        }
+
         // MARK: Samples
 
         test("sample search: outdoor matches three, kayak none, empty shows all") {
@@ -314,7 +337,7 @@ final class WindowTests: TestSuite {
                 expect(gallery.contains("window.\(name)"), "gallery window.\(name)")
             }
             for required in ["main", "home", "page-scaffold", "hero-header", "shelf", "tile", "tile-grid", "item-list",
-                             "detail-header", "artwork", "empty-page"] {
+                             "detail-header", "artwork", "empty-page", "no-pages", "search-empty"] {
                 expect(WindowCatalog.names.contains(required), required)
             }
         }

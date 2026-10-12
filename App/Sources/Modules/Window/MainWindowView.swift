@@ -39,7 +39,7 @@ struct MainWindowView: View {
             if let page {
                 page.content()
             } else {
-                EmptyPage(symbol: "sidebar.left", title: WindowText.noPagesTitle, message: WindowText.noPagesMessage)
+                EmptyPage.noPages
             }
         }
         .id(page?.id)

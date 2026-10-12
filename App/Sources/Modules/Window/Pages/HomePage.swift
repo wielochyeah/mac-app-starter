@@ -48,7 +48,7 @@ struct HomePage: View {
                 .fixedSize(horizontal: false, vertical: true)
             }
 
-            Shelf(WindowText.buildingBlocks, items: BuildingBlock.all, tileWidth: Metrics.Window.tileMin) { block in
+            Shelf(WindowText.buildingBlocks, items: BuildingBlock.all, tileWidth: Metrics.Window.tile) { block in
                 Tile(title: block.name, subtitle: block.detail(), seed: block.name, symbol: block.symbol)
             }
 
