@@ -95,6 +95,17 @@ class SyncTests(TempDirCase):
         self.assertIn("App/Sources/Kit/Core/New.swift", lock["checksums"])
         self.assertNotIn("App/Sources/Kit/Core/Old.swift", lock["checksums"])
 
+    def test_earlier_kit_changes_stay_visible_after_sync(self):
+        from starter import kitcheck
+        self.release({"App/Sources/Kit/Core/New.swift": "enum New {}\n"})
+        write_files(self.project, {"App/Sources/Kit/Core/MyHack.swift": "enum MyHack {}\n"})
+        self.run_sync()
+        lock = read_lock(self.project)
+        self.assertIn("App/Sources/Kit/Core/New.swift", lock["checksums"])
+        self.assertNotIn("App/Sources/Kit/Core/MyHack.swift", lock["checksums"])
+        self.assertIn("App/Sources/Kit/Core/MyHack.swift: neu angelegt",
+                      "\n".join(kitcheck.run(self.project).problems))
+
     def test_dry_run_writes_nothing(self):
         self.release({"App/Sources/Kit/Core/New.swift": "enum New {}\n"})
         result = self.run_sync(dry_run=True)

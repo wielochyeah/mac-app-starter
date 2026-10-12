@@ -16,9 +16,9 @@ from typing import Dict, List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, build_env, inside, is_starter_origin, is_text_path, origin_url, remove_empty_dirs,
+from .common import (StarterError, build_env, checksum, inside, is_starter_origin, is_text_path, origin_url, remove_empty_dirs,
                      working_files, write_text)
-from .manifest import LOCK, Manifest, is_project, kit_checksums, read_lock, read_manifest, write_lock
+from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, write_lock
 from .markers import dangling_references, transform
 
 
@@ -149,6 +149,12 @@ def refuse_in_starter(root: Path, manifest: Manifest, command: str) -> None:
 
 
 def apply_removal(root: Path, plan: RemovalPlan, manifest: Manifest) -> None:
+    lock = read_lock(root) if (root / LOCK).exists() else None
+    in_project = lock is not None and is_project(lock)
+    # Kit files this removal edits, with their checksum before the edit: the lock follows only those
+    # the project had left unchanged, so earlier project changes stay visible to check-kit.
+    before = {p: checksum(root, p) for p in plan.edited
+              if in_project and manifest.classify(p) == "kit" and (root / p).is_file()}
     for path in plan.deleted + plan.emptied:
         full = inside(root, path)
         if full.exists():
@@ -158,13 +164,17 @@ def apply_removal(root: Path, plan: RemovalPlan, manifest: Manifest) -> None:
         write_text(inside(root, path), text)
     if plan.config is not None:
         cfg.write_config(root, plan.config)
-    if (root / LOCK).exists():
-        lock = read_lock(root)
+    if lock is not None:
         if plan.module not in lock["removedModules"]:
             lock["removedModules"] = sorted(lock["removedModules"] + [plan.module])
-        if is_project(lock):
-            # The removal changes kit files on purpose; the lock follows, so check-kit stays green.
-            lock["checksums"] = kit_checksums(root, manifest, working_files(root))
+        if in_project:
+            sums = dict(lock["checksums"])
+            for path in plan.deleted + plan.emptied:
+                sums.pop(path, None)
+            for path, old in before.items():
+                if sums.get(path) == old:
+                    sums[path] = checksum(root, path)
+            lock["checksums"] = dict(sorted(sums.items()))
         write_lock(root, lock)
 
 

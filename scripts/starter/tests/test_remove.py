@@ -37,6 +37,22 @@ class RemoveTests(TempDirCase):
         self.assertEqual(read_lock(root)["checksums"], {}, "no project yet: no checksums")
         self.assertTrue(self.remove(root, "island").already_removed)
 
+    def test_earlier_kit_changes_stay_visible_after_remove(self):
+        from starter import kitcheck
+        from starter.project import InitOptions, init
+        root = self.repo()
+        init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
+        write_files(root, {
+            "App/Sources/Kit/Core/Lang.swift": "func tr(en: String, de: String) -> String { de }\n",
+            "App/Tests/MineTests.swift": "x\n",
+        })
+        self.remove(root, "hotkeys", check_origin=False)
+        text = "\n".join(kitcheck.run(root).problems)
+        self.assertIn("App/Sources/Kit/Core/Lang.swift: geändert", text)
+        self.assertIn("App/Tests/MineTests.swift: neu angelegt", text)
+        self.assertNotIn("Modules.swift", text, "the removal's own edit is recorded")
+        self.assertNotIn("HotkeysModule.swift", text)
+
     def test_dry_run_writes_nothing(self):
         root = self.repo()
         plan = self.remove(root, "island", dry_run=True)

@@ -29,9 +29,9 @@ from typing import Dict, List, Optional, Tuple
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, cut_blocks, git, git_bytes, inside, is_binary, is_safe_repo_path,
-                     is_text_path, to_lf, working_files)
-from .manifest import LOCK, MANIFEST, Manifest, is_project, kit_checksums, parse_manifest, read_lock, write_lock
+from .common import (StarterError, checksum, cut_blocks, git, git_bytes, inside, is_binary, is_safe_repo_path,
+                     is_text_path, to_lf)
+from .manifest import LOCK, MANIFEST, Manifest, is_project, parse_manifest, read_lock, write_lock
 from .markers import transform
 
 BASE_REF = "refs/starter/basis"
@@ -132,6 +132,17 @@ def _prepared(manifest: Manifest, path: str, content: Optional[bytes], removed: 
     return text
 
 
+def synced_checksums(root: Path, target_m: Manifest, old: Dict[str, str], synced: List[str]) -> Dict[str, str]:
+    """The lock's checksums after a sync: kit files that now hold the target version get their new
+    checksum; every other kit entry keeps its old reference, so a kit file the project changed or
+    added before the sync (and sync left alone) still shows up in check-kit."""
+    sums = {p: c for p, c in old.items() if target_m.classify(p) == "kit" and (root / p).is_file()}
+    for path in synced:
+        if target_m.classify(path) == "kit" and (root / path).is_file():
+            sums[path] = checksum(root, path)
+    return dict(sorted(sums.items()))
+
+
 def check_source(source: str, target: str) -> None:
     if re.match(r"^[a-z][a-z0-9+.-]*://[^/]*@", source, re.I):
         raise StarterError("--quelle mit Zugangsdaten in der Adresse ist nicht erlaubt; für private Quellen den "
@@ -179,6 +190,7 @@ def sync(root: Path, target: str, source: Optional[str] = None, base: Optional[s
         return target_m.classify(path) if path in target_files else base_m.classify(path)
 
     writes: Dict[str, Optional[bytes]] = {}   # path -> content (None = delete)
+    synced_kit: List[str] = []                 # kit paths that hold the target version after the sync
     for path in sorted(base_files | target_files):
         kind = class_of(path)
         if kind not in ("kit", "shared") or path in NEVER_MERGED or globs.matches(path, removed_paths):
@@ -212,6 +224,8 @@ def sync(root: Path, target: str, source: Optional[str] = None, base: Optional[s
             else:
                 result.kept_deleted_in_starter.append(path)
             continue
+        if kind == "kit":
+            synced_kit.append(path)
         if theirs_text == ours_text:
             continue
         if kind == "shared" and base_text is None and ours_raw is not None:
@@ -233,7 +247,10 @@ def sync(root: Path, target: str, source: Optional[str] = None, base: Optional[s
     for src, dst in target_m.move.items():
         theirs_raw = _show(root, TARGET_REF, src)
         full = inside(root, dst)
-        if theirs_raw is None or (full.is_file() and full.read_bytes() == theirs_raw):
+        if theirs_raw is None:
+            continue
+        synced_kit.append(dst)
+        if full.is_file() and full.read_bytes() == theirs_raw:
             continue
         writes[dst] = theirs_raw
         result.taken.append(dst)
@@ -265,7 +282,7 @@ def sync(root: Path, target: str, source: Optional[str] = None, base: Optional[s
         "version": target[1:] if target.startswith("v") else target,
         "commit": git(root, ["rev-parse", TARGET_REF]),
         "lastSyncedOn": today,
-        "checksums": kit_checksums(root, target_m, working_files(root)),
+        "checksums": synced_checksums(root, target_m, lock["checksums"], synced_kit),
     })
     write_lock(root, lock)
     result.lock = lock
