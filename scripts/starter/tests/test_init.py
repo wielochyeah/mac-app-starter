@@ -4,7 +4,7 @@ import unittest
 from starter.tests.helpers import TempDirCase, base_files, git, make_repo
 from starter.common import StarterError, checksum
 from starter.manifest import read_lock
-from starter.project import InitOptions, default_bundle_id, init, removal_order
+from starter.project import InitOptions, default_bundle_id, init, interactive_values, removal_order
 from starter.tests.helpers import manifest_obj
 
 
@@ -112,6 +112,25 @@ class InitTests(TempDirCase):
         result = init(root, options())
         self.assertEqual(self.read(root, "docs/agents/VORGABEN.md"), "# Vorgaben des Starters\n")
         self.assertTrue(any("VORGABEN" in m for m in result.missing_templates))
+
+    def test_interactive_questions_re_ask_until_valid(self):
+        answers = iter(["1abc", "Mein Tool", "", "pink", "rot", "Not Valid", "hammer",
+                        "j", "j", "x", "n", "j", "j", "j", "", "n"])
+        asked = []
+
+        def ask(prompt, default, check):
+            while True:
+                answer = next(answers) or (default or "")
+                asked.append(prompt)
+                if check(answer) is None:
+                    return answer
+
+        m = manifest_obj()
+        opts = interactive_values(m, {"app": {"accent": "violett", "symbol": "sparkles"}}, ask, list(m.modules))
+        self.assertEqual((opts.name, opts.bundle_id, opts.accent, opts.symbol),
+                         ("Mein Tool", "com.example.meintool", "rot", "hammer"))
+        self.assertEqual(opts.remove, ["island", "examples"])
+        self.assertEqual(sum(1 for p in asked if p.startswith("Name")), 2)
 
     def test_default_bundle_id(self):
         self.assertEqual(default_bundle_id("Meine App 2"), "com.example.meineapp2")

@@ -132,8 +132,8 @@ def project_config(config: dict, opts: InitOptions, today: str) -> dict:
 
 
 def _check_symbol(symbol: Optional[str]) -> None:
-    if symbol is not None and not re.fullmatch(r"[a-z0-9]+(\.[a-z0-9]+)*", symbol):
-        raise StarterError(f"--symbol {symbol}: ein SF-Symbol-Name wie sparkles oder waveform.circle")
+    if symbol is not None and check_symbol(symbol):
+        raise StarterError(f"--symbol {symbol}: {check_symbol(symbol)}")
 
 
 def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[InitResult]:
@@ -249,21 +249,42 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
     return "\n".join(lines) + "\n"
 
 
+def check_name(value: str) -> Optional[str]:
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9 ]*", value):
+        return "mit einem Buchstaben beginnen, nur Buchstaben, Ziffern und Leerzeichen"
+    return None
+
+
+def check_bundle_id(value: str) -> Optional[str]:
+    if not re.fullmatch(r"[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+", value):
+        return "Form wie de.firma.app"
+    return None
+
+
+def check_symbol(value: str) -> Optional[str]:
+    if not re.fullmatch(r"[a-z0-9]+(\.[a-z0-9]+)*", value):
+        return "Name eines SF Symbols wie sparkles oder waveform.circle"
+    return None
+
+
 def interactive_values(manifest: Manifest, config: dict, ask, present: List[str],
                        name: Optional[str] = None) -> InitOptions:
     """Asks for name (unless given), bundle id, accent, symbol and the modules to keep;
-    `ask(prompt, default)` returns the answer (default on empty input)."""
-    gc = cfg.gen_config()
-    name = name or ask("Name der App (Buchstaben, Ziffern, Leerzeichen)", None)
-    bundle = ask("Bundle-ID", default_bundle_id(name))
-    accent = ask(f"Akzentfarbe ({', '.join(gc.ACCENTS)})", (config.get("app") or {}).get("accent", "violett"))
-    symbol = ask("SF Symbol für das App-Icon", (config.get("app") or {}).get("symbol", "sparkles"))
+    `ask(prompt, default, check)` returns the answer (default on empty input) and asks again while
+    `check(answer)` returns a reason."""
+    accents = cfg.gen_config().ACCENTS
+    app = config.get("app") or {}
+    name = name or ask("Name der App (Buchstaben, Ziffern, Leerzeichen)", None, check_name)
+    bundle = ask("Bundle-ID", default_bundle_id(name), check_bundle_id)
+    accent = ask(f"Akzentfarbe ({', '.join(accents)})", app.get("accent", "violett"),
+                 lambda v: None if v in accents else "eine der genannten Farben")
+    symbol = ask("SF Symbol für das App-Icon", app.get("symbol", "sparkles"), check_symbol)
     remove = []
     for m in manifest.modules.values():
         if m.name not in present:
             continue
-        keep = ask(f"Modul {m.name} ({m.title}) behalten? j/n", "j")
+        keep = ask(f"Modul {m.name} ({m.title}) behalten? j/n", "j",
+                   lambda v: None if v[:1].lower() in ("j", "n") else "j oder n")
         if keep.lower().startswith("n"):
             remove.append(m.name)
     return InitOptions(name=name, bundle_id=bundle, accent=accent, symbol=symbol, remove=remove)
-
