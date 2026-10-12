@@ -12,6 +12,7 @@
       "id": "sie-form",
       "label": "Sie-Form",
       "hinweis": "du-Form wie im Rest der App: „Wähle einen Eintrag“, „deine Notizen“",
+      "regeln": ["S-05"],
       "art": "regex",
       "muster": [
         "(?<=[a-zäöüß,;]\\s)Sie(?![\\w-])",
@@ -46,6 +47,7 @@
       "id": "du-form",
       "label": "Du-Form",
       "hinweis": "Sie-Form wie im Rest der App: „Wählen Sie einen Eintrag“",
+      "regeln": ["S-05"],
       "art": "woerter",
       "muster": [
         "(?<!-)[Dd]u(?!-)",

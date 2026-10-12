@@ -40,7 +40,7 @@
     {
       "id": "A-05",
       "schluessel": "eigene-dateien",
-      "text": "Jeder Strang ändert nur seine eigenen Dateien (`docs/agents/straenge.json`); Bedarf an fremden Dateien steht als Anfrage in der eigenen Statusdatei. Gemeinsame Dateien (`Makefile`, `starter.json`, `CLAUDE.md`, `rules/`, Manifest) ändert nur die Integration.",
+      "text": "Jeder Strang ändert nur seine eigenen Dateien (`docs/agents/straenge.json`); Bedarf an fremden Dateien steht als Anfrage in der eigenen Statusdatei. Gemeinsame Dateien (`Makefile`, `starter.json`, `CLAUDE.md`, `rules/`, Manifest) ändert nur die Integration. Ausnahme: wer einen Befund behebt, der in `rules/baseline/` steht, verkleinert die Baseline mit `--baseline-aktualisieren` und nennt das in der Statusdatei; lokal ist ein veralteter Eintrag nur ein Hinweis, in CI (`--ci`) ein Fehler.",
       "pakete": [],
       "durchsetzung": ["Review (pruefer-integration)"],
       "ki": false

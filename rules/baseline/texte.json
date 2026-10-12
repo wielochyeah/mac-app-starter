@@ -1,68 +1,68 @@
 {
   "App/Sources/Kit/Core/Registry.swift": [
-    "pfeil | → | omponent shown in the gallery (Settings → Components in debug builds)."
+    "pfeil | →"
   ],
   "App/Sources/Kit/Design/DesignCatalog.swift": [
-    "kommentar-verweis | S0.md | hey name the API, they are not UI copy (S0.md, exception"
+    "kommentar-verweis | S0.md"
   ],
   "App/Sources/Kit/Design/Island.swift": [
-    "pfeil | → | / Dark: violet night (#5A4BB0 → #2C2470 → #130F33), light: peach dusk (",
-    "pfeil | → | / Dark: violet night (#5A4BB0 → #2C2470 → #130F33), light: peach dusk (#FBE3D2 →",
-    "pfeil | → | → #130F33), light: peach dusk (#FBE3D2 → #EFBFAE → #C497B6).",
-    "pfeil | → | ), light: peach dusk (#FBE3D2 → #EFBFAE → #C497B6)."
+    "pfeil | →",
+    "pfeil | →",
+    "pfeil | →",
+    "pfeil | →"
   ],
   "App/Sources/Kit/Design/Patterns/OnboardingPage.swift": [
-    "kommentar-verweis | Strand D | eArea()`, VoiceBud OnboardingRootView). Strand D's root view puts its"
+    "kommentar-verweis | Strand D"
   ],
   "App/Sources/Kit/Design/Patterns/OnboardingStatusSlot.swift": [
-    "ui-literal | [X](X://help) | [X](X://help)"
+    "ui-literal | [X](X://help)"
   ],
   "App/Sources/Kit/Design/Patterns/PatternsText.swift": [
-    "deutsch-wort | auf | Lieber auf Deutsch? Unten bei App „Deutsch“ wählen",
-    "deutsch-zeichen | „ | Lieber auf Deutsch? Unten bei App „Deutsch“ wählen.",
-    "deutsch-zeichen | ä | r auf Deutsch? Unten bei App „Deutsch“ wählen.",
-    "harter-umbruch |  | permission to insert text at the cursor and to see which app you are writing in.",
-    "harter-umbruch |  | Erlaubnis, um Text am Cursor einzufügen und zu sehen, in welcher App du schreibs"
+    "deutsch-wort | auf",
+    "deutsch-zeichen | „",
+    "deutsch-zeichen | ä",
+    "harter-umbruch | ",
+    "harter-umbruch | "
   ],
   "App/Sources/Kit/Design/Patterns/SettingsRows.swift": [
-    "pfeil | ↗ | / row is the button, with an ↗ mark and a hover highlight."
+    "pfeil | ↗"
   ],
   "App/Sources/Kit/Design/Tokens.swift": [
-    "pfeil | → | swaps while the surface stays (waveform → spinner → check).",
-    "pfeil | → | e the surface stays (waveform → spinner → check)."
+    "pfeil | →",
+    "pfeil | →"
   ],
   "App/Sources/Kit/Gallery/GalleryKit.swift": [
-    "kommentar-verweis | Strand E | Strand E replaces this folder with the real gall"
+    "kommentar-verweis | Strand E"
   ],
   "App/Sources/Kit/Gallery/GalleryText.swift": [
-    "kommentar-verweis | Strand E | STUB (S0): texts of the stub gallery. Strand E owns this file and replaces it."
+    "kommentar-verweis | Strand E"
   ],
   "App/Sources/Kit/Main/AppForm.swift": [
-    "kommentar-verweis | BAUPLAN | p's form decides its activation policy (BAUPLAN §1):"
+    "kommentar-verweis | BAUPLAN"
   ],
   "App/Sources/Kit/Onboarding/OnboardingKit.swift": [
-    "kommentar-verweis | Strand D | working onboarding so the app launches. Strand D replaces this folder"
+    "kommentar-verweis | Strand D"
   ],
   "App/Sources/Kit/Onboarding/OnboardingText.swift": [
-    "kommentar-verweis | Strand D | TUB (S0): texts of the stub onboarding. Strand D owns this file and replaces it.",
-    "floskel-en | Welcome to | Welcome to X",
-    "floskel | Willkommen bei | Willkommen bei X",
-    "floskel | Los geht’s | Los geht’s"
+    "kommentar-verweis | Strand D",
+    "floskel-en | Welcome to",
+    "floskel | Willkommen bei",
+    "floskel | Los geht’s"
   ],
   "App/Sources/Kit/Permissions/Permission.swift": [
-    "kommentar-verweis | strand D | STUB (S0): strand D replaces this folder (status, request,"
+    "kommentar-verweis | strand D"
   ],
   "App/Sources/Kit/Settings/SettingsKit.swift": [
-    "kommentar-verweis | Strand E | Strand E replaces this folder with the real hub"
+    "kommentar-verweis | Strand E"
   ],
   "App/Sources/Kit/Settings/SettingsText.swift": [
-    "kommentar-verweis | Strand E | S0): texts of the stub settings window. Strand E owns this file and replaces it."
+    "kommentar-verweis | Strand E"
   ],
   "App/Sources/Kit/Texts/DesignText.swift": [
-    "mittelpunkt | · | Notes · 0.7 s",
-    "mittelpunkt | · | Notizen · 0,7 s"
+    "mittelpunkt | ·",
+    "mittelpunkt | ·"
   ],
   "App/Tests/DesignTests.swift": [
-    "kommentar-verweis | S0.md | t 14 pt bold), so this is below AA; see S0.md."
+    "kommentar-verweis | S0.md"
   ]
 }

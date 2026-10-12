@@ -16,7 +16,7 @@
     {
       "id": "D-02",
       "schluessel": "raster",
-      "text": "Abstände folgen dem Raster 8, 12, 16, 24, 32 (`Space.xs` bis `Space.xl`), 4 und 2 nur zum Feinausgleich; Zeilen sind 44 pt hoch. Ecken sind kontinuierlich (`style: .continuous`) mit Radien aus `Radius`, Linien Haarlinien von 0,5 pt.",
+      "text": "Abstände kommen aus `Space`: Raster 8, 12, 16, 24, 32 (`Space.xs` bis `Space.xl`), 4 und 2 nur zum Feinausgleich, 20 für den Inhalt eines Einstellungsbereichs (`Space.pane`), 12 und 9 als Einzug von Zeilen in Karten (`Space.rowX`, `Space.rowY`), 9 zwischen Symbol und Titel (`Space.iconGap`). Zeilen in Karten und Listen sind mindestens 44 pt hoch (`Metrics.rowMinHeight`), Zeilen der Seitenleiste 34 pt (`Metrics.sidebarRow`). Ecken sind kontinuierlich (`style: .continuous`) mit Radien aus `Radius`, Linien Haarlinien von 0,5 pt.",
       "pakete": ["gestaltung"],
       "durchsetzung": ["make check-design", "Review (pruefer-design)"],
       "ki": false
@@ -24,7 +24,7 @@
     {
       "id": "D-03",
       "schluessel": "typografie",
-      "text": "Nur die Systemschrift (SF Pro) in den Graden von `TypeScale`, keine eigene Schrift und keine freie Größe. Zahlen, die sich ändern, mit `.monospacedDigit()`. Kleinster Grad für Text ist `TypeScale.caption` (11 pt), `micro` nur in Insel und Kapsel.",
+      "text": "Nur die Systemschrift (SF Pro) in den Graden von `TypeScale`, keine eigene Schrift und keine freie Größe. Zahlen, die sich ändern, mit `.monospacedDigit()`. Kein Textstil des Systems (`.headline`, `.body`). Kleinster Grad für Text ist `TypeScale.caption` (11 pt), für Plaketten und Zähler `TypeScale.badge` (10,5 pt); `TypeScale.micro` (9,5 pt) nur in Insel, Kapsel und für das Symbol eines Chips.",
       "pakete": ["gestaltung"],
       "durchsetzung": ["make check-design", "Review (pruefer-design)"],
       "ki": false
@@ -34,7 +34,7 @@
       "schluessel": "symbole",
       "text": "Symbole nur aus SF Symbols über `Image(systemName:)`, keine Bild-Assets für Icons, keine Emojis, keine Glyphen als Icons. Das App-Icon entsteht im Code (`make icon`). Icon-Knöpfe tragen ein `.accessibilityLabel` aus einer `*Text.swift`-Datei.",
       "pakete": ["zeichen"],
-      "durchsetzung": ["make check-texts (Emoji, Glyphen)", "Selbsttest kit.symbol", "Review"],
+      "durchsetzung": ["make check-texts (Emoji, Glyphen)", "make check-design (Bild-Assets)", "Selbsttest kit.symbol", "Review"],
       "ki": false
     },
     {
@@ -80,7 +80,7 @@
     {
       "id": "D-10",
       "schluessel": "deutsch-passt",
-      "text": "Deutsche Texte sind etwa 30 % länger und passen trotzdem: keine festen Breiten für Text, kein Abschneiden, keine Silbentrennung mitten im Wort, kein harter Umbruch mitten im Satz, weder in UI-Texten noch in Absätzen der Doku. Geprüft wird in den Renders mit `de`.",
+      "text": "Deutsche Texte sind etwa 30 % länger und passen trotzdem: keine festen Breiten für Text, kein Abschneiden, keine Silbentrennung mitten im Wort, kein harter Umbruch mitten im Satz, weder in UI-Texten noch in Absätzen der Doku. Ausnahme ist eine bewusst ausgewogene zweizeilige Unterzeile wie in VoiceBud: sie steht mit dem Kommentar `// umbruch: Grund` direkt über dem Text. Geprüft wird in den Renders mit `de`.",
       "pakete": ["layout"],
       "durchsetzung": ["make check-texts (harte Umbrüche)", "make shots (de)", "Review (pruefer-laie-ux)"],
       "ki": false
@@ -96,7 +96,7 @@
     {
       "id": "D-12",
       "schluessel": "barrierefreiheit",
-      "text": "Alles ist mit der Tastatur erreichbar (Fokus sichtbar, `↑` und `↓` in Listen, `Esc`, `⌘W`, `⌘,`), Bedienelemente haben Namen für VoiceOver, Trefferflächen sind mindestens 24 pt groß, Zeilen 44 pt.",
+      "text": "Alles ist mit der Tastatur erreichbar (Fokus sichtbar, `↑` und `↓` in Listen, `Esc`, `⌘W`, `⌘,`), Bedienelemente haben Namen für VoiceOver, Trefferflächen sind mindestens 24 pt groß, Zeilen in Karten und Listen mindestens 44 pt (`Metrics.rowMinHeight`).",
       "pakete": [],
       "durchsetzung": ["Review (pruefer-laie-ux)"],
       "ki": false

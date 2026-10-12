@@ -12,7 +12,7 @@
     },
     {
       "id": "S-03",
-      "text": "Keine Emojis, keine Deko-Pfeile (`→`, `->`, `=>`), keine Glyphen statt Symbolen (`▲`, `‹`, `✓`, `★`) und keine Ausrufezeichen. Symbole kommen aus SF Symbols über `Image(systemName:)`. Die Zeichen der Tastenkürzel (`⌘ ⌥ ⌃ ⇧ ⇥ ⇪ ⏎ ⌫`) sind erlaubt, eine Pfeiltaste direkt nach einer Modifikatortaste ebenfalls (`⌘←`)."
+      "text": "Keine Emojis, keine Deko-Pfeile (`→`, `->`, `=>`), keine Glyphen statt Symbolen (`▲`, `‹`, `✓`, `★`) und keine Ausrufezeichen. Symbole kommen aus SF Symbols über `Image(systemName:)`. Die Zeichen der Mac-Tasten sind erlaubt (`⌘ ⌥ ⌃ ⇧ ⇥ ⇤ ⇪ ⏎ ↩ ⌤ ⌫ ⌦ ⎋ ⇞ ⇟ ↖ ↘`, `🌐` vor einer Taste wie `🌐E`), Pfeiltasten nach einer Modifikatortaste (`⌘←`), als Paar (`↑/↓`, `↑ oder ↓`, `← and →`) und mit dem Wort Taste oder key (`↓-Taste`)."
     },
     {
       "id": "S-04",
@@ -20,7 +20,7 @@
     },
     {
       "id": "S-05",
-      "text": "Deutsche Texte nutzen genau eine Anrede: die aus `starter.json` (`texts.anrede`), Standard `du` wie bei Apple und VoiceBud, sonst `Sie`. Die andere Form ist ein Fehler. Knöpfe und Menübefehle stehen im Infinitiv (`Einstellungen öffnen`, `Freigabe erteilen`), englische im Imperativ (`Open Settings`)."
+      "text": "Deutsche Texte nutzen genau eine Anrede: die aus `starter.json` (`texts.anrede`), Standard `du` wie bei Apple und VoiceBud, sonst `Sie`. Die andere Form ist ein Fehler. Die Texte des Kits sind in der du-Form geschrieben; wer `sie` wählt, schreibt die deutschen Texte der `*Text.swift`-Dateien und der `App/Resources/InfoPlist.json` um (gemeinsame Pfade, die ein Projekt ändern darf), `make check-texts` listet jede Stelle. Knöpfe und Menübefehle stehen im Infinitiv (`Einstellungen öffnen`, `Freigabe erteilen`), englische im Imperativ (`Open Settings`)."
     },
     {
       "id": "S-06",

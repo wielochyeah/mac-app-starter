@@ -12,6 +12,7 @@
       "id": "zeitwort",
       "label": "Zeitwort ohne Datum",
       "hinweis": "Stand-Datum aus den Daten über Format nennen, etwa „Stand 25.09.2026“",
+      "regeln": ["S-14"],
       "art": "woerter",
       "muster": [
         "live(?:daten|werte?|ansicht|feed|ticker)?",

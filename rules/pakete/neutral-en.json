@@ -11,7 +11,8 @@
     {
       "id": "werbeversprechen-en",
       "label": "Superlativ oder Versprechen",
-      "hinweis": "describe what the feature does and how that can be measured",
+      "hinweis": "beschreiben, was die Funktion tut und woran das messbar ist",
+      "regeln": ["S-06"],
       "art": "woerter",
       "muster": [
         "the\\s+best",

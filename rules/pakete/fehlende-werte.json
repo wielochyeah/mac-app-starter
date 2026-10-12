@@ -12,6 +12,7 @@
       "id": "fehlender-wert",
       "label": "Abkürzung für einen fehlenden Wert",
       "hinweis": "den Grund nennen, etwa „noch kein Lauf“ oder „nicht verfügbar, Modell fehlt“",
+      "regeln": ["S-08"],
       "art": "regex",
       "muster": [
         "(?<!\\w)[Nn]\\.\\s?[Vv]\\.(?!\\w)",
@@ -29,6 +30,7 @@
       "id": "strich-als-wert",
       "label": "Strich als Wert",
       "hinweis": "den Grund statt eines Strichs, etwa „noch kein Lauf“",
+      "regeln": ["S-08"],
       "art": "regex",
       "muster": ["^\\s*[-\\u2013\\u2014]\\s*$"],
       "flags": "",
@@ -43,6 +45,7 @@
       "id": "technischer-wert",
       "label": "Technischer Wert im sichtbaren Text",
       "hinweis": "den fehlenden Wert abfangen und seinen Grund zeigen",
+      "regeln": ["S-08"],
       "art": "regex",
       "muster": [
         "(?<!\\w)(?:NaN|undefined|Infinity|Invalid\\s+Date)(?!\\w)",

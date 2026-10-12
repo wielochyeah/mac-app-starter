@@ -12,6 +12,7 @@
       "id": "platzhaltertext",
       "label": "Blindtext oder Merkzettel",
       "hinweis": "echten Text schreiben oder den Abschnitt weglassen; offene Punkte gehören in die Statusdatei",
+      "regeln": ["S-09"],
       "art": "woerter",
       "muster": ["[Ll]orem\\s+[Ii]psum", "dolor\\s+sit\\s+amet", "TODO", "FIXME", "TBD", "XXX"],
       "flags": "",

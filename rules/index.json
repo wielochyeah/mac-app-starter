@@ -74,8 +74,8 @@
       "pfad": "scripts/check_texts.py"
     },
     {
-      "name": "`make check-design`: Swift-Code gegen die Pakete `gestaltung` und `swift-technik`",
-      "regeln": ["D-01", "D-02", "D-03", "D-07", "D-09", "T-01", "T-02", "T-03", "T-04", "T-05", "T-06"],
+      "name": "`make check-design`: Swift-Code in `App/Sources`, `App/Tests` und `tools` gegen die Pakete `gestaltung` und `swift-technik`",
+      "regeln": ["D-01", "D-02", "D-03", "D-04", "D-07", "D-09", "T-01", "T-02", "T-03", "T-04", "T-05", "T-06"],
       "pfad": "scripts/check_design.py"
     },
     {
@@ -193,25 +193,16 @@
   "bereiche": {
     "ui": "UI-Texte: die beiden Literale jedes tr(en:de:) und die Werte in App/Resources/InfoPlist.json, je nach Sprache",
     "kommentar": "Kommentare in Swift- und Python-Dateien (Sprache Englisch)",
-    "doku": "Markdown ohne Code-Blöcke, Inline-Code, HTML-Kommentare und Link-Ziele (Sprache Deutsch)",
+    "doku": "jede Markdown-Datei im Repository außer den Ausnahmen, ohne Code-Blöcke, Inline-Code, HTML-Kommentare und Link-Ziele (Sprache Deutsch)",
     "commit": "Betreff und Text einer Commit-Nachricht (Sprache Englisch), geprüft vom Hook commit-msg",
     "ki": "Texte, die die App mit lokaler KI in eigener Stimme schreibt, vor der Anzeige; und die Schreibregeln im Prompt",
-    "swift": "Swift-Code ohne Kommentare und Literale, geprüft von check_design.py"
+    "swift": "Swift-Code ohne Kommentare und Literale in App/Sources, App/Tests und tools/, geprüft von check_design.py"
   },
   "pruefumfang": {
     "swift": ["App/Sources"],
+    "swiftCode": ["App/Sources", "App/Tests", "tools"],
     "kommentare": ["App", "tools", "scripts", "ai-worker", ".claude"],
-    "doku": [
-      "README.md",
-      "CLAUDE.md",
-      "AGENTS.md",
-      "CONTRIBUTING.md",
-      "CHANGELOG.md",
-      "docs",
-      "rules",
-      ".claude",
-      "App/Sources/Features"
-    ],
+    "doku": ["."],
     "infoplist": "App/Resources/InfoPlist.json",
     "ausnahmen": [
       {
@@ -225,6 +216,14 @@
       {
         "pfad": "**/.venv/**",
         "grund": "fremde Pakete einer virtuellen Umgebung"
+      },
+      {
+        "pfad": "**/node_modules/**",
+        "grund": "fremde Pakete"
+      },
+      {
+        "pfad": "App/Resources/Notices/**",
+        "grund": "Lizenzhinweise im Wortlaut der Rechteinhaber, in beiden Sprachen der App"
       },
       {
         "pfad": "scripts/tests/**",

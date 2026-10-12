@@ -13,6 +13,7 @@
       "id": "kommentar-verweis",
       "label": "Kommentar mit Projektverweis",
       "hinweis": "den Grund selbst nennen statt auf Plan, Strang, Statusbericht oder Person zu verweisen",
+      "regeln": ["S-12"],
       "art": "regex",
       "muster": [
         "(?<!\\w)(?:VORGABEN|STRAENGE|BAUPLAN|STRANDS|[Ss]trang|[Ss]tr[aä]nge|[Ss]trands?\\s+[A-Z]\\d?|Vorgabe\\s+V?\\d+)(?!\\w)",

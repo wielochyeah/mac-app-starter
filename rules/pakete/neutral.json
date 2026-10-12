@@ -12,6 +12,7 @@
       "id": "werbeversprechen",
       "label": "Superlativ oder Versprechen",
       "hinweis": "beschreiben, was die Funktion tut und woran das messbar ist",
+      "regeln": ["S-06"],
       "art": "woerter",
       "muster": [
         "(?:die|der|das|den|dem|des)\\s+beste[nrms]?",

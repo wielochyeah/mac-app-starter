@@ -1,6 +1,6 @@
 {
   "uiTexte": {
-    "beschreibung": "Wo ein String-Literal in Swift ein UI-Text ist. check_texts.py meldet ein Literal mit Text an diesen Stellen außerhalb von tr(en:de:); Text(verbatim:) mit Literal braucht den Kommentar // verbatim: Grund. Ein Aufruf ohne Klammern prüft das erste Argument ohne Label und jedes Argument mit einem Label aus textLabels; Name(#1,title) prüft nur das zweite Argument ohne Label und das Label title. Literale in verschachtelten Aufrufen und Closures zählen nicht, Elemente eines Array-Literals schon.",
+    "beschreibung": "Wo ein String-Literal in Swift ein UI-Text ist. check_texts.py meldet ein Literal mit Text an diesen Stellen außerhalb von tr(en:de:); Text(verbatim:) mit Literal braucht den Kommentar // verbatim: Grund. Ein Aufruf ohne Klammern prüft das erste Argument ohne Label und jedes Argument mit einem Label aus textLabels; Name(#1,title) prüft nur das zweite Argument ohne Label und das Label title. Literale in verschachtelten Aufrufen und Closures zählen nicht, mit zwei Ausnahmen: Elemente eines Array-Literals und eine Closure, die nur ein Literal liefert (title: { \"Home\" }, wie AppPage, SettingsPane, MenuItemContribution, GalleryEntry und WindowHost.show sie nehmen). Ein Literal unter einem Label aus formatLabels ist ein Format: es zählt, wenn nach den Platzhaltern (%d, %.2f, %@) ein Wort aus zwei Buchstaben bleibt.",
     "aufrufe": [
       "Text",
       "Button",
@@ -19,7 +19,7 @@
       "NavigationLink",
       "ProgressView",
       "Stepper",
-      "Tab",
+      "Tab(#0,title)",
       "NSMenuItem",
       "NSMenu",
       "NSButton",
@@ -51,7 +51,14 @@
       "ListCard",
       "SearchField",
       "TileOption(title,detail,badge)",
-      "StatusMark(#1)"
+      "StatusMark(#1)",
+      "OnboardingFooter(advanceTitle)",
+      "SlotButton(title)",
+      "AppPage(title)",
+      "SettingsPane(title)",
+      "MenuItemContribution(title)",
+      "GalleryEntry(title)",
+      "String(format,localized)"
     ],
     "modifikatoren": [
       "help",
@@ -66,7 +73,14 @@
       "searchable",
       "addItem",
       "addButton",
-      "insertItem"
+      "insertItem",
+      "show(title)",
+      "action(#0)",
+      "waiting(#0)",
+      "denied(#0)",
+      "granted(#0)",
+      "restartNeeded(#0,buttonTitle)",
+      "init(title)"
     ],
     "textLabels": [
       "title",
@@ -91,7 +105,11 @@
       "searchPrompt",
       "role",
       "name",
-      "text"
+      "text",
+      "advanceTitle",
+      "buttonTitle",
+      "checkboxWithTitle",
+      "radioButtonWithTitle"
     ],
     "zuweisungen": [
       "title",
@@ -103,10 +121,15 @@
       "stringValue",
       "prompt",
       "message",
-      "nameFieldLabel"
+      "nameFieldLabel",
+      "body"
+    ],
+    "formatLabels": [
+      "format"
     ],
     "verbatimKommentar": "verbatim",
     "ausnahmeKommentar": "text-ausnahme",
+    "umbruchKommentar": "umbruch",
     "textDateien": "*Text.swift"
   }
 }

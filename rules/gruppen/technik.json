@@ -42,7 +42,7 @@
       "schluessel": "kit-wege",
       "text": "Jede Sache hat einen Weg: Einstellungen nur über `SettingKey` und `Settings.shared`, gespeichert in `~/Library/Application Support/<bundleId>/settings.json`; Daten über `Database` (sqlite3, nummerierte Migrationen); Berechtigungen nur über `Kit/Permissions`; Fenster über `WindowHost` und `AppForm`; Texte über `tr`; Formatierung über `Format`; Protokolle über `Log`. Beiträge von Modulen (Seiten, Bereiche, Schritte, Menüeinträge, Szenen) laufen über `Registry`.",
       "pakete": ["swift-technik"],
-      "durchsetzung": ["make check-design (Berechtigungen, Anmeldeobjekte)", "Review (pruefer-integration)"],
+      "durchsetzung": ["make check-design (Einstellungen, Berechtigungen, Anmeldeobjekte)", "Review (pruefer-integration)"],
       "ki": false
     },
     {
