@@ -29,8 +29,8 @@ from typing import Dict, List, Optional, Tuple
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, checksum, cut_blocks, git, git_bytes, inside, is_binary, is_safe_repo_path,
-                     is_text_path, to_lf)
+from .common import (StarterError, checksum, cut_blocks, git, git_bytes, has_block, inside, is_binary,
+                     is_safe_repo_path, is_script_text, is_text_path, to_lf)
 from .manifest import LOCK, MANIFEST, Manifest, is_project, parse_manifest, read_lock, write_lock
 from .markers import transform
 
@@ -122,12 +122,12 @@ def _prepared(manifest: Manifest, path: str, content: Optional[bytes], removed: 
     if content is None:
         return None
     text = to_lf(content.decode("utf-8", "replace"))
-    if is_text_path(path):
+    if is_text_path(path) or is_script_text(path, text):
         new = transform(path, text, removed)
         if new is None:
             return None
         text = new
-        if any(line.strip() == manifest.block_start for line in text.split("\n")):
+        if not path.endswith(".json") and has_block(text, manifest.block_start):
             text = cut_blocks(text, manifest.block_start, manifest.block_end)
     return text
 

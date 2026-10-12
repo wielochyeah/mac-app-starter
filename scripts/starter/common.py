@@ -154,23 +154,45 @@ def checksum(root: Path, path: str) -> str:
     return checksum_bytes((root / path).read_bytes())
 
 
+def marker_token(marker: str) -> str:
+    """The word of a block marker without its comment syntax: `<!-- nur-im-starter:anfang -->` ->
+    `nur-im-starter:anfang`."""
+    return re.sub(r"^(?:<!--|#|//)\s*|\s*-->$", "", marker.strip())
+
+
+def is_block_marker(line: str, marker: str) -> bool:
+    """A line that is only the marker, in any comment syntax: `<!-- t -->` (Markdown, HTML), `# t`
+    (shell, Python, YAML, Makefile) or `// t` (Swift)."""
+    token = re.escape(marker_token(marker))
+    return re.fullmatch(r"(?:<!--\s*" + token + r"\s*-->|#\s*" + token + r"|//\s*" + token + r")",
+                        line.strip()) is not None
+
+
+def has_block(text: str, start: str) -> bool:
+    return any(is_block_marker(line, start) for line in text.split("\n"))
+
+
 def cut_blocks(text: str, start: str, end: str) -> str:
-    """Cuts every block from a line that is exactly the start marker to a line that is exactly the
-    end marker (both included) and leaves one blank line where it was."""
+    """Cuts every block from a line that is only the start marker to a line that is only the end
+    marker (both included, in the file's comment syntax) and leaves at most one blank line at the seam."""
     kept: List[str] = []
     inside_block = False
+    seam = False
     for line in text.split("\n"):
-        if not inside_block and line.strip() == start:
+        if not inside_block and is_block_marker(line, start):
             inside_block = True
             continue
         if inside_block:
-            if line.strip() == end:
-                inside_block = False
+            if is_block_marker(line, end):
+                inside_block, seam = False, True
             continue
+        if seam and not line.strip() and kept and not kept[-1].strip():
+            continue
+        seam = False
         kept.append(line)
     if inside_block:
         raise StarterError(f"Markierung {start} ohne {end}")
-    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept))
+    return "\n".join(kept)
 
 
 def remove_empty_dirs(root: Path, files: Sequence[str]) -> None:
@@ -187,12 +209,31 @@ def remove_empty_dirs(root: Path, files: Sequence[str]) -> None:
 
 
 def is_text_path(path: str) -> bool:
+    """A text file by its name (extension or a known name without one)."""
     name = path.rsplit("/", 1)[-1]
     return bool(TEXT_FILE.search(path)) or name in TEXT_NAMES
 
 
 TEXT_FILE = re.compile(r"\.(swift|py|sh|zsh|md|txt|yml|yaml|json|toml|cfg|html|css|js|plist|entitlements|c|h|m)$")
 TEXT_NAMES = {"Makefile", ".gitignore", ".editorconfig"}
+
+
+def is_script_text(path: str, text: str) -> bool:
+    """A script without extension (Git hooks, bin/starter) by its shebang line."""
+    return "." not in path.rsplit("/", 1)[-1] and text.startswith("#!")
+
+
+def is_text_file(root: Path, path: str) -> bool:
+    """is_text_path, plus scripts without extension that start with a shebang."""
+    if is_text_path(path):
+        return True
+    if "." in path.rsplit("/", 1)[-1]:
+        return False
+    try:
+        with open(root / path, "rb") as f:
+            return f.read(2) == b"#!"
+    except OSError:
+        return False
 
 
 def build_env() -> Dict[str, str]:

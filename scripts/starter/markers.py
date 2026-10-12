@@ -150,8 +150,12 @@ def swift_flag_problems(text: str, path: str, known: Iterable[str]) -> List[str]
     return problems
 
 
-def comment_syntax(path: str) -> Optional[Tuple[str, str]]:
+def comment_syntax(path: str, text: str = "") -> Optional[Tuple[str, str]]:
+    """The line-comment syntax of a file by its name; a script without extension (Git hooks,
+    bin/starter) by its shebang."""
     name = path.rsplit("/", 1)[-1]
+    if "." not in name and text.startswith("#!"):
+        return "#", ""
     if re.search(r"\.(md|html|xml|plist|entitlements)$", name):
         return "<!--", "-->"
     if re.search(r"\.(py|sh|zsh|yml|yaml|txt|toml|cfg)$", name) or name in (
@@ -164,7 +168,7 @@ def comment_syntax(path: str) -> Optional[Tuple[str, str]]:
 
 def strip_comment_markers(text: str, module: str, path: str) -> str:
     """Drops lines ending in the module's marker and blocks between its :anfang and :ende markers."""
-    syntax = comment_syntax(path)
+    syntax = comment_syntax(path, text)
     if syntax is None:
         return text
     open_, close = (re.escape(s) for s in syntax)

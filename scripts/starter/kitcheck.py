@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Sequence
 
 from . import config as cfg
 from . import globs
-from .common import StarterError, cut_blocks, is_text_path, working_files
+from .common import StarterError, cut_blocks, has_block, is_text_file, working_files
 from .manifest import CLASS_NAMES, Manifest, is_project, kit_checksums, read_lock, read_manifest
 from .markers import swift_flag_problems, transform
 from .remove import read_texts, simulate
@@ -73,10 +73,10 @@ def check_project(root: Path, manifest: Manifest, lock: dict, files: Sequence[st
         f.ok.append(f"{len(lock['checksums'])} Kit-Dateien unverändert seit Starter {lock['version']}")
     leftovers = [p for p in files if globs.matches(p, manifest.starter_only_paths) and p not in manifest.replace]
     for p in files:
-        if not is_text_path(p) or p.endswith(".json"):
+        if not is_text_file(root, p) or p.endswith(".json"):
             continue
         text = _read(root, p) or ""
-        if any(line.strip() == manifest.block_start for line in text.split("\n")):
+        if has_block(text, manifest.block_start):
             leftovers.append(f"{p} (Abschnitt {manifest.block_start})")
     if leftovers:
         f.problems.append("Bauunterlagen des Starters sind noch da; bin/starter init ausführen oder entfernen: "
@@ -169,7 +169,7 @@ def check_starter(root: Path, manifest: Manifest, lock: dict, files: Sequence[st
             swift_problems += swift_flag_problems(t, p, manifest.modules)
     f.problems += swift_problems
     for p, t in texts.items():
-        if p.endswith(".json") or not any(line.strip() == manifest.block_start for line in t.split("\n")):
+        if p.endswith(".json") or not has_block(t, manifest.block_start):
             continue
         try:
             cut_blocks(t, manifest.block_start, manifest.block_end)

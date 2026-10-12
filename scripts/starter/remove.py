@@ -16,7 +16,7 @@ from typing import Dict, List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, build_env, checksum, inside, is_starter_origin, is_text_path, origin_url, remove_empty_dirs,
+from .common import (StarterError, build_env, checksum, inside, is_starter_origin, is_text_file, origin_url, remove_empty_dirs,
                      working_files, write_text)
 from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, write_lock
 from .markers import dangling_references, transform
@@ -79,7 +79,7 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
     deleted = set(plan.deleted)
     remaining: Dict[str, str] = {}
     for path in files:
-        if path in deleted or not is_text_path(path) or path in ("starter.json", LOCK):
+        if path in deleted or not is_text_file(root, path) or path in ("starter.json", LOCK):
             continue
         try:
             text = (root / path).read_text(encoding="utf-8")
@@ -114,10 +114,10 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
 
 
 def read_texts(root: Path, files: List[str]) -> Dict[str, str]:
-    """Text files (by extension) that decode as UTF-8, path -> text."""
+    """Text files (by extension or shebang) that decode as UTF-8, path -> text."""
     out = {}
     for path in files:
-        if is_text_path(path):
+        if is_text_file(root, path):
             try:
                 out[path] = (root / path).read_text(encoding="utf-8")
             except (UnicodeDecodeError, OSError):

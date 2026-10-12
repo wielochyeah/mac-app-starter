@@ -66,6 +66,10 @@ class CommonTests(unittest.TestCase):
         with self.assertRaises(StarterError):
             cut_blocks("<!-- s -->\nx", "<!-- s -->", "<!-- e -->")
         self.assertEqual(cut_blocks("see `<!-- s -->` here", "<!-- s -->", "<!-- e -->"), "see `<!-- s -->` here")
+        self.assertEqual(cut_blocks("a\n  # s\nx\n  # e\nb\n", "<!-- s -->", "<!-- e -->"), "a\nb\n")
+        self.assertEqual(cut_blocks("a\n// s\nx\n// e\nb\n", "<!-- s -->", "<!-- e -->"), "a\nb\n")
+        self.assertEqual(cut_blocks("a\n\n\n\nb\n", "<!-- s -->", "<!-- e -->"), "a\n\n\n\nb\n",
+                         "blank lines away from a block stay")
 
 
 class ManifestTests(unittest.TestCase):

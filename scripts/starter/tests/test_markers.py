@@ -84,6 +84,13 @@ class CommentMarkerTests(unittest.TestCase):
         self.assertEqual(comment_syntax("ai-worker/requirements.txt"), ("#", ""))
         self.assertEqual(comment_syntax("App/A.swift"), ("//", ""))
         self.assertIsNone(comment_syntax("starter.json"))
+        self.assertIsNone(comment_syntax("scripts/hooks/pre-push"))
+        self.assertEqual(comment_syntax("scripts/hooks/pre-push", "#!/bin/zsh\n"), ("#", ""))
+        self.assertEqual(comment_syntax("bin/starter", "#!/usr/bin/env python3\n"), ("#", ""))
+
+    def test_markers_in_a_script_without_extension(self):
+        src = "#!/bin/zsh\nrun island # modul:island\nmake check\n"
+        self.assertEqual(transform("scripts/hooks/pre-push", src, ["island"]), "#!/bin/zsh\nmake check\n")
 
     def test_markdown_line_and_block(self):
         src = lines("keep", "| Insel | x | <!-- modul:island -->", "<!-- modul:island:anfang -->", "## Insel",
