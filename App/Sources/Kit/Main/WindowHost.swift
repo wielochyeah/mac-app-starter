@@ -72,7 +72,12 @@ enum WindowHost {
         window.delegate = observer
         windows[id] = window
         delegates[id] = observer
-        Observing.track { _ = title() } onChange: { windows[id]?.title = title() }
+        // stops (and releases `title`) once this window is closed or replaced under the same id
+        Observing.track { _ = title() } while: { [weak window] in
+            window != nil && windows[id] === window
+        } onChange: { [weak window] in
+            window?.title = title()
+        }
 
         AppForm.windowWillShow(id)
         window.makeKeyAndOrderFront(nil)
