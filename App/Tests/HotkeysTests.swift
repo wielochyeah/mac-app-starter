@@ -769,8 +769,8 @@ final class HotkeysSceneTests: TestSuite {
                            "hotkeys.onboarding-off"] {
                     expect(scenes.contains(id), id)
                 }
-                // the pane comes with the first hotkey, the step with a showInOnboarding one (the
-                // examples module registers one; a project without hotkeys shows neither)
+                // the pane comes with the first hotkey, the step with a showInOnboarding one (other
+                // modules or the project may have registered some; without hotkeys neither shows)
                 let center = HotkeyCenter.shared
                 expectEqual(Registry.settingsPanes.map(\.id), center.definitions.isEmpty ? [] : [HotkeysModule.paneID])
                 expectEqual(Registry.onboardingSteps.first?.order, 600)
