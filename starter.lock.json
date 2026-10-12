@@ -1,0 +1,13 @@
+{
+  "description": "Stand des Starters in diesem Repository. Im Starter selbst bleibt project leer. In einem Projekt trägt bin/starter init Version, Quelle, Commit und die Prüfsummen der Kit-Pfade ein; bin/starter remove hält removedModules und die Prüfsummen nach, bin/starter sync aktualisiert Version, Commit und Prüfsummen, bin/starter check-kit vergleicht die Kit-Pfade damit.",
+  "starter": "mac-app-starter",
+  "version": "1.0.0",
+  "state": "release",
+  "source": null,
+  "commit": null,
+  "project": null,
+  "createdOn": null,
+  "lastSyncedOn": null,
+  "removedModules": [],
+  "checksums": {}
+}
