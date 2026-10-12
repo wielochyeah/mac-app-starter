@@ -68,7 +68,7 @@ command -v brew >/dev/null && ok "brew $(brew --version 2>/dev/null | head -1 | 
 for tool in hdiutil iconutil sips tiffutil; do
   command -v $tool >/dev/null && ok "$tool" || warn "$tool missing (make dmg / make icon)"
 done
-if command -v dmgbuild >/dev/null || [[ -x build/venv-dmg/bin/dmgbuild ]]; then ok "dmgbuild"; else warn "dmgbuild not set up yet (make dmg prepares it in a project venv)"; fi
+if [[ -x build/tools-venv/bin/dmgbuild ]]; then ok "dmgbuild (build/tools-venv)"; else warn "dmgbuild not set up yet (make dmg installs the pinned version into build/tools-venv)"; fi
 xcrun --find notarytool >/dev/null 2>&1 && ok "notarytool (optional notarization)" || warn "notarytool missing (only for notarization)"
 
 print ""
