@@ -355,11 +355,54 @@ final class BackgroundTests: TestSuite {
             expect(!LoginItem.needsChange(to: false, from: .unavailable))
         }
 
-        test("onboarding switch: on in a first setup, later what macOS reports") {
+        test("onboarding switch: a pending choice wins, else on in a first setup, later what macOS reports") {
             expect(LoginItemStepRule.initial(status: .disabled, asked: false))
             expect(!LoginItemStepRule.initial(status: .disabled, asked: true))
             expect(LoginItemStepRule.initial(status: .enabled, asked: true))
             expect(LoginItemStepRule.initial(status: .requiresApproval, asked: true))
+            expect(!LoginItemStepRule.initial(status: .disabled, asked: false, pending: false), "the person switched it off earlier")
+            expect(LoginItemStepRule.initial(status: .disabled, asked: true, pending: true))
+        }
+
+        test("the setup choice is applied only once onboarding is done, never on Back or close") {
+            expect(!LoginWish.isDue(onboardingDone: false, pending: true))
+            expect(!LoginWish.isDue(onboardingDone: true, pending: nil))
+            expect(LoginWish.isDue(onboardingDone: true, pending: false))
+            let settings = Settings(fileURL: tempDir().appendingPathComponent("settings.json"))
+            let login = LoginItemModel(status: .disabled)
+            expect(!LoginWish.applyIfDue(settings: settings, login: login), "no wish, nothing to do")
+            // the step recorded its default (on); the person went back or closed the window
+            settings[.backgroundLoginWish] = true
+            expect(!LoginWish.applyIfDue(settings: settings, login: login))
+            expectEqual(login.status, .disabled, "nothing registered while onboarding runs")
+            expectEqual(LoginWish.pending(settings), true, "the wish waits for the next setup")
+            // onboarding finished
+            settings[.onboardingDone] = true
+            expect(LoginWish.applyIfDue(settings: settings, login: login))
+            expectEqual(login.status, .enabled)
+            expectEqual(LoginWish.pending(settings), nil, "applied once")
+            expect(settings[.backgroundLoginAsked])
+            expect(!LoginWish.applyIfDue(settings: settings, login: login))
+            // a wish "off" against an enabled item switches it off
+            settings[.backgroundLoginWish] = false
+            expect(LoginWish.applyIfDue(settings: settings, login: login))
+            expectEqual(login.status, .disabled)
+        }
+
+        test("a login launch is told by the launch Apple event") {
+            let open = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEOpenApplication),
+                                              targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID),
+                                              transactionID: AETransactionID(kAnyTransactionID))
+            expect(!LoginItem.isLoginLaunch(open), "a plain launch")
+            open.setParam(NSAppleEventDescriptor(enumCode: OSType(keyAELaunchedAsLogInItem)), forKeyword: AEKeyword(keyAEPropData))
+            expect(LoginItem.isLoginLaunch(open), "opened as a login item")
+            let reopen = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEReopenApplication),
+                                                targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID),
+                                                transactionID: AETransactionID(kAnyTransactionID))
+            reopen.setParam(NSAppleEventDescriptor(enumCode: OSType(keyAELaunchedAsLogInItem)), forKeyword: AEKeyword(keyAEPropData))
+            expect(!LoginItem.isLoginLaunch(reopen), "only the open event counts")
+            expect(!LoginItem.isLoginLaunch(nil))
+            expect(!LoginItem.launchedAtLogin, "tests are not launched at login")
         }
 
         test("a preview login model changes only what it shows") {

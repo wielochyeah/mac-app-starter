@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import Observation
 import ServiceManagement
 
@@ -79,8 +79,25 @@ enum LoginItem {
         if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
     }
 
-    /// Opens System Settings at General, Login Items.
+    /// Opens System Settings at General, Login Items & Extensions.
     static func openSystemSettings() { SMAppService.openSystemSettingsLoginItems() }
+
+    // MARK: Launched at login
+
+    /// Whether macOS opened this process as a login item, so a module can stay quiet (no main
+    /// window, no onboarding) at login. macOS starts login items without arguments; the sign is a
+    /// property of the launch Apple event (`keyAELaunchedAsLogInItem`). That event is only current
+    /// while the app finishes launching, so read this from a launch hook (the background module's
+    /// launch hook reads it first, which keeps the value). Not yet tried with a real login.
+    static let launchedAtLogin: Bool = isLoginLaunch(NSAppleEventManager.shared().currentAppleEvent)
+
+    /// The launch event says "opened as a login item" (pure, tested).
+    nonisolated static func isLoginLaunch(_ event: NSAppleEventDescriptor?) -> Bool {
+        guard let event, event.eventClass == AEEventClass(kCoreEventClass), event.eventID == AEEventID(kAEOpenApplication) else {
+            return false
+        }
+        return event.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == OSType(keyAELaunchedAsLogInItem)
+    }
 }
 
 /// The login item for SwiftUI: status, why it is unavailable, the last error. Re-read on
@@ -131,14 +148,52 @@ enum LoginItem {
 }
 
 extension SettingKey {
-    /// Set once the login-item onboarding step was shown; later runs start at what macOS reports.
+    /// Set once a login-item choice from the onboarding step was applied; later runs start at what
+    /// macOS reports.
     static var backgroundLoginAsked: SettingKey<Bool> { .init("background.loginItemAsked", default: false) }
+    /// The choice on the onboarding step during a first setup, not applied yet. Stored only while
+    /// onboarding runs; `LoginWish` applies it once onboarding is done and removes it.
+    static var backgroundLoginWish: SettingKey<Bool> { .init("background.loginItemWish", default: false) }
 }
 
-/// The onboarding step's switch (pure, tested): on by default in a first setup (VoiceBud), later
-/// what macOS reports, so the person's own choice is not overruled.
+/// The onboarding step's switch (pure, tested): a choice not applied yet wins; else on by default
+/// in a first setup (VoiceBud), later what macOS reports, so the person's own choice is not overruled.
 enum LoginItemStepRule {
-    static func initial(status: LoginItem.Status, asked: Bool) -> Bool {
-        asked ? (status == .enabled || status == .requiresApproval) : true
+    static func initial(status: LoginItem.Status, asked: Bool, pending: Bool? = nil) -> Bool {
+        if let pending { return pending }
+        return asked ? (status == .enabled || status == .requiresApproval) : true
+    }
+}
+
+/// The first-setup choice of the onboarding step, applied only when onboarding is done (VoiceBud
+/// sends the login choice in `finish`, never earlier). Going back, closing the setup window or
+/// quitting halfway registers nothing; the wish waits for the next setup. A kit hook "onboarding
+/// finished" would replace the observation (wave 2 candidate).
+enum LoginWish {
+    /// A pending wish is applied once onboarding is done (pure, tested).
+    static func isDue(onboardingDone: Bool, pending: Bool?) -> Bool { onboardingDone && pending != nil }
+
+    static func pending(_ settings: Settings) -> Bool? {
+        settings.hasValue(.backgroundLoginWish) ? settings[.backgroundLoginWish] : nil
+    }
+
+    /// Applies a pending wish when onboarding is done: changes the login item only when it differs
+    /// from what macOS reports, remembers that the person was asked, forgets the wish.
+    @discardableResult
+    static func applyIfDue(settings: Settings = .shared, login: LoginItemModel = .shared) -> Bool {
+        let wanted = pending(settings)
+        guard let wanted, isDue(onboardingDone: settings[.onboardingDone], pending: wanted) else { return false }
+        settings.reset(.backgroundLoginWish)
+        settings[.backgroundLoginAsked] = true
+        login.refresh()
+        if LoginItem.needsChange(to: wanted, from: login.status) { login.set(wanted) }
+        return true
+    }
+
+    /// Launch hook of the real app: applies a wish left from an earlier run, then the moment
+    /// onboarding becomes done.
+    static func watch() {
+        applyIfDue()
+        Observing.track { _ = Settings.shared[.onboardingDone] } onChange: { applyIfDue() }
     }
 }

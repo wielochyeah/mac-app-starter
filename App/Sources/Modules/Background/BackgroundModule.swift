@@ -7,7 +7,7 @@ import SwiftUI
 /// Public API for features and other modules:
 /// - `BackgroundJobs.shared.register(id:title:interval:tolerance:qos:exact:run:)`
 /// - `BackgroundJobs.shared.runNow(_:)`, `.perform(_:) async`, `.record(_:)`, `.isRunning(_:)`
-/// - `LoginItem.isAvailable`, `.status`, `.setEnabled(_:)`, `LoginItemModel.shared`
+/// - `LoginItem.isAvailable`, `.status`, `.setEnabled(_:)`, `.launchedAtLogin`, `LoginItemModel.shared`
 enum BackgroundModule {
     static func register() {
         Registry.settingsPanes.append(SettingsPane(id: "background", group: .settings, order: 310, title: { BackgroundText.paneTitle },
@@ -15,9 +15,12 @@ enum BackgroundModule {
         Registry.onboardingSteps.append(OnboardingStep(id: "background.login", order: 900, isIncluded: { LoginItem.isAvailable }) { _ in
             AnyView(LoginItemStep())
         })
-        // jobs run in the real app only: never in renders, self-tests or headless test runs
+        // jobs and the login item change in the real app only: never in renders, self-tests or
+        // headless test runs
         Registry.launchHooks.append {
+            _ = LoginItem.launchedAtLogin   // read while the launch event is current, kept for later readers
             guard !RenderMode.isHeadless, !RenderMode.isStatic else { return }
+            LoginWish.watch()
             BackgroundJobs.shared.start()
         }
         Registry.terminateHooks.append { BackgroundJobs.shared.stop() }
