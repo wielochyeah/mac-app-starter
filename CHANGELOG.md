@@ -21,4 +21,8 @@ Ein Projekt führt darunter seine eigenen Fassungen (`app.version` in `starter.j
 ### Hinweise für Projekte
 
 - `bin/starter init` leert die Commit-Identität in `starter.json`. Bis das Projekt seine eigene einträgt, nimmt der Hook `commit-msg` keinen Commit an.
+- `bin/starter init` fragt die Anrede (`--anrede du|sie`), entfernt die Unterzeile des Starters (`app.tagline`) und `texts.personen` und führt danach `make rules` aus.
+- Finder zeigt den Namen der App in der Sprache des Macs (`LSHasLocalizedDisplayName`, `app.displayName`), solange das Bundle seinen Dateinamen behält.
+- Notarisiert wird über `make dmg` mit `signing.notarize: true` und einem Profil im Schlüsselbund (`signing.notaryProfile` oder `NOTARY_PROFILE`); `make notarize` reicht nur erneut ein.
+- Das Modul `mlx` kommt noch nicht in ein DMG (`docs/KI.md`); weitergegebene Apps nutzen Apple Foundation Models.
 - Das App-Symbol aus `make icon` nutzt ein SF Symbol und ist nur für die Entwicklung gedacht; vor der ersten Weitergabe ein eigenes Motiv einsetzen (`docs/VERTEILUNG.md`).
