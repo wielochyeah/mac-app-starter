@@ -10,6 +10,7 @@ then `make build` unless --ohne-build. When the guard finds a use of a module ty
 from __future__ import annotations
 
 import json
+import shlex
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,9 +18,9 @@ from typing import Dict, List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, build_env, checksum, inside, is_starter_origin, is_text_file, origin_url, remove_empty_dirs,
+from .common import (StarterError, build_env, checksum, git, inside, is_starter_origin, is_text_file, origin_url, remove_empty_dirs,
                      working_files, write_text)
-from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, write_lock
+from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, set_pending_build, write_lock
 from .markers import dangling_references, transform
 
 
@@ -34,6 +35,12 @@ class RemovalPlan:
     config_notes: List[str] = field(default_factory=list)
     next_steps: List[str] = field(default_factory=list)
     already_removed: bool = False
+    build_ok: Optional[bool] = None                            # None: not built
+    dirty: List[str] = field(default_factory=list)             # uncommitted changes before the removal
+
+    @property
+    def touched(self) -> List[str]:
+        return self.deleted + self.emptied + sorted(self.edited) + [cfg.CONFIG, LOCK]
 
 
 def module_present(root: Path, manifest: Manifest, name: str, files: List[str], config: dict) -> bool:
@@ -111,7 +118,8 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
         new_config["permissions"] = [p for p in new_config["permissions"] if p not in drop]
         plan.config_notes.append(f"permissions ohne {', '.join(drop)}")
     plan.config = new_config
-    plan.next_steps = list(module.next_steps)
+    bundle = (new_config.get("app") or {}).get("bundleId") or "<bundleId>"
+    plan.next_steps = [step.replace("<bundleId>", bundle) for step in module.next_steps]
     return plan
 
 
@@ -204,42 +212,73 @@ def run_make(root: Path, target: str) -> bool:
     return res.returncode == 0
 
 
+def uncommitted(root: Path) -> List[str]:
+    """Paths with changes that are not committed (git status), for the warning before a write."""
+    out = git(root, ["status", "--porcelain", "-z"], check=False)
+    return [entry[3:] for entry in out.split("\0") if len(entry) > 3]
+
+
 def remove_module(root: Path, name: str, dry_run: bool = False, build: bool = True,
                   check_origin: bool = True) -> RemovalPlan:
+    """Plans and applies the removal; with build, runs make build and records the result in
+    plan.build_ok (a red build is noted in the lock, see manifest.set_pending_build)."""
     manifest = read_manifest(root)
     if check_origin and not dry_run:
         refuse_in_starter(root, manifest, f"bin/starter remove {name}")
     plan = plan_removal(root, name, manifest)
     if plan.already_removed or dry_run or plan.dangling:
         return plan
+    plan.dirty = uncommitted(root)
     apply_removal(root, plan, manifest)
-    if build and not run_make(root, "build"):
-        plan.next_steps.append("make build ist rot: die Meldungen oben lesen, mit git diff vergleichen und "
-                               "verbliebene Stellen mit #if MODUL_" + name.upper() + " umschließen")
-        raise StarterError(f"Modul {name} ist entfernt, aber make build ist rot (Meldungen oben).")
+    if build:
+        plan.build_ok = run_make(root, "build")
+        set_pending_build(root, None if plan.build_ok else f"bin/starter remove {name}")
     return plan
+
+
+def _count(n: int, one: str, many: str) -> str:
+    return f"{n} {one if n == 1 else many}"
+
+
+def restore_command(paths: List[str]) -> str:
+    return "git restore --source=HEAD --staged --worktree -- " + " ".join(shlex.quote(p) for p in paths)
 
 
 def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
     if plan.already_removed:
         return f"bin/starter remove {plan.module}: das Modul ist schon entfernt, nichts zu tun.\n"
+
     def names(items: List[str]) -> str:
         return ", ".join(items) if items else "keine"
-    head = (f"bin/starter remove {plan.module} würde entfernen (Probelauf, nichts geschrieben):" if dry_run
-            else f"bin/starter remove {plan.module} hat entfernt:")
-    lines = [
-        head,
-        f"  {len(plan.deleted)} Dateien: {names(plan.deleted)}",
-        f"  Modul-Blöcke und Markierungen entfernt in: {names(sorted(plan.edited))}",
-        f"  leer geworden und gelöscht: {names(plan.emptied)}",
-        f"  starter.json: {names(plan.config_notes)}",
-    ]
+    flag_name = "MODUL_" + plan.module.upper()
+    if dry_run:
+        lines = [f"bin/starter remove {plan.module} würde ändern (Probelauf, nichts geschrieben):",
+                 f"  {_count(len(plan.deleted), 'Datei', 'Dateien')} löschen: {names(plan.deleted)}",
+                 f"  Modul-Blöcke und Markierungen entfernen in: {names(sorted(plan.edited))}",
+                 f"  danach leer und löschen: {names(plan.emptied)}",
+                 f"  starter.json: {names(plan.config_notes)}"]
+        lines += [f"  Danach: {s}" for s in plan.next_steps]
+        return "\n".join(lines) + "\n"
+    lines = [f"bin/starter remove {plan.module} hat entfernt:",
+             f"  {_count(len(plan.deleted), 'Datei', 'Dateien')}: {names(plan.deleted)}",
+             f"  Modul-Blöcke und Markierungen entfernt in: {names(sorted(plan.edited))}",
+             f"  leer geworden und gelöscht: {names(plan.emptied)}",
+             f"  starter.json: {names(plan.config_notes)}"]
+    if plan.dirty:
+        lines.append(f"  Hinweis: {_count(len(plan.dirty), 'Datei hatte', 'Dateien hatten')} schon vorher nicht "
+                     f"committete Änderungen ({names(plan.dirty[:5])}{', …' if len(plan.dirty) > 5 else ''}).")
     lines += [f"  Danach: {s}" for s in plan.next_steps]
-    if not dry_run:
-        if not build:
-            lines.append("  Danach: make build (mit --ohne-build übersprungen)")
-        lines.append(f"  Danach: make check, dann ein Commit nur für dieses Modul, etwa "
-                     f"„chore(starter): remove module {plan.module}“")
+    if plan.build_ok is False:
+        lines.append(f"  make build ist rot (Meldungen oben). Stellen, die das Modul noch nutzen, mit #if {flag_name} "
+                     f"… #endif umschließen und bin/starter remove {plan.module} erneut aufrufen: es baut dann noch "
+                     "einmal.")
+        lines.append(f"  Oder zurück zum Stand vor remove (setzt auch frühere, nicht committete Änderungen dieser "
+                     f"Dateien zurück): {restore_command(plan.touched)}")
+        return "\n".join(lines) + "\n"
+    if not build:
+        lines.append("  Danach: make build (mit --ohne-build übersprungen)")
+    lines.append(f"  Danach: make check, dann ein Commit nur für dieses Modul, etwa "
+                 f"„chore(starter): remove module {plan.module}“")
     return "\n".join(lines) + "\n"
 
 

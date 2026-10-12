@@ -190,6 +190,24 @@ def write_lock(root: Path, lock: dict) -> None:
     write_json(root / LOCK, lock)
 
 
+PENDING = "pendingBuild"
+
+
+def set_pending_build(root: Path, command: Optional[str]) -> None:
+    """Notes in the lock that `command` wrote its changes but make build stayed red (None clears it), so
+    a second run does not report success while the build is still red."""
+    if not (root / LOCK).is_file():
+        return
+    lock = read_json(root / LOCK)
+    if command:
+        lock[PENDING] = command
+    elif PENDING in lock:
+        del lock[PENDING]
+    else:
+        return
+    write_lock(root, lock)
+
+
 def is_project(lock: dict) -> bool:
     """project == null is the signal "this is the starter itself"."""
     return lock.get("project") is not None

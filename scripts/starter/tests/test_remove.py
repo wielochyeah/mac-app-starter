@@ -63,6 +63,47 @@ class RemoveTests(TempDirCase):
         self.assertEqual(self.json(root, "rules/baseline/texte.json"),
                          {"App/Sources/Kit/Core/Lang.swift": ["a | b | c"]})
 
+    def test_red_build_is_reported_and_finished_by_a_second_run(self):
+        """make build fails (the fixture's build.sh is not executable): the report keeps the next steps and a
+        recovery command, the lock notes the red build, and the next call builds again instead of saying done."""
+        import contextlib
+        import io
+        from starter import cli
+        from starter.manifest import PENDING
+        from starter.remove import report
+        root = self.repo()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            plan = remove_module(root, "background", build=True, check_origin=False)
+        self.assertIs(plan.build_ok, False)
+        text = report(plan, dry_run=False, build=True)
+        self.assertIn("make build ist rot", text)
+        self.assertIn("Anmeldeobjekte", text, "the module's next steps are printed")
+        self.assertIn("git restore --source=HEAD --staged --worktree -- App/Sources/Modules/Background/", text)
+        self.assertNotIn("make check, dann ein Commit", text)
+        self.assertEqual(read_lock(root)[PENDING], "bin/starter remove background")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            self.assertEqual(cli.finish_pending_build(root, "bin/starter remove background", True), 1)
+        self.assertIn("weiter rot", out.getvalue())
+        write_files(root, {"Makefile": self.read(root, "Makefile").replace("@scripts/build.sh", "@true")})
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.finish_pending_build(root, "bin/starter remove background", True), 0)
+        self.assertNotIn(PENDING, read_lock(root))
+        self.assertIsNone(cli.finish_pending_build(root, "bin/starter remove background", True))
+
+    def test_dry_run_report_speaks_of_what_would_happen(self):
+        from starter.remove import report
+        root = self.repo()
+        text = report(self.remove(root, "window", dry_run=True), dry_run=True, build=True)
+        self.assertIn("würde ändern", text)
+        self.assertIn("1 Datei löschen", text)
+        self.assertNotIn(" entfernt in", text)
+
+    def test_next_steps_name_the_bundle_id(self):
+        root = self.repo()
+        plan = self.remove(root, "mlx", dry_run=True)
+        self.assertTrue(any("com.example.starter" in s for s in plan.next_steps), plan.next_steps)
+
     def test_dry_run_writes_nothing(self):
         root = self.repo()
         plan = self.remove(root, "island", dry_run=True)

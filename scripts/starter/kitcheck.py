@@ -20,7 +20,7 @@ from typing import Dict, List, Optional, Sequence
 from . import config as cfg
 from . import globs
 from .common import StarterError, cut_blocks, has_block, is_text_file, working_files
-from .manifest import CLASS_NAMES, Manifest, is_project, kit_checksums, read_lock, read_manifest
+from .manifest import CLASS_NAMES, PENDING, Manifest, is_project, kit_checksums, read_lock, read_manifest
 from .markers import swift_flag_problems, transform
 from .remove import read_texts, simulate
 
@@ -361,6 +361,9 @@ def run(root: Path) -> Findings:
     else:
         f.ok.append("starter.lock.json nennt kein Projekt: das ist der Starter selbst")
         check_starter(root, manifest, lock, files, f)
+    if lock.get(PENDING):
+        f.warnings.append(f"nach „{lock[PENDING]}“ war make build rot; nach der Korrektur {lock[PENDING]} erneut "
+                          "aufrufen (baut noch einmal und löscht den Vermerk pendingBuild in starter.lock.json)")
     check_switches(root, manifest, is_project(lock), f)
     return f
 

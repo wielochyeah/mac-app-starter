@@ -11,7 +11,7 @@ from typing import List, Optional
 from . import config as cfg
 from . import kitcheck, project, remove, sync
 from .common import StarterError, build_env, repo_root, working_files
-from .manifest import is_project, read_lock, read_manifest
+from .manifest import PENDING, is_project, read_lock, read_manifest, set_pending_build
 
 DESCRIPTION = """Werkzeuge des mac-app-starter: aus der Vorlage ein Projekt machen, Module entfernen,
 neue Starter-Stände übernehmen und prüfen, dass Kit-Dateien unverändert sind.
@@ -136,9 +136,31 @@ def _ask(prompt: str, default: Optional[str], check=None) -> str:
         print(f"  {reason}")
 
 
+def finish_pending_build(root: Path, label: str, build: bool) -> Optional[int]:
+    """When an earlier init or remove left make build red (pendingBuild in the lock), builds again
+    instead of reporting success; None when nothing is pending."""
+    pending = read_lock(root).get(PENDING)
+    if not pending:
+        return None
+    if not build:
+        sys.stderr.write(f"{label}: nach „{pending}“ war make build rot; ohne --ohne-build erneut aufrufen, "
+                         "dann baut es noch einmal.\n")
+        return 1
+    print(f"{label}: nach „{pending}“ war make build rot, baue noch einmal.")
+    if remove.run_make(root, "build"):
+        set_pending_build(root, None)
+        print(f"{label}: make build ist grün, „{pending}“ ist fertig. Danach: make check und committen.")
+        return 0
+    sys.stderr.write(f"{label}: make build ist weiter rot (Meldungen oben); „{pending}“ ist nicht fertig.\n")
+    return 1
+
+
 def cmd_init(root: Path, a) -> int:
     lock = read_lock(root)
     if is_project(lock):
+        pending = None if a.probelauf else finish_pending_build(root, "bin/starter init", not a.ohne_build)
+        if pending is not None:
+            return pending
         print(f"bin/starter init: starter.lock.json nennt schon das Projekt {lock['project']}, nichts zu tun.")
         return 0
     manifest = read_manifest(root)
@@ -172,6 +194,9 @@ def cmd_init(root: Path, a) -> int:
         print("bin/starter init: nichts zu tun.")
         return 0
     print(project.report(result, a.probelauf, opts.build), end="")
+    if result.build_ok is False:
+        sys.stderr.write("bin/starter init: Projekt eingerichtet, aber make build ist rot (Meldungen oben).\n")
+        return 1
     return 0
 
 
@@ -180,7 +205,14 @@ def cmd_remove(root: Path, name: str, dry_run: bool, build: bool) -> int:
     if plan.dangling:
         sys.stderr.write(remove.dangling_report(plan))
         return 1
+    if plan.already_removed and not dry_run:
+        pending = finish_pending_build(root, f"bin/starter remove {name}", build)
+        if pending is not None:
+            return pending
     print(remove.report(plan, dry_run, build), end="")
+    if plan.build_ok is False:
+        sys.stderr.write(f"bin/starter remove {name}: Modul entfernt, aber make build ist rot (Meldungen oben).\n")
+        return 1
     return 0
 
 
@@ -242,6 +274,9 @@ def cmd_doctor(root: Path) -> int:
         code = code or 1
     if lock.get("removedModules"):
         print(f"starter: entfernte Module: {', '.join(lock['removedModules'])}")
+    if lock.get(PENDING):
+        print(f"starter: nach „{lock[PENDING]}“ war make build rot; nach der Korrektur {lock[PENDING]} erneut aufrufen")
+        code = code or 1
     return code
 
 

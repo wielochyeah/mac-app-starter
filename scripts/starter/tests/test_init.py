@@ -97,6 +97,18 @@ class InitTests(TempDirCase):
         self.assertEqual(self.read(root, "scripts/hooks/pre-push"), "#!/bin/zsh\nexec make check\n")
         self.assertIn("scripts/hooks/pre-push", result.blocks)
 
+    def test_red_build_keeps_the_report(self):
+        from starter.manifest import PENDING
+        from starter.project import report
+        root = self.repo()
+        result = init(root, options(build=True))
+        self.assertIs(result.build_ok, False)
+        self.assertEqual(read_lock(root)[PENDING], "bin/starter init")
+        text = report(result, dry_run=False, build=True)
+        self.assertIn("Commit-Identität geleert", text)
+        self.assertIn("make build ist rot", text)
+        self.assertIn("commit.name und commit.email in starter.json eintragen", text)
+
     def test_dry_run_writes_nothing(self):
         root = self.repo()
         result = init(root, options(dry_run=True, remove=["island"]))

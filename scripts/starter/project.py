@@ -22,9 +22,9 @@ from . import config as cfg
 from . import globs
 from .common import (StarterError, cut_blocks, git, has_block, inside, is_text_file, remove_empty_dirs, working_files,
                      write_text)
-from .manifest import Manifest, is_project, kit_checksums, read_lock, read_manifest, write_lock
+from .manifest import Manifest, is_project, kit_checksums, read_lock, read_manifest, set_pending_build, write_lock
 from .remove import (apply_removal, dangling_report, plan_removal, present_modules, read_texts, refuse_in_starter,
-                     run_make, simulate)
+                     run_make, simulate, uncommitted)
 
 NEW_VERSION = "0.1.0"
 
@@ -57,6 +57,8 @@ class InitResult:
     commit: Optional[str] = None
     checksums: int = 0
     notes: List[str] = field(default_factory=list)
+    build_ok: Optional[bool] = None                     # None: not built
+    dirty: List[str] = field(default_factory=list)      # uncommitted changes before init
 
 
 def slug(name: str) -> str:
@@ -192,6 +194,7 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
     if opts.dry_run:
         return result
 
+    result.dirty = uncommitted(root)
     for f in result.removed:
         inside(root, f).unlink()
     remove_empty_dirs(root, result.removed)
@@ -232,8 +235,8 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
         if (root / "scripts" / "icon.sh").exists():
             if not run_make(root, "icon"):
                 result.notes.append("make icon ist gescheitert; später von Hand ausführen")
-        if not run_make(root, "build"):
-            raise StarterError("Projekt eingerichtet, aber make build ist rot (Meldungen oben).")
+        result.build_ok = run_make(root, "build")
+        set_pending_build(root, None if result.build_ok else "bin/starter init")
     return result
 
 
@@ -259,8 +262,15 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
     lines.append(f"  starter.json: Name, Bundle-ID, Version {NEW_VERSION}; Commit-Identität {cleared} "
                  "(commit.name und commit.email eintragen, sonst lehnt der Hook commit-msg jeden Commit ab)")
     lines += [f"  Hinweis: {n}" for n in result.notes]
+    if result.dirty:
+        lines.append(f"  Hinweis: {len(result.dirty)} Datei(en) hatten schon vorher nicht committete Änderungen.")
     if not dry_run:
-        if not build:
+        if result.build_ok is False:
+            lines.append("  make build ist rot (Meldungen oben). Die Stellen beheben (Code eines entfernten Moduls mit "
+                         "#if MODUL_<NAME> … #endif umschließen) und bin/starter init erneut aufrufen: es baut dann "
+                         "noch einmal. Oder zurück zur unveränderten Kopie (verwirft alle nicht committeten "
+                         "Änderungen): git restore --source=HEAD --staged --worktree -- .")
+        elif not build:
             lines.append("  Danach: make icon und make build (mit --ohne-build übersprungen)")
         lines.append("Danach: commit.name und commit.email in starter.json eintragen, make hooks, make rules, "
                      "make check, docs/PROJECT.md füllen und alles committen.")
