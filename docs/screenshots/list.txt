@@ -1,0 +1,11 @@
+# Bilder für README.md, kopiert von make readme-shots aus build/shots nach docs/screenshots/
+# (aus "de-light/window.main.png" wird "docs/screenshots/de-light-window.main.png").
+# Eine Zeile je Bild: <sprache>-<erscheinung>/<szene>.png. Nur wenige, sorgfältig gewählte Bilder;
+# alles andere bleibt in build/shots und kommt nie ins Repository.
+de-light/window.main.png
+de-dark/settings.window.png
+de-light/onboarding.welcome.png
+en-dark/island.done-card.png
+de-light/capsule.progress.png
+en-light/menubar.panel.png
+de-dark/patterns.sample-permission.png
