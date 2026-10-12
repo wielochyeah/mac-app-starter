@@ -51,14 +51,24 @@ Load command 3
 """
 
 
+# The settings the tests start from, shaped like starter.json as the starter ships it. A project
+# changes its own starter.json (name, languages, signing), so the tests must not read it.
+STARTER_CONFIG = {
+    "app": {"name": "Starter", "bundleId": "com.example.starter", "displayName": {"en": "Starter", "de": "Starter"},
+            "version": "1.0.0", "build": 1, "minimumMacOS": "26.0", "accent": "violett", "symbol": "sparkles"},
+    "texts": {"languages": ["en", "de"], "anrede": "du"},
+    "signing": {"identity": "-", "teamId": "", "notarize": False},
+}
+
+
 def config(**app):
-    base = json.loads((ROOT / "starter.json").read_text(encoding="utf-8"))
+    base = json.loads(json.dumps(STARTER_CONFIG))
     base["app"].update(app)
     return base
 
 
 class SettingsTests(unittest.TestCase):
-    def test_defaults_from_starter_json(self):
+    def test_defaults_from_the_config(self):
         s = pkg.settings(config(), environ={})
         self.assertEqual(s["NAME"], "Starter")
         self.assertEqual(s["IDENTITY"], "-")
@@ -153,9 +163,10 @@ class MachoTests(unittest.TestCase):
         self.assertEqual([Path(f).name for f in found], ["H", "A"])
 
     def test_real_bundle_minimum_matches_starter_json(self):
-        app = ROOT / "build" / "Starter.app"
+        name = json.loads((ROOT / "starter.json").read_text(encoding="utf-8"))["app"]["name"]
+        app = ROOT / "build" / f"{name}.app"
         if not (app / "Contents" / "Info.plist").exists():
-            self.skipTest("no build/Starter.app (make build)")
+            self.skipTest(f"no build/{name}.app (make build)")
         ok, newest, msg = pkg.bundle_minos(str(app))
         self.assertTrue(ok, msg)
 
