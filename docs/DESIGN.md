@@ -91,7 +91,7 @@ OnboardingPage {
 - Inhalt mittig zwischen Titelleiste und Fußleiste, 12 pt angehoben, nie näher als 24 pt an der Oberkante (`OnboardingCentered`).
 - Kopf 22 pt fett, Untertitel 13 pt in `prose`; der erste Schritt mit `large: true` (28 und 15 pt).
 - Status-Slot 30 pt hoch für jeden Zustand einer Berechtigung (`action`, `waiting`, `denied`, `granted`, `restartNeeded`); Hinweisbereich fest 560 x 64 pt, wechselt mit Überblendung.
-- Karten in Schritten: `SettingsSection(tone: .onboarding)` in 560 pt Breite (Sprache: 460 pt), darunter `OnboardingFootnote`.
+- Karten in Schritten: `SettingsSection(tone: .onboarding)` in `Metrics.onboardingColumn` (560 pt) oder schmal in `Metrics.onboardingCard` (460 pt: Sprache, Fertig, Beim Anmelden starten), darunter `OnboardingFootnote`.
 - Fußleiste mit Zurück, Fortschritt in Segmenten und Weiter; hält der Slot die Hauptaktion, ist Weiter nicht primär.
 - Links im Text als `[Titel](app://aktion)`; der Rest bleibt wörtlich, kein Markdown.
 
