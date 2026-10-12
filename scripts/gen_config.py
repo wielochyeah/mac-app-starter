@@ -66,6 +66,22 @@ PERMISSION_ENTITLEMENTS = {
     "photos": ["com.apple.security.personal-information.photos-library"],
     "location": ["com.apple.security.personal-information.location"],
 }
+BUNDLE_ID = r"[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+"
+
+
+def permission_base(p):
+    """'automation:com.apple.mail' -> 'automation': Automation may name its target app."""
+    if isinstance(p, str) and p.startswith("automation:"):
+        return "automation"
+    return p
+
+
+def permission_ok(p):
+    if not isinstance(p, str) or permission_base(p) not in PERMISSION_KEYS:
+        return False
+    return not p.startswith("automation:") or re.fullmatch(BUNDLE_ID, p[len("automation:"):]) is not None
+
+
 ACCENTS = ["violett", "rot", "blau", "gruen", "orange", "graphit"]
 LANGS = ["en", "de"]
 
@@ -130,9 +146,10 @@ def validate(config):
         if not isinstance(names.get(lang, app["name"]), str):
             raise ConfigError(f"starter.json: app.displayName.{lang} must be a string")
     perms = config.get("permissions", [])
-    bad = [p for p in perms if p not in PERMISSION_KEYS]
+    bad = [str(p) for p in perms if not permission_ok(p)]
     if bad:
-        raise ConfigError(f"starter.json: unknown permission(s) {', '.join(bad)}; known: {', '.join(PERMISSION_KEYS)}")
+        raise ConfigError(f"starter.json: unknown permission(s) {', '.join(bad)}; known: {', '.join(PERMISSION_KEYS)} "
+                          f"(automation with its target app: automation:com.apple.mail)")
     anrede = config.get("texts", {}).get("anrede", "du")
     if anrede not in ("du", "sie"):
         raise ConfigError("starter.json: texts.anrede must be du or sie")
@@ -177,7 +194,7 @@ def app_config_swift(config, modules):
 def usage_keys(config):
     keys = []
     for p in config.get("permissions", []):
-        for k in PERMISSION_KEYS[p]:
+        for k in PERMISSION_KEYS[permission_base(p)]:
             if k not in keys:
                 keys.append(k)
     return keys
@@ -186,7 +203,7 @@ def usage_keys(config):
 def entitlements(config):
     out = {}
     for p in config.get("permissions", []):
-        for key in PERMISSION_ENTITLEMENTS.get(p, []):
+        for key in PERMISSION_ENTITLEMENTS.get(permission_base(p), []):
             out[key] = True
     return out
 

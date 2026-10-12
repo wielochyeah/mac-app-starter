@@ -64,6 +64,21 @@ class GenConfigTests(unittest.TestCase):
             "com.apple.security.personal-information.location": True,
         })
 
+    def test_automation_with_target(self):
+        c = self.config()
+        c["permissions"] = ["automation:com.apple.mail"]
+        self.write(c)
+        gen_config.generate(self.tmp, self.out)
+        self.assertIn("NSAppleEventsUsageDescription", self.plist())
+        ent = plistlib.loads((self.out / "App.entitlements").read_bytes())
+        self.assertTrue(ent.get("com.apple.security.automation.apple-events"))
+        self.assertIn('"automation:com.apple.mail"', (self.out / "AppConfig.swift").read_text())
+        for bad in ["automation:", "automation:mail", "microphone:x"]:
+            c["permissions"] = [bad]
+            self.write(c)
+            with self.assertRaises(gen_config.ConfigError):
+                gen_config.generate(self.tmp, self.out)
+
     def test_bundle_keys(self):
         gen_config.generate(self.tmp, self.out)
         p = self.plist()
