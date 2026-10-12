@@ -65,11 +65,17 @@ final class WindowTests: TestSuite {
             expect(!settings[.windowSidebarHidden])
         }
 
-        test("model: focus search bumps the request") {
+        test("model: focus search only on a page with search") {
             let model = MainWindowModel(settings: scratchSettings())
-            let before = model.searchFocusRequest
+            guard let id = model.currentPage?.id else { return fail("no page") }
+            let had = WindowSearch.isEnabled(id)
+            defer { if had { WindowSearch.enable(page: id) } else { WindowSearch.disable(page: id) } }
+            WindowSearch.disable(page: id)
             model.focusSearch()
-            expectEqual(model.searchFocusRequest, before + 1)
+            expect(!model.hasSearch && !model.searchFocusPending, "no search, no focus request")
+            WindowSearch.enable(page: id)
+            model.focusSearch()
+            expect(model.hasSearch && model.searchFocusPending)
         }
 
         // MARK: Search and footer registries
@@ -183,6 +189,32 @@ final class WindowTests: TestSuite {
             expect(all.contains { $0.keyEquivalent == "f" && $0.keyEquivalentModifierMask == .command }, "⌘F")
             expect(all.contains { $0.keyEquivalent == "0" }, "⌘0 main window")
             expect(NSApp.helpMenu === bar.items.last?.submenu)
+            // the second pass must not free the targets of the first (menu items hold them weakly)
+            let closureItems = all.filter { $0.action == #selector(WindowMenuTarget.fire(_:)) }
+            expect(closureItems.allSatisfy { $0.target != nil }, "every closure item keeps its target")
+            expectEqual(closureItems.filter { $0.target is WindowMenuTarget }.count, 4, "Find, sidebar, main window, setup")
+        }
+
+        test("menus: Find only with search, sidebar only for the key main window, title follows the state") {
+            MainMenu.rebuild()
+            guard let bar = NSApp.mainMenu else { return fail("no main menu") }
+            let all = bar.items.compactMap(\.submenu).flatMap(\.items)
+            @MainActor func validate(_ item: NSMenuItem?) -> Bool {
+                guard let item, let target = item.target as? WindowMenuTarget else { return false }
+                return target.validateMenuItem(item)
+            }
+            let find = all.first { $0.keyEquivalent == "f" && $0.keyEquivalentModifierMask == .command }
+            let sidebar = all.first { $0.keyEquivalent == "s" && $0.keyEquivalentModifierMask == [.command, .control] }
+            guard let id = MainWindowModel.shared.currentPage?.id else { return fail("no page") }
+            let had = WindowSearch.isEnabled(id)
+            defer { if had { WindowSearch.enable(page: id) } else { WindowSearch.disable(page: id) } }
+            WindowSearch.disable(page: id)
+            expect(!validate(find), "Find disabled without search")
+            WindowSearch.enable(page: id)
+            expect(validate(find), "Find enabled with search")
+            expect(!MainWindowController.isOpen && !validate(sidebar), "sidebar item disabled without the main window")
+            let hidden = MainWindowModel.shared.columnVisibility == .detailOnly
+            expectEqual(sidebar?.title, hidden ? WindowText.showSidebar : WindowText.hideSidebar)
         }
 
         test("menus follow the language") {

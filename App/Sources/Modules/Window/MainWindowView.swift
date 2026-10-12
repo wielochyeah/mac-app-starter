@@ -24,7 +24,12 @@ struct MainWindowView: View {
             detail(t)
         }
         .tint(t.accent)
-        .onChange(of: model.searchFocusRequest) { searchFocused = true }
+        .onChange(of: model.searchFocusPending, initial: true) { _, pending in
+            guard pending else { return }
+            model.searchFocusPending = false
+            // the toolbar's search field exists only after this layout pass
+            DispatchQueue.main.async { searchFocused = true }
+        }
     }
 
     @ViewBuilder

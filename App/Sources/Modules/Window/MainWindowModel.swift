@@ -51,8 +51,9 @@ enum WindowSearch {
             if settings[.windowSidebarHidden] != hidden { settings[.windowSidebarHidden] = hidden }
         }
     }
-    /// Bumped by ⌘F; the view focuses the search field when it changes.
-    private(set) var searchFocusRequest = 0
+    /// Set by ⌘F; the view focuses the search field and clears it, also when ⌘F opened the
+    /// window and the view appears only now.
+    var searchFocusPending = false
 
     init(settings: Settings) {
         self.settings = settings
@@ -100,7 +101,13 @@ enum WindowSearch {
         columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
     }
 
-    func focusSearch() { searchFocusRequest += 1 }
+    /// The shown page has the toolbar search (Edit > Find is enabled only then).
+    var hasSearch: Bool { WindowSearch.isEnabled(currentPage?.id) }
+
+    func focusSearch() {
+        guard hasSearch else { return }
+        searchFocusPending = true
+    }
 }
 
 /// Lines at the foot of the main window's sidebar (Music shows the account there; the starter

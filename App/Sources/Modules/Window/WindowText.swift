@@ -5,7 +5,8 @@ enum WindowText {
     static var fileMenu: String { tr(en: "File", de: "Ablage") }
     static var viewMenu: String { tr(en: "View", de: "Darstellung") }
     static var find: String { tr(en: "Find", de: "Suchen") }
-    static var toggleSidebar: String { tr(en: "Show or Hide Sidebar", de: "Seitenleiste ein- oder ausblenden") }
+    static var showSidebar: String { tr(en: "Show Sidebar", de: "Seitenleiste einblenden") }
+    static var hideSidebar: String { tr(en: "Hide Sidebar", de: "Seitenleiste ausblenden") }
     static var enterFullScreen: String { tr(en: "Enter Full Screen", de: "Vollbildmodus aktivieren") }
     static var showSetup: String { tr(en: "Show Setup Again", de: "Einrichtung erneut zeigen") }
 

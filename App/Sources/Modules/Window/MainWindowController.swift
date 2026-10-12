@@ -11,6 +11,8 @@ enum MainWindowController {
     static let id = "main"
 
     static var isOpen: Bool { WindowHost.window(id) != nil }
+    /// The main window is open and takes the keyboard (View menu items act on it only then).
+    static var isKey: Bool { WindowHost.window(id)?.isKeyWindow == true }
 
     static func show() {
         WindowHost.show(id: id, style: .main, size: Metrics.Window.size, minSize: Metrics.Window.minSize,
