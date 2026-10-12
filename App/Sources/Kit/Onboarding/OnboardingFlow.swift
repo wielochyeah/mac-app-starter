@@ -20,6 +20,10 @@ extension SettingKey {
     /// launch opens the setup at `onboardingResume` even when it was finished before (shown again
     /// from Settings). Cleared once a flow used it, on "Done" and when the window is closed.
     static var onboardingReopen: SettingKey<Bool> { .init("onboarding.reopen", default: false) }
+    /// Permission ids that were allowed when the setup was last finished. One of them gone at a
+    /// later launch (an ad-hoc rebuild has a new signature, or it was revoked) reopens the setup
+    /// at that step (VoiceBud `Onboarding.needed()`).
+    static var onboardingAllowed: SettingKey<[String]> { .init("onboarding.allowed", default: []) }
 }
 
 /// What the footer's advance button does on a step. Steps that hold their own primary action

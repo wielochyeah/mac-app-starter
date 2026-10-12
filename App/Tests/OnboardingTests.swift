@@ -77,6 +77,17 @@ final class OnboardingTests: TestSuite {
             expectEqual(first[.onboardingResume].id, "permission.microphone", "a first setup continues there next time")
         }
 
+        test("lost permission: allowed at Done and missing or denied now reopens the setup there") {
+            let mic = PermissionKind.microphone, ax = PermissionKind.accessibility, cam = PermissionKind.camera
+            let allowed = [mic.id, ax.id]
+            expectEqual(OnboardingKit.lostPermission(allowed: allowed, now: [(mic, .granted), (ax, .granted), (cam, .missing)]), nil,
+                        "never allowed: not lost")
+            expectEqual(OnboardingKit.lostPermission(allowed: allowed, now: [(mic, .granted), (ax, .missing)]), ax)
+            expectEqual(OnboardingKit.lostPermission(allowed: allowed, now: [(mic, .denied), (ax, .missing)]), mic, "the first in step order")
+            expectEqual(OnboardingKit.lostPermission(allowed: allowed, now: [(mic, .restartNeeded), (ax, .requested)]), nil)
+            expectEqual(OnboardingKit.lostPermission(allowed: [], now: [(mic, .missing)]), nil)
+        }
+
         test("flow: go(toStep:) jumps by id, unknown ids do nothing") {
             let flow = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: nil, startAt: 4)
             flow.go(toStep: "nope")

@@ -34,6 +34,7 @@ enum OnboardingKit {
         let permissions = onboardingPermissions(PermissionsKit.configured)
         Registry.onboardingSteps += kitSteps(permissions: permissions)
         advanceRules.merge(kitRules(permissions: permissions)) { _, kit in kit }
+        Registry.launchHooks.append { reopenIfPermissionLost(permissions) }
         OnboardingScenes.register()
         Registry.selfTests += [
             SelfTestCheck(id: "onboarding.steps") {
@@ -110,6 +111,31 @@ enum OnboardingKit {
         hasSteps && !background && (!done || reopen)
     }
 
+    /// The first permission that was allowed when the setup was finished and is not any more
+    /// (pure; a kind still being asked for does not count).
+    nonisolated static func lostPermission(allowed: [String], now: [(kind: PermissionKind, status: PermissionStatus)]) -> PermissionKind? {
+        now.first { allowed.contains($0.kind.id) && ($0.status == .missing || $0.status == .denied) }?.kind
+    }
+
+    /// Launch hook: after the setup was finished, a permission it had allowed is gone (ad-hoc
+    /// rebuilds lose them, notes gotcha 10): open the setup at that step. Pressing "Done" there
+    /// records the new state, so a permission left off on purpose stops reopening it.
+    static func reopenIfPermissionLost(_ permissions: [PermissionKind]) {
+        let settings = Settings.shared
+        guard !RenderMode.isHeadless, !Launch.isBackground, !Launch.isDemo, settings[.onboardingDone],
+              !settings[.onboardingAllowed].isEmpty else { return }
+        Task {
+            let monitor = PermissionMonitor.shared
+            await monitor.refresh(permissions)
+            guard let lost = lostPermission(allowed: settings[.onboardingAllowed], now: permissions.map { ($0, monitor.status($0)) }),
+                  let step = Registry.orderedOnboardingSteps.first(where: { $0.id == StepID.permission(lost) }) else { return }
+            Log.info("permission \(lost.id) was allowed and is gone: setup reopens", "onboarding")
+            settings[.onboardingResume] = OnboardingResumePoint(id: step.id, order: step.order)
+            settings[.onboardingReopen] = true
+            AppActions.openOnboarding()
+        }
+    }
+
     static var opensAtLaunch: Bool {
         opensAtLaunch(done: Settings.shared[.onboardingDone], reopen: Settings.shared[.onboardingReopen],
                       hasSteps: !Registry.orderedOnboardingSteps.isEmpty, background: Launch.isBackground)
@@ -136,8 +162,9 @@ enum OnboardingWindow {
         let permissions = OnboardingKit.onboardingPermissions(PermissionsKit.configured)
         let flow = OnboardingFlow(steps: Registry.orderedOnboardingSteps, rules: OnboardingKit.advanceRules)
         flow.onFinish = { [weak flow] in
-            let restart = flow.map { OnboardingKit.restartPending(permissions, $0.monitor) } ?? false
-            finish(firstTime: firstTime, restart: restart)
+            guard let flow else { return }
+            Settings.shared[.onboardingAllowed] = permissions.filter { flow.monitor.status($0).isAllowed }.map(\.id)
+            finish(firstTime: firstTime, restart: OnboardingKit.restartPending(permissions, flow.monitor))
         }
         return flow
     }
