@@ -101,7 +101,28 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 <!-- modul:examples:anfang -->
 ## examples: Beispiele
 
-- **Zweck:** ein vollständiges Beispiel-Feature, das Seite, Einstellung, Onboarding-Schritt, Insel, Statusmenü, Hintergrund-Aufgabe, Kurzbefehl und KI nutzt, jeweils in eigenen `#if`-Blöcken, mit Texten, Speicher, Szenen und Tests. Vorlage für das erste eigene Feature.
+- **Zweck:** das Beispiel-Feature „Notizen“, gebaut, wie die Skills ein Feature bauen lassen: eigene Daten, Seiten im Hauptfenster, ein Abschnitt im Statusmenü, Rückmeldungen in der Insel, ein Kurzbefehl, lokale KI, eine Hintergrund-Aufgabe und ein Einstellungsbereich, jeder Bezug auf ein Modul in einem eigenen `#if MODUL_<NAME>`-Block (für zwei Module zwei Blöcke ineinander). Vorlage für das erste eigene Feature.
+- **Dateien:** alles unter `App/Sources/Modules/Examples/`, Tests in `App/Tests/ExamplesTests.swift`.
+
+  | Teil | Dateien | Inhalt |
+  |---|---|---|
+  | Daten | `NotesModel`, `NotesStore`, `NotesSeed` | eigene Datei `notes.sqlite` über `Database` mit zwei Migrationen, Volltextsuche (FTS5) mit Rückfall auf `LIKE`, Beispieldaten in der Sprache der Oberfläche; headless nur im Speicher |
+  | Aktionen | `NotesActions` | Schnellnotiz aus der Zwischenablage, Kopieren, Öffnen (mit Fenster die Notizseite, sonst der Einstellungsbereich) |
+  | Fenster | `NotesWindow`, `NotesDetail` | Übersicht (ersetzt die Startseite), Alle Notizen mit Suche, Papierkorb, eine Seite je Sammlung, Notizseite über der Liste (`NotesNavigator`) |
+  | Statusmenü | `NotesMenuBar` | Abschnitt mit den drei zuletzt bearbeiteten Notizen |
+  | Insel | `NotesIsland` | Sichern als Tätigkeit, dann Ergebniskarte; KI-Arbeit als Fortschritt mit Abbrechen |
+  | Kurzbefehl | `NotesHotkeys` | ⌃⌥N, Schnellnotiz aus der Zwischenablage |
+  | KI | `NotesAI`, `NotesAIViews` | Zusammenfassung (gestreamt) und Titelvorschlag (strukturiert), abbrechbar, mit Aus-Zustand |
+  | Hintergrund | `NotesBackground` | „Papierkorb leeren“ täglich, angemeldet im Start-Hook |
+  | Einstellungen | `NotesPane` | Bereich „Notizen“ (Gruppe Inhalt) mit Anzahl, Standardsammlung, Speicherort und „Beispieldaten neu laden“ |
+  | Registrierung | `ExamplesModule`, `NotesScenes`, `NotesWindowScenes`, `NotesIslandScenes`, `NotesDemo`, `NotesText`, `NotesLook` | Bereich, Menüeintrag, Hooks, Selbsttests, Szenen, Demo, Texte und Maße |
+
+- **Einstellungen:** `notes.defaultCollection` (Sammlung für neue Notizen und Schnellnotizen), `notes.layout` (Raster oder Liste auf Sammlungsseiten).
+- **Onboarding:** kein eigener Schritt. Drei Karten im Kit-Schritt „Funktionen“ über `OnboardingFeatures`: Schnellnotiz (mit `hotkeys`), Sammlungen (mit `window`), Lokale KI (mit `ai`), jeweils nur, wenn das Modul gebaut ist; der Kurzbefehl steht im Schritt „Dein Kurzbefehl“.
+- **Szenen:** `examples.*` für jede Seite und jeden Zustand (leer, Suche ohne Treffer, KI läuft, KI nicht verfügbar, Insel und Kapsel, Statusmenü, Bereich, Rückfrage).
+- **Selbsttests:** `examples.store`, `examples.symbols`; `examples.ai.live` nur benannt (`--selftest examples.ai`), fragt das echte Modell.
+- **Demo:** `--demo examples` legt Beispieldaten in den Speicher, öffnet das Fenster, sichert eine Schnellnotiz aus festem Text und fasst sie zusammen (nur für die Person am Mac).
+- **Skills:** `neues-feature` mit allen Skills, die es nennt.
 - **Entfernen:** `bin/starter strip-examples`, sobald das erste eigene Feature steht.
 <!-- modul:examples:ende -->
 
