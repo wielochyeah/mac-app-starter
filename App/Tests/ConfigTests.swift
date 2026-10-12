@@ -1,4 +1,5 @@
 #if TESTING
+import AppKit
 import Foundation
 
 /// Generated config (scripts/gen_config.py) matches the compile flags and starter.json.
@@ -28,6 +29,13 @@ final class ConfigTests: TestSuite {
                 let parsed = try PropertyListSerialization.propertyList(from: Data(text.utf8), format: nil) as? [String: String]
                 expectEqual(parsed?["CFBundleName"], AppConfig.name)
             }
+        }
+
+        test("app.symbol is a real SF Symbol, and the selftest catches a typo") {
+            expect(NSImage(systemSymbolName: AppConfig.symbol, accessibilityDescription: nil) != nil, AppConfig.symbol)
+            expect(NSImage(systemSymbolName: "sparklez", accessibilityDescription: nil) == nil)
+            let check = Registry.selfTests.first { $0.id == "kit.symbol" }
+            expect(check != nil && check?.run() == nil)
         }
 
         test("AppConfig values come from starter.json") {

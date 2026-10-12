@@ -57,6 +57,10 @@ enum SelfTestRunner {
                     return "\(error)"
                 }
             },
+            SelfTestCheck(id: "kit.symbol") {
+                NSImage(systemSymbolName: AppConfig.symbol, accessibilityDescription: nil) != nil ? nil
+                    : "app.symbol \"\(AppConfig.symbol)\" in starter.json is not an SF Symbol (icons would be blank)"
+            },
             SelfTestCheck(id: "kit.render") {
                 guard let scene = Registry.renderScenes.first(where: { $0.id == "design.buttons" }) else { return "design.buttons missing" }
                 let png = RenderRunner.png(scene.content(), size: scene.size, appearance: .dark, lang: .de)
