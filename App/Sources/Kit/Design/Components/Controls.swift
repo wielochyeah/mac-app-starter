@@ -183,13 +183,17 @@ struct StatusMark: View {
     var body: some View {
         let t = Theme(scheme)
         HStack(spacing: 6) {
-            switch kind {
-            case .ok: Image(systemName: "checkmark.circle.fill").font(TypeScale.bodySemibold).foregroundStyle(t.ok)
-            case .warn: Circle().fill(t.warn).frame(width: 8, height: 8)
-            case .idle: Circle().fill(t.idle).frame(width: Metrics.dot, height: Metrics.dot)
-            case .busy: Spinner(size: 12)
-            case .error: Image(systemName: "exclamationmark.circle.fill").font(TypeScale.bodySemibold).foregroundStyle(t.strike)
+            // fixed slot, so texts line up whatever the mark
+            Group {
+                switch kind {
+                case .ok: Image(systemName: "checkmark.circle.fill").font(TypeScale.bodySemibold).foregroundStyle(t.ok)
+                case .warn: Circle().fill(t.warn).frame(width: 8, height: 8)
+                case .idle: Circle().fill(t.idle).frame(width: Metrics.dot, height: Metrics.dot)
+                case .busy: Spinner(size: 12)
+                case .error: Image(systemName: "exclamationmark.circle.fill").font(TypeScale.bodySemibold).foregroundStyle(t.strike)
+                }
             }
+            .frame(width: Metrics.spinner, height: Metrics.spinner)
             Text(text).font(TypeScale.secondaryMedium).foregroundStyle(kind == .error ? t.strike : t.fg2)
         }
     }

@@ -6,7 +6,7 @@ enum DesignKit {
         for item in catalog {
             Registry.gallery.append(GalleryEntry(id: "design.\(item.id)", area: "design", title: item.title, content: item.view))
             Registry.renderScenes.append(RenderScene(id: "design.\(item.id)", size: item.size) {
-                AnyView(item.specimen ? AnyView(Specimen { item.view() }) : item.view())
+                AnyView(item.specimen ? AnyView(Specimen(width: item.width) { item.view() }) : item.view())
             })
         }
     }
@@ -17,6 +17,7 @@ enum DesignKit {
         var size: CGSize = .zero
         /// false: the view brings its own background and size.
         var specimen = true
+        var width: CGFloat = 520
         let view: () -> AnyView
     }
 
@@ -24,7 +25,7 @@ enum DesignKit {
         [
             Item(id: "tokens", title: { DesignText.tokens }) { AnyView(TokenSwatches()) },
             Item(id: "type", title: { DesignText.type }) { AnyView(TypeSamples()) },
-            Item(id: "accents", title: { DesignText.accents }) { AnyView(AccentSamples()) },
+            Item(id: "accents", title: { DesignText.accents }, width: 680) { AnyView(AccentSamples()) },
             Item(id: "buttons", title: { DesignText.buttons }) { AnyView(ButtonSamples()) },
             Item(id: "card", title: { DesignText.card }) { AnyView(CardSample()) },
             Item(id: "row", title: { DesignText.row }) { AnyView(RowSamples()) },
@@ -114,7 +115,7 @@ private struct AccentSamples: View {
                     Text(DesignText.recommended).font(TypeScale.badge).foregroundStyle(t.accentText)
                         .padding(.horizontal, 6).frame(height: Metrics.badgeHeight).background(Capsule().fill(t.accentSoft))
                     RoundedRectangle(cornerRadius: Radius.tile, style: .continuous).strokeBorder(t.ring, lineWidth: 2.5).frame(width: 40, height: 24)
-                    Text(DesignText.typeSample).font(TypeScale.body).foregroundStyle(t.accentText)
+                    Text(DesignText.typeSample).font(TypeScale.body).foregroundStyle(t.accentText).lineLimit(1).fixedSize()
                 }
             }
         }

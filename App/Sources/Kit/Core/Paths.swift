@@ -1,14 +1,16 @@
 import Foundation
 
 /// Where the app keeps its files. `STARTER_DATA_DIR` moves everything (tests, renders, demos).
+/// Reading a path never creates anything; writers create their folder (`Settings` and `Database`
+/// do), or call `Paths.ensure(_:)`.
 nonisolated enum Paths {
-    /// ~/Library/Application Support/<bundleId> (created on first use)
+    /// ~/Library/Application Support/<bundleId>
     static var appSupport: URL {
         if let custom = ProcessInfo.processInfo.environment["STARTER_DATA_DIR"], !custom.isEmpty {
-            return ensure(URL(fileURLWithPath: (custom as NSString).expandingTildeInPath, isDirectory: true))
+            return URL(fileURLWithPath: (custom as NSString).expandingTildeInPath, isDirectory: true)
         }
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return ensure(base.appendingPathComponent(AppConfig.bundleId, isDirectory: true))
+        return base.appendingPathComponent(AppConfig.bundleId, isDirectory: true)
     }
 
     /// The settings store (see `Settings`).
@@ -19,7 +21,7 @@ nonisolated enum Paths {
         appSupport.appendingPathComponent("\(name).sqlite")
     }
 
-    /// ~/Library/Caches/<bundleId> (or <STARTER_DATA_DIR>/Caches): files that can be rebuilt.
+    /// ~/Library/Caches/<bundleId> (or <STARTER_DATA_DIR>/Caches): files that can be rebuilt. Created on use.
     static var caches: URL {
         if let custom = ProcessInfo.processInfo.environment["STARTER_DATA_DIR"], !custom.isEmpty {
             return ensure(appSupport.appendingPathComponent("Caches", isDirectory: true))
@@ -28,7 +30,7 @@ nonisolated enum Paths {
         return ensure(base.appendingPathComponent(AppConfig.bundleId, isDirectory: true))
     }
 
-    /// Downloaded models and other large, re-downloadable data.
+    /// Downloaded models and other large, re-downloadable data. Created on use.
     static var models: URL { ensure(appSupport.appendingPathComponent("Models", isDirectory: true)) }
 
     @discardableResult
