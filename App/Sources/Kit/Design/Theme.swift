@@ -28,37 +28,45 @@ nonisolated enum AccentName: String, CaseIterable, Codable, Sendable {
     case violett, rot, blau, gruen, orange, graphit
 }
 
-/// One accent: fill (buttons, switches, progress), text (links, badges; >= 4.5:1 on window and
-/// card backgrounds in both schemes), ring (selection; >= 3:1), onAccent (text on the fill).
+/// One accent. `brand` is the colour people know (icon gradient, app icon); `fillLight`/`fillDark`
+/// paint controls (buttons, switches, progress) and differ from it where the brand colour would
+/// not stand apart from the off state (orange in light, graphit in dark, rot in dark). `text` is
+/// for links and badges (>= 4.5:1 on window and card, also on the badge tint), `ring` for
+/// selection (>= 3:1), `onAccent` for labels on the fill (>= 3:1 like VoiceBud, see DesignTests).
 nonisolated struct AccentPalette: Sendable {
-    let fill: UInt32
+    let brand: UInt32
+    let fillLight: UInt32
+    let fillDark: UInt32
     let textLight: UInt32
     let textDark: UInt32
     let ringLight: UInt32
     let ringDark: UInt32
     let onAccent: UInt32
-    /// Lighter top colour for the accent squircle gradient.
+    /// Lighter top colour for the accent squircle gradient (bottom: `brand`).
     let gradientTop: UInt32
+
+    func fill(dark: Bool) -> UInt32 { dark ? fillDark : fillLight }
 
     static func of(_ name: AccentName) -> AccentPalette {
         switch name {
-        case .violett: AccentPalette(fill: 0x8F6CF2, textLight: 0x6A4BD6, textDark: 0xB89EFA,
+        case .violett: AccentPalette(brand: 0x8F6CF2, fillLight: 0x8F6CF2, fillDark: 0x8F6CF2, textLight: 0x6243CC, textDark: 0xB89EFA,
                                      ringLight: 0x8F6CF2, ringDark: 0xB89EFA, onAccent: 0xFFFFFF, gradientTop: 0xC3A8FF)
-        case .rot: AccentPalette(fill: 0xFA2D48, textLight: 0xC8102E, textDark: 0xFF6B7D,
+        case .rot: AccentPalette(brand: 0xFA2D48, fillLight: 0xFA2D48, fillDark: 0xFF3B55, textLight: 0xB80D29, textDark: 0xFF8592,
                                  ringLight: 0xE3243B, ringDark: 0xFF5C70, onAccent: 0xFFFFFF, gradientTop: 0xFF8A98)
-        case .blau: AccentPalette(fill: 0x0A84FF, textLight: 0x0064D2, textDark: 0x5EAEFF,
+        case .blau: AccentPalette(brand: 0x0A84FF, fillLight: 0x0A84FF, fillDark: 0x0A84FF, textLight: 0x005BBF, textDark: 0x5EAEFF,
                                   ringLight: 0x0A7AF0, ringDark: 0x4DA3FF, onAccent: 0xFFFFFF, gradientTop: 0x7DB6FF)
-        case .gruen: AccentPalette(fill: 0x249B43, textLight: 0x1A7433, textDark: 0x4CD472,
+        case .gruen: AccentPalette(brand: 0x249B43, fillLight: 0x249B43, fillDark: 0x249B43, textLight: 0x176A2E, textDark: 0x4CD472,
                                    ringLight: 0x22913F, ringDark: 0x3CC864, onAccent: 0xFFFFFF, gradientTop: 0x86EFAC)
-        case .orange: AccentPalette(fill: 0xF5900A, textLight: 0x9E4F00, textDark: 0xFFB340,
+        case .orange: AccentPalette(brand: 0xF5900A, fillLight: 0xC96A00, fillDark: 0xF5900A, textLight: 0x934900, textDark: 0xFFB340,
                                     ringLight: 0xC26A00, ringDark: 0xFF9F0A, onAccent: 0x1D1D1F, gradientTop: 0xFFC56B)
-        case .graphit: AccentPalette(fill: 0x6E6E73, textLight: 0x56565C, textDark: 0xC7C7CC,
+        case .graphit: AccentPalette(brand: 0x6E6E73, fillLight: 0x6E6E73, fillDark: 0x8E8E93, textLight: 0x56565C, textDark: 0xC7C7CC,
                                      ringLight: 0x6E6E73, ringDark: 0xA1A1A6, onAccent: 0xFFFFFF, gradientTop: 0xA1A1A6)
         }
     }
 }
 
-/// Opaque background hex values, shared by `Theme` and the contrast test.
+/// Background hex values and the opacities of translucent tokens, shared by `Theme` and the
+/// contrast tests (which composite them over window and card).
 nonisolated enum ThemeHex {
     static let windowBgLight: UInt32 = 0xECECEE
     static let windowBgDark: UInt32 = 0x1E1E20
@@ -66,6 +74,26 @@ nonisolated enum ThemeHex {
     static let cardDark: UInt32 = 0x2A2A2D
     static let fgLight: UInt32 = 0x1D1D1F
     static let fgDark: UInt32 = 0xF5F5F7
+    /// Switch off (light opaque; dark white at `switchOffDarkAlpha`, sits on cards).
+    static let switchOffLight: UInt32 = 0xD4D4D9
+    static let switchOffDarkAlpha = 0.17
+    /// Progress track off (light opaque; dark white at `trackOffDarkAlpha`, sits on the window).
+    static let trackOffLight: UInt32 = 0xD6D6DB
+    static let trackOffDarkAlpha = 0.15
+    /// Badge tints: the tone's colour at this opacity.
+    static let accentSoftLight = 0.12
+    static let accentSoftDark = 0.22
+    static let ok: UInt32 = 0x30D158
+    static let okTextLight: UInt32 = 0x1A6E2E
+    static let okSoftLight = 0.14
+    static let okSoftDark = 0.2
+    static let warn: UInt32 = 0xFF9F0A
+    static let warnTextLight: UInt32 = 0x8A4B00
+    static let warnSoftLight = 0.16
+    static let warnSoftDark = 0.2
+    /// Chip and neutral badge: black (light) / white (dark) at these opacities.
+    static let chipLight = 0.06
+    static let chipDark = 0.1
 }
 
 /// WCAG 2 contrast for opaque sRGB colours.
@@ -81,6 +109,15 @@ nonisolated enum Contrast {
     static func ratio(_ a: UInt32, _ b: UInt32) -> Double {
         let la = luminance(a), lb = luminance(b)
         return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+    }
+
+    /// `color` at `alpha` over the opaque `background` (sRGB channel blend, like the renderer).
+    static func over(_ color: UInt32, _ alpha: Double, _ background: UInt32) -> UInt32 {
+        func mix(_ shift: UInt32) -> UInt32 {
+            let f = Double((color >> shift) & 0xFF), b = Double((background >> shift) & 0xFF)
+            return UInt32((f * alpha + b * (1 - alpha)).rounded()) << shift
+        }
+        return mix(16) | mix(8) | mix(0)
     }
 }
 
@@ -123,24 +160,25 @@ struct Theme {
     var sideSel: Color { dark ? .white.opacity(0.09) : .black.opacity(0.075) }
     var rowHover: Color { dark ? .white.opacity(0.05) : .black.opacity(0.035) }
     var field: Color { dark ? .white.opacity(0.08) : .black.opacity(0.05) }
-    var chip: Color { dark ? .white.opacity(0.1) : .black.opacity(0.06) }
+    var chip: Color { dark ? .white.opacity(ThemeHex.chipDark) : .black.opacity(ThemeHex.chipLight) }
     var chipActive: Color { dark ? .white.opacity(0.18) : .black.opacity(0.12) }
 
     // MARK: Accent
-    var accent: Color { Color(hex: palette.fill) }
+    var accent: Color { Color(hex: palette.fill(dark: dark)) }
     var accentText: Color { Color(hex: dark ? palette.textDark : palette.textLight) }
     var ring: Color { Color(hex: dark ? palette.ringDark : palette.ringLight) }
     /// Text and glyphs on an accent fill (primary button).
     var onAccent: Color { Color(hex: palette.onAccent) }
     /// Quiet accent background (badges, flashes).
-    var accentSoft: Color { accent.opacity(dark ? 0.22 : 0.12) }
-    var accentGradient: [Color] { [Color(hex: palette.gradientTop), Color(hex: palette.fill)] }
+    var accentSoft: Color { accent.opacity(dark ? ThemeHex.accentSoftDark : ThemeHex.accentSoftLight) }
+    /// The squircle/app-icon gradient: same in both schemes (brand colour at the bottom).
+    var accentGradient: [Color] { [Color(hex: palette.gradientTop), Color(hex: palette.brand)] }
 
     // MARK: Controls
-    var switchOff: Color { dark ? .white.opacity(0.17) : Color(hex: 0xD4D4D9) }
+    var switchOff: Color { dark ? .white.opacity(ThemeHex.switchOffDarkAlpha) : Color(hex: ThemeHex.switchOffLight) }
     var knob: Color { .white }
     var knobShadow: Color { .black.opacity(0.25) }
-    var trackOff: Color { dark ? .white.opacity(0.15) : Color(hex: 0xD6D6DB) }
+    var trackOff: Color { dark ? .white.opacity(ThemeHex.trackOffDarkAlpha) : Color(hex: ThemeHex.trackOffLight) }
     var detent: Color { dark ? .white.opacity(0.32) : .black.opacity(0.28) }
     var capsuleBg: Color { dark ? .white.opacity(0.06) : .white }
     var capsuleStroke: Color { dark ? .white.opacity(0.16) : .black.opacity(0.18) }
@@ -160,12 +198,15 @@ struct Theme {
 
     // MARK: Status
     var strike: Color { dark ? Color(hex: 0xFF6B6B) : Color(hex: 0xD9363E) }
-    var ok: Color { Color(hex: 0x30D158) }
-    var warn: Color { Color(hex: 0xFF9F0A) }
+    var ok: Color { Color(hex: ThemeHex.ok) }
+    var warn: Color { Color(hex: ThemeHex.warn) }
     var idle: Color { fg3 }
-    /// Status colours as text on window/card backgrounds (>= 4.5:1).
-    var okText: Color { dark ? ok : Color(hex: 0x1E7B34) }
-    var warnText: Color { dark ? warn : Color(hex: 0x8A4B00) }
+    /// Status colours as text on window/card backgrounds and on their badge tints (>= 4.5:1).
+    var okText: Color { dark ? ok : Color(hex: ThemeHex.okTextLight) }
+    var warnText: Color { dark ? warn : Color(hex: ThemeHex.warnTextLight) }
+    /// Badge tints (`Badge`): the tone's colour at a low opacity.
+    var okSoft: Color { ok.opacity(dark ? ThemeHex.okSoftDark : ThemeHex.okSoftLight) }
+    var warnSoft: Color { warn.opacity(dark ? ThemeHex.warnSoftDark : ThemeHex.warnSoftLight) }
 
     // MARK: Window chrome in renders
     var trafficRed: Color { Color(hex: 0xFF5F57) }

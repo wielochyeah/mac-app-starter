@@ -104,7 +104,8 @@ struct Chip: View {
     }
 }
 
-/// A tiny label pill ("Recommended", "New", "Beta"): 10.5 semibold, height 16.
+/// A tiny label pill ("Recommended", "New", "Beta"): 10.5 semibold, height 16. Text is >= 4.5:1
+/// on its own tint over window and card in both schemes (DesignTests).
 struct Badge: View {
     enum Tone { case accent, ok, warn, neutral }
     let text: String
@@ -120,9 +121,9 @@ struct Badge: View {
         let t = Theme(scheme)
         let (fg, bg): (Color, Color) = switch tone {
         case .accent: (t.accentText, t.accentSoft)
-        case .ok: (t.okText, t.ok.opacity(t.dark ? 0.2 : 0.14))
-        case .warn: (t.warnText, t.warn.opacity(t.dark ? 0.2 : 0.16))
-        case .neutral: (t.fg2, t.chip)
+        case .ok: (t.okText, t.okSoft)
+        case .warn: (t.warnText, t.warnSoft)
+        case .neutral: (t.fg, t.chip)
         }
         Text(text)
             .font(TypeScale.badge)

@@ -171,7 +171,7 @@ nonisolated enum TintName: String, CaseIterable, Sendable {
         switch self {
         case .accent:
             let p = AccentPalette.of(accent)
-            return (p.gradientTop, p.fill)
+            return (p.gradientTop, p.brand)
         case .violet: return (0xC3A8FF, 0x8F6CF2)
         case .blue: return (0x7DB6FF, 0x3B82F6)
         case .sky: return (0x8CCBFF, 0x3E92F0)
