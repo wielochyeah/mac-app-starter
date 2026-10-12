@@ -1,0 +1,8 @@
+# MLX worker (module mlx). Python >= 3.11 (mlx-lm needs it), Apple silicon, macOS 26.2 or later
+# (the macOS 26 MLX wheel is built for 26.2; older systems load it and fail on the first GPU call).
+# Direct dependencies, exact versions verified together on macOS 26.6 / M5 Pro (2026-10-12).
+# setup.sh installs requirements.lock (the full resolved set) when it exists.
+mlx==0.32.3
+mlx-metal==0.32.3
+mlx-lm==0.32.0
+huggingface-hub==1.33.0

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "default": "small",
+  "allow": ["*.json", "*.safetensors", "*.jinja", "*.txt", "*.model"],
+  "models": [
+    {
+      "id": "small",
+      "role": "fast",
+      "name": "Qwen3 1.7B",
+      "detail": "4-bit",
+      "repo": "mlx-community/Qwen3-1.7B-4bit",
+      "revision": "3b1b1768f8f8cf8351c712464f906e86c2b8269e",
+      "bytes": 984013244,
+      "ramGB": 1.6,
+      "license": "apache-2.0"
+    },
+    {
+      "id": "quality",
+      "role": "quality",
+      "name": "Qwen3.5 4B",
+      "detail": "4-bit",
+      "repo": "mlx-community/Qwen3.5-4B-MLX-4bit",
+      "revision": "32f3e8ecf65426fc3306969496342d504bfa13f3",
+      "bytes": 3061129077,
+      "ramGB": 3.7,
+      "license": "apache-2.0"
+    }
+  ]
+}
