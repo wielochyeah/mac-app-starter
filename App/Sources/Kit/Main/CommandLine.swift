@@ -4,6 +4,8 @@ import AppKit
 ///
 ///     <App> --render <dir> [--only <prefix>] [--lang en|de] [--appearance light|dark]
 ///     <App> --selftest
+///     <App> --permission-probe <id>   prints the permission status a fresh process sees, then exits
+///                         (Kit/Permissions asks this for Screen Recording, see PermissionProbe)
 ///     <App> --demo        normal launch, no onboarding, runs every `Registry.demoDrivers` entry
 ///                         (scripted loops such as the island's); fails when no module adds one
 ///
@@ -19,9 +21,10 @@ struct LaunchFlags: Equatable {
     var appearance: Appearance?
     var selftest = false
     var demo = false
+    var permissionProbe: String?
     var errors: [String] = []
 
-    var isTool: Bool { renderDir != nil || selftest }
+    var isTool: Bool { renderDir != nil || selftest || permissionProbe != nil }
 
     static func parse(_ arguments: [String]) -> LaunchFlags {
         var flags = LaunchFlags()
@@ -53,6 +56,8 @@ struct LaunchFlags: Equatable {
                 flags.selftest = true
             case "--demo":
                 flags.demo = true
+            case "--permission-probe":
+                flags.permissionProbe = value(arg)
             default:
                 // macOS adds its own single-dash arguments (-NSDocumentRevisionsDebugMode, -AppleLanguages …)
                 if arg.hasPrefix("--") { flags.errors.append("unknown flag \(arg)") }
@@ -80,6 +85,7 @@ enum Launch {
             for e in flags.errors { FileHandle.standardError.write(Data("\(AppConfig.name): \(e)\n".utf8)) }
             exit(2)
         }
+        if let probe = flags.permissionProbe { exit(PermissionProbe.answer(probe)) }
         let app = NSApplication.shared
         if flags.isTool || RenderMode.isHeadless {
             // no Dock icon, no menu bar, never activates; windows are never ordered front
