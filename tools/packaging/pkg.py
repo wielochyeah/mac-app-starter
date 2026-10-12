@@ -63,6 +63,9 @@ def settings(config, environ=None):
     dmg_lang = environ.get("DMG_LANG") or ("both" if len(langs) > 1 else langs[0])
     if dmg_lang not in ("en", "de", "both"):
         raise PackagingError(f"DMG_LANG must be en, de or both (got {dmg_lang})")
+    anrede = texts.get("anrede", "du")
+    if anrede not in ("du", "sie"):
+        raise PackagingError(f"texts.anrede in starter.json must be du or sie (got {anrede})")
     identity = environ.get("SIGN_IDENTITY") or signing.get("identity") or "-"
     notarize = bool(signing.get("notarize", False))
     return {
@@ -76,6 +79,7 @@ def settings(config, environ=None):
         "ACCENT": app.get("accent", "violett"),
         "SYMBOL": app.get("symbol", "sparkles"),
         "DMG_LANG": dmg_lang,
+        "ANREDE": anrede,
         "IDENTITY": identity,
         "TEAM_ID": signing.get("teamId", "") or "",
         "NOTARIZE": "1" if notarize and identity != "-" else "0",

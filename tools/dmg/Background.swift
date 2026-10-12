@@ -9,8 +9,11 @@
 //
 //   dmg-background --out <dir> --layout <layout.json> --icon <AppIcon.icns> --name <Name> [--name-de <Name>]
 //                  --app-label <Finder label> --version <1.0.0> --min-macos <26.0>
-//                  [--accent violett] [--lang en|de|both] [--no-hint]
-// Writes <dir>/background.png, background@2x.png, preview.png.
+//                  [--accent violett] [--lang en|de|both] [--anrede du|sie] [--no-hint]
+// --name/--name-de: the display name for the header. --app-label: what Finder shows under the app
+// icon (the bundle's file name); the drag line names that, so it matches the screen.
+// Writes <dir>/background.png, background@2x.png, preview.png (Finder's black labels) and
+// preview-dark.png (white labels, in case Finder draws them white in dark mode).
 
 import AppKit
 import SwiftUI
@@ -45,7 +48,11 @@ struct Options {
     var minimumMacOS = "26.0"
     var accent = AccentName.violett
     var lang = DMGLang.both
+    var anrede = DMGAnrede.du
     var hint = true
+
+    /// The header name: German display name when the window is German only.
+    var title: String { lang == .de && !nameDE.isEmpty ? nameDE : name }
 }
 
 /// Fixed geometry of the artwork (points in the 640 x 400 background). Kept here, not in Kit
@@ -59,8 +66,6 @@ enum Art {
     static let glowRadius: CGFloat = 300
     static let glowOpacity = 0.16
     static let groundTint = 0.07
-    static let pillFill = 0.78
-    static let pillStroke = 0.32
     static let lockSize: CGFloat = 10.5
     static let labelGap: CGFloat = 4
 }
@@ -91,8 +96,9 @@ struct DottedArrow: View {
     }
 }
 
-/// The drag line and, for builds that are not notarized, the first-open step. One block per
-/// language; the second language is quieter.
+/// The drag line and, for builds that are not notarized, the first-open step. The drag line is the
+/// one action and carries the weight; the Gatekeeper step sits below it, smaller and unframed.
+/// In both blocks the second language is quieter.
 struct Hints: View {
     let o: Options
     let folder: String
@@ -103,29 +109,29 @@ struct Hints: View {
         VStack(spacing: Space.xs) {
             VStack(spacing: Space.hair) {
                 ForEach(Array(langs.enumerated()), id: \.offset) { i, lang in
-                    Text(DMGText.drag(lang == "de" && !o.nameDE.isEmpty ? o.nameDE : o.name, to: folder).text(lang))
+                    Text(DMGText.drag(o.appLabel, to: folder, anrede: o.anrede).text(lang))
                         .font(i == 0 ? TypeScale.bodySemibold : TypeScale.secondary)
                         .foregroundStyle(i == 0 ? t.fg : t.prose)
                 }
             }
             if o.hint {
-                HStack(alignment: .center, spacing: Space.xs) {
-                    Image(systemName: "lock.open.fill")
-                        .symbolFont(Art.lockSize, weight: .semibold)
-                        .foregroundStyle(t.accentText)
-                    VStack(alignment: .leading, spacing: Space.hair) {
-                        ForEach(langs, id: \.self) { lang in
-                            Text("\(DMGText.firstOpen.text(lang))\(Text(DMGText.openAnyway.text(lang)).bold())")
-                                .font(TypeScale.subtitle)
-                                .foregroundStyle(t.prose)
-                        }
+                // the question once (both languages on one line), then the path per language
+                VStack(spacing: Space.hair) {
+                    HStack(alignment: .firstTextBaseline, spacing: Space.xxs + Space.hair) {
+                        Image(systemName: "lock.open.fill")
+                            .symbolFont(Art.lockSize, weight: .semibold)
+                            .foregroundStyle(t.accentText)
+                        Text(langs.map { DMGText.blocked.text($0) }.joined(separator: " · "))
+                            .font(TypeScale.caption.weight(.medium))
+                            .foregroundStyle(t.prose)
+                    }
+                    ForEach(langs, id: \.self) { lang in
+                        Text("\(DMGText.settingsPath.text(lang))\(Text(DMGText.openAnyway.text(lang)).fontWeight(.semibold))")
+                            .font(TypeScale.caption)
+                            .foregroundStyle(t.prose)
                     }
                 }
-                .padding(.horizontal, Space.s)
-                .padding(.vertical, langs.count > 1 ? Space.xs : Space.xxs + Space.hair)
-                .background(RoundedRectangle(cornerRadius: Radius.ring, style: .continuous).fill(Color.white.opacity(Art.pillFill)))
-                .overlay(RoundedRectangle(cornerRadius: Radius.ring, style: .continuous)
-                    .strokeBorder(t.ring.opacity(Art.pillStroke), lineWidth: 1))
+                .padding(.top, Space.xxs)
             }
         }
         .fixedSize()
@@ -147,7 +153,7 @@ struct Background: View {
             RadialGradient(colors: [Color(hex: p.brand, opacity: Art.glowOpacity), .clear],
                            center: UnitPoint(x: 0.5, y: iconY / size.height), startRadius: 10, endRadius: Art.glowRadius)
             VStack(spacing: Space.hair) {
-                Text(o.name).font(TypeScale.title).foregroundStyle(t.fg)
+                Text(o.title).font(TypeScale.title).foregroundStyle(t.fg)
                 Text(DMGText.versionLine(o.version, minimumMacOS: o.minimumMacOS))
                     .font(TypeScale.secondary).foregroundStyle(t.prose)
             }
@@ -168,6 +174,8 @@ struct Preview: View {
     let layout: DMGLayout
     let appIcon: NSImage
     let folder: NSImage
+    /// Finder draws black labels; white shows how a dark-mode Finder would look if it used white.
+    var label = Color.black
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -178,10 +186,10 @@ struct Preview: View {
         .frame(width: layout.size.width, height: layout.size.height)
     }
 
-    private func item(_ image: NSImage, _ label: String, at centre: CGPoint) -> some View {
+    private func item(_ image: NSImage, _ text: String, at centre: CGPoint) -> some View {
         VStack(spacing: Art.labelGap) {
             Image(nsImage: image).resizable().frame(width: layout.iconSize, height: layout.iconSize)
-            Text(label).font(.system(size: layout.textSize)).foregroundStyle(Color.black)
+            Text(text).font(.system(size: layout.textSize)).foregroundStyle(label)
         }
         .fixedSize()
         .alignmentGuide(.top) { d in d[VerticalAlignment.top] - (centre.y - layout.iconSize / 2) }
@@ -240,6 +248,10 @@ enum BackgroundTool {
                 let v = try value()
                 guard let l = DMGLang(rawValue: v) else { throw BackgroundError.usage("dmg-background: --lang en|de|both") }
                 o.lang = l
+            case "--anrede":
+                let v = try value()
+                guard let a = DMGAnrede(rawValue: v) else { throw BackgroundError.usage("dmg-background: --anrede du|sie") }
+                o.anrede = a
             case "--no-hint": o.hint = false
             default: throw BackgroundError.usage("dmg-background: unknown argument \(args[i])")
             }
@@ -262,5 +274,7 @@ enum BackgroundTool {
         folder.size = NSSize(width: 256, height: 256)
         try writePNG(Preview(o: o, layout: layout, appIcon: appIcon, folder: folder), scale: 2,
                      to: out.appendingPathComponent("preview.png"))
+        try writePNG(Preview(o: o, layout: layout, appIcon: appIcon, folder: folder, label: .white), scale: 2,
+                     to: out.appendingPathComponent("preview-dark.png"))
     }
 }
