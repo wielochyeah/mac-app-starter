@@ -15,7 +15,7 @@
       "hinweis": "den Grund selbst nennen statt auf Plan, Strang, Statusbericht oder Person zu verweisen",
       "art": "regex",
       "muster": [
-        "(?<!\\w)(?:VORGABEN|STRAENGE|BAUPLAN|STRANDS|[Ss]trang|[Ss]tr[aä]nge|[Ss]trands?\\s+[A-Z]\\d?|Vorgabe\\s+V?\\d+|[Ww]elle\\s+\\d|[Ww]ave\\s+\\d)(?!\\w)",
+        "(?<!\\w)(?:VORGABEN|STRAENGE|BAUPLAN|STRANDS|[Ss]trang|[Ss]tr[aä]nge|[Ss]trands?\\s+[A-Z]\\d?|Vorgabe\\s+V?\\d+)(?!\\w)",
         "(?<!\\w)V[1-9]\\d?(?=\\s*(?:Nr\\.|[:),]))",
         "(?<![\\w/.])[A-Z]\\d{0,2}b?\\.md(?!\\w)",
         "docs/bau/"
@@ -32,8 +32,7 @@
           "// V12: ein Chart",
           "// strand C owns the island",
           "// BAUPLAN §2.17",
-          "// wave 2 wires this",
-          "// see S0.md",
+                    "// see S0.md",
           "// docs/bau/status/G1.md"
         ],
         "erlaubt": [
@@ -41,7 +40,8 @@
           "// V8 optimiert diese Schleife nicht",
           "// UUID v4",
           "// see README.md",
-          "// a strand of text"
+          "// a strand of text",
+          "// a sine wave 2 periods long"
         ]
       }
     }

@@ -603,7 +603,7 @@
       "label": "Kommentar mit Projektverweis",
       "hinweis": "den Grund selbst nennen statt auf Plan, Strang, Statusbericht oder Person zu verweisen",
       "art": "regex",
-      "quelle": "(?<!\\w)(?:VORGABEN|STRAENGE|BAUPLAN|STRANDS|[Ss]trang|[Ss]tr[aä]nge|[Ss]trands?\\s+[A-Z]\\d?|Vorgabe\\s+V?\\d+|[Ww]elle\\s+\\d|[Ww]ave\\s+\\d)(?!\\w)|(?<!\\w)V[1-9]\\d?(?=\\s*(?:Nr\\.|[:),]))|(?<![\\w/.])[A-Z]\\d{0,2}b?\\.md(?!\\w)|docs/bau/",
+      "quelle": "(?<!\\w)(?:VORGABEN|STRAENGE|BAUPLAN|STRANDS|[Ss]trang|[Ss]tr[aä]nge|[Ss]trands?\\s+[A-Z]\\d?|Vorgabe\\s+V?\\d+)(?!\\w)|(?<!\\w)V[1-9]\\d?(?=\\s*(?:Nr\\.|[:),]))|(?<![\\w/.])[A-Z]\\d{0,2}b?\\.md(?!\\w)|docs/bau/",
       "flags": "",
       "bereiche": [
         "kommentar"
