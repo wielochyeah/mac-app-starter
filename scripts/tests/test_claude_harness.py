@@ -377,7 +377,11 @@ async function agent(prompt, opts) {
     return result;
   }
   if (label === "zusammenfuehren") return null;
-  if (label.indexOf("widerlegen:") === 0) return { refuted: false, reason: "belegt", severity: "wichtig" };
+  if (label.indexOf("widerlegen:") === 0) {
+    if (scenario.refuter === "throws") throw new Error("budget exhausted");
+    if (scenario.refuter === "null") return null;
+    return { refuted: false, reason: "belegt", severity: "wichtig" };
+  }
   return null;
 }
 async function parallel(thunks) { return Promise.all(thunks.map(function (thunk) { return thunk().catch(function () { return null; }); })); }
@@ -469,6 +473,19 @@ class RedTeamWorkflowTests(unittest.TestCase):
         data = self.run_workflow({"args": {}, "capture": {"changed_files": ["scripts/x.py"], "images": []}, "dead": ["sicherheit"]})
         titles = [entry["title"] for entry in data["result"]["unchecked"]]
         self.assertIn("Blickwinkel Sicherheit und Datenschutz ohne Ergebnis", titles)
+
+    def test_failed_refuter_keeps_the_finding_as_unchecked(self):
+        findings = [{"severity": "kritisch", "file": "scripts/x.py", "line": n, "title": "t{}".format(n), "problem": "p", "fix": "f"}
+                    for n in (1, 2, 3)]
+        for mode, reason in (("throws", "Widerleger ausgefallen"), ("null", "ohne Urteil des Widerlegers")):
+            data = self.run_workflow({"args": {}, "capture": {"changed_files": ["scripts/x.py"], "images": []},
+                                      "findings": {"korrektheit": findings}, "refuter": mode})
+            result = data["result"]
+            self.assertEqual(result["confirmed"], [], mode)
+            self.assertEqual(result["refuted"], [], mode)
+            self.assertEqual(sorted(entry["title"] for entry in result["unchecked"]), ["t1", "t2", "t3"], mode)
+            for entry in result["unchecked"]:
+                self.assertIn(reason, entry["reason"], mode)
 
     def test_unopened_picture_means_not_checked(self):
         images = images_for(["menubar.panel"])

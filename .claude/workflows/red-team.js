@@ -300,7 +300,8 @@ for (let index = 0; index < merged.length; index += 2) {
         ).then((verdict) => ({ ...finding, verdict: verdict ?? null })),
     ),
   )
-  checked.push(...verdicts.filter(Boolean))
+  // parallel() turns a refuter that threw or failed into null; the finding stays and counts as unchecked.
+  pair.forEach((finding, position) => checked.push(verdicts[position] ?? { ...finding, verdict: null, failed: true }))
 }
 
 const confirmed = checked
@@ -317,6 +318,9 @@ const refuted = checked
   .filter((finding) => finding.verdict && finding.verdict.refuted)
   .map((finding) => ({ title: finding.title, reason: finding.verdict.reason, owner: finding.verdict.owner }))
 for (const finding of checked.filter((entry) => !entry.verdict))
-  unchecked.push({ title: finding.title, reason: `ohne Urteil des Widerlegers, ${finding.file}:${finding.line}: ${finding.problem}` })
+  unchecked.push({
+    title: finding.title,
+    reason: `${finding.failed ? "Widerleger ausgefallen" : "ohne Urteil des Widerlegers"}, ${finding.file}:${finding.line}: ${finding.problem}`,
+  })
 log(`${confirmed.length} bestätigt, ${refuted.length} widerlegt, ${unchecked.length} ungeprüft`)
 return { confirmed, refuted, unchecked, sichtpruefung }
