@@ -20,7 +20,7 @@ from typing import List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, cut_blocks, git, inside, is_text_path, remove_empty_dirs, working_files,
+from .common import (StarterError, cut_blocks, git, has_block, inside, is_text_file, remove_empty_dirs, working_files,
                      write_text)
 from .manifest import Manifest, is_project, kit_checksums, read_lock, read_manifest, write_lock
 from .remove import (apply_removal, dangling_report, plan_removal, present_modules, read_texts, refuse_in_starter,
@@ -175,14 +175,18 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
             result.replaced.append(target)
         elif (root / target).exists():
             result.missing_templates.append(f"{target} (Vorlage {template} fehlt)")
+    # Every text is cut before anything moves: a moved file and a template copy get the cut text, and a
+    # file that a template replaces is not written back over the template.
     block_texts = {}
     for f in files:
-        if f in result.removed or not is_text_path(f) or f.endswith(".json"):
+        if f in result.removed or f.endswith(".json") or not is_text_file(root, f):
             continue
         text = (root / f).read_text(encoding="utf-8", errors="replace")
-        if any(line.strip() == manifest.block_start for line in text.split("\n")):
+        if has_block(text, manifest.block_start):
             block_texts[f] = cut_blocks(text, manifest.block_start, manifest.block_end)
-    result.blocks = sorted(block_texts)
+    replaced = set(result.replaced)
+    result.blocks = sorted({f for f in block_texts if f not in replaced}
+                           | {dst for src, dst in moves if src in block_texts})
     result.commit = opts.starter_commit if opts.starter_commit is not None else \
         starter_commit_for(root, manifest.repository, lock["version"], opts.offline)
     if opts.dry_run:
@@ -191,12 +195,19 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
     for f in result.removed:
         inside(root, f).unlink()
     remove_empty_dirs(root, result.removed)
+    def copy(src: str, dst: str) -> None:
+        if src in block_texts:
+            write_text(inside(root, dst), block_texts[src])
+        else:
+            shutil.copyfile(inside(root, src), inside(root, dst))
+
     for src, dst in moves:
-        shutil.copyfile(inside(root, src), inside(root, dst))
+        copy(src, dst)
     for target in result.replaced:
-        shutil.copyfile(inside(root, manifest.replace[target]), inside(root, target))
+        copy(manifest.replace[target], target)
     for f, text in block_texts.items():
-        write_text(inside(root, f), text)
+        if f not in replaced:
+            write_text(inside(root, f), text)
     cfg.write_config(root, new_config)
 
     lock.update({

@@ -65,6 +65,38 @@ class InitTests(TempDirCase):
         self.assertIsNone(init(root, options(name="Anders")), "second run changes nothing")
         self.assertEqual(self.json(root, "starter.json")["app"]["name"], "Notizen")
 
+    def test_blocks_in_moved_and_replaced_files(self):
+        """A starter-only block in docs/DECISIONS.md is cut in the moved copy, and the template still replaces it."""
+        from starter import kitcheck
+        root = self.repo({
+            "docs/DECISIONS.md": "# Entscheidungen des Starters\n\nE-01\n\n<!-- nur-im-starter:anfang -->\n"
+                                 "Bauplan\n<!-- nur-im-starter:ende -->\n",
+        })
+        result = init(root, options())
+        self.assertEqual(self.read(root, "docs/DECISIONS.md"), "# Entscheidungen\n\n(leer)\n")
+        self.assertEqual(self.read(root, "docs/STARTER_DECISIONS.md"), "# Entscheidungen des Starters\n\nE-01\n")
+        self.assertIn("docs/STARTER_DECISIONS.md", result.blocks)
+        self.assertNotIn("docs/DECISIONS.md", result.blocks)
+        f = kitcheck.run(root)
+        self.assertEqual(f.problems, [], "\n".join(f.problems))
+
+    def test_blocks_in_every_comment_syntax(self):
+        root = self.repo({
+            ".github/workflows/ci.yml": "jobs:\n  check:\n    steps:\n      - run: make check\n"
+                                        "  # nur-im-starter:anfang\n  template-probe:\n    steps:\n"
+                                        "      - run: bin/starter init\n  # nur-im-starter:ende\n",
+            "App/Sources/Kit/Main/Probe.swift": "let a = 1\n// nur-im-starter:anfang\nlet b = 2\n"
+                                                "// nur-im-starter:ende\nlet c = 3\n",
+            "scripts/hooks/pre-push": "#!/bin/zsh\n# nur-im-starter:anfang\necho bau\n# nur-im-starter:ende\n"
+                                      "exec make check\n",
+        })
+        result = init(root, options())
+        self.assertEqual(self.read(root, ".github/workflows/ci.yml"),
+                         "jobs:\n  check:\n    steps:\n      - run: make check\n")
+        self.assertEqual(self.read(root, "App/Sources/Kit/Main/Probe.swift"), "let a = 1\nlet c = 3\n")
+        self.assertEqual(self.read(root, "scripts/hooks/pre-push"), "#!/bin/zsh\nexec make check\n")
+        self.assertIn("scripts/hooks/pre-push", result.blocks)
+
     def test_dry_run_writes_nothing(self):
         root = self.repo()
         result = init(root, options(dry_run=True, remove=["island"]))
