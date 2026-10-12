@@ -55,59 +55,33 @@ struct MenuBarPanelView: View {
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }, action: { onHeight?($0) })
     }
 
-    /// Settings, Open window and Quit; Quit shrinks to its symbol when the titles do not fit.
+    /// Settings, Open window and Quit, always with their names: when the names do not fit with
+    /// symbols (German), every chip drops its symbol, so both languages keep the same footer.
     private var footer: some View {
         ViewThatFits(in: .horizontal) {
-            footerRow(compactQuit: false)
-            footerRow(compactQuit: true)
+            footerRow(symbols: true)
+            footerRow(symbols: false)
         }
         .padding(.top, Space.xxs)
     }
 
-    private func footerRow(compactQuit: Bool) -> some View {
+    private func footerRow(symbols: Bool) -> some View {
         HStack(spacing: Space.xs) {
-            Chip(MenuBarText.settings, symbol: "gearshape.fill") {
+            Chip(CommonText.settings, symbol: symbols ? "gearshape.fill" : nil) {
                 close()
                 AppActions.openSettings()
             }
             .fixedSize()
             if showsWindowAction {
-                Chip(MenuBarText.openWindow, symbol: "macwindow") {
+                Chip(MenuBarText.openWindow, symbol: symbols ? "macwindow" : nil) {
                     close()
                     AppActions.openMainWindow()
                 }
                 .fixedSize()
             }
             Spacer(minLength: Space.xs)
-            if compactQuit {
-                MenuBarSymbolChip(symbol: "power", label: MenuBarText.quit) { AppActions.quit() }
-            } else {
-                Chip(MenuBarText.quit, symbol: "power") { AppActions.quit() }.fixedSize()
-            }
+            Chip(MenuBarText.quit, symbol: symbols ? "power" : nil) { AppActions.quit() }.fixedSize()
         }
-    }
-}
-
-/// A square chip with only a symbol (VoiceOver and the tooltip say what it does).
-struct MenuBarSymbolChip: View {
-    let symbol: String
-    let label: String
-    let action: () -> Void
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        let t = Theme(scheme)
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(TypeScale.subtitleMedium)
-                .foregroundStyle(t.fg)
-                .frame(width: Metrics.chipHeight, height: Metrics.chipHeight)
-                .background(RoundedRectangle(cornerRadius: Radius.chip, style: .continuous).fill(t.chip))
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(PressStyle())
-        .help(label)
-        .accessibilityLabel(label)
     }
 }
 
@@ -132,7 +106,6 @@ struct MenuBarPanelHeader: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, Space.xxs)
         .padding(.bottom, Space.xxs)
         .accessibilityElement(children: .combine)
     }
@@ -146,8 +119,9 @@ private struct MenuBarAppName: View {
     }
 }
 
-/// The state as a mark and words (StatusMark metrics): grey dot when ready, spinner while
-/// working, a red dot like the icon's when the app needs the person.
+/// The state as a mark and words: grey dot when ready, spinner while working, a red dot like the
+/// icon's when the app needs the person. The mark sits at the leading edge of a slot as wide as
+/// the spinner, so the dot lines up with the app name above and the words never move sideways.
 struct MenuBarStatusLine: View {
     let state: MenuBarState
     let text: String
@@ -163,7 +137,7 @@ struct MenuBarStatusLine: View {
                 case .attention: Circle().fill(t.strike).frame(width: Metrics.dot, height: Metrics.dot)
                 }
             }
-            .frame(width: Metrics.spinner, height: Metrics.spinner)
+            .frame(width: MenuBarPanelMetrics.statusSpinner, height: MenuBarPanelMetrics.statusSpinner, alignment: .leading)
             Text(text)
                 .font(state == .attention ? TypeScale.secondaryMedium : TypeScale.secondary)
                 .foregroundStyle(state == .attention ? t.fg : t.prose)

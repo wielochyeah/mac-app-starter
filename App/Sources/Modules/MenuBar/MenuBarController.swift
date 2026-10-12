@@ -60,6 +60,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         let status = MenuBarStatus.shared
         _ = status.state
         _ = status.message
+        _ = status.shortTitle
         _ = Settings.shared[.menuBarIconStyle]
         _ = Settings.shared[.menuBarStatusText]
         _ = Settings.shared[.menuBarVisible]
@@ -85,7 +86,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             frame = 0
         }
         button.image = MenuBarIcon.image(state: status.state, style: style, frame: frame, inks: inks(for: button))
-        let title = MenuBarPrefs.title(state: status.state, line: status.line, showsText: Settings.shared[.menuBarStatusText])
+        let title = MenuBarPrefs.title(state: status.state, short: status.shortTitle, showsText: Settings.shared[.menuBarStatusText])
         button.title = title
         button.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
         // one symbol sits in the square item, exactly where the plain symbol sits (VoiceBud)
@@ -119,7 +120,9 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         item = nil
     }
 
-    /// Label ink of the menu bar's current appearance, the accent and the alert red.
+    /// Label ink of the menu bar's current appearance, the accent (its contrast-tested text
+    /// colour: the fill is below 3:1 on a light menu bar) and the alert red (`strike`, the same red
+    /// as the panel's status dot).
     private func inks(for button: NSStatusBarButton) -> MenuBarIcon.Inks {
         // design-ausnahme: the status item's ink follows the real menu bar (wallpaper decides), no Theme token knows it
         var label = NSColor.labelColor
@@ -128,7 +131,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             label = NSColor.labelColor.usingColorSpace(.sRGB) ?? .labelColor
         }
         let dark = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        return MenuBarIcon.Inks(label: label, accent: NSColor(Theme(dark ? .dark : .light).accent), alert: .systemRed)
+        return MenuBarIcon.Inks.themed(label: label, Theme(dark ? .dark : .light))
     }
 
     // MARK: Busy animation (only while busy in style "marks", never under Reduce Motion)
@@ -227,7 +230,7 @@ enum MenuBarMenu {
         }
         if !out.isEmpty { out.append(nil) }
         if windowModule {
-            out.append(Entry(id: "menubar.open-window", title: CommonText.openApp, symbol: nil, shortcut: nil) {
+            out.append(Entry(id: "menubar.open-window", title: MenuBarText.openWindow, symbol: nil, shortcut: nil) {
                 AppActions.openMainWindow()
             })
         }

@@ -13,11 +13,14 @@ struct MenuBarPane: View {
         let statusText = Binding(get: { settings[.menuBarStatusText] }, set: { settings[.menuBarStatusText] = $0 })
         let visible = Binding(get: { settings[.menuBarVisible] }, set: { settings[.menuBarVisible] = $0 })
         PaneScaffold(title: MenuBarText.paneTitle, symbol: "menubar.rectangle", tint: .indigo, subtitle: MenuBarText.paneIntro) {
+            // the note explains the chosen style, so it sits right under the tiles
             SettingsSection(MenuBarText.iconSection, footnote: MenuBarText.styleNote(style.wrappedValue), footnoteLines: 2) {
                 TilePicker(MenuBarIconStyle.allCases.map { TileOption($0, title: MenuBarText.styleName($0)) },
                            selection: style, tone: .settings) { value in
                     MenuBarStylePreview(style: value)
                 }
+            }
+            SettingsSection(MenuBarText.displaySection) {
                 ToggleRow(MenuBarText.statusText, subtitle: MenuBarText.statusTextDetail, isOn: statusText)
                 if windowModule {
                     ToggleRow(MenuBarText.visible, subtitle: MenuBarText.visibleDetail, isOn: visible)
@@ -38,7 +41,7 @@ struct MenuBarIconImage: View {
 
     var body: some View {
         let t = Theme(scheme)
-        let inks = MenuBarIcon.Inks(label: NSColor(t.menuBarText), accent: NSColor(t.accent), alert: .systemRed)
+        let inks = MenuBarIcon.Inks.themed(label: NSColor(t.menuBarText), t)
         let image = MenuBarIcon.enlarged(MenuBarIcon.image(state: state, style: style, frame: frame, inks: inks), by: scale)
         if image.isTemplate {
             Image(nsImage: image).renderingMode(.template).foregroundStyle(t.menuBarText)

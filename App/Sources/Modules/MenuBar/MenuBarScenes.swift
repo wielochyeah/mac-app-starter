@@ -5,7 +5,8 @@ import SwiftUI
 // are deterministic; nothing here runs in the app).
 
 enum MenuBarScenes {
-    static let ids = ["menubar.icon-states", "menubar.panel", "menubar.panel-busy", "menubar.panel-empty", "menubar.pane"]
+    static let ids = ["menubar.icon-states", "menubar.status-text", "menubar.panel", "menubar.panel-busy", "menubar.panel-empty",
+                      "menubar.panel-nowindow", "menubar.pane", "menubar.pane-nowindow"]
 
     static func register() {
         Registry.renderScenes.append(RenderScene(id: "menubar.icon-states", size: .zero) { AnyView(IconStatesBoard()) })
@@ -19,8 +20,18 @@ enum MenuBarScenes {
         Registry.renderScenes.append(RenderScene(id: "menubar.panel-empty", size: .zero) {
             AnyView(PanelStage(status: MenuBarStatus(state: .attention), sections: [], actions: [], itemState: .attention))
         })
+        // without the window module: no "Open Window" in the panel, no "Show in menu bar" switch
+        Registry.renderScenes.append(RenderScene(id: "menubar.panel-nowindow", size: .zero) {
+            AnyView(PanelStage(status: MenuBarStatus(), sections: MenuBarSamples.sections, actions: MenuBarSamples.actions,
+                               showsWindowAction: false))
+        })
+        Registry.renderScenes.append(RenderScene(id: "menubar.status-text", size: .zero) { AnyView(StatusTextBoard()) })
         Registry.renderScenes.append(RenderScene(id: "menubar.pane", size: .zero) {
             AnyView(MenuBarPane(settings: MenuBarSamples.settings(), windowModule: true)
+                .frame(width: MenuBarSamples.paneSize.width, height: MenuBarSamples.paneSize.height))
+        })
+        Registry.renderScenes.append(RenderScene(id: "menubar.pane-nowindow", size: .zero) {
+            AnyView(MenuBarPane(settings: MenuBarSamples.settings(), windowModule: false)
                 .frame(width: MenuBarSamples.paneSize.width, height: MenuBarSamples.paneSize.height))
         })
 
@@ -91,6 +102,8 @@ private struct QuickToggles: View {
 private struct MenuBarStrip: View {
     var itemState: MenuBarState = .idle
     var highlighted = true
+    /// The text next to the icon ("Status next to the icon"), empty for none.
+    var title = ""
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -98,11 +111,14 @@ private struct MenuBarStrip: View {
         MenuBarBackdrop {
             HStack(spacing: Space.m) {
                 Spacer(minLength: 0)
-                MenuBarIconImage(state: itemState, style: .marks)
+                HStack(spacing: Space.xxs) {
+                    MenuBarIconImage(state: itemState, style: .marks, frame: 1)
+                    if !title.isEmpty { Text(title).lineLimit(1).fixedSize() }
+                }
                     .padding(.horizontal, Space.xs)
                     .padding(.vertical, Space.xxs)
                     .background(RoundedRectangle(cornerRadius: Radius.button, style: .continuous)
-                        .fill(highlighted ? t.menuBarText.opacity(0.16) : .clear))
+                        .fill(highlighted ? t.chipActive : .clear))
                 Image(systemName: "wifi")
                 Image(systemName: "battery.75percent")
                 Image(systemName: "switch.2")
@@ -122,6 +138,7 @@ private struct PanelStage: View {
     let sections: [MenuBarSection]
     let actions: [MenuItemContribution]
     var itemState: MenuBarState = .idle
+    var showsWindowAction = true
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -130,7 +147,7 @@ private struct PanelStage: View {
             MenuBarStrip(itemState: itemState)
             HStack {
                 Spacer(minLength: 0)
-                MenuBarPanelView(close: {}, sections: sections, actions: actions, status: status, showsWindowAction: true)
+                MenuBarPanelView(close: {}, sections: sections, actions: actions, status: status, showsWindowAction: showsWindowAction)
             }
             .padding(.top, Space.xxs)
             .padding(.trailing, Space.xs)
@@ -138,6 +155,40 @@ private struct PanelStage: View {
         }
         .frame(width: MenuBarSamples.stageWidth)
         .background(t.wallpaper)
+    }
+}
+
+/// "Status next to the icon" on real-size menu bars: the state names, a module's short title, and
+/// a title too long for the menu bar, cut.
+private struct StatusTextBoard: View {
+    @Environment(\.colorScheme) private var scheme
+
+    private var groups: [(label: String, strips: [(state: MenuBarState, short: String?)])] {
+        [
+            (MenuBarText.stateNames, [(.busy, nil), (.attention, nil)]),
+            (MenuBarText.withShortTitle, [(.busy, MenuBarSampleText.fileCount)]),
+            (MenuBarText.cut, [(.busy, MenuBarSampleText.importing)]),
+        ]
+    }
+
+    var body: some View {
+        let t = Theme(scheme)
+        VStack(alignment: .leading, spacing: Space.m) {
+            Text(MenuBarText.statusTextBoard).font(TypeScale.groupLabel).foregroundStyle(t.fg)
+            ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
+                VStack(alignment: .leading, spacing: Space.xxs) {
+                    Text(group.label).font(TypeScale.secondary).foregroundStyle(t.fg2)
+                    ForEach(Array(group.strips.enumerated()), id: \.offset) { _, strip in
+                        MenuBarStrip(itemState: strip.state, highlighted: false,
+                                     title: MenuBarPrefs.title(state: strip.state, short: strip.short, showsText: true))
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.button, style: .continuous))
+                    }
+                }
+            }
+        }
+        .padding(Space.l)
+        .frame(width: MenuBarSamples.stageWidth)
+        .background(t.windowBg)
     }
 }
 

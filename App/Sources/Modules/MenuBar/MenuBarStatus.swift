@@ -14,26 +14,37 @@ nonisolated enum MenuBarState: String, CaseIterable, Sendable {
 ///
 ///     MenuBarStatus.shared.state = .busy
 ///     MenuBarStatus.shared.message = MyText.importing      // optional, else the state's own words
+///     MenuBarStatus.shared.shortTitle = MyText.fileCount   // optional, "3 files" next to the icon
 ///     …
-///     MenuBarStatus.shared.state = .idle                   // also clears the message
+///     MenuBarStatus.shared.state = .idle                   // also clears message and short title
 ///
 /// The status item, the panel header and the tooltip follow at once (`@Observable`).
 @Observable final class MenuBarStatus {
     static let shared = MenuBarStatus()
 
     var state: MenuBarState = .idle {
-        didSet { if state == .idle { message = nil } }
+        didSet {
+            if state == .idle {
+                message = nil
+                shortTitle = nil
+            }
+        }
     }
 
-    /// A short line ("Importing 3 files…"). Nil shows the state's default words.
+    /// The panel's status line ("Importing 3 files…"). Nil shows the state's default words.
     var message: String?
 
-    /// The status line of the panel header and the text next to the icon.
+    /// A word or two next to the icon when "Status next to the icon" is on ("3 files", "0:42").
+    /// Nil shows the state's name ("Working"). Longer texts are cut (`MenuBarPrefs.titleLimit`).
+    var shortTitle: String?
+
+    /// The status line of the panel header, the tooltip and VoiceOver.
     var line: String { message ?? MenuBarText.statusLine(state) }
 
-    init(state: MenuBarState = .idle, message: String? = nil) {
+    init(state: MenuBarState = .idle, message: String? = nil, shortTitle: String? = nil) {
         self.state = state
         self.message = message
+        self.shortTitle = shortTitle
     }
 }
 
@@ -53,7 +64,7 @@ nonisolated enum MenuBarIconStyle: String, CaseIterable, Sendable {
 extension SettingKey {
     /// "plain", "marks" or "color" (`MenuBarIconStyle`).
     static var menuBarIconStyle: SettingKey<String> { .init("menubar.iconStyle", default: MenuBarIconStyle.marks.rawValue) }
-    /// Shows `MenuBarStatus.line` next to the icon while the app is busy or needs attention.
+    /// Shows a short title next to the icon while the app is busy or needs attention.
     static var menuBarStatusText: SettingKey<Bool> { .init("menubar.statusText", default: false) }
     /// Whether the status item is shown. Only honoured when the window module keeps the app reachable.
     static var menuBarVisible: SettingKey<Bool> { .init("menubar.visible", default: true) }
@@ -64,8 +75,22 @@ enum MenuBarPrefs {
     /// Without a main window the status item is the only way into the app: it always shows.
     static func isVisible(setting: Bool, windowModule: Bool) -> Bool { setting || !windowModule }
 
-    /// Text next to the icon: only with the setting on and only while busy or needing attention.
-    static func title(state: MenuBarState, line: String, showsText: Bool) -> String {
-        showsText && state != .idle ? line : ""
+    /// Characters next to the icon at most: a wide item pushes other items (or itself) under the
+    /// notch on MacBooks.
+    static let titleLimit = 14
+
+    /// Text next to the icon: only with the setting on and only while busy or needing attention;
+    /// the short title or the state's name ("Working", "Needs you"), never the panel sentence.
+    static func title(state: MenuBarState, short: String?, showsText: Bool) -> String {
+        guard showsText, state != .idle else { return "" }
+        let text = (short?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
+            ?? MenuBarText.stateName(state)
+        return capped(text)
+    }
+
+    /// Cuts a text to `titleLimit` characters with an ellipsis.
+    static func capped(_ text: String, limit: Int = titleLimit) -> String {
+        guard text.count > limit else { return text }
+        return text.prefix(limit - 1).trimmingCharacters(in: .whitespaces) + "…"
     }
 }

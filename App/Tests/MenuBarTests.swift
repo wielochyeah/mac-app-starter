@@ -57,11 +57,27 @@ final class MenuBarTests: TestSuite {
             expect(MenuBarPrefs.isVisible(setting: true, windowModule: false))
         }
 
-        test("status text shows only with the setting on and only while not idle") {
-            expectEqual(MenuBarPrefs.title(state: .busy, line: "Sync", showsText: true), "Sync")
-            expectEqual(MenuBarPrefs.title(state: .attention, line: "Look", showsText: true), "Look")
-            expectEqual(MenuBarPrefs.title(state: .idle, line: "Ready", showsText: true), "")
-            expectEqual(MenuBarPrefs.title(state: .busy, line: "Sync", showsText: false), "")
+        test("status text: short, only with the setting on and only while not idle") {
+            expectEqual(MenuBarPrefs.title(state: .busy, short: "3 files", showsText: true), "3 files")
+            expectEqual(MenuBarPrefs.title(state: .idle, short: "3 files", showsText: true), "")
+            expectEqual(MenuBarPrefs.title(state: .busy, short: "3 files", showsText: false), "")
+            withLang(.en) {
+                expectEqual(MenuBarPrefs.title(state: .attention, short: nil, showsText: true), "Needs you", "the state's name, not the panel sentence")
+                expectEqual(MenuBarPrefs.title(state: .busy, short: "  ", showsText: true), "Working")
+            }
+            withLang(.de) {
+                expectEqual(MenuBarPrefs.title(state: .attention, short: nil, showsText: true), "Braucht dich")
+                for state in [MenuBarState.busy, .attention] {
+                    expect(MenuBarText.stateName(state).count <= MenuBarPrefs.titleLimit, "\(state) fits")
+                }
+            }
+            let long = MenuBarPrefs.title(state: .busy, short: "3 Dateien werden importiert", showsText: true)
+            expectEqual(long.count, MenuBarPrefs.titleLimit)
+            expect(long.hasSuffix("…"), long)
+            expectEqual(MenuBarPrefs.capped("Short"), "Short")
+            let status = MenuBarStatus(state: .busy, message: "m", shortTitle: "s")
+            status.state = .idle
+            expectEqual(status.shortTitle, nil, "idle clears the short title")
         }
 
         // MARK: Icon rules and geometry
@@ -150,6 +166,19 @@ final class MenuBarTests: TestSuite {
             guard let color = rep.colorAt(x: x, y: y)?.usingColorSpace(.sRGB) else { return fail("no pixel") }
             expect(color.alphaComponent > 0.9, "dot opaque")
             expect(color.redComponent > 0.8 && color.greenComponent < 0.4, "dot red: \(color)")
+        }
+
+        test("drawn glyphs carry the ink's opacity once, like the template glyph (no tone change with the dot)") {
+            let ink = NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.85)
+            let colored = MenuBarIcon.Inks(label: ink, accent: ink, alert: inks.alert)
+            let symbol = MenuBarIcon.symbol()
+            let dot = MenuBarIcon.dotRect(in: symbol.size).insetBy(dx: -MenuBarIconMetrics.knockout - 0.5, dy: -MenuBarIconMetrics.knockout - 0.5)
+            let template = MenuBarIcon.glyphAlpha(symbol)
+            expect(template > 0.95, "the template glyph is opaque: \(template)")
+            let attention = MenuBarIcon.glyphAlpha(MenuBarIcon.image(state: .attention, style: .marks, inks: colored), excluding: dot)
+            expect(abs(attention - 0.85) < 0.04, "attention glyph alpha \(attention), want 0.85")
+            let busy = MenuBarIcon.glyphAlpha(MenuBarIcon.image(state: .busy, style: .color, inks: colored))
+            expect(abs(busy - 0.85) < 0.04, "color busy glyph alpha \(busy), want 0.85")
         }
 
         test("enlarged images keep the template flag and scale") {

@@ -24,7 +24,7 @@ enum MenuBarModule {
 enum MenuBarSelfTest {
     /// Every state in every style draws something, at the symbol's size, as the right image kind.
     static func icons() -> String? {
-        let inks = MenuBarIcon.Inks(label: .black, accent: .systemPurple, alert: .systemRed)
+        let inks = MenuBarIcon.Inks.themed(label: .black, Theme(.light))
         let plain = MenuBarIcon.symbol()
         for style in MenuBarIconStyle.allCases {
             for state in MenuBarState.allCases {
@@ -62,6 +62,21 @@ extension MenuBarIcon {
             for x in 0..<rep.pixelsWide where (rep.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.02 { count += 1 }
         }
         return count
+    }
+
+    /// The highest opacity of the glyph when drawn at 2x, leaving out `excluding` (image
+    /// coordinates, e.g. the dot): drawn glyphs must carry the ink's opacity once, like templates.
+    static func glyphAlpha(_ image: NSImage, excluding: NSRect = .null) -> CGFloat {
+        guard let rep = bitmap(image) else { return 0 }
+        var high: CGFloat = 0
+        for y in 0..<rep.pixelsHigh {
+            for x in 0..<rep.pixelsWide {
+                let point = NSPoint(x: (CGFloat(x) + 0.5) / 2, y: (CGFloat(rep.pixelsHigh - 1 - y) + 0.5) / 2)
+                if excluding.contains(point) { continue }
+                high = max(high, rep.colorAt(x: x, y: y)?.alphaComponent ?? 0)
+            }
+        }
+        return high
     }
 
     /// Opacity at a point (image coordinates, origin bottom left) when drawn at 2x.

@@ -36,6 +36,12 @@ enum MenuBarIcon {
         let label: NSColor
         let accent: NSColor
         let alert: NSColor
+
+        /// The inks from the theme: `accentText` (>= 3:1 on the menu bar, the fill is not) and
+        /// `strike`, the red of the panel's status dot. Used by the live item and every preview.
+        static func themed(label: NSColor, _ t: Theme) -> Inks {
+            Inks(label: label, accent: NSColor(t.accentText), alert: NSColor(t.strike))
+        }
     }
 
     /// The template image macOS tints itself (idle, plain style, the busy ring).
@@ -56,6 +62,9 @@ enum MenuBarIcon {
     static func nextFrame(_ frame: Int) -> Int { (frame + 1) % MenuBarIconMetrics.frames }
 
     /// The symbol by name; a missing name (selftest `kit.symbol` catches it) falls back to a circle.
+    /// With a colour it is drawn in that colour (not a template). Palette symbols apply a colour's
+    /// opacity twice (0.85 ink came out 0.72, lighter than the template glyph next to it), so the
+    /// palette gets the opaque colour and the opacity is applied once when drawing.
     static func symbol(_ name: String = AppInfo.symbol, color: NSColor? = nil) -> NSImage {
         let base = NSImage(systemSymbolName: name, accessibilityDescription: AppInfo.displayName)
             ?? NSImage(systemSymbolName: "circle.fill", accessibilityDescription: AppInfo.displayName)
@@ -64,7 +73,17 @@ enum MenuBarIcon {
             base.isTemplate = true
             return base
         }
-        return base.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [color])) ?? base
+        let opaque = color.withAlphaComponent(1)
+        let palette = base.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [opaque])) ?? base
+        let alpha = color.alphaComponent
+        let image = NSImage(size: base.size, flipped: false) { bounds in
+            palette.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: alpha)
+            return true
+        }
+        image.isTemplate = false
+        image.alignmentRect = base.alignmentRect
+        image.accessibilityDescription = base.accessibilityDescription
+        return image
     }
 
     /// The icon for a state in a style. `frame` turns the busy ring (0 when still).
