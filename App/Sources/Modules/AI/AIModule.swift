@@ -57,7 +57,7 @@ enum AIModule {
         t = Date()
         var snapshots: [String] = []
         let streamed = AIWait.run(timeout: 60) { () async throws -> String in
-            for try await s in apple.stream(AIRequest(prompt: "Zähle von eins bis fünf, mit Kommas.", instructions: request.instructions)) {
+            for try await s in apple.stream(AIRequest(prompt: "Zähle in Worten von eins bis zwanzig, mit Kommas.", instructions: request.instructions)) {
                 snapshots.append(s)
             }
             return snapshots.last ?? ""
