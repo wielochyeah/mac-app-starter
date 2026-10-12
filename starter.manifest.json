@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "starter": "mac-app-starter",
+  "repository": "wielochyeah/mac-app-starter",
+  "description": "Grenze zwischen Starter und Projekt. Kit-Pfade gehören dem Starter und bleiben in Projekten unverändert; bin/starter sync übernimmt neue Stände, bin/starter check-kit vergleicht sie mit den Prüfsummen in starter.lock.json. Gemeinsame Pfade (shared) liefert der Starter, das Projekt darf sie ändern; sync führt beide Seiten per Drei-Wege-Merge zusammen. Projekt-Pfade gehören allein dem Projekt, kein Werkzeug fasst sie an: eigener Code nach App/Sources/Features/ (angemeldet in Features.register()), eigene Tests nach App/Tests/Features/, eigene Skripte nach scripts/projekt/, eigene Regeln nach rules/projekt/. Die Baselines der Prüfungen (rules/baseline/), die Zeichnung des App-Symbols (tools/icon/Icon.swift) und der DMG-Hintergrund (tools/dmg/Background.swift) sind gemeinsam: ein Projekt passt sie an.",
+  "order": ["starterOnly", "shared", "project", "kit"],
+  "orderRule": "Ein Pfad gehört zur ersten Liste in order, deren Muster ihn trifft; ein Pfad, den keine Liste trifft, gehört in einem Projekt dem Projekt, im Starter meldet check-kit ihn als unklassifiziert. Gemeinsame und Projekt-Pfade stehen vor den Kit-Pfaden, damit Textdateien (*Text.swift) und Projektordner (App/Tests/Features, scripts/projekt, rules/projekt) innerhalb eines Kit-Ordners liegen können. Muster sind Globs relativ zum Repository: ** trifft beliebig viele Ordner, * bleibt in einem Ordner, ein Muster ohne / trifft den Dateinamen in jedem Ordner, ./ verankert es an der Wurzel.",
+  "kit": [
+    "App/Sources/Kit/**",
+    "App/Sources/Modules/**",
+    "App/Tests/**",
+    "scripts/**",
+    "bin/**",
+    "tools/**",
+    "ai-worker/**",
+    "rules/**",
+    ".claude/hooks/**",
+    "docs/DESIGN.md",
+    "docs/ARCHITEKTUR.md",
+    "docs/MODULE.md",
+    "docs/KI.md",
+    "docs/VERTEILUNG.md",
+    "docs/STARTER_DECISIONS.md",
+    "docs/vorlagen/**",
+    "./THIRD_PARTY_NOTICES.md",
+    "./starter.manifest.json"
+  ],
+  "shared": [
+    "./README.md",
+    "./CLAUDE.md",
+    "./AGENTS.md",
+    "./CONTRIBUTING.md",
+    "./CHANGELOG.md",
+    "docs/UEBERGABE.md",
+    "./starter.json",
+    "./Makefile",
+    "./Package.swift",
+    "./.gitignore",
+    "./.editorconfig",
+    ".github/**",
+    ".claude/settings.json",
+    ".claude/README.md",
+    ".claude/skills/**",
+    ".claude/agents/**",
+    ".claude/workflows/**",
+    "rules/generated/**",
+    "rules/baseline/**",
+    "tools/icon/Icon.swift",
+    "tools/dmg/Background.swift",
+    "App/Resources/InfoPlist.json",
+    "App/Sources/Kit/**/*Text.swift",
+    "App/Sources/Modules/**/*Text.swift",
+    "ai-worker/models.json",
+    "ai-worker/requirements*.txt"
+  ],
+  "project": [
+    "App/Sources/Features/**",
+    "App/Tests/Features/**",
+    "App/Resources/**",
+    "scripts/projekt/**",
+    "rules/projekt/**",
+    "docs/PROJECT.md",
+    "docs/DECISIONS.md",
+    "docs/STARTER_FEEDBACK.md",
+    "docs/agents/**",
+    "docs/screenshots/**",
+    "./starter.lock.json"
+  ],
+  "starterOnly": {
+    "description": "Bauunterlagen des Starters. bin/starter init löscht paths, schneidet in allen Textdateien die Abschnitte zwischen den blockMarkers heraus (Marker allein auf ihrer Zeile, in der Kommentarsyntax der Datei: <!-- nur-im-starter:anfang --> in Markdown, # nur-im-starter:anfang in Shell, Python, YAML und Makefile, // nur-im-starter:anfang in Swift), legt jede Datei aus move unter ihrem neuen Namen ab (die Entscheidungen des Starters als docs/STARTER_DECISIONS.md, die sync nachzieht) und ersetzt jede Datei aus replace durch ihre leere Vorlage. check-kit meldet in einem Projekt jeden Rest davon.",
+    "paths": ["docs/bau/**"],
+    "move": { "docs/DECISIONS.md": "docs/STARTER_DECISIONS.md" },
+    "replace": {
+      "docs/DECISIONS.md": "docs/vorlagen/DECISIONS.md",
+      "docs/agents/PLAN.md": "docs/vorlagen/PLAN.md",
+      "docs/agents/straenge.json": "docs/vorlagen/straenge.json",
+      "docs/agents/VORGABEN.md": "docs/vorlagen/VORGABEN.md"
+    },
+    "blockMarkers": { "start": "<!-- nur-im-starter:anfang -->", "end": "<!-- nur-im-starter:ende -->" }
+  },
+  "markers": {
+    "description": "Code eines Moduls außerhalb seines Ordners steht in Swift in #if MODUL_<NAME> … #endif (ein Flag je #if, für zwei Module zwei Blöcke verschachteln; ein #else-Zweig bleibt beim Entfernen stehen, #if !MODUL_<NAME> behält seinen Inhalt). Tests eines Moduls stehen ganz in #if MODUL_<NAME> oder unter App/Tests/Modules/<Ordner>/; eine Swift-Datei, in der nach dem Entfernen nur Kommentare, Importe und Direktiven bleiben, löscht remove. In allen anderen Textdateien gelten Kommentar-Markierungen in der Syntax der Datei: am Zeilenende // modul:<name> (Swift, C), # modul:<name> (Shell, Python, YAML, Makefile, requirements, Skripte ohne Endung mit #!-Zeile wie die Git-Hooks), <!-- modul:<name> --> (Markdown, HTML); mehrzeilig zwischen modul:<name>:anfang und modul:<name>:ende. Eine Zeile mit zwei Modulen nennt beide (// modul:ai,mlx) und geht mit jedem. JSON hat keine Kommentare: starter.json ändert remove über den Schlüssel.",
+    "swift": "#if MODUL_<NAME>",
+    "line": "// modul:<name>",
+    "start": "// modul:<name>:anfang",
+    "end": "// modul:<name>:ende"
+  },
+  "rules": {
+    "description": "Aus jeder Gruppe in atLeastOne bleibt mindestens ein Modul eingeschaltet (ohne Fenster und ohne Menüleiste wären die Einstellungen nicht erreichbar). Ein Modul unter needs eines anderen lässt sich erst entfernen, wenn das andere weg ist.",
+    "atLeastOne": [["window", "menubar"]]
+  },
+  "modules": {
+    "window": {
+      "title": "Fenster-App",
+      "description": "Dock-Symbol und Hauptfenster im Stil von Apple Music: Seitenleiste, Suche in der Symbolleiste, Seitenbausteine (Kopfbereich, Regale, Kacheln, Listen), Hauptmenü.",
+      "folder": "Window",
+      "default": true,
+      "paths": ["App/Sources/Modules/Window/**", "App/Tests/Modules/Window/**", ".claude/skills/neue-ansicht/**"]
+    },
+    "menubar": {
+      "title": "Menüleisten-App",
+      "description": "Symbol in der Menüleiste mit Zuständen, Panel und Kontextmenü; ohne Fenster-Modul läuft die App ohne Dock-Symbol.",
+      "folder": "MenuBar",
+      "default": true,
+      "paths": ["App/Sources/Modules/MenuBar/**", "App/Tests/Modules/MenuBar/**", ".claude/skills/menueleisten-app/**"]
+    },
+    "island": {
+      "title": "Insel an der Notch",
+      "description": "Insel, die aus der Notch wächst (Kapsel unter der Menüleiste ohne Notch), mit Zuständen für Aktivität, Fortschritt, Ergebniskarte und Hinweise, auf mehreren Bildschirmen.",
+      "folder": "Island",
+      "default": true,
+      "paths": ["App/Sources/Modules/Island/**", "App/Tests/Modules/Island/**", ".claude/skills/insel-zustand/**"]
+    },
+    "background": {
+      "title": "Hintergrund-Aufgaben",
+      "description": "Geplante Aufgaben mit Statusmodell und Start bei der Anmeldung.",
+      "folder": "Background",
+      "default": true,
+      "paths": ["App/Sources/Modules/Background/**", "App/Tests/Modules/Background/**", ".claude/skills/hintergrund-job/**"],
+      "nextSteps": [
+        "Wer einen installierten Build mit Start bei der Anmeldung hatte, entfernt den Eintrag unter Systemeinstellungen > Allgemein > Anmeldeobjekte, bevor der neue Build ihn ersetzt."
+      ]
+    },
+    "hotkeys": {
+      "title": "Kurzbefehle",
+      "description": "Systemweite Tastenkürzel mit Aufnahmezeile und Konfliktregeln.",
+      "folder": "Hotkeys",
+      "default": true,
+      "paths": ["App/Sources/Modules/Hotkeys/**", "App/Tests/Modules/Hotkeys/**", ".claude/skills/kurzbefehl/**"]
+    },
+    "ai": {
+      "title": "Lokale KI",
+      "description": "Apple Foundation Models auf dem Gerät: Anbieter, Verfügbarkeit, Einstellungsbereich Modelle und Onboarding-Schritt.",
+      "folder": "AI",
+      "default": true,
+      "paths": ["App/Sources/Modules/AI/**", "App/Tests/Modules/AI/**", ".claude/skills/ki-funktion/**", "docs/KI.md"]
+    },
+    "mlx": {
+      "title": "MLX-Worker",
+      "description": "Optionaler Python-Worker mit MLX-Modellen und Downloads mit Fortschritt; braucht das Modul ai.",
+      "folder": "MLX",
+      "default": false,
+      "paths": ["App/Sources/Modules/MLX/**", "App/Tests/Modules/MLX/**", "ai-worker/**"],
+      "needs": ["ai"],
+      "nextSteps": [
+        "ai-worker/.venv und heruntergeladene Modelle (Ordner Models unter ~/Library/Application Support/<bundleId>) von Hand löschen, falls vorhanden."
+      ]
+    },
+    "examples": {
+      "title": "Beispiele",
+      "description": "Beispiel-Funktion, die jedes Modul zeigt; Vorlage für die erste eigene Funktion. Entfernen, sobald die erste eigene Funktion steht.",
+      "folder": "Examples",
+      "default": true,
+      "command": "bin/starter strip-examples",
+      "paths": ["App/Sources/Modules/Examples/**", "App/Tests/Modules/Examples/**"]
+    }
+  },
+  "checks": {
+    "description": "Soll-Liste für check-kit Teil 2: Diese Ziele, Hooks und CI-Schritte schalten die Prüfungen ein. Ein Projekt darf Makefile, Hooks und CI ändern, aber keine Prüfung abschalten; check-kit meldet fehlende Schritte, || true, ; true, --no-verify, Make-Zeilen mit führendem -, continue-on-error: true und if: false.",
+    "files": [
+      "scripts/build.sh",
+      "scripts/test.sh",
+      "scripts/check_kit.py",
+      "scripts/rules_sync.py",
+      "scripts/check_texts.py",
+      "scripts/check_design.py",
+      "scripts/check_commit_msg.py",
+      "scripts/hooks/commit-msg",
+      "scripts/hooks/pre-push"
+    ],
+    "makefile": {
+      "file": "Makefile",
+      "targets": {
+        "check": ["check-rules", "check-texts", "check-design", "check-kit", "build", "test"],
+        "check-rules": ["scripts/rules_sync.py"],
+        "check-texts": ["scripts/check_texts.py"],
+        "check-design": ["scripts/check_design.py"],
+        "check-kit": ["scripts/check_kit.py"],
+        "build": ["scripts/build.sh"],
+        "test": ["scripts/test.sh"]
+      }
+    },
+    "hooks": {
+      "scripts/hooks/commit-msg": ["scripts/check_commit_msg.py"],
+      "scripts/hooks/pre-push": ["make check"]
+    },
+    "ci": {
+      "file": ".github/workflows/ci.yml",
+      "steps": [["make check"]]
+    }
+  }
+}

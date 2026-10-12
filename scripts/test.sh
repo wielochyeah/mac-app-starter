@@ -29,6 +29,13 @@ STARTER_ROOT="$ROOT" STARTER_HEADLESS=1 STARTER_DATA_DIR="$DATA" STARTER_LANG=en
 
 if [[ -z "${ONLY:-}" ]]; then
   python3 -m unittest discover -s scripts/tests -t . -p 'test_*.py' 2>&1 | tail -3
+  if [[ -d scripts/starter/tests ]]; then
+    # bin/starter and check-kit; the full output only when something fails.
+    if ! out="$(python3 -m unittest discover -s scripts/starter/tests -t scripts -p 'test_*.py' 2>&1)"; then
+      print -r -- "$out"; exit 1
+    fi
+    print -r -- "$out" | tail -3
+  fi
   if [[ -d ai-worker/tests ]]; then
     PY=python3
     [[ -x ai-worker/.venv/bin/python ]] && PY=ai-worker/.venv/bin/python

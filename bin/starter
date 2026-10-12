@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""bin/starter: init, remove, strip-examples, sync, check-kit, modules, doctor (bin/starter --help).
+
+Python 3.9 standard library only; the code lives in scripts/starter/.
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+from starter.cli import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -17,7 +17,7 @@ define run_script
 endef
 
 .PHONY: help doctor build run test check shots readme-shots icon dmg notarize rules hooks clean \
-        check-rules check-texts check-design check-kit
+        check-rules check-texts check-design check-kit probe
 
 help:
 	@print "make doctor        check the toolchain (never installs anything)"
@@ -31,6 +31,7 @@ help:
 	@print "make dmg           release build + designed DMG in build/dmg"
 	@print "make rules         write CLAUDE.md part A and word lists from rules/"
 	@print "make hooks         use scripts/hooks as git hooks"
+	@print "make probe         template probe: init a copy, remove each module, build (slow, starter only)"
 	@print "make clean         remove build/"
 
 doctor:
@@ -81,6 +82,9 @@ check-kit:
 	$(call run_script,scripts/check_kit.py)
 
 check: check-rules check-texts check-design check-kit build test
+
+probe:
+	@python3 -m unittest discover -s scripts/starter/tests -t scripts -p 'probe_*.py'
 
 hooks:
 	@if [[ -d scripts/hooks ]]; then git config core.hooksPath scripts/hooks && print "git hooks: scripts/hooks"; \
