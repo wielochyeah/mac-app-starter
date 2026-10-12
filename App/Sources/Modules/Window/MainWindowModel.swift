@@ -80,9 +80,17 @@ enum WindowSearch {
         return ordered.first?.id
     }
 
+    /// The pages the sidebar shows: the starter's start page steps aside as soon as another page
+    /// takes the first place (section `.main`, order 0 or lower). That is how a project replaces
+    /// it, from its own code, without editing the window module.
+    static func visible(_ pages: [AppPage]) -> [AppPage] {
+        let replaced = pages.contains { $0.id != HomePage.id && $0.section == .main && $0.order <= HomePage.order }
+        return replaced ? pages.filter { $0.id != HomePage.id } : pages
+    }
+
     // MARK: State
 
-    var pages: [AppPage] { Registry.orderedPages }
+    var pages: [AppPage] { Self.visible(Registry.orderedPages) }
 
     /// The page shown in the detail column.
     var currentPage: AppPage? {

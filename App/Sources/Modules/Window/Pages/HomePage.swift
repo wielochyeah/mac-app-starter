@@ -3,12 +3,15 @@ import SwiftUI
 
 /// The start page a fresh project sees: app icon and name, what this page is, three next steps
 /// with the paths to open, and the building blocks drawn with themselves. Registered as
-/// `AppPage(id: "home", section: .main, order: 0)`; projects remove it once their first page exists.
+/// `AppPage(id: "home", section: .main, order: 0)`. A project replaces it by registering its own
+/// page at `section: .main, order: 0` (or lower); the sidebar then leaves this one out
+/// (`MainWindowModel.visible`).
 struct HomePage: View {
     static let id = "home"
+    static let order = 0
 
     static var page: AppPage {
-        AppPage(id: id, section: .main, order: 0, title: { WindowText.homeTitle }, symbol: "house.fill") {
+        AppPage(id: id, section: .main, order: order, title: { WindowText.homeTitle }, symbol: "house.fill") {
             AnyView(HomePage())
         }
     }

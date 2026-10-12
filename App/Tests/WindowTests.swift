@@ -31,6 +31,14 @@ final class WindowTests: TestSuite {
             expectEqual(MainWindowModel.resolve(saved: "x", in: []), nil)
         }
 
+        test("start page: steps aside for a page at the first place, stays otherwise") {
+            let home = HomePage.page
+            expectEqual(MainWindowModel.visible([home, page("start", .main, 0)]).map(\.id), ["start"])
+            expectEqual(MainWindowModel.visible([home, page("first", .main, -1)]).map(\.id), ["first"])
+            expectEqual(MainWindowModel.visible([home, page("lib", .library, 0)]).map(\.id), ["home", "lib"])
+            expectEqual(MainWindowModel.visible([home, page("later", .main, 5)]).map(\.id), ["home", "later"])
+        }
+
         test("model: selection persists, clears the search, survives a new model") {
             let settings = scratchSettings()
             let model = MainWindowModel(settings: settings)

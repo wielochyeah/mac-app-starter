@@ -38,19 +38,19 @@ enum WindowText {
     // MARK: Start page (a fresh project sees this)
     static var homeTitle: String { tr(en: "Home", de: "Start") }
     static var homeLede: String {
-        tr(en: "This is where your first view goes. Window, sidebar, search and the building blocks below are ready; this page is a placeholder you replace.",
-           de: "Hier baust du deine erste Ansicht. Fenster, Seitenleiste, Suche und die Bausteine unten sind fertig; diese Seite ist ein Platzhalter, den du ersetzt.")
+        tr(en: "This is where your first view goes. Window, sidebar, menus and the building blocks below are ready; this page is a placeholder that your first own page replaces.",
+           de: "Hier baust du deine erste Ansicht. Fenster, Seitenleiste, Menüs und die Bausteine unten sind fertig; diese Seite ist ein Platzhalter, den deine erste eigene Seite ersetzt.")
     }
     static var nextSteps: String { tr(en: "Next steps", de: "Nächste Schritte") }
     static var stepPageTitle: String { tr(en: "Add a page", de: "Seite anlegen") }
     static var stepPageText: String {
-        tr(en: "Create a view in its own folder and register it as an AppPage. It shows up in the sidebar.",
-           de: "Leg eine Ansicht in einem eigenen Ordner an und melde sie als AppPage an. Sie erscheint in der Seitenleiste.")
+        tr(en: "Create a view under Features and add it to Registry.pages as an AppPage. It shows up in the sidebar.",
+           de: "Leg unter Features eine Ansicht an und häng sie als AppPage an Registry.pages. Sie erscheint in der Seitenleiste.")
     }
     static var stepBlocksTitle: String { tr(en: "Use the building blocks", de: "Bausteine nutzen") }
     static var stepBlocksText: String {
-        tr(en: "Page frame, hero, shelves, tile grids and lists keep every page in the same look.",
-           de: "Seitenrahmen, Titelbild, Regale, Kachelraster und Listen halten jede Seite im selben Look.")
+        tr(en: "Page frame, hero, shelves, grids and lists keep every page in the same style. Toolbar search: WindowSearch.enable.",
+           de: "Seitenrahmen, Titelbild, Regale, Raster und Listen halten jede Seite im selben Stil. Suche in der Symbolleiste: WindowSearch.enable.")
     }
     static var stepAgentTitle: String { tr(en: "Build it with an agent", de: "Mit einem Agenten bauen") }
     static var stepAgentText: String {
@@ -59,8 +59,8 @@ enum WindowText {
     }
     static var buildingBlocks: String { tr(en: "Building blocks", de: "Bausteine") }
     static var replaceHome: String {
-        tr(en: "Remove this page in WindowModule.register() once your first own page exists.",
-           de: "Diese Seite entfernst du in WindowModule.register(), sobald deine erste eigene Seite steht.")
+        tr(en: "This page steps aside by itself once a page of yours takes the first place in the sidebar: section .main, order 0 or lower.",
+           de: "Diese Seite verschwindet von selbst, sobald eine eigene Seite den ersten Platz in der Seitenleiste einnimmt: section .main, order 0 oder kleiner.")
     }
 
     /// Short descriptions of the building blocks on the start page and in the gallery.
