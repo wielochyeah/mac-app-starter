@@ -34,13 +34,45 @@ nonisolated enum AIUnavailableReason: String, CaseIterable, Sendable {
     case unknown
 
     /// Lower = the user can fix it here and now (preferred when explaining "automatic").
-    var fixRank: Int {
+    @MainActor var fixRank: Int {
         switch self {
         case .modelMissing, .appleIntelligenceOff: 0
         case .modelNotReady: 1
-        case .notInstalled, .systemTooOld: 2
+        case .systemTooOld: 2
+        case .notInstalled: AIBuild.canSetUpMLX ? 2 : 3
         case .deviceNotEligible, .unsupportedHardware, .unknown: 3
         }
+    }
+
+    /// Nothing the user can do on this Mac changes it (shown as information, not as a warning).
+    @MainActor var isPermanent: Bool {
+        switch self {
+        case .deviceNotEligible, .unsupportedHardware: true
+        case .notInstalled: !AIBuild.canSetUpMLX
+        case .appleIntelligenceOff, .modelNotReady, .systemTooOld, .modelMissing, .unknown: false
+        }
+    }
+
+    /// The user has something to do (a warning); otherwise it is information (waiting, not supported).
+    @MainActor var needsAction: Bool {
+        switch self {
+        case .appleIntelligenceOff, .systemTooOld, .modelMissing: true
+        case .notInstalled: AIBuild.canSetUpMLX
+        case .modelNotReady, .deviceNotEligible, .unsupportedHardware, .unknown: false
+        }
+    }
+}
+
+/// What kind of build this is, for texts that differ between developers and users.
+enum AIBuild {
+    /// A debug build runs from the project, where ai-worker/setup.sh can set MLX up. A release
+    /// build (and every render, which shows the app as users get it) cannot.
+    static var canSetUpMLX: Bool {
+        #if DEBUG
+        !RenderMode.isStatic
+        #else
+        false
+        #endif
     }
 }
 

@@ -153,18 +153,34 @@ enum MLXLiveCheck {
     }
 }
 
-/// Render scenes with MLX (fixed sample states).
+/// Render scenes with MLX (fixed sample states; which provider answers is worked out by
+/// `ProviderChoice` as in the app).
 enum MLXScenes {
     static func register() {
         AIScenes.scene("ai.pane-mlx", height: AIRenderSize.paneMLX) { AnyView(pane(.ready)) }
         AIScenes.scene("ai.pane-mlx-setup", height: AIRenderSize.paneMLX) { AnyView(pane(.notInstalled)) }
-        AIScenes.scene("ai.onboarding-mlx") {
-            AnyView(AIStepWindow { AIOnboardingContent(model: model(.download), sections: sections(.download)) })
-        }
+        AIScenes.scene("ai.pane-mlx-offline", height: AIRenderSize.paneMLX) { AnyView(pane(.offline)) }
+        AIScenes.scene("ai.pane-mlx-too-old", height: AIRenderSize.paneMLX) { AnyView(pane(.tooOld)) }
+        AIScenes.scene("ai.onboarding-mlx") { AnyView(step(.download)) }
+        AIScenes.scene("ai.onboarding-mlx-missing") { AnyView(step(.missing)) }
+        AIScenes.scene("ai.onboarding-mlx-setup") { AnyView(step(.notInstalled)) }
         Registry.gallery.append(GalleryEntry(id: "ai.pane-mlx", area: "ai", title: { MLXText.galleryPane }) { AnyView(pane(.ready)) })
     }
 
-    enum State { case ready, notInstalled, download }
+    enum State {
+        /// Apple answers, the fast model is on disk, the precise one downloading.
+        case ready
+        /// No Python for MLX, Apple not supported on this Mac.
+        case notInstalled
+        /// Apple answers, a download stopped offline.
+        case offline
+        /// MLX picked by hand on a macOS older than 26.2.
+        case tooOld
+        /// Apple switched off, no MLX model yet.
+        case download
+        /// No Apple Intelligence on this Mac, no MLX model yet.
+        case missing
+    }
 
     static let mb: Int64 = 1_000_000
 
@@ -174,41 +190,47 @@ enum MLXScenes {
     }
 
     static func model(_ state: State) -> AIPaneModel {
-        switch state {
-        case .ready:
-            AIPaneModel(providers: [AISample.apple(.available), mlxInfo(.available)], choice: ProviderChoice.automatic,
-                        activeID: AppleOnDeviceProvider.providerID, availability: .available,
-                        usage: AIUsage(requests: 9, failures: 0, lastLatency: 0.6, lastProvider: MLXProvider.providerID))
-        case .notInstalled:
-            AIPaneModel(providers: [AISample.apple(.unavailable(.deviceNotEligible)), mlxInfo(.unavailable(.notInstalled))],
-                        choice: ProviderChoice.automatic, activeID: MLXProvider.providerID,
-                        availability: .unavailable(.notInstalled), usage: AIUsage())
-        case .download:
-            AIPaneModel(providers: [AISample.apple(.unavailable(.appleIntelligenceOff)), mlxInfo(.unavailable(.modelMissing))],
-                        choice: ProviderChoice.automatic, activeID: AppleOnDeviceProvider.providerID,
-                        availability: .unavailable(.appleIntelligenceOff), usage: AIUsage())
+        let (apple, mlx, choice): (AIAvailability, AIAvailability, String) = switch state {
+        case .ready, .offline: (.available, .available, ProviderChoice.automatic)
+        case .notInstalled: (.unavailable(.deviceNotEligible), .unavailable(.notInstalled), ProviderChoice.automatic)
+        case .tooOld: (.available, .unavailable(.systemTooOld), MLXProvider.providerID)
+        case .download: (.unavailable(.appleIntelligenceOff), .unavailable(.modelMissing), ProviderChoice.automatic)
+        case .missing: (.unavailable(.deviceNotEligible), .unavailable(.modelMissing), ProviderChoice.automatic)
         }
+        let providers = [AISample.apple(apple), mlxInfo(mlx)]
+        let resolved = ProviderChoice.resolve(choice, providers.map { .init(id: $0.id, availability: $0.availability) })
+        let usage = state == .ready
+            ? AIUsage(requests: 9, failures: 0, lastLatency: 1.2, lastProvider: AppleOnDeviceProvider.providerID)
+            : AIUsage()
+        return AIPaneModel(providers: providers, choice: choice, activeID: resolved.id, availability: resolved.availability, usage: usage)
     }
 
     static func sectionModel(_ state: State) -> MLXSectionModel {
         let catalog = ModelCatalog.builtIn
         let states: [String: ModelDownloads.State] = switch state {
         case .ready: ["small": .done, "quality": .running(done: 1_400 * mb, total: 3_061 * mb)]
-        case .notInstalled: [:]
-        case .download: [:]
+        case .offline: ["small": .done, "quality": .paused(done: 1_400 * mb, total: 3_061 * mb, problem: "offline")]
+        case .tooOld: ["small": .done]
+        case .notInstalled, .download, .missing: [:]
         }
+        let installed = state != .notInstalled
         let selected = catalog.defaultID
+        let onDisk: Int64 = switch state {
+        case .ready, .offline: 2_384 * mb
+        case .tooOld: 984 * mb
+        case .notInstalled, .download, .missing: 0
+        }
         return MLXSectionModel(
             rows: catalog.models.map { MLXSectionModel.row($0, states[$0.id] ?? .notStarted) }, selected: selected,
             options: catalog.models.map { ($0.id, MLXText.role($0.role)) }, memoryGB: catalog.defaultModel?.ramGB,
-            footnote: MLXSectionModel.footnote(states, selected: selected, installed: true),   // .notInstalled: the pane's top notice explains it
-            bytesOnDisk: state == .ready ? 2_384 * mb : 0, installed: state != .notInstalled)
+            footnote: MLXSectionModel.footnote(states, selected: selected, installed: installed),
+            bytesOnDisk: onDisk, installed: installed)
     }
 
     static func sections(_ state: State) -> [AIPaneSection] {
         let m = sectionModel(state)
         return [AIPaneSection(id: "mlx", order: 10, pane: { AnyView(MLXSectionContent(model: m, selected: .constant(m.selected))) },
-                              onboarding: { AnyView(MLXOnboardingContent(row: m.rows.first { $0.id == m.selected })) })]
+                              onboarding: { AnyView(MLXOnboardingContent(row: m.installed ? m.rows.first { $0.id == m.selected } : nil)) })]
     }
 
     static func pane(_ state: State) -> some View {
@@ -216,5 +238,9 @@ enum MLXScenes {
         return AIPaneContent(model: m, choice: .constant(m.choice), trial: state == .ready ? AISample.trial(.available) : AITrial(),
                              sections: sections(state))
             .frame(width: AIScenes.paneWidth)
+    }
+
+    static func step(_ state: State) -> some View {
+        AIStepWindow { AIOnboardingContent(model: model(state), sections: sections(state)) }
     }
 }

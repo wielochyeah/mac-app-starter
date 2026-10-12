@@ -20,15 +20,10 @@ enum MLXText {
         default: role
         }
     }
-    /// "Qwen3 1.7B, 4-bit"
-    static func name(_ name: String, bits: Int?) -> String {
-        guard let bits else { return name }
-        return tr(en: "\(name), \(bits)-bit", de: "\(name), \(bits)-Bit")
-    }
     /// "Needs about 1.6 GB of memory while it runs."
     static func memory(_ gb: Double) -> String {
         tr(en: "Needs about \(Format.decimal(gb)) GB of memory while it runs",
-           de: "Braucht beim Rechnen etwa \(Format.decimal(gb)) GB Arbeitsspeicher")
+           de: "Braucht im Betrieb etwa \(Format.decimal(gb)) GB Arbeitsspeicher")
     }
 
     // Footnotes under the download rows (VoiceBud's three states, plus "nothing yet").
@@ -37,11 +32,11 @@ enum MLXText {
            de: "Keine Verbindung zum Internet. Der Download macht dort weiter, wo er aufgehört hat, wenn du es erneut versuchst.")
     }
     static var noteFailed: String {
-        tr(en: "The download stopped. Try again; what arrived is kept.",
-           de: "Der Download ist stehen geblieben. Versuch es erneut, Geladenes bleibt erhalten.")
+        tr(en: "The download stopped. Try again; what has arrived is kept.",
+           de: "Der Download ist stehen geblieben. Versuch es erneut, der heruntergeladene Teil bleibt erhalten.")
     }
     static var noteRunning: String {
-        tr(en: "You don’t have to wait, the download runs in the background.",
+        tr(en: "You don’t have to wait. The download runs in the background.",
            de: "Du musst nicht warten, der Download läuft im Hintergrund.")
     }
     static var noteReady: String {
@@ -49,8 +44,14 @@ enum MLXText {
            de: "Das Modell ist auf deinem Mac. Ab jetzt braucht MLX kein Internet mehr.")
     }
     static var noteNothing: String {
-        tr(en: "A model is only downloaded when you start it. After that everything runs offline.",
-           de: "Ein Modell wird nur geladen, wenn du es startest. Danach läuft alles offline.")
+        tr(en: "A model is only downloaded when you click Download. After that everything runs offline.",
+           de: "Ein Modell wird erst heruntergeladen, wenn du auf Herunterladen klickst. Danach läuft alles offline.")
+    }
+    /// Under the rows while MLX is not set up (the rows then have no Download chip).
+    static func noteNotInstalled(developer: Bool) -> String {
+        developer
+            ? tr(en: "Downloads work once ai-worker/setup.sh has run.", de: "Downloads gehen, sobald ai-worker/setup.sh gelaufen ist.")
+            : tr(en: "This version of the app cannot download MLX models.", de: "Diese Version der App kann keine MLX-Modelle herunterladen.")
     }
 
     static var storage: String { tr(en: "Storage", de: "Speicher") }
@@ -58,9 +59,9 @@ enum MLXText {
         tr(en: "\(size) in the app’s data folder", de: "\(size) im Datenordner der App")
     }
     static var deleteModels: String { tr(en: "Delete Models", de: "Modelle löschen") }
-    static var deleteConfirm: String { tr(en: "Delete the downloaded models?", de: "Geladene Modelle löschen?") }
+    static var deleteConfirm: String { tr(en: "Delete the downloaded models?", de: "Heruntergeladene Modelle löschen?") }
     static var deleteConfirmDetail: String {
-        tr(en: "You can download them again at any time.", de: "Du kannst sie jederzeit wieder laden.")
+        tr(en: "You can download them again at any time.", de: "Du kannst sie jederzeit wieder herunterladen.")
     }
     static var delete: String { tr(en: "Delete", de: "Löschen") }
 

@@ -1,18 +1,23 @@
 import SwiftUI
 
 /// Render scenes and gallery entries of the AI module, from fixed sample states (never the real
-/// availability of the Mac that renders): `ai.pane`, `ai.pane-unavailable`, `ai.pane-not-ready`,
-/// `ai.onboarding`, `ai.onboarding-unavailable`, `ai.download-rows`.
+/// availability of the Mac that renders): the pane available, trying, failed, off, not ready and
+/// ineligible; the step ready, off, not ready and ineligible; the download rows in every phase.
 enum AIScenes {
     /// A settings pane as the hub shows it: window width minus sidebar.
     static let paneWidth = Metrics.settingsWindow.width - Metrics.sidebarWidth
 
     static func register() {
         scene("ai.pane", height: AIRenderSize.pane) { AnyView(pane(.available)) }
+        scene("ai.pane-trying", height: AIRenderSize.pane) { AnyView(pane(.trying)) }
+        scene("ai.pane-error", height: AIRenderSize.pane) { AnyView(pane(.failed)) }
         scene("ai.pane-unavailable", height: AIRenderSize.paneProblem) { AnyView(pane(.appleOff)) }
         scene("ai.pane-not-ready", height: AIRenderSize.paneProblem) { AnyView(pane(.notReady)) }
+        scene("ai.pane-ineligible", height: AIRenderSize.paneProblem) { AnyView(pane(.ineligible)) }
         scene("ai.onboarding") { AnyView(AIStepWindow { AIOnboardingContent(model: AISample.model(.available)) }) }
         scene("ai.onboarding-unavailable") { AnyView(AIStepWindow { AIOnboardingContent(model: AISample.model(.appleOff)) }) }
+        scene("ai.onboarding-not-ready") { AnyView(AIStepWindow { AIOnboardingContent(model: AISample.model(.notReady)) }) }
+        scene("ai.onboarding-ineligible") { AnyView(AIStepWindow { AIOnboardingContent(model: AISample.model(.ineligible)) }) }
         scene("ai.download-rows") { AnyView(Specimen(width: Metrics.onboardingColumn) { AISampleRows() }) }
 
         Registry.gallery += [
@@ -63,7 +68,7 @@ struct AIStepWindow<Page: View>: View {
 
 /// Fixed sample states.
 enum AISample {
-    enum State { case available, appleOff, notReady }
+    enum State { case available, trying, failed, appleOff, notReady, ineligible }
 
     static let gb: Int64 = 1_000_000_000
     static let mb: Int64 = 1_000_000
@@ -75,7 +80,7 @@ enum AISample {
 
     static func model(_ state: State) -> AIPaneModel {
         switch state {
-        case .available:
+        case .available, .trying, .failed:
             AIPaneModel(providers: [apple(.available)], choice: ProviderChoice.automatic, activeID: AppleOnDeviceProvider.providerID,
                         availability: .available,
                         usage: AIUsage(requests: 14, failures: 1, lastLatency: 1.2, lastProvider: AppleOnDeviceProvider.providerID))
@@ -85,29 +90,38 @@ enum AISample {
         case .notReady:
             AIPaneModel(providers: [apple(.unavailable(.modelNotReady))], choice: ProviderChoice.automatic,
                         activeID: AppleOnDeviceProvider.providerID, availability: .unavailable(.modelNotReady), usage: AIUsage())
+        case .ineligible:
+            AIPaneModel(providers: [apple(.unavailable(.deviceNotEligible))], choice: ProviderChoice.automatic,
+                        activeID: AppleOnDeviceProvider.providerID, availability: .unavailable(.deviceNotEligible), usage: AIUsage())
         }
     }
 
     static func trial(_ state: State) -> AITrial {
         switch state {
         case .available: AITrial(prompt: AIText.trySample, answer: AIText.sampleAnswer, latency: 1.2, provider: AIText.apple)
-        case .appleOff, .notReady: AITrial()
+        case .trying:
+            AITrial(prompt: AIText.trySample, answer: AIText.samplePartialAnswer, latency: nil, provider: AIText.apple, running: true)
+        case .failed: AITrial(prompt: AIText.trySample, answer: "", latency: nil, provider: AIText.apple, error: .busy)
+        case .appleOff, .notReady, .ineligible: AITrial()
         }
     }
 
-    /// One row per phase, for `ai.download-rows`.
+    /// One row per phase, for `ai.download-rows` (as the MLX module builds them).
     static var rows: [ModelRowItem] {
-        [
-            ModelRowItem(id: "a", role: AIText.sampleFastRole, name: "Qwen3 1.7B", symbol: "hare.fill", tint: .teal,
-                         phase: .notStarted(total: 984 * mb)),
-            ModelRowItem(id: "b", role: AIText.sampleFastRole, name: "Qwen3 1.7B", symbol: "hare.fill", tint: .teal,
-                         phase: .queued(total: 984 * mb)),
-            ModelRowItem(id: "c", role: AIText.sampleQualityRole, name: "Qwen3.5 4B", symbol: "text.alignleft", tint: .indigo,
-                         phase: .running(done: 1_400 * mb, total: 3_061 * mb)),
-            ModelRowItem(id: "d", role: AIText.sampleQualityRole, name: "Qwen3.5 4B", symbol: "text.alignleft", tint: .indigo,
-                         phase: .paused(done: 1_400 * mb, total: 3_061 * mb)),
-            ModelRowItem(id: "e", role: AIText.sampleFastRole, name: "Qwen3 1.7B", symbol: "hare.fill", tint: .teal,
-                         phase: .done(total: 984 * mb)),
+        func fast(_ id: String, _ phase: ModelRowItem.Phase) -> ModelRowItem {
+            ModelRowItem(id: id, role: AIText.sampleFastRole, name: AIText.modelName("Qwen3 1.7B", bits: 4), symbol: "hare.fill",
+                         tint: .teal, phase: phase)
+        }
+        func precise(_ id: String, _ phase: ModelRowItem.Phase) -> ModelRowItem {
+            ModelRowItem(id: id, role: AIText.sampleQualityRole, name: AIText.modelName("Qwen3.5 4B", bits: 4), symbol: "scope",
+                         tint: .indigo, phase: phase)
+        }
+        return [
+            fast("a", .notStarted(total: 984 * mb)),
+            fast("b", .queued(total: 984 * mb)),
+            precise("c", .running(done: 1_400 * mb, total: 3_061 * mb)),
+            precise("d", .paused(done: 1_400 * mb, total: 3_061 * mb)),
+            fast("e", .done(total: 984 * mb)),
         ]
     }
 }
@@ -116,10 +130,10 @@ private struct AISampleRows: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.pane) {
             SettingsSection(AIText.modelsSection) {
-                ForEach(AISample.rows) { ModelRowView(item: $0) }
+                ForEach(AISample.rows) { ModelRowView(item: $0, start: {}) }
             }
             SettingsSection(tone: .onboarding) {
-                ForEach(AISample.rows.prefix(3)) { ModelRowView(item: $0) }
+                ForEach(AISample.rows.prefix(3)) { ModelRowView(item: $0, start: {}) }
             }
         }
     }

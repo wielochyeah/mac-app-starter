@@ -155,6 +155,31 @@ final class AITests: TestSuite {
             expect(AIText.error(.restarting(4.2)).contains("5"), "rounds the wait up")
         }
 
+        test("hints promise only what exists") {
+            let saved = Localizer.shared.forced
+            defer { Localizer.shared.forced = saved }
+            for lang in Lang.allCases {
+                Localizer.shared.forced = lang
+                // no "switch it on later" where there is nothing to switch on
+                for reason in AIUnavailableReason.allCases where reason != .appleIntelligenceOff {
+                    let note = AIText.onboardingHint(reason, link: AILinks.fix(for: reason) != nil)
+                    expect(!note.contains("switch it on") && !note.contains("einschalten"), "\(reason): \(note)")
+                }
+                // a Mac without Apple Intelligence and no other provider: no MLX advertised
+                expect(!AIText.reasonHint(.deviceNotEligible).contains("MLX"))
+                expect(!AIText.onboardingHint(.deviceNotEligible, link: false).contains("MLX"))
+                // the step points up to the download row, never "below"
+                let missing = AIText.onboardingHint(.modelMissing, link: false)
+                expect(!missing.contains("below") && !missing.contains("unten"), missing)
+                expect(AIText.stepReady(canSwitch: false) != AIText.stepReady(canSwitch: true))
+                expect(AIText.fixAction(.systemTooOld) == AIText.softwareUpdate)
+            }
+            let ineligible = AISample.model(.ineligible)
+            expect(!ineligible.hasAlternative && !ineligible.showsPicker)
+            expect(!AIUnavailableReason.modelNotReady.needsAction && !AIUnavailableReason.deviceNotEligible.needsAction)
+            expect(AIUnavailableReason.appleIntelligenceOff.needsAction)
+        }
+
         test("respond goes to the active provider with the reply-language line") {
             let saved = Localizer.shared.forced
             defer { Localizer.shared.forced = saved }
@@ -323,7 +348,9 @@ final class AITests: TestSuite {
         test("the module registers pane, step, scenes and the Apple provider") {
             expect(Registry.settingsPanes.contains { $0.id == "ai" })
             expect(Registry.onboardingSteps.contains { $0.id == "ai" && $0.order == 400 })
-            for id in ["ai.pane", "ai.pane-unavailable", "ai.pane-not-ready", "ai.onboarding", "ai.onboarding-unavailable", "ai.download-rows"] {
+            for id in ["ai.pane", "ai.pane-trying", "ai.pane-error", "ai.pane-unavailable", "ai.pane-not-ready", "ai.pane-ineligible",
+                       "ai.onboarding", "ai.onboarding-unavailable", "ai.onboarding-not-ready", "ai.onboarding-ineligible",
+                       "ai.download-rows"] {
                 expect(Registry.renderScenes.contains { $0.id == id }, id)
             }
             expect(LocalAI.shared.provider("apple") != nil)

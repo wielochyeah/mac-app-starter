@@ -190,7 +190,24 @@ final class MLXTests: TestSuite {
             expectEqual(f(["a": .paused(done: 1, total: 2, problem: "cancelled"), "b": .queued], "a"), MLXText.noteRunning)
             expectEqual(f(["a": .done, "b": .notStarted], "a"), MLXText.noteReady)
             expectEqual(f(["a": .notStarted, "b": .done], "a"), MLXText.noteNothing)
-            expectEqual(MLXSectionModel.footnote(["a": .done], selected: "a", installed: false), AIText.reasonHint(.notInstalled))
+            expectEqual(MLXSectionModel.footnote(["a": .done], selected: "a", installed: false),
+                        MLXText.noteNotInstalled(developer: AIBuild.canSetUpMLX))
+            expectEqual(f(["a": .paused(done: 0, total: 2, problem: "setup")], "a"), MLXText.noteNothing,
+                        "a download that never ran is no failure")
+        }
+
+        test("without MLX set up: no Download chip, no retry, no onboarding row; release copy names no script") {
+            Localizer.shared.forced = .en
+            defer { Localizer.shared.forced = nil }
+            let spec = ModelCatalog.builtIn.model("small")!
+            expectEqual(MLXSectionModel.row(spec, .paused(done: 0, total: 1, problem: "setup")).phase, .notStarted(total: spec.bytes))
+            let scene = MLXScenes.sectionModel(.notInstalled)
+            expect(!scene.installed)
+            let step = MLXScenes.sections(.notInstalled)
+            expect(step.first?.onboarding != nil)
+            let user = MLXText.noteNotInstalled(developer: false) + AIText.notInstalledHint(developer: false)
+            expect(!user.contains("setup.sh") && !user.contains("ai-worker"), user)
+            expect(MLXText.noteNotInstalled(developer: true).contains("setup.sh"))
         }
 
         // MARK: Client against fake_worker.py
@@ -433,6 +450,17 @@ final class MLXTests: TestSuite {
             expect(finished.contains("small"))
         }
 
+        test("scene states follow ProviderChoice: a missing model is what the step explains") {
+            expectEqual(MLXScenes.model(.missing).problem, .modelMissing)
+            expectEqual(MLXScenes.model(.download).problem, .appleIntelligenceOff)
+            expectEqual(MLXScenes.model(.tooOld).problem, .systemTooOld)
+            expect(!MLXScenes.model(.missing).hasAlternative, "Apple cannot run here, so MLX is the only way")
+            var applePicked = MLXScenes.model(.missing)
+            applePicked.activeID = AppleOnDeviceProvider.providerID
+            applePicked.availability = .unavailable(.deviceNotEligible)
+            expect(applePicked.hasAlternative, "Apple picked by hand: MLX can still be set up")
+        }
+
         test("Delete Models is off while a download runs") {
             let catalog = ModelCatalog.builtIn
             @MainActor func model(_ s: ModelDownloads.State) -> MLXSectionModel {
@@ -448,7 +476,8 @@ final class MLXTests: TestSuite {
         test("mlx scenes render and the module registered its provider and section") {
             expect(LocalAI.shared.provider(MLXProvider.providerID) != nil)
             expect(LocalAI.shared.sections.contains { $0.id == "mlx" })
-            for id in ["ai.pane-mlx", "ai.pane-mlx-setup", "ai.onboarding-mlx"] {
+            for id in ["ai.pane-mlx", "ai.pane-mlx-setup", "ai.pane-mlx-offline", "ai.pane-mlx-too-old", "ai.onboarding-mlx",
+                       "ai.onboarding-mlx-missing", "ai.onboarding-mlx-setup"] {
                 guard let scene = Registry.renderScenes.first(where: { $0.id == id }) else { fail("\(id) missing"); continue }
                 let png = RenderRunner.png(scene.content(), size: scene.size, appearance: .dark, lang: .de)
                 expect((png?.count ?? 0) > 5_000, id)

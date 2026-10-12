@@ -7,8 +7,8 @@
 #   ai-worker/setup.sh --lock     after an install: write requirements.lock from the venv
 #
 # Python: python3.12 (Homebrew), else python3.11 / python3.13, else `uv python find 3.12`.
-# Network: pip downloads the packages (dev tooling, BAUPLAN §2.13). Models are not downloaded here;
-# the app does that when the user starts it (or `ai-worker/.venv/bin/python ai-worker/download.py`).
+# Network: pip downloads the packages (developer tooling only). Models are not downloaded here;
+# the app does that when the user clicks Download (or `ai-worker/.venv/bin/python ai-worker/download.py`).
 set -euo pipefail
 HERE="${0:A:h}"
 VENV="$HERE/.venv"

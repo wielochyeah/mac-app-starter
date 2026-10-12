@@ -38,6 +38,12 @@ struct AIPaneModel {
     /// The problem to explain on top, if requests cannot be answered.
     var problem: AIUnavailableReason? { availability.reason }
     var showsPicker: Bool { providers.count > 1 }
+
+    /// Another provider than the one in use could answer once its own problem is fixed (so a
+    /// "this Mac cannot" hint can point to it instead of a dead end).
+    var hasAlternative: Bool {
+        providers.contains { $0.id != activeID && !($0.availability.reason?.isPermanent ?? false) }
+    }
 }
 
 enum AILinks {
@@ -91,7 +97,8 @@ struct AIProviderRow: View {
 // MARK: - Model rows (downloads; the MLX module fills them)
 
 /// One downloadable model as a row: before the download a "Download" chip, then the kit's
-/// `ProgressRow` (queued / running / paused with retry / done).
+/// `ProgressRow` (queued / running / paused with retry / done). Without `start` (downloads are not
+/// possible here) the row shows the size only and a paused row offers no retry.
 struct ModelRowItem: Identifiable, Equatable {
     enum Phase: Equatable {
         case notStarted(total: Int64)
@@ -115,7 +122,7 @@ struct ModelRowItem: Identifiable, Equatable {
 
 struct ModelRowView: View {
     let item: ModelRowItem
-    var start: () -> Void = {}
+    var start: (() -> Void)?
     @Environment(\.colorScheme) private var scheme
     @Environment(\.textTone) private var tone
 
@@ -131,7 +138,7 @@ struct ModelRowView: View {
                 }
                 Spacer(minLength: Space.s)
                 Text(ByteText.size(total)).font(tone.small.monospacedDigit()).foregroundStyle(tone.smallColor(t))
-                Chip(AIText.download, symbol: "arrow.down", action: start)
+                if let start { Chip(AIText.download, symbol: "arrow.down", action: start) }
             }
             .padding(.horizontal, Space.rowX)
             .padding(.vertical, Metrics.progressRowY)
@@ -303,8 +310,9 @@ struct AIPaneContent: View {
     var body: some View {
         PaneScaffold(title: AIText.pane, symbol: "cpu", tint: .indigo, subtitle: AIText.paneIntro) {
             if let reason = model.problem {
-                InlineNotice(AIText.reasonHint(reason), title: AIText.reasonTitle(reason), kind: .warning,
-                             actionTitle: AILinks.fix(for: reason) == nil ? nil : AIText.openAISettings,
+                InlineNotice(AIText.reasonHint(reason, alternative: model.hasAlternative), title: AIText.reasonTitle(reason),
+                             kind: reason.needsAction ? .warning : .info,
+                             actionTitle: AILinks.fix(for: reason) == nil ? nil : AIText.fixAction(reason),
                              action: AILinks.fix(for: reason).map { url in { AILinks.open(url) } })
             }
             SettingsSection(AIText.providerSection) {
@@ -318,18 +326,24 @@ struct AIPaneContent: View {
                 }
             }
             ForEach(sections.sorted { ($0.order, $0.id) < ($1.order, $1.id) }) { $0.pane() }
-            AITrialSection(trial: trial, canSend: model.availability.isAvailable)
-            SettingsSection(AIText.usageSection, footnote: AIText.usageNote) {
-                ValueRow(AIText.requests, value: Format.number(model.usage.requests))
-                ValueRow(AIText.failures, value: Format.number(model.usage.failures))
-                ValueRow(AIText.lastAnswer, value: lastAnswer)
+            // while nothing can answer, the notice's action is the only thing to do here
+            if model.availability.isAvailable || trial.running || !trial.answer.isEmpty {
+                AITrialSection(trial: trial, canSend: model.availability.isAvailable)
+            }
+            if model.availability.isAvailable || model.usage.requests > 0 {
+                SettingsSection(AIText.usageSection, footnote: AIText.usageNote) {
+                    ValueRow(AIText.requests, value: Format.number(model.usage.requests))
+                    ValueRow(AIText.failures, value: Format.number(model.usage.failures))
+                    ValueRow(AIText.lastAnswer, value: lastAnswer)
+                }
             }
         }
     }
 
     private var lastAnswer: String {
         guard let latency = model.usage.lastLatency else { return AIText.noAnswerYet }
-        let name = model.providers.first { $0.id == model.usage.lastProvider }?.shortTitle ?? (model.usage.lastProvider ?? "")
+        // the full name, as the try-it answer shows it
+        let name = model.providers.first { $0.id == model.usage.lastProvider }?.title ?? (model.usage.lastProvider ?? "")
         return AIText.answered(in: latency, by: name)
     }
 }
@@ -384,8 +398,8 @@ struct AIOnboardingContent: View {
     }
 
     private var note: String {
-        guard let reason = model.problem else { return AIText.stepReady }
-        return AIText.onboardingHint(reason, link: AILinks.fix(for: reason) != nil)
+        guard let reason = model.problem else { return AIText.stepReady(canSwitch: model.showsPicker) }
+        return AIText.onboardingHint(reason, link: AILinks.fix(for: reason) != nil, alternative: model.hasAlternative)
     }
 }
 
