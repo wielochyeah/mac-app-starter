@@ -146,6 +146,25 @@ class GenConfigTests(unittest.TestCase):
         swift = (self.out / "AppConfig.swift").read_text()
         self.assertIn('de: "Mein \\"Starter\\"\\\\"', swift)
 
+    def test_links(self):
+        gen_config.generate(self.tmp, self.out)
+        self.assertIn("static let links: [(en: String, de: String, url: String)] = []", (self.out / "AppConfig.swift").read_text())
+        c = self.config()
+        c["app"]["links"] = [{"title": {"en": "Website", "de": "Webseite"}, "url": "https://example.com"},
+                             {"title": {"en": "Support", "de": "Hilfe"}, "url": "mailto:help@example.com"}]
+        self.write(c)
+        gen_config.generate(self.tmp, self.out)
+        swift = (self.out / "AppConfig.swift").read_text()
+        self.assertIn('(en: "Website", de: "Webseite", url: "https://example.com")', swift)
+        self.assertIn('url: "mailto:help@example.com")]', swift)
+        for bad in ([{"title": {"en": "Web"}, "url": "https://example.com"}],
+                    [{"title": {"en": "Web", "de": "Web"}, "url": "http://example.com"}],
+                    {"title": "x"}):
+            c["app"]["links"] = bad
+            self.write(c)
+            with self.assertRaises(gen_config.ConfigError):
+                gen_config.generate(self.tmp, self.out)
+
     def test_rules(self):
         with self.assertRaises(gen_config.ConfigError):
             gen_config.generate(self.tmp, self.out, "island,background")   # neither window nor menubar

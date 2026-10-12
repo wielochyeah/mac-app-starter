@@ -158,6 +158,15 @@ def validate(config):
     anrede = config.get("texts", {}).get("anrede", "du")
     if anrede not in ("du", "sie"):
         raise ConfigError("starter.json: texts.anrede must be du or sie")
+    links = app.get("links", [])
+    if not isinstance(links, list):
+        raise ConfigError("starter.json: app.links must be a list")
+    for i, link in enumerate(links):
+        title = link.get("title") if isinstance(link, dict) else None
+        if not isinstance(title, dict) or not all(isinstance(title.get(l), str) and title.get(l) for l in LANGS):
+            raise ConfigError(f"starter.json: app.links[{i}].title needs en and de")
+        if not re.fullmatch(r"(https://|mailto:)\S+", str(link.get("url", ""))):
+            raise ConfigError(f"starter.json: app.links[{i}].url must start with https:// or mailto:")
 
 
 def swift_str(s):
@@ -189,6 +198,11 @@ def app_config_swift(config, modules):
         f"    static let accent: AccentName = .{app['accent']}",
         f"    static let symbol = {swift_str(app['symbol'])}",
         f"    static let copyright = {swift_str(app.get('copyright', ''))}",
+        "    /// starter.json app.links (About pane): title per language and URL.",
+        "    static let links: [(en: String, de: String, url: String)] = ["
+        + ", ".join(f"(en: {swift_str(l['title']['en'])}, de: {swift_str(l['title']['de'])}, url: {swift_str(l['url'])})"
+                    for l in app.get("links", []))
+        + "]",
         f"    static let enabledModules: Set<String> = [{', '.join(swift_str(m) for m in modules)}]",
         f"    static let permissions: [String] = [{', '.join(swift_str(p) for p in config.get('permissions', []))}]",
         f"    static let languages: [Lang] = [{', '.join('.' + l for l in langs)}]",

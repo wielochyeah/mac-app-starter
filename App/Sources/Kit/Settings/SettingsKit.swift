@@ -1,110 +1,102 @@
 import SwiftUI
 
-// STUB (S0): a plain settings window listing Registry.settingsPanes, plus General and About.
-// Strand E replaces this folder with the real hub (sidebar, pane header, General, About) and
-// keeps `SettingsKit.register()`.
-
+/// The settings window (hub) and its kit panes. Modules add panes with
+///
+///     Registry.settingsPanes.append(SettingsPane(id: "island", group: .settings, order: 100,
+///         title: { IslandText.pane }, symbol: "capsule.fill", tint: .black) { AnyView(IslandPane()) })
+///
+/// and open the window with `AppActions.openSettings(pane: "island")`. Content panes (`.content`)
+/// sit on top of the sidebar, setting panes below the "Settings" label; General is order 0 and
+/// About order 1000 of the settings group, so module panes go in between.
 enum SettingsKit {
     static func register() {
-        AppActions.settingsHandler = { pane in SettingsWindow.show(pane: pane) }
+        AppActions.settingsHandler = { pane in SettingsController.show(pane: pane) }
         Registry.settingsPanes += [
             SettingsPane(id: "general", group: .settings, order: 0, title: { SettingsText.general }, symbol: "gearshape.fill",
-                         tint: .graphite) { AnyView(GeneralPaneStub()) },
+                         tint: .graphite) { AnyView(GeneralPane()) },
             SettingsPane(id: "about", group: .settings, order: 1000, title: { SettingsText.about }, symbol: "info.circle.fill",
-                         tint: .accent) { AnyView(AboutPaneStub()) },
+                         tint: .accent) { AnyView(AboutPane()) },
+        ]
+        Registry.launchHooks.append { AppAppearance.apply() }
+        Registry.selfTests.append(SelfTestCheck(id: "settings.panes") {
+            let ids = Registry.orderedSettingsPanes.map(\.id)
+            for required in ["general", "about"] where !ids.contains(required) { return "pane \(required) missing" }
+            if Set(ids).count != ids.count { return "duplicate pane ids" }
+            if SettingsHub.resolve("about", current: nil, available: ids) != "about" { return "deep link to about fails" }
+            return nil
+        })
+        SettingsScenes.register()
+    }
+}
+
+/// Render scenes and gallery entries of the settings window. Each scene builds its own hub
+/// (`persists: false`), so renders never change the real selection.
+enum SettingsScenes {
+    /// Width of the detail column in the default window (900 minus sidebar 224 minus panel inset 8).
+    static var paneSize: CGSize {
+        CGSize(width: Metrics.settingsWindow.width - Metrics.sidebarWidth - Metrics.Sidebar.panelInset,
+               height: Metrics.settingsWindow.height)
+    }
+
+    static func register() {
+        Registry.renderScenes += [
+            RenderScene(id: "settings.window", size: .zero) { AnyView(window(pane: "general")) },
+            RenderScene(id: "settings.window-about", size: .zero) { AnyView(window(pane: "about")) },
+            RenderScene(id: "settings.window-many", size: .zero) { AnyView(manyPanesWindow) },
+            RenderScene(id: "settings.general", size: paneSize) { AnyView(GeneralPane()) },
+            RenderScene(id: "settings.general-reset", size: paneSize) { AnyView(GeneralPane(confirmingReset: true)) },
+            RenderScene(id: "settings.about", size: paneSize) { AnyView(AboutPane()) },
+            RenderScene(id: "settings.about-full", size: CGSize(width: paneSize.width, height: Metrics.aboutFullRender)) { AnyView(AboutPane(info: sampleAbout, copied: true)) },
+            // the bundled file of the render language; the sample only when the build has none
+            RenderScene(id: "settings.notices", size: .zero) {
+                AnyView(RenderBoard { NoticesSheet(text: AboutInfo.bundledNotices(Localizer.shared.lang) ?? SettingsSampleText.notices) {} })
+            },
+        ]
+        Registry.gallery += [
+            GalleryEntry(id: "settings.sidebar", area: "settings", title: { SettingsText.sidebarTitle }) { AnyView(SidebarSample()) },
+            GalleryEntry(id: "settings.local-footer", area: "settings", title: { SettingsText.footerTitle }) { AnyView(LocalOnlyFooter()) },
         ]
     }
-}
 
-@Observable final class SettingsSelection {
-    static let shared = SettingsSelection()
-    var pane: String = "general"
-}
-
-enum SettingsWindow {
-    static func show(pane: String?) {
-        if let pane { SettingsSelection.shared.pane = pane }
-        WindowHost.show(id: "settings", style: .settings, title: { CommonText.settings }) { AnyView(SettingsRootStub()) }
+    static func window(pane: String) -> some View {
+        RenderBoard { SettingsStaticWindow(hub: SettingsHub(pane: pane, persists: false)) }
     }
-}
 
-private struct SettingsRootStub: View {
-    @Environment(\.colorScheme) private var scheme
-    private let selection = SettingsSelection.shared
+    /// The About pane with links, the notices row and a known version (the configured app has none).
+    static var sampleAbout: AboutInfo {
+        var info = AboutInfo()
+        info.links = [(SettingsSampleText.website, "https://example.com"), (SettingsSampleText.feedback, "mailto:feedback@example.com")]
+            .compactMap { title, link in URL(string: link).map { AboutInfo.Link(title: title, url: $0) } }
+        if info.notices == nil { info.fixedNotices = SettingsSampleText.notices }
+        return info
+    }
 
-    var body: some View {
-        let t = Theme(scheme)
-        let panes = Registry.orderedSettingsPanes
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: Space.hair) {
-                ForEach(panes) { pane in
-                    Button { selection.pane = pane.id } label: {
-                        HStack(spacing: Space.iconGap) {
-                            SquircleIcon(symbol: pane.symbol, tint: pane.tint)
-                            Text(pane.title()).font(TypeScale.body).foregroundStyle(t.fg)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, Space.xs)
-                        .frame(height: Metrics.sidebarRow)
-                        .background(RoundedRectangle(cornerRadius: Radius.row, style: .continuous)
-                            .fill(selection.pane == pane.id ? t.sideSel : .clear))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PlainStyle())
-                }
-                Spacer()
-            }
-            .padding(.top, Metrics.paneHeader)
-            .padding(.horizontal, Space.xs)
-            .frame(width: Metrics.sidebarWidth)
-            .background(t.sidebarBg)
-            Group {
-                if let pane = panes.first(where: { $0.id == selection.pane }) ?? panes.first {
-                    VStack(spacing: 0) {
-                        SectionHeader(pane.title(), symbol: pane.symbol, tint: pane.tint)
-                        pane.content()
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    /// A project with many panes at the minimum window size: the list scrolls, the footer stays.
+    static var manyPanesWindow: some View {
+        let samples = SettingsSampleText.panes.enumerated().map { index, sample in
+            SettingsPane(id: "sample.\(index)", group: sample.group, order: 100 + index, title: sample.title,
+                         symbol: sample.symbol, tint: sample.tint) { AnyView(EmptyView()) }
         }
-        .background(t.windowBg)
-        .ignoresSafeArea()
-    }
-}
-
-private struct GeneralPaneStub: View {
-    private let localizer = Localizer.shared
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            GroupLabel(SettingsText.language)
-            Card {
-                Row(SettingsText.interface) {
-                    Segmented([("system", CommonText.systemLanguage), ("de", Lang.de.nativeName), ("en", Lang.en.nativeName)],
-                              selection: Binding(get: { localizer.choice?.rawValue ?? "system" },
-                                                 set: { localizer.choice = Lang(rawValue: $0) }))
-                }
-            }
-            Spacer()
+        let panes = (Registry.orderedSettingsPanes + samples).sorted { ($0.group, $0.order, $0.id) < ($1.group, $1.order, $1.id) }
+        let hub = SettingsHub(pane: "general", persists: false) { panes }
+        return RenderBoard {
+            SettingsStaticWindow(hub: hub, size: Metrics.settingsWindowMin, footer: { AnyView(LocalOnlyFooter()) })
         }
-        .frame(maxWidth: Metrics.settingsColumn, alignment: .leading)
-        .padding(.horizontal, Space.pane)
-        .padding(.top, Space.m)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-private struct AboutPaneStub: View {
+/// The sidebar on its own, as macOS 26 draws it (floating panel, no traffic lights), for the gallery.
+private struct SidebarSample: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let t = Theme(scheme)
-        VStack(spacing: Space.s) {
-            SquircleIcon(symbol: AppInfo.symbol, size: Metrics.squircleLarge)
-            Text(AppInfo.displayName).font(TypeScale.title).foregroundStyle(t.fg)
-            Text(CommonText.version(AppInfo.version, build: AppInfo.build)).font(TypeScale.secondary).foregroundStyle(t.fg2)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        let panel = RoundedRectangle(cornerRadius: Radius.panel, style: .continuous)
+        SettingsSidebar(hub: SettingsHub(pane: "general", persists: false), top: Metrics.Sidebar.topAlone,
+                        footer: { AnyView(LocalOnlyFooter()) })
+            .frame(width: Metrics.sidebarWidth, height: Metrics.sidebarSample)
+            .background(panel.fill(t.sidebarPanel))
+            .overlay(panel.strokeBorder(t.sidebarPanelStroke, lineWidth: Metrics.hairline))
+            .environment(\.renderStatic, true)
     }
 }
