@@ -24,6 +24,8 @@ extension Metrics {
     static let gallerySlack: CGFloat = 8
     /// Height of the sidebar sample in the gallery.
     static let sidebarSample: CGFloat = 340
+    /// Height of the `settings.about-full` render (every section visible, no scrolling).
+    static let aboutFullRender: CGFloat = 860
     /// The third-party notices sheet.
     static let noticesSheet = CGSize(width: 560, height: 480)
 }

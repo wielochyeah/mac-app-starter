@@ -45,7 +45,7 @@ enum SettingsScenes {
             RenderScene(id: "settings.general", size: paneSize) { AnyView(GeneralPane()) },
             RenderScene(id: "settings.general-reset", size: paneSize) { AnyView(GeneralPane(confirmingReset: true)) },
             RenderScene(id: "settings.about", size: paneSize) { AnyView(AboutPane()) },
-            RenderScene(id: "settings.about-full", size: paneSize) { AnyView(AboutPane(info: sampleAbout, copied: true)) },
+            RenderScene(id: "settings.about-full", size: CGSize(width: paneSize.width, height: Metrics.aboutFullRender)) { AnyView(AboutPane(info: sampleAbout, copied: true)) },
             RenderScene(id: "settings.notices", size: .zero) {
                 AnyView(RenderBoard { NoticesSheet(text: AboutInfo.bundledNotices ?? SettingsSampleText.notices) {} })
             },
