@@ -11,8 +11,6 @@ enum NotesLook {
     static var resultInset: CGFloat { Space.rowX + Metrics.squircle + Space.iconGap }
     static var spinner: CGFloat { Metrics.spinner - Space.xxs }
     static let clearGlyph: CGFloat = 10
-    /// Kit `Chip` does not dim when disabled; the kit buttons use 45 %.
-    static let offOpacity = 0.45
     /// The Keyboard Shortcuts pane with one hotkey (render).
     static let hotkeyPaneHeight: CGFloat = 230
     /// Notes on the "Recently Edited" shelf and in the status menu panel.
