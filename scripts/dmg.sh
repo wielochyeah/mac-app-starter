@@ -129,7 +129,7 @@ fi
 # 4. Background ----------------------------------------------------------------------------------
 build_tool dmg-background tools/dmg/Background.swift tools/dmg/DMGText.swift
 bg_args=(--out "$WORK/background" --layout tools/dmg/layout.json --icon App/Resources/AppIcon.icns
-         --name "$PKG_DISPLAY_EN" --name-de "$PKG_DISPLAY_DE" --app-label "$APP_NAME"
+         --name "$PKG_DISPLAY_EN" --name-de "$PKG_DISPLAY_DE" --app-label "$PKG_DISPLAY_EN" --app-label-de "$PKG_DISPLAY_DE"
          --version "$PKG_VERSION" --min-macos "$PKG_MIN_MACOS" --accent "$PKG_ACCENT" --lang "$PKG_DMG_LANG" --anrede "$PKG_ANREDE")
 # The Gatekeeper hint only for builds that are not notarized (they need "Open Anyway" once).
 [[ "$PKG_NOTARIZE" == 1 ]] && bg_args+=(--no-hint)

@@ -244,10 +244,11 @@ def entitlements(config):
 
 def info_plist(config, modules, texts):
     app = config["app"]
-    names = app.get("displayName", {})
     plist = {
         "CFBundleDevelopmentRegion": "en",
-        "CFBundleDisplayName": names.get("en", app["name"]),
+        # The bundle's file name; Finder shows the localized name from <lang>.lproj/InfoPlist.strings
+        # (LSHasLocalizedDisplayName) as long as the file keeps that name.
+        "CFBundleDisplayName": app["name"],
         "CFBundleExecutable": app["name"],
         "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": app["bundleId"],
@@ -257,6 +258,7 @@ def info_plist(config, modules, texts):
         "CFBundlePackageType": "APPL",
         "CFBundleShortVersionString": app["version"],
         "CFBundleVersion": str(app["build"]),
+        "LSHasLocalizedDisplayName": True,
         "LSApplicationCategoryType": app.get("category", "public.app-category.productivity"),
         "LSMinimumSystemVersion": str(app["minimumMacOS"]),
         "LSUIElement": "window" not in modules,

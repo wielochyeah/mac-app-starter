@@ -330,7 +330,7 @@ class ToolBuildTests(unittest.TestCase):
                 [str(ROOT / "build" / "tools" / "dmg-background"), "--out", tmp,
                  "--layout", str(ROOT / "tools" / "dmg" / "layout.json"),
                  "--icon", str(ROOT / "App" / "Resources" / "AppIcon.icns"),
-                 "--name", "Photo Shelf", "--name-de", "Fotoablage", "--app-label", "PhotoShelf",
+                 "--name", "Photo Shelf", "--name-de", "Fotoablage", "--app-label", "Photo Shelf", "--app-label-de", "Fotoablage",
                  "--lang", "de", "--anrede", "sie"],
                 capture_output=True, text=True)
             self.assertEqual(res.returncode, 0, res.stdout + res.stderr)

@@ -135,6 +135,9 @@ class GenConfigTests(unittest.TestCase):
         self.assertEqual(p["CFBundleVersion"], "1")
         self.assertEqual(p["CFBundleLocalizations"], ["en", "de"])
         self.assertEqual(p["CFBundlePackageType"], "APPL")
+        # Finder shows the translated name from InfoPlist.strings; the base value is the file name
+        self.assertIs(p["LSHasLocalizedDisplayName"], True)
+        self.assertEqual(p["CFBundleDisplayName"], "Starter")
 
     def test_usage_descriptions_for_listed_permissions(self):
         c = self.config()
