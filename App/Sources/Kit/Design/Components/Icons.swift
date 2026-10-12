@@ -65,12 +65,12 @@ struct Spinner: View {
 
     private func arc(angle: Double) -> some View {
         let t = Theme(scheme)
-        let line = max(1.5, size * 0.11)
+        let line = max(Metrics.spinnerLine, size * Metrics.spinnerLineRatio)
         return ZStack {
             Circle().stroke(t.trackOff, lineWidth: line)
             Circle().trim(from: 0, to: 0.28)
                 .stroke(t.accent, style: StrokeStyle(lineWidth: line, lineCap: .round))
-                .rotationEffect(.degrees(angle))
+                .rotationEffect(.degrees(angle - 90))   // the arc starts at 12 o'clock
         }
         .frame(width: size, height: size)
         .accessibilityLabel(CommonText.loading)

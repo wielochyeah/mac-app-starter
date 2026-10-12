@@ -53,22 +53,25 @@ struct GroupLabel: View {
     }
 }
 
-/// Small print under a card. `lines` reserves height so swapping texts never moves the layout.
+/// Small print under a card (11.5 `fg2`; 12 `prose` with `tone: .onboarding`). `lines` reserves
+/// height so swapping texts never moves the layout.
 struct Footnote: View {
     let text: String
     var lines: Int = 0
+    var tone: TextTone = .settings
     @Environment(\.colorScheme) private var scheme
 
-    init(_ text: String, lines: Int = 0) {
+    init(_ text: String, lines: Int = 0, tone: TextTone = .settings) {
         self.text = text
         self.lines = lines
+        self.tone = tone
     }
 
     var body: some View {
         Text(text)
-            .font(TypeScale.subtitle)
-            .foregroundStyle(Theme(scheme).fg2)
-            .lineSpacing(TypeScale.footnoteLineSpacing)
+            .font(tone.small)
+            .foregroundStyle(tone.smallColor(Theme(scheme)))
+            .lineSpacing(tone == .settings ? TypeScale.footnoteLineSpacing : TypeScale.noteLineSpacing)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, minHeight: lines > 0 ? CGFloat(lines) * 16 : nil, alignment: .topLeading)
             .padding(.horizontal, 6)

@@ -1,31 +1,46 @@
 import SwiftUI
 
-/// Window chrome for renders: rounded window (macOS 26 radius), hairline edge, traffic lights.
-/// Offscreen captures have no real titlebar, so window scenes draw this around their content.
+/// Window chrome for renders: rounded window, hairline edge, traffic lights. Offscreen captures
+/// have no real titlebar, so window scenes draw this around their content.
 enum WindowLights { case all, closeOnly, none }
+
+/// Which window the render imitates (VoiceBud's HubStaticWindow / OnboardingStaticWindow).
+enum WindowChrome {
+    /// Settings hub and main window: macOS 26 radius 26, all three lights 19 pt in.
+    case settings
+    /// Onboarding: radius 16, close button only, 9 pt in.
+    case onboarding
+
+    var radius: CGFloat { self == .settings ? Radius.windowGlass : Radius.window }
+    var trafficInset: CGFloat { self == .settings ? Metrics.trafficInset : Metrics.trafficInsetCompact }
+    var lights: WindowLights { self == .settings ? .all : .closeOnly }
+}
 
 struct StaticWindow<Content: View>: View {
     let size: CGSize
-    var lights: WindowLights = .all
+    var chrome: WindowChrome = .settings
+    var lights: WindowLights
     let content: Content
     @Environment(\.colorScheme) private var scheme
 
-    init(size: CGSize, lights: WindowLights = .all, @ViewBuilder content: () -> Content) {
+    /// `lights` defaults to the chrome's (all for settings, close only for onboarding).
+    init(size: CGSize, chrome: WindowChrome = .settings, lights: WindowLights? = nil, @ViewBuilder content: () -> Content) {
         self.size = size
-        self.lights = lights
+        self.chrome = chrome
+        self.lights = lights ?? chrome.lights
         self.content = content()
     }
 
     var body: some View {
         let t = Theme(scheme)
-        let shape = RoundedRectangle(cornerRadius: Radius.windowGlass, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: chrome.radius, style: .continuous)
         content
             .frame(width: size.width, height: size.height)
             .background(t.windowBg)
             .overlay(alignment: .topLeading) {
                 TrafficLights(lights: lights)
-                    .padding(.leading, Metrics.trafficInset)
-                    .padding(.top, Metrics.trafficInset)
+                    .padding(.leading, chrome.trafficInset)
+                    .padding(.top, chrome.trafficInset)
             }
             .clipShape(shape)
             .overlay(shape.strokeBorder(t.windowStroke, lineWidth: Metrics.hairline))
@@ -54,7 +69,8 @@ struct TrafficLights: View {
     }
 }
 
-/// Puts a window render on a neutral "desk" with a soft shadow (README screenshots).
+/// Puts a window render on a neutral "desk" with a soft shadow (README screenshots, every window
+/// scene: VoiceBud's OnboardingBoard / hub renders).
 struct RenderBoard<Content: View>: View {
     let content: Content
     @Environment(\.colorScheme) private var scheme
@@ -65,8 +81,8 @@ struct RenderBoard<Content: View>: View {
         let t = Theme(scheme)
         content
             .compositingGroup()
-            .shadow(color: t.deskShadow, radius: 24, y: 14)
-            .padding(36)
+            .shadow(color: t.deskShadow, radius: Metrics.deskShadowRadius, y: Metrics.deskShadowY)
+            .padding(Metrics.deskPadding)
             .background(t.desk)
     }
 }

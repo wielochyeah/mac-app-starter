@@ -169,7 +169,7 @@ struct KeyCaps: View {
     }
 }
 
-/// A status word with a mark (VoiceBud OnboardingStatus): granted, missing, idle, busy.
+/// A status word with a mark (VoiceBud OnboardingStatus): granted, missing, idle, busy, error.
 struct StatusMark: View {
     enum Kind { case ok, warn, idle, busy, error }
     let kind: Kind
@@ -195,7 +195,11 @@ struct StatusMark: View {
                 }
             }
             .frame(width: Metrics.spinner, height: Metrics.spinner)
-            Text(text).font(TypeScale.secondaryMedium).foregroundStyle(kind == .error ? t.strike : t.fg2)
+            // VoiceBud: settled states (ok, warn) medium in fg, waiting states regular in prose
+            let quiet = kind == .idle || kind == .busy
+            Text(text)
+                .font(quiet ? TypeScale.secondary : TypeScale.secondaryMedium)
+                .foregroundStyle(kind == .error ? t.strike : quiet ? t.prose : t.fg)
         }
     }
 }

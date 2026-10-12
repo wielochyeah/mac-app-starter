@@ -53,6 +53,10 @@ enum DesignKit {
 
 // MARK: - Specimens (sample state is fixed so renders are deterministic)
 
+// Token and type-scale labels below are code identifiers ("fg2", "paneTitle 15.5"), shown
+// verbatim in monospace on purpose: they name the API, they are not UI copy (S0.md, exception
+// for scripts/check_texts.py). Everything a person reads goes through DesignText.
+
 private struct TokenSwatches: View {
     @Environment(\.colorScheme) private var scheme
 
@@ -108,7 +112,7 @@ private struct AccentSamples: View {
             ForEach(AccentName.allCases, id: \.self) { accent in
                 let t = Theme(scheme, accent: accent)
                 HStack(spacing: Space.s) {
-                    Text(verbatim: accent.rawValue).font(TypeScale.caption.monospaced()).foregroundStyle(t.fg2).frame(width: 60, alignment: .leading)
+                    Text(DesignText.accentName(accent)).font(TypeScale.caption).foregroundStyle(t.fg2).frame(width: 60, alignment: .leading)
                     Capsule().fill(t.accent).frame(width: 36, height: 21)
                     Text(CommonText.continue).font(TypeScale.bodySemibold).foregroundStyle(t.onAccent)
                         .padding(.horizontal, Space.m).frame(height: Metrics.buttonHeight)
@@ -428,7 +432,7 @@ private struct SampleSettingsPane: View {
                     Separator()
                     Row(DesignText.hideInFullScreen, subtitle: DesignText.hideInFullScreenDetail) { SwitchToggle(isOn: .constant(false)) }
                 }
-                Footnote(DesignText.footnoteSample)
+                Footnote(DesignText.footnoteSettings)
             }
             .frame(maxWidth: Metrics.settingsColumn, alignment: .leading)
             .padding(.horizontal, Space.pane)
@@ -441,52 +445,56 @@ private struct SampleSettingsPane: View {
     }
 }
 
-/// An onboarding step in VoiceBud's setup style (window chrome drawn for the render).
+/// An onboarding step in VoiceBud's setup style (window chrome and desk drawn for the render).
+/// The language segment shows the current UI language and switches it, like the real step.
 private struct SampleOnboardingStep: View {
-    @State private var lang = "en"
+    private let localizer = Localizer.shared
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let t = Theme(scheme)
-        StaticWindow(size: Metrics.onboardingWindow, lights: .closeOnly) {
-            VStack(spacing: 0) {
-                VStack(spacing: Space.m) {
-                    SquircleIcon(symbol: "globe", tint: .sky, size: Metrics.squircleLarge)
-                        .shadow(color: t.panelShadow, radius: 6, y: 2)
-                    VStack(spacing: Space.xs) {
-                        Text(DesignText.setupTitle).font(TypeScale.title).foregroundStyle(t.fg)
-                        Text(DesignText.setupSubtitle).font(TypeScale.body).foregroundStyle(t.prose)
-                        Text(DesignText.setupHint).font(TypeScale.secondary).foregroundStyle(t.fg2)
-                    }
-                    .multilineTextAlignment(.center)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Card {
-                            Row(DesignText.app, subtitle: DesignText.appDetail) {
-                                Segmented([("en", Lang.en.nativeName), ("de", Lang.de.nativeName)], selection: $lang)
-                            }
-                            Separator()
-                            Row(DesignText.openAtLogin, subtitle: DesignText.openAtLoginDetail) { SwitchToggle(isOn: .constant(true)) }
+        let lang = Binding(get: { localizer.lang.rawValue }, set: { localizer.choice = Lang(rawValue: $0) })
+        RenderBoard {
+            StaticWindow(size: Metrics.onboardingWindow, chrome: .onboarding) {
+                VStack(spacing: 0) {
+                    VStack(spacing: Space.m) {
+                        SquircleIcon(symbol: "globe", tint: .sky, size: Metrics.squircleLarge)
+                            .shadow(color: t.panelShadow, radius: 6, y: 2)
+                        VStack(spacing: Space.xs) {
+                            Text(DesignText.setupTitle).font(TypeScale.title).foregroundStyle(t.fg)
+                            Text(DesignText.setupSubtitle).font(TypeScale.body).foregroundStyle(t.prose)
+                            Text(DesignText.setupHint).font(TypeScale.secondary).foregroundStyle(t.prose)
                         }
-                        Footnote(DesignText.footnoteSample)
+                        .multilineTextAlignment(.center)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Card {
+                                Row(DesignText.app, subtitle: DesignText.appDetail, tone: .onboarding) {
+                                    Segmented([("en", Lang.en.nativeName), ("de", Lang.de.nativeName)], selection: lang)
+                                }
+                                Separator()
+                                Row(DesignText.openAtLogin, subtitle: DesignText.openAtLoginDetail, tone: .onboarding) {
+                                    SwitchToggle(isOn: .constant(true))
+                                }
+                            }
+                            Footnote(DesignText.footnoteSample, tone: .onboarding)
+                        }
+                        .frame(width: Metrics.onboardingNarrow + 40)
+                        .padding(.top, Space.xs)
                     }
-                    .frame(width: Metrics.onboardingNarrow + 40)
-                    .padding(.top, Space.xs)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, Metrics.titlebar)
-                ZStack {
-                    SegmentedProgress(count: 6, current: 1)
-                    HStack {
-                        Button(CommonText.back) {}.buttonStyle(.secondary)
-                        Spacer()
-                        Button(CommonText.continue) {}.buttonStyle(.primary(minWidth: Metrics.buttonWideMinWidth))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.top, Metrics.titlebar)
+                    ZStack {
+                        SegmentedProgress(count: 6, current: 1)
+                        HStack {
+                            Button(CommonText.back) {}.buttonStyle(.secondary)
+                            Spacer()
+                            Button(CommonText.continue) {}.buttonStyle(.primary(minWidth: Metrics.buttonWideMinWidth))
+                        }
                     }
+                    .padding(.horizontal, Space.l)
+                    .frame(height: Metrics.onboardingFooter)
                 }
-                .padding(.horizontal, Space.l)
-                .frame(height: Metrics.onboardingFooter)
             }
         }
-        .padding(Space.l)
-        .background(t.desk)
     }
 }

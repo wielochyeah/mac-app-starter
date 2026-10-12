@@ -1,7 +1,16 @@
 import SwiftUI
 
-/// A settings row (VoiceBud HubRow): min height 44, title 13 `fg`, optional subtitle 11.5 `fg2`,
-/// optional leading squircle icon or status dot, trailing control.
+/// Where small text sits: the settings hub (11.5 pt `fg2`, VoiceBud HubRow/HubFootnote) or the
+/// onboarding window (12 pt `prose`, VoiceBud OnboardingRow/OnboardingFootnote).
+enum TextTone {
+    case settings, onboarding
+
+    var small: Font { self == .settings ? TypeScale.subtitle : TypeScale.secondary }
+    func smallColor(_ t: Theme) -> Color { self == .settings ? t.fg2 : t.prose }
+}
+
+/// A settings row (VoiceBud HubRow): min height 44, title 13 `fg`, optional subtitle (11.5 `fg2`;
+/// 12 `prose` with `tone: .onboarding`), optional leading squircle icon or status dot, trailing control.
 struct Row<Trailing: View>: View {
     let title: String
     var subtitle: String?
@@ -10,17 +19,19 @@ struct Row<Trailing: View>: View {
     var dot: Color?
     /// A subtitle that must be seen (a refused shortcut, an error): pass `Theme(scheme).strike`.
     var subtitleColor: Color?
+    var tone: TextTone = .settings
     let trailing: Trailing
     @Environment(\.colorScheme) private var scheme
 
     init(_ title: String, subtitle: String? = nil, symbol: String? = nil, tint: TintName = .accent,
-         dot: Color? = nil, subtitleColor: Color? = nil, @ViewBuilder trailing: () -> Trailing) {
+         dot: Color? = nil, subtitleColor: Color? = nil, tone: TextTone = .settings, @ViewBuilder trailing: () -> Trailing) {
         self.title = title
         self.subtitle = subtitle
         self.symbol = symbol
         self.tint = tint
         self.dot = dot
         self.subtitleColor = subtitleColor
+        self.tone = tone
         self.trailing = trailing()
     }
 
@@ -33,8 +44,8 @@ struct Row<Trailing: View>: View {
                 Text(title).font(TypeScale.body).foregroundStyle(t.fg)
                 if let subtitle {
                     Text(subtitle)
-                        .font(TypeScale.subtitle)
-                        .foregroundStyle(subtitleColor ?? t.fg2)
+                        .font(tone.small)
+                        .foregroundStyle(subtitleColor ?? tone.smallColor(t))
                         .lineSpacing(1)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -50,13 +61,15 @@ struct Row<Trailing: View>: View {
 }
 
 extension Row where Trailing == EmptyView {
-    init(_ title: String, subtitle: String? = nil, symbol: String? = nil, tint: TintName = .accent, dot: Color? = nil) {
-        self.init(title, subtitle: subtitle, symbol: symbol, tint: tint, dot: dot) { EmptyView() }
+    init(_ title: String, subtitle: String? = nil, symbol: String? = nil, tint: TintName = .accent, dot: Color? = nil,
+         tone: TextTone = .settings) {
+        self.init(title, subtitle: subtitle, symbol: symbol, tint: tint, dot: dot, tone: tone) { EmptyView() }
     }
 }
 
 /// The header band of a settings pane (VoiceBud HubPaneHeader): squircle 22 + title 15.5 bold,
-/// trailing slot (search field), height 52, padding 20, hairline below.
+/// trailing slot (search field), height 52, padding 20, hairline below, opaque and above the
+/// scrolling content.
 struct SectionHeader<Trailing: View>: View {
     let title: String
     var symbol: String?
@@ -73,7 +86,7 @@ struct SectionHeader<Trailing: View>: View {
 
     var body: some View {
         let t = Theme(scheme)
-        HStack(spacing: Space.s - 2) {
+        HStack(spacing: Space.iconGap) {
             if let symbol { SquircleIcon(symbol: symbol, tint: tint) }
             Text(title).font(TypeScale.paneTitle).foregroundStyle(t.fg)
             Spacer(minLength: Space.s)
@@ -81,7 +94,9 @@ struct SectionHeader<Trailing: View>: View {
         }
         .padding(.horizontal, Space.pane)
         .frame(height: Metrics.paneHeader)
+        .background(t.windowBg)
         .overlay(alignment: .bottom) { Rectangle().fill(t.separator).frame(height: Metrics.hairline) }
+        .zIndex(1)
     }
 }
 

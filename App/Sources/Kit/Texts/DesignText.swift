@@ -43,6 +43,10 @@ enum DesignText {
         tr(en: "Changes apply right away. You can change them later in Settings under General.",
            de: "Änderungen gelten sofort. Du kannst sie später in den Einstellungen unter Allgemein ändern.")
     }
+    static var footnoteSettings: String {
+        tr(en: "Changes apply right away and stay after a restart.",
+           de: "Änderungen gelten sofort und bleiben nach einem Neustart erhalten.")
+    }
     static var setupTitle: String { tr(en: "Language", de: "Sprache") }
     static var setupSubtitle: String { tr(en: "Pick the language for windows and menus.", de: "Wähle die Sprache für Fenster und Menüs.") }
     static var setupHint: String { tr(en: "Lieber auf Deutsch? Wähle unten Deutsch.", de: "Prefer English? Pick English below.") }
@@ -68,5 +72,15 @@ enum DesignText {
            de: "Hol die gedruckten Pläne vor Freitag ab und bring sie zur Baubesprechung mit.")
     }
     static var islandHint: String { tr(en: "Hover to read everything", de: "Zeigen, um alles zu lesen") }
+    static func accentName(_ accent: AccentName) -> String {
+        switch accent {
+        case .violett: tr(en: "Violet", de: "Violett")
+        case .rot: tr(en: "Red", de: "Rot")
+        case .blau: tr(en: "Blue", de: "Blau")
+        case .gruen: tr(en: "Green", de: "Grün")
+        case .orange: tr(en: "Orange", de: "Orange")
+        case .graphit: tr(en: "Graphite", de: "Graphit")
+        }
+    }
     static var disabled: String { tr(en: "Not available", de: "Nicht verfügbar") }
 }

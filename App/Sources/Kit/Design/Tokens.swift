@@ -77,6 +77,8 @@ enum TypeScale {
     /// Line spacing for running text (onboarding sentences, footnotes).
     static let proseLineSpacing: CGFloat = 3
     static let footnoteLineSpacing: CGFloat = 1.5
+    /// Onboarding footnotes (12 pt prose).
+    static let noteLineSpacing: CGFloat = 2
 
     /// Glyph inside a squircle of `size`.
     static func squircleGlyph(_ size: CGFloat) -> Font { .system(size: size * 0.5, weight: .semibold) }
@@ -167,6 +169,15 @@ enum Metrics {
     static let trafficLight: CGFloat = 14
     static let trafficSpacing: CGFloat = 9
     static let trafficInset: CGFloat = 19
+    /// Traffic light inset of the onboarding window (close button only).
+    static let trafficInsetCompact: CGFloat = 9
+    /// Render desk around window scenes (`RenderBoard`).
+    static let deskPadding: CGFloat = 36
+    static let deskShadowRadius: CGFloat = 24
+    static let deskShadowY: CGFloat = 14
+    /// Spinner stroke (VoiceBud 1.8 pt); larger spinners scale it with `spinnerLineRatio`.
+    static let spinnerLine: CGFloat = 1.8
+    static let spinnerLineRatio: CGFloat = 0.065
 }
 
 /// Gradient tints for squircle icons (settings panes, permission icons), from VoiceBud's hub.
