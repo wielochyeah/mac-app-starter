@@ -87,6 +87,7 @@ struct LanguageStep: View {
         let follows = Binding(get: { previewFollowsMac ?? (localizer.choice == nil) },
                               set: { localizer.choice = $0 ? nil : localizer.lang })
         let system = previewFollowsMac == nil ? localizer.system : localizer.lang
+        let offered = previewFollowsMac != nil || OnboardingKit.macLanguageOffered()
         OnboardingPage {
             OnboardingHero(symbol: "globe", tint: .sky).padding(.bottom, Space.m)
             OnboardingHeader(title: OnboardingText.languageTitle, subtitle: OnboardingText.languageSubtitle)
@@ -97,7 +98,8 @@ struct LanguageStep: View {
                     // each language in its own name, so it can be found in either language
                     PickerRow(OnboardingText.languageApp, subtitle: OnboardingText.languageAppDetail,
                               options: Lang.allCases.map { ($0, $0.nativeName) }, selection: language)
-                    ToggleRow(OnboardingText.followMac, subtitle: OnboardingText.followMacDetail(OnboardingText.languageName(system)),
+                    ToggleRow(OnboardingText.followMac,
+                              subtitle: OnboardingText.followMacDetail(OnboardingText.languageName(system), offered: offered),
                               isOn: follows)
                 }
                 OnboardingFootnote(OnboardingText.languageFootnote, lines: 2)
@@ -226,39 +228,45 @@ struct PermissionStep: View {
 
 // MARK: - Done
 
-/// What is set up (language, permissions), where Settings are, and "Done".
+/// What is set up (language, permissions), where Settings are, and "Done". While a permission is
+/// not allowed the page says so ("Almost Done") and its row leads back to its step.
 struct DoneStep: View {
     let permissions: [PermissionKind]
     var previewFollowsMac: Bool?
     @Environment(\.permissionMonitor) private var monitor
     @Environment(\.renderStatic) private var renderStatic
+    @Environment(\.onboardingGoTo) private var goTo
+    @Environment(\.colorScheme) private var scheme
     private let localizer = Localizer.shared
 
     /// More than this many permissions collapse into one "x of y allowed" row.
     static let permissionRowLimit = 3
 
     var body: some View {
+        let notAllowed = permissions.filter { !monitor.status($0).isAllowed }
         let restartPending = permissions.contains { monitor.status($0) == .restartNeeded }
+        let collapsed = permissions.count > Self.permissionRowLimit
         OnboardingPage {
             DoneIcon().padding(.bottom, Space.m)
-            OnboardingHeader(title: OnboardingText.doneTitle, subtitle: OnboardingText.doneSubtitle)
+            OnboardingHeader(title: OnboardingText.doneTitle(complete: notAllowed.isEmpty),
+                             subtitle: notAllowed.isEmpty ? OnboardingText.doneSubtitle
+                                 : OnboardingText.doneMissing(notAllowed.map(PermissionText.title), collapsed: collapsed))
                 .padding(.bottom, Space.l)
             VStack(alignment: .leading, spacing: 0) {
                 SettingsSection(tone: .onboarding) {
                     ValueRow(OnboardingText.doneLanguage, symbol: "globe", tint: .sky, value: languageValue)
-                    if permissions.count <= Self.permissionRowLimit {
+                    if !collapsed {
                         ForEach(permissions, id: \.self) { kind in
                             let status = monitor.status(kind)
-                            Row(PermissionText.title(kind), symbol: kind.symbol, tint: kind.tint, tone: .onboarding) {
-                                StatusMark(Self.mark(status), PermissionText.short(status))
-                            }
+                            permissionRow(PermissionText.title(kind), symbol: kind.symbol, tint: kind.tint, mark: Self.mark(status),
+                                          text: PermissionText.short(status), back: status.isAllowed ? nil : kind)
                         }
                     } else {
-                        let allowed = permissions.filter { monitor.status($0).isAllowed }.count
-                        Row(OnboardingText.donePermissionsTitle, symbol: "lock.fill", tint: .blue, tone: .onboarding) {
-                            StatusMark(allowed == permissions.count ? .ok : .warn,
-                                       OnboardingText.donePermissions(granted: allowed, of: permissions.count))
-                        }
+                        let allowed = permissions.count - notAllowed.count
+                        permissionRow(OnboardingText.donePermissionsTitle, symbol: "lock.fill", tint: .blue,
+                                      mark: notAllowed.isEmpty ? .ok : .warn,
+                                      text: OnboardingText.donePermissions(granted: allowed, of: permissions.count),
+                                      back: notAllowed.first)
                     }
                     if AppInfo.isEnabled("window") {
                         Row(OnboardingText.doneSettings, subtitle: OnboardingText.doneSettingsWindow, symbol: "gearshape.fill",
@@ -270,7 +278,7 @@ struct DoneStep: View {
                             tint: .graphite, tone: .onboarding)
                     }
                 }
-                OnboardingFootnote(restartPending ? OnboardingText.doneRestartNote : OnboardingText.doneFootnote, lines: 2)
+                OnboardingFootnote(restartPending ? OnboardingText.doneRestartNote : OnboardingText.doneFootnote, lines: 1)
             }
             .frame(width: Metrics.onboardingCard)
         }
@@ -280,9 +288,30 @@ struct DoneStep: View {
         }
     }
 
+    /// A permission row; with `back` the whole row leads to that permission's step.
+    @ViewBuilder
+    private func permissionRow(_ title: String, symbol: String, tint: TintName, mark: StatusMark.Kind, text: String,
+                               back kind: PermissionKind?) -> some View {
+        if let kind, let goTo {
+            HoverButton { goTo(OnboardingKit.StepID.permission(kind)) } label: {
+                Row(title, symbol: symbol, tint: tint, tone: .onboarding) {
+                    HStack(spacing: Space.xs) {
+                        StatusMark(mark, text)
+                        Image(systemName: "chevron.right")
+                            .font(TypeScale.caption.weight(.semibold))
+                            .foregroundStyle(Theme(scheme).fg3)
+                    }
+                }
+            }
+        } else {
+            Row(title, symbol: symbol, tint: tint, tone: .onboarding) { StatusMark(mark, text) }
+        }
+    }
+
     private var languageValue: String {
         let follows = previewFollowsMac ?? (localizer.choice == nil)
-        return OnboardingText.doneLanguageValue(OnboardingText.languageName(localizer.lang), followsMac: follows)
+        let offered = previewFollowsMac != nil || OnboardingKit.macLanguageOffered()
+        return OnboardingText.doneLanguageValue(OnboardingText.languageName(localizer.lang), sameAsMac: follows && offered)
     }
 
     static func mark(_ status: PermissionStatus) -> StatusMark.Kind {

@@ -287,16 +287,48 @@ final class OnboardingTests: TestSuite {
         test("texts: both languages, no exclamation marks, the cross hint is in the other language") {
             let saved = Localizer.shared.forced
             defer { Localizer.shared.forced = saved }
+            @MainActor func texts() -> [String] {
+                [OnboardingText.doneSubtitle, OnboardingText.doneFootnote, OnboardingText.done, OnboardingText.doneTitle(complete: false),
+                 OnboardingText.doneMissing(["Mikrofon"], collapsed: false), OnboardingText.doneMissing(["A", "B"], collapsed: true),
+                 OnboardingText.languageFootnote, OnboardingText.followMacDetail("X", offered: false)]
+            }
             Localizer.shared.forced = .de
             expect(OnboardingText.languageCrossHint.hasPrefix("Prefer English"))
-            let de = [OnboardingText.welcomeLede, OnboardingText.doneSubtitle, OnboardingText.doneFootnote, OnboardingText.done]
+            let de = texts()
             Localizer.shared.forced = .en
             expect(OnboardingText.languageCrossHint.hasPrefix("Lieber auf Deutsch"))
-            let en = [OnboardingText.welcomeLede, OnboardingText.doneSubtitle, OnboardingText.doneFootnote, OnboardingText.done]
+            let en = texts()
             for (a, b) in zip(de, en) {
                 expect(a != b && !a.contains("!") && !b.contains("!"), "\(a) / \(b)")
             }
-            expectEqual(OnboardingText.welcomeNote(steps: 6), "6 steps. You can change everything later in Settings.")
+            expectEqual(OnboardingText.welcomeNote(steps: 6), "Setup takes 6 short steps.")
+        }
+
+        test("welcome: the lede is the project's tagline, nothing when it is empty") {
+            let saved = Localizer.shared.forced
+            defer { Localizer.shared.forced = saved }
+            Localizer.shared.forced = .en
+            let lede = OnboardingText.welcomeLede
+            expectEqual(lede, AppConfig.tagline.en.isEmpty ? nil : AppConfig.tagline.en)
+            Localizer.shared.forced = .de
+            if !AppConfig.tagline.de.isEmpty { expectEqual(OnboardingText.welcomeLede, AppConfig.tagline.de) }
+        }
+
+        test("done: All Set only when every permission is allowed") {
+            let saved = Localizer.shared.forced
+            defer { Localizer.shared.forced = saved }
+            Localizer.shared.forced = .en
+            expectEqual(OnboardingText.doneTitle(complete: true), "All Set")
+            expectEqual(OnboardingText.doneTitle(complete: false), "Almost Done")
+            expect(OnboardingText.doneMissing(["Input Monitoring"], collapsed: false).hasPrefix("Input Monitoring is not allowed yet."))
+            expect(OnboardingText.doneMissing(["A", "B"], collapsed: false).hasPrefix("2 permissions"))
+        }
+
+        test("language: \"same as the Mac\" only when the Mac's first language is offered") {
+            expect(OnboardingKit.macLanguageOffered(["de-DE", "en-US"]))
+            expect(OnboardingKit.macLanguageOffered(["en-GB"]))
+            expect(!OnboardingKit.macLanguageOffered(["fr-FR", "en-US"]), "English is the fallback here, not the Mac's language")
+            expect(!OnboardingKit.macLanguageOffered([]))
         }
     }
 }

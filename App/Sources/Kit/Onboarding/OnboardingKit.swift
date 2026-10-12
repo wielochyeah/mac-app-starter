@@ -136,6 +136,13 @@ enum OnboardingKit {
         }
     }
 
+    /// Whether the Mac's first language is one the app offers (else the app falls back to
+    /// English, and "same as the Mac" would be wrong). Pure with `languages`.
+    nonisolated static func macLanguageOffered(_ languages: [String] = Locale.preferredLanguages) -> Bool {
+        guard let first = languages.first?.lowercased() else { return false }
+        return Lang.allCases.contains { first.hasPrefix($0.rawValue) }
+    }
+
     static var opensAtLaunch: Bool {
         opensAtLaunch(done: Settings.shared[.onboardingDone], reopen: Settings.shared[.onboardingReopen],
                       hasSteps: !Registry.orderedOnboardingSteps.isEmpty, background: Launch.isBackground)

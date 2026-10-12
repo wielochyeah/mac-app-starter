@@ -18,6 +18,10 @@ enum OnboardingScenes {
             ("done-restart", { window(at: OnboardingKit.StepID.done, states: [.microphone: .granted, .accessibility: .granted, .inputMonitoring: .restartNeeded]) }),
             ("permission-microphone-waiting", { window(at: OnboardingKit.StepID.permission(.microphone), states: [.microphone: .requested]) }),
             ("permission-accessibility-waiting", { window(at: OnboardingKit.StepID.permission(.accessibility), states: [.accessibility: .requested]) }),
+            ("permission-automation-denied", {
+                let mail = PermissionKind.automation(bundleId: "com.apple.mail")
+                return window(at: OnboardingKit.StepID.permission(mail), permissions: [mail], states: [mail: .denied])
+            }),
             ("permission-notifications", {
                 window(at: OnboardingKit.StepID.permission(.notifications), permissions: [.notifications], states: [.notifications: .missing])
             }),

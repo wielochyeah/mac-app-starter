@@ -1,6 +1,8 @@
 // Words for permissions: title, why the app asks, what to do in each state, and short status
 // words. Projects replace the "why" sentence per kind with `PermissionsKit.reasons[kind]` (in
-// their own feature code), so these kit texts stay generic.
+// their own feature code). The kit's own sentences only say what the permission is for: no
+// promise about storage, uploads or when a device runs, because the kit cannot keep it for
+// every app. A project that can keep one adds it in its own reason.
 
 enum PermissionText {
     private static var app: String { AppInfo.displayName }
@@ -13,7 +15,8 @@ enum PermissionText {
         case .inputMonitoring: tr(en: "Input Monitoring", de: "Eingabeüberwachung")
         case .screenRecording: tr(en: "Screen Recording", de: "Bildschirmaufnahme")
         case .notifications: tr(en: "Notifications", de: "Mitteilungen")
-        case .automation: tr(en: "Automation", de: "Automation")
+        case .automation(let bundleId):
+            tr(en: "Control \(PermissionsKit.appName(bundleId))", de: "\(PermissionsKit.appName(bundleId)) steuern")
         case .speechRecognition: tr(en: "Speech Recognition", de: "Spracherkennung")
         case .contacts: tr(en: "Contacts", de: "Kontakte")
         case .calendars: tr(en: "Calendars", de: "Kalender")
@@ -30,6 +33,7 @@ enum PermissionText {
         switch kind {
         case .screenRecording: tr(en: "Screen & System Audio Recording", de: "Bildschirm- & Systemaudioaufnahme")
         case .location: tr(en: "Location Services", de: "Ortungsdienste")
+        case .automation: tr(en: "Automation", de: "Automation")
         default: title(kind)
         }
     }
@@ -38,11 +42,11 @@ enum PermissionText {
     static func why(_ kind: PermissionKind) -> String {
         switch kind {
         case .microphone:
-            tr(en: "\(app) needs your permission to hear you.\nThe microphone runs only while you record.",
-               de: "\(app) braucht deine Erlaubnis, um dich zu hören.\nDas Mikrofon läuft nur, während du aufnimmst.")
+            tr(en: "\(app) needs your permission to hear you.",
+               de: "\(app) braucht deine Erlaubnis, um dich zu hören.")
         case .camera:
-            tr(en: "\(app) needs your permission to use the camera.\nIt runs only while you take a picture.",
-               de: "\(app) braucht deine Erlaubnis für die Kamera.\nSie läuft nur, während du ein Bild aufnimmst.")
+            tr(en: "\(app) needs your permission to use the camera.",
+               de: "\(app) braucht deine Erlaubnis für die Kamera.")
         case .accessibility:
             tr(en: "\(app) needs your permission to work with other apps,\nfor example to insert text at your cursor.",
                de: "\(app) braucht deine Erlaubnis, um mit anderen Apps zu arbeiten,\nzum Beispiel um Text an deinem Cursor einzufügen.")
@@ -50,20 +54,20 @@ enum PermissionText {
             tr(en: "\(app) needs your permission to notice\nyour keyboard shortcuts in every app.",
                de: "\(app) braucht deine Erlaubnis, um deine\nKurzbefehle in jeder App zu erkennen.")
         case .screenRecording:
-            tr(en: "\(app) needs your permission to see what is on your screen.\nImages stay on your Mac.",
-               de: "\(app) braucht deine Erlaubnis, um zu sehen, was auf dem Bildschirm ist.\nBilder bleiben auf deinem Mac.")
+            tr(en: "\(app) needs your permission to see what is on your screen.",
+               de: "\(app) braucht deine Erlaubnis, um zu sehen, was auf dem Bildschirm ist.")
         case .notifications:
-            tr(en: "\(app) tells you when something is done,\neven while you work in another app.",
-               de: "\(app) sagt dir Bescheid, wenn etwas fertig ist,\nauch wenn du gerade in einer anderen App bist.")
+            tr(en: "\(app) needs your permission to send you notifications,\neven while you work in another app.",
+               de: "\(app) braucht deine Erlaubnis für Mitteilungen,\nauch wenn du gerade in einer anderen App bist.")
         case .automation(let bundleId):
-            tr(en: "\(app) needs your permission to control \(PermissionsKit.appName(bundleId))\nfor the actions you start.",
-               de: "\(app) braucht deine Erlaubnis, um \(PermissionsKit.appName(bundleId)) zu steuern,\nnur für Aktionen, die du startest.")
+            tr(en: "\(app) needs your permission to control \(PermissionsKit.appName(bundleId)).",
+               de: "\(app) braucht deine Erlaubnis, um \(PermissionsKit.appName(bundleId)) zu steuern.")
         case .speechRecognition:
             tr(en: "\(app) needs your permission to turn speech into text.",
                de: "\(app) braucht deine Erlaubnis, um Sprache in Text umzuwandeln.")
         case .contacts:
-            tr(en: "\(app) needs your permission to read your contacts.\nNothing is uploaded.",
-               de: "\(app) braucht deine Erlaubnis, um deine Kontakte zu lesen.\nNichts wird hochgeladen.")
+            tr(en: "\(app) needs your permission to read your contacts.",
+               de: "\(app) braucht deine Erlaubnis, um deine Kontakte zu lesen.")
         case .calendars:
             tr(en: "\(app) needs your permission to read and add calendar events.",
                de: "\(app) braucht deine Erlaubnis, um Termine zu lesen und anzulegen.")
@@ -71,11 +75,11 @@ enum PermissionText {
             tr(en: "\(app) needs your permission to read and add reminders.",
                de: "\(app) braucht deine Erlaubnis, um Erinnerungen zu lesen und anzulegen.")
         case .photos:
-            tr(en: "\(app) needs your permission to open your photos.\nNothing is uploaded.",
-               de: "\(app) braucht deine Erlaubnis, um deine Fotos zu öffnen.\nNichts wird hochgeladen.")
+            tr(en: "\(app) needs your permission to open your photos.",
+               de: "\(app) braucht deine Erlaubnis, um deine Fotos zu öffnen.")
         case .location:
-            tr(en: "\(app) needs your location for results near you.\nIt never leaves your Mac.",
-               de: "\(app) braucht deinen Standort für Ergebnisse in deiner Nähe.\nEr verlässt deinen Mac nie.")
+            tr(en: "\(app) needs your location for results near you.",
+               de: "\(app) braucht deinen Standort für Ergebnisse in deiner Nähe.")
         case .bluetooth:
             tr(en: "\(app) needs Bluetooth to connect your devices.",
                de: "\(app) braucht Bluetooth, um deine Geräte zu verbinden.")
@@ -85,23 +89,47 @@ enum PermissionText {
         }
     }
 
-    /// The verb phrase of macOS's question ("… whether <App> may <phrase>").
-    private static func askPhrase(_ kind: PermissionKind) -> (en: String, de: String) {
+    /// The first hint line of a dialog kind before macOS asks: its question, and what to choose.
+    private static func askLine(_ kind: PermissionKind) -> String {
         switch kind {
-        case .microphone: ("use your microphone", "dein Mikrofon nutzen")
-        case .camera: ("use your camera", "deine Kamera nutzen")
-        case .notifications: ("send you notifications", "dir Mitteilungen senden")
+        case .microphone:
+            tr(en: "macOS asks next whether \(app) may use your microphone.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) dein Mikrofon nutzen darf.\nWähle „Erlauben“.")
+        case .camera:
+            tr(en: "macOS asks next whether \(app) may use your camera.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) deine Kamera nutzen darf.\nWähle „Erlauben“.")
+        case .notifications:
+            tr(en: "macOS asks next whether \(app) may send you notifications.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) dir Mitteilungen senden darf.\nWähle „Erlauben“.")
         case .automation(let bundleId):
-            ("control \(PermissionsKit.appName(bundleId))", "\(PermissionsKit.appName(bundleId)) steuern")
-        case .speechRecognition: ("use speech recognition", "die Spracherkennung nutzen")
-        case .contacts: ("access your contacts", "auf deine Kontakte zugreifen")
-        case .calendars: ("access your calendars", "auf deine Kalender zugreifen")
-        case .reminders: ("access your reminders", "auf deine Erinnerungen zugreifen")
-        case .photos: ("access your photos", "auf deine Fotos zugreifen")
-        case .location: ("use your location", "deinen Standort nutzen")
-        case .bluetooth: ("use Bluetooth", "Bluetooth nutzen")
-        case .localNetwork: ("find devices on your network", "Geräte in deinem Netzwerk finden")
-        case .accessibility, .inputMonitoring, .screenRecording: ("", "")
+            tr(en: "macOS asks next whether \(app) may control \(PermissionsKit.appName(bundleId)).\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) \(PermissionsKit.appName(bundleId)) steuern darf.\nWähle „Erlauben“.")
+        case .speechRecognition:
+            tr(en: "macOS asks next whether \(app) may use speech recognition.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) die Spracherkennung nutzen darf.\nWähle „Erlauben“.")
+        case .contacts:
+            tr(en: "macOS asks next whether \(app) may access your contacts.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) auf deine Kontakte zugreifen darf.\nWähle „Erlauben“.")
+        case .calendars:
+            tr(en: "macOS asks next whether \(app) may access your calendars.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) auf deine Kalender zugreifen darf.\nWähle „Erlauben“.")
+        case .reminders:
+            tr(en: "macOS asks next whether \(app) may access your reminders.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) auf deine Erinnerungen zugreifen darf.\nWähle „Erlauben“.")
+        case .photos:
+            tr(en: "macOS asks next whether \(app) may access your photos.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) auf deine Fotos zugreifen darf.\nWähle „Erlauben“.")
+        case .location:
+            tr(en: "macOS asks next whether \(app) may use your location.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) deinen Standort nutzen darf.\nWähle „Erlauben“.")
+        case .bluetooth:
+            tr(en: "macOS asks next whether \(app) may use Bluetooth.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) Bluetooth nutzen darf.\nWähle „Erlauben“.")
+        case .localNetwork:
+            tr(en: "macOS asks next whether \(app) may find devices on your network.\nChoose “Allow”.",
+               de: "macOS fragt gleich, ob \(app) Geräte in deinem Netzwerk finden darf.\nWähle „Erlauben“.")
+        case .accessibility, .inputMonitoring, .screenRecording:
+            ""   // switch kinds: no dialog question (see `hint`)
         }
     }
 
@@ -123,13 +151,17 @@ enum PermissionText {
             return [tr(en: "macOS asks the first time \(app) searches your network.\nChoose “Allow”.",
                        de: "macOS fragt, wenn \(app) zum ersten Mal im Netzwerk sucht.\nWähle „Erlauben“.")]
         case .dialog:
+            if status == .denied, case .automation(let bundleId) = kind {
+                // System Settings lists the target under this app: that switch is the one
+                let target = tr(en: "“\(PermissionsKit.appName(bundleId))”", de: "„\(PermissionsKit.appName(bundleId))“")
+                return [tr(en: "In System Settings under \(list), turn on \(target) below \(quoted).",
+                           de: "Schalte in den Systemeinstellungen unter \(list) bei \(quoted) den Eintrag \(target) ein.")]
+            }
             if status == .denied {
                 return [tr(en: "Turn on \(quoted) in System Settings under \(list).",
                            de: "Schalte in den Systemeinstellungen unter \(list) den Eintrag \(quoted) ein.")]
             }
-            let phrase = askPhrase(kind)
-            var lines = [tr(en: "macOS asks next whether \(app) may \(phrase.en).\nChoose “Allow”.",
-                            de: "macOS fragt gleich, ob \(app) \(phrase.de) darf.\nWähle „Erlauben“.")]
+            var lines = [askLine(kind)]
             if case .automation(let bundleId) = kind {
                 let target = PermissionsKit.appName(bundleId)
                 lines.append(tr(en: "\(target) must be open for this.", de: "Dafür muss \(target) geöffnet sein."))
