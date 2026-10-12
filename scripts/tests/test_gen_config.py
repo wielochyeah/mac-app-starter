@@ -41,6 +41,8 @@ class GenConfigTests(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         (self.tmp / "App" / "Resources").mkdir(parents=True)
+        for folder in gen_config.MODULE_DIRS.values():
+            (self.tmp / "App" / "Sources" / "Modules" / folder).mkdir(parents=True)
         self.write(json.loads(json.dumps(FIXTURE)))
         shutil.copy(ROOT / "App" / "Resources" / "InfoPlist.json", self.tmp / "App" / "Resources" / "InfoPlist.json")
         self.out = self.tmp / "gen"
@@ -203,6 +205,15 @@ class GenConfigTests(unittest.TestCase):
         self.write(c)
         with self.assertRaises(gen_config.ConfigError):
             gen_config.generate(self.tmp, self.out)
+
+    def test_removed_module_is_refused(self):
+        (self.tmp / "App" / "Sources" / "Modules" / "Island").rmdir()
+        c = self.config()
+        del c["modules"]["island"]
+        self.write(c)
+        self.assertNotIn("island", gen_config.generate(self.tmp, self.out))
+        with self.assertRaisesRegex(gen_config.ConfigError, "island.*App/Sources/Modules/Island"):
+            gen_config.generate(self.tmp, self.out, "window,island")
 
     def test_override_order_is_canonical(self):
         modules = gen_config.generate(self.tmp, self.out, " Examples, window ,ai")

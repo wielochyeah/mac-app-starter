@@ -124,6 +124,16 @@ def resolve_modules(config, override):
     return [m for m in MODULE_DIRS if m in enabled]
 
 
+def check_module_dirs(root, modules):
+    """A module whose folder is gone (bin/starter remove) would build without its code yet still be listed
+    in AppConfig.enabledModules, so it is refused instead."""
+    missing = [m for m in modules if not (Path(root) / "App" / "Sources" / "Modules" / MODULE_DIRS[m]).is_dir()]
+    if missing:
+        folders = ", ".join(f"App/Sources/Modules/{MODULE_DIRS[m]}" for m in missing)
+        raise ConfigError(f"module(s) {', '.join(missing)} not in this project ({folders} missing, removed with "
+                          f"bin/starter remove?); bin/starter modules lists the modules that are left")
+
+
 def validate(config):
     app = config.get("app")
     if not isinstance(app, dict):
@@ -297,6 +307,7 @@ def generate(root, out, override=None):
     config = load_json(root / "starter.json")
     validate(config)
     modules = resolve_modules(config, override)
+    check_module_dirs(root, modules)
     texts_path = root / "App" / "Resources" / "InfoPlist.json"
     texts = load_json(texts_path) if texts_path.exists() else {}
     write_if_changed(out / "AppConfig.swift", app_config_swift(config, modules))
