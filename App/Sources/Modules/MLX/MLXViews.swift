@@ -19,7 +19,9 @@ struct MLXSectionModel {
         return MLXSectionModel(
             rows: d.catalog.models.map { row($0, d.state($0.id)) }, selected: selected,
             options: d.catalog.models.map { ($0.id, MLXText.role($0.role)) }, memoryGB: provider.selected?.ramGB,
-            footnote: footnote(states, selected: selected, installed: provider.isInstalled()), bytesOnDisk: d.bytesOnDisk,
+            // the pane's top notice already explains a missing setup when MLX is the one in use
+            footnote: footnote(states, selected: selected,
+                               installed: provider.isInstalled() || LocalAI.shared.availability.reason == .notInstalled), bytesOnDisk: d.bytesOnDisk,
             installed: provider.isInstalled())
     }
 

@@ -199,7 +199,7 @@ enum MLXScenes {
         return MLXSectionModel(
             rows: catalog.models.map { MLXSectionModel.row($0, states[$0.id] ?? .notStarted) }, selected: selected,
             options: catalog.models.map { ($0.id, MLXText.role($0.role)) }, memoryGB: catalog.defaultModel?.ramGB,
-            footnote: MLXSectionModel.footnote(states, selected: selected, installed: state != .notInstalled),
+            footnote: MLXSectionModel.footnote(states, selected: selected, installed: true),   // .notInstalled: the pane's top notice explains it
             bytesOnDisk: state == .ready ? 2_384 * mb : 0, installed: state != .notInstalled)
     }
 
