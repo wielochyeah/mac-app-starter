@@ -1,0 +1,11 @@
+#!/bin/zsh
+# Runs `make check` before every push (rule A-02): rules, texts, design, kit, build and tests.
+# Installed with `make hooks`. Git passes the remote and the refs on stdin; the check covers the whole tree.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+print "pre-push: make check"
+if ! make check; then
+  print -u2 "pre-push: make check ist rot, Push abgebrochen. Befunde beheben, dann erneut pushen."
+  exit 1
+fi
