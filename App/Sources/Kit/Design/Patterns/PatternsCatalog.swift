@@ -376,12 +376,16 @@ private struct NavigationRowSample: View {
 
 private struct NoticeSample: View {
     var body: some View {
-        VStack(spacing: Space.s) {
+        VStack(alignment: .leading, spacing: Space.s) {
             InlineNotice(PatternsSampleText.noticeInfo, title: PatternsSampleText.noticeInfoTitle,
                          actionTitle: PatternsSampleText.turnOn) {}
             InlineNotice(PatternsSampleText.noWaitNote, kind: .success)
             InlineNotice(PatternsSampleText.noticeWarn, kind: .warning)
             InlineNotice(PatternsSampleText.noticeError, kind: .error)
+            // a narrow column: the chip moves under the text
+            InlineNotice(PatternsSampleText.noticeInfo, title: PatternsSampleText.noticeInfoTitle,
+                         actionTitle: PatternsSampleText.turnOn, actionBelow: true) {}
+                .frame(width: Metrics.onboardingCard - Space.xl * 2)
         }
     }
 }

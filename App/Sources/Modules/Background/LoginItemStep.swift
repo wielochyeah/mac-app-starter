@@ -31,7 +31,8 @@ struct LoginItemStep: View {
                 }
                 if login.status == .requiresApproval {
                     // the notice names the same place in System Settings, so it replaces the footnote
-                    InlineNotice(BackgroundText.needsApproval, kind: .warning, actionTitle: BackgroundText.openLoginItems) {
+                    InlineNotice(BackgroundText.needsApproval, kind: .warning, actionTitle: BackgroundText.openLoginItems,
+                                 actionBelow: true) {
                         LoginItem.openSystemSettings()
                     }
                     .padding(.top, Space.s)

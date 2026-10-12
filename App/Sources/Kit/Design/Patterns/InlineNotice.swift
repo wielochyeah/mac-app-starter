@@ -2,7 +2,9 @@ import SwiftUI
 
 /// A banner inside a pane or step that explains a state and, if there is one, the way out
 /// (VoiceBud OnboardingSpeedHint): tinted fill (10 % / 16 %) with a 1 pt edge (35 %), radius 12,
-/// icon 15 semibold, optional 13 semibold title, 12 `prose` text, optional chip.
+/// icon 15 semibold, optional 13 semibold title, 12 `prose` text, optional chip: on the right, or
+/// under the text with `actionBelow` where the column is narrow (a 460 pt step card), so the text
+/// keeps its width.
 struct InlineNotice: View {
     enum Kind {
         case info, success, warning, error
@@ -39,17 +41,19 @@ struct InlineNotice: View {
     var title: String?
     var kind: Kind
     var actionTitle: String?
+    var actionBelow: Bool
     var action: (() -> Void)?
     var perform: (String) -> Void
     @Environment(\.colorScheme) private var scheme
 
     /// `text` may contain `[label](app://action)` links, routed to `perform`.
-    init(_ text: String, title: String? = nil, kind: Kind = .info, actionTitle: String? = nil, action: (() -> Void)? = nil,
-         perform: @escaping (String) -> Void = { _ in }) {
+    init(_ text: String, title: String? = nil, kind: Kind = .info, actionTitle: String? = nil, actionBelow: Bool = false,
+         action: (() -> Void)? = nil, perform: @escaping (String) -> Void = { _ in }) {
         self.text = text
         self.title = title
         self.kind = kind
         self.actionTitle = actionTitle
+        self.actionBelow = actionBelow
         self.action = action
         self.perform = perform
     }
@@ -74,9 +78,12 @@ struct InlineNotice: View {
                     .foregroundStyle(t.prose)
                     .lineSpacing(1)
                     .fixedSize(horizontal: false, vertical: true)
+                if actionBelow, let actionTitle, let action {
+                    Chip(actionTitle, action: action).padding(.top, Space.xxs)
+                }
             }
             Spacer(minLength: 0)
-            if let actionTitle, let action {
+            if !actionBelow, let actionTitle, let action {
                 Chip(actionTitle, action: action)
             }
         }
