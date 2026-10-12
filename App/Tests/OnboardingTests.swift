@@ -24,6 +24,80 @@ final class OnboardingTests: TestSuite {
             expectEqual(OnboardingFlow.startIndex(steps: steps, done: false, resume: .init(id: "gone", order: 5000)), 0)
         }
 
+        test("start index: a restart from a setup shown again from Settings comes back to its step") {
+            let steps = fiveSteps.map { (id: $0.id, order: $0.order) }
+            let island = OnboardingResumePoint(id: "island", order: 500)
+            expectEqual(OnboardingFlow.startIndex(steps: steps, done: true, reopen: true, resume: island), 3)
+            expectEqual(OnboardingFlow.startIndex(steps: steps, done: true, reopen: true, resume: .none), 0)
+        }
+
+        test("opens at launch: first run or a reopen, never without steps or in the background") {
+            expect(OnboardingKit.opensAtLaunch(done: false, reopen: false, hasSteps: true, background: false))
+            expect(!OnboardingKit.opensAtLaunch(done: true, reopen: false, hasSteps: true, background: false))
+            expect(OnboardingKit.opensAtLaunch(done: true, reopen: true, hasSteps: true, background: false))
+            expect(!OnboardingKit.opensAtLaunch(done: false, reopen: false, hasSteps: false, background: false))
+            expect(!OnboardingKit.opensAtLaunch(done: false, reopen: true, hasSteps: true, background: true))
+        }
+
+        test("flow: a re-run restarted from a permission step reopens there once") {
+            let store = settings()
+            store[.onboardingDone] = true
+            let first = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: store)
+            expectEqual(first.index, 0, "shown again from Settings: from the top")
+            first.go(to: 2)
+            first.prepareRestart()
+            first.isRelaunching = true
+            first.leave()   // a window closing during the relaunch changes nothing
+            expect(store[.onboardingReopen])
+            // the new process
+            let reopened = Settings(fileURL: store.fileURL)
+            expect(OnboardingKit.opensAtLaunch(done: reopened[.onboardingDone], reopen: reopened[.onboardingReopen],
+                                               hasSteps: true, background: false))
+            let again = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: reopened)
+            expectEqual(again.current?.id, "permission.microphone")
+            expect(!reopened[.onboardingReopen], "used once")
+            let later = Settings(fileURL: store.fileURL)
+            expect(!OnboardingKit.opensAtLaunch(done: later[.onboardingDone], reopen: later[.onboardingReopen],
+                                                hasSteps: true, background: false))
+        }
+
+        test("flow: closing the window by hand drops the reopen; a re-run also forgets its step") {
+            let rerun = settings()
+            rerun[.onboardingDone] = true
+            let flow = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: rerun)
+            flow.go(to: 2)
+            flow.prepareRestart()   // asked for Screen Recording, then closed the window instead
+            flow.leave()
+            expect(!rerun[.onboardingReopen])
+            expect(!rerun.hasValue(.onboardingResume))
+            let first = settings()
+            let firstFlow = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: first)
+            firstFlow.go(to: 2)
+            firstFlow.leave()
+            expectEqual(first[.onboardingResume].id, "permission.microphone", "a first setup continues there next time")
+        }
+
+        test("flow: go(toStep:) jumps by id, unknown ids do nothing") {
+            let flow = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: nil, startAt: 4)
+            flow.go(toStep: "nope")
+            expectEqual(flow.index, 4)
+            flow.go(toStep: "permission.microphone")
+            spin(1) { flow.index == 2 }
+            expectEqual(flow.index, 2)
+        }
+
+        test("launch: --background and a login-item launch event mean no windows") {
+            expect(LaunchFlags.parse(["app", "--background"]).background)
+            expect(LaunchFlags.parse(["app", "--background"]).errors.isEmpty)
+            let event = NSAppleEventDescriptor(eventClass: AEEventClass(kCoreEventClass), eventID: AEEventID(kAEOpenApplication),
+                                               targetDescriptor: nil, returnID: AEReturnID(kAutoGenerateReturnID),
+                                               transactionID: AETransactionID(kAnyTransactionID))
+            expect(!Launch.isLoginItemLaunch(event))
+            event.setParam(NSAppleEventDescriptor(enumCode: OSType(keyAELaunchedAsLogInItem)), forKeyword: AEKeyword(keyAEPropData))
+            expect(Launch.isLoginItemLaunch(event))
+            expect(!Launch.isLoginItemLaunch(nil))
+        }
+
         test("registry steps: filtered by isIncluded, sorted by order then id") {
             Registry.withScratch {
                 Registry.onboardingSteps = OnboardingKit.kitSteps(permissions: [.microphone, .accessibility], features: { [] })

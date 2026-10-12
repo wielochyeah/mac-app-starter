@@ -8,6 +8,8 @@ import AppKit
 ///                         (Kit/Permissions asks this for Screen Recording, see PermissionProbe)
 ///     <App> --demo        normal launch, no onboarding, runs every `Registry.demoDrivers` entry
 ///                         (scripted loops such as the island's); fails when no module adds one
+///     <App> --background  normal launch without onboarding or main window (`Launch.isBackground`;
+///                         a launch as a login item counts as one too)
 ///
 /// Unknown `--` flags are errors (exit 2), so a mistyped tool flag never starts the GUI app.
 /// Single-dash arguments are macOS's own (`-NSDocumentRevisionsDebugMode YES`, `-psn_…`) and pass.
@@ -21,6 +23,7 @@ struct LaunchFlags: Equatable {
     var appearance: Appearance?
     var selftest = false
     var demo = false
+    var background = false
     var permissionProbe: String?
     var errors: [String] = []
 
@@ -56,6 +59,8 @@ struct LaunchFlags: Equatable {
                 flags.selftest = true
             case "--demo":
                 flags.demo = true
+            case "--background":
+                flags.background = true
             case "--permission-probe":
                 flags.permissionProbe = value(arg)
             default:
@@ -79,6 +84,22 @@ enum Launch {
     private static var delegate: AppDelegate?
     /// True for `--demo`: AppDelegate skips onboarding and runs `Registry.demoDrivers`.
     private(set) static var isDemo = false
+    /// True for `--background` and for a launch as a login item: AppDelegate opens no window
+    /// (no onboarding, no main window); menu bar, island and background jobs run as usual.
+    private(set) static var isBackground = false
+
+    /// Reads the launch Apple event (AppDelegate, `applicationDidFinishLaunching`): macOS marks a
+    /// login-item launch with `keyAELaunchedAsLogInItem`. SMAppService.mainApp cannot pass
+    /// arguments, so this is how a login launch is told apart.
+    static func noteLaunchEvent(_ event: NSAppleEventDescriptor?) {
+        if isLoginItemLaunch(event) { isBackground = true }
+    }
+
+    nonisolated static func isLoginItemLaunch(_ event: NSAppleEventDescriptor?) -> Bool {
+        guard let event, event.eventClass == AEEventClass(kCoreEventClass),
+              event.eventID == AEEventID(kAEOpenApplication) else { return false }
+        return event.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == OSType(keyAELaunchedAsLogInItem)
+    }
 
     static func run(_ flags: LaunchFlags) -> Never {
         if !flags.errors.isEmpty {
@@ -111,6 +132,7 @@ enum Launch {
             }
             isDemo = true
         }
+        isBackground = flags.background
         let delegate = AppDelegate()
         Launch.delegate = delegate
         app.delegate = delegate

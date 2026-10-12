@@ -15,6 +15,11 @@ extension SettingKey {
     /// restart the app, so a restart (Input Monitoring, Screen Recording, macOS's own "Quit &
     /// Reopen") comes back to the same step. VoiceBud lost it (notes gotcha 14).
     static var onboardingResume: SettingKey<OnboardingResumePoint> { .init("onboarding.resume", default: .none) }
+    /// Set right before the app may restart from inside the setup ("Restart <App>", or a restart
+    /// kind's request or System Settings pane, where macOS offers "Quit & Reopen"): the next
+    /// launch opens the setup at `onboardingResume` even when it was finished before (shown again
+    /// from Settings). Cleared once a flow used it, on "Done" and when the window is closed.
+    static var onboardingReopen: SettingKey<Bool> { .init("onboarding.reopen", default: false) }
 }
 
 /// What the footer's advance button does on a step. Steps that hold their own primary action
@@ -42,6 +47,8 @@ struct OnboardingAdvance: Equatable {
     @ObservationIgnored var onFinish: () -> Void = {}
     /// Set by `finish()`: a second click on Done (or Return pressed twice) does nothing.
     @ObservationIgnored private(set) var isFinished = false
+    /// Set when the app is about to relaunch: closing the window then is not leaving the setup.
+    @ObservationIgnored var isRelaunching = false
 
     /// - settings: where the step and the done flag are saved; nil for renders (nothing written).
     init(steps: [OnboardingStep], monitor: PermissionMonitor = .shared, settings: Settings? = .shared,
@@ -51,9 +58,12 @@ struct OnboardingAdvance: Equatable {
         self.settings = settings
         self.rules = rules
         let start = startAt ?? settings.map {
-            Self.startIndex(steps: steps.map { ($0.id, $0.order) }, done: $0[.onboardingDone], resume: $0[.onboardingResume])
+            Self.startIndex(steps: steps.map { ($0.id, $0.order) }, done: $0[.onboardingDone],
+                            reopen: $0[.onboardingReopen], resume: $0[.onboardingResume])
         } ?? 0
         index = steps.isEmpty ? 0 : min(max(start, 0), steps.count - 1)
+        // the marker brought the setup back once; a later normal launch must not
+        if let settings, settings[.onboardingReopen] { settings.reset(.onboardingReopen) }
     }
 
     // MARK: Reading
@@ -105,6 +115,11 @@ struct OnboardingAdvance: Equatable {
         }
     }
 
+    /// Jumps to the step with this id (the Done page's rows of permissions not allowed yet).
+    func go(toStep id: String) {
+        if let target = steps.firstIndex(where: { $0.id == id }) { go(to: target) }
+    }
+
     private func commit(_ target: Int) {
         guard steps.indices.contains(target) else { return }
         canContinue = true
@@ -118,6 +133,22 @@ struct OnboardingAdvance: Equatable {
         settings[.onboardingResume] = OnboardingResumePoint(id: current.id, order: current.order)
     }
 
+    /// Saves the step and asks the next launch to reopen the setup there (right before
+    /// anything that may restart the app; VoiceBud lost the step here, notes gotcha 14).
+    func prepareRestart() {
+        guard let settings else { return }
+        save()
+        settings[.onboardingReopen] = true
+    }
+
+    /// The window was closed without "Done" (not by a relaunch): no reopen on the next launch,
+    /// and a setup shown again from Settings forgets its step. A first setup keeps its step.
+    func leave() {
+        guard !isFinished, !isRelaunching, let settings else { return }
+        settings.reset(.onboardingReopen)
+        if settings[.onboardingDone] { settings.reset(.onboardingResume) }
+    }
+
     /// Marks onboarding done, forgets the step and calls `onFinish`.
     func finish() {
         guard !isFinished else { return }
@@ -125,6 +156,7 @@ struct OnboardingAdvance: Equatable {
         if let settings {
             settings[.onboardingDone] = true
             settings.reset(.onboardingResume)
+            settings.reset(.onboardingReopen)
         }
         onFinish()
     }
@@ -132,9 +164,11 @@ struct OnboardingAdvance: Equatable {
     // MARK: Rules (pure, OnboardingTests)
 
     /// Where a newly opened onboarding starts: at the top once it was finished (shown again from
-    /// Settings), else at the saved step, else at the first step ordered after it, else at 0.
-    nonisolated static func startIndex(steps: [(id: String, order: Int)], done: Bool, resume: OnboardingResumePoint) -> Int {
-        guard !done, !resume.id.isEmpty else { return 0 }
+    /// Settings) unless a restart from inside the setup asked to `reopen` it, else at the saved
+    /// step, else at the first step ordered after it, else at 0.
+    nonisolated static func startIndex(steps: [(id: String, order: Int)], done: Bool, reopen: Bool = false,
+                                       resume: OnboardingResumePoint) -> Int {
+        guard !done || reopen, !resume.id.isEmpty else { return 0 }
         if let same = steps.firstIndex(where: { $0.id == resume.id }) { return same }
         return steps.firstIndex(where: { $0.order >= resume.order }) ?? 0
     }

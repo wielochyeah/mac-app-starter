@@ -79,7 +79,8 @@ enum OnboardingKit {
         ]
         for (i, kind) in permissions.enumerated() {
             steps.append(OnboardingStep(id: StepID.permission(kind), order: Order.permissions + i, isIncluded: { true }) { _ in
-                AnyView(PermissionStep(kind: kind, restart: { OnboardingWindow.restart() }))
+                AnyView(PermissionStep(kind: kind, restart: { OnboardingWindow.restart() },
+                                       willLeaveForRestart: { OnboardingWindow.flow?.prepareRestart() }))
             })
         }
         return steps
@@ -100,6 +101,18 @@ enum OnboardingKit {
 
     static func restartPending(_ permissions: [PermissionKind], _ monitor: PermissionMonitor) -> Bool {
         permissions.contains { monitor.status($0) == .restartNeeded }
+    }
+
+    /// Whether `AppDelegate` opens the setup at launch: not finished yet, or a restart from inside
+    /// the setup asked for it (also after a re-run from Settings); never for a login-item or
+    /// `--background` launch.
+    nonisolated static func opensAtLaunch(done: Bool, reopen: Bool, hasSteps: Bool, background: Bool) -> Bool {
+        hasSteps && !background && (!done || reopen)
+    }
+
+    static var opensAtLaunch: Bool {
+        opensAtLaunch(done: Settings.shared[.onboardingDone], reopen: Settings.shared[.onboardingReopen],
+                      hasSteps: !Registry.orderedOnboardingSteps.isEmpty, background: Launch.isBackground)
     }
 }
 
@@ -137,10 +150,12 @@ enum OnboardingWindow {
         if firstTime && AppInfo.isEnabled("window") { AppActions.openMainWindow() }
     }
 
-    /// "Restart <App>" on a permission step: save the step, then relaunch. The new process opens
-    /// the onboarding again (not done yet) at this step.
+    /// "Restart <App>" on a permission step: save the step and the reopen marker, then relaunch.
+    /// The new process opens the setup again at this step, also when it was shown from Settings.
     static func restart() {
-        flow?.save()
-        AppRelaunch.relaunch()
+        AppRelaunch.relaunch {
+            flow?.prepareRestart()
+            flow?.isRelaunching = true
+        }
     }
 }
