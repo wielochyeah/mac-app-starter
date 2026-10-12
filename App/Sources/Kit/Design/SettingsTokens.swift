@@ -1,26 +1,10 @@
 import SwiftUI
 
 // Tokens of the settings window (Kit/Settings) and the component gallery (Kit/Gallery), from
-// VoiceBud's hub (ui/Hub.swift HubSidebar / HubStaticWindow, notes vb-onboarding-hub §3.2).
-// `Metrics.Sidebar` is the macOS 26 floating sidebar; the main window (module window) should use
-// it too instead of its own copy.
+// VoiceBud's hub (ui/Hub.swift HubSidebar / HubStaticWindow). The sidebar both windows share is in
+// Sidebar.swift.
 
 extension Metrics {
-    /// The floating sidebar of a NavigationSplitView window on macOS 26 (and its render imitation).
-    enum Sidebar {
-        /// Column width range (ideal = `Metrics.sidebarWidth`).
-        static let minWidth: CGFloat = 200
-        static let maxWidth: CGFloat = 280
-        /// Top inset of the first item, below the traffic lights.
-        static let top: CGFloat = 44
-        /// Top inset when the sidebar is drawn on its own (gallery), without traffic lights.
-        static let topAlone: CGFloat = 12
-        /// Gap between the static sidebar panel and the window edge (macOS 26 inset glass panel).
-        static let panelInset: CGFloat = 8
-        static let panelShadowRadius: CGFloat = 6
-        static let panelShadowY: CGFloat = 1
-    }
-
     /// App icon at the top of the About pane.
     static let aboutIcon: CGFloat = 96
     /// The band under the gallery header (area menu, count, light/dark switch), VoiceBud stats line.

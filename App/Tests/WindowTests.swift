@@ -239,8 +239,8 @@ final class WindowTests: TestSuite {
                     expect(width(c.name(), 13, .medium) <= Metrics.Window.tileMin, "\(lang) \(c.name())")
                 }
                 // sidebar title column: ideal width minus panel insets, symbol column and gap
-                let titleColumn = Metrics.Window.sidebarIdeal - 2 * Metrics.Window.sidebarContentInset
-                    - Metrics.Window.sidebarSymbolColumn - Space.xs
+                let titleColumn = Metrics.sidebarWidth - 2 * Metrics.Sidebar.contentInset
+                    - Metrics.Sidebar.symbolColumn - Space.xs
                 for p in WindowSamples.sidebarPages {
                     expect(width(p.title(), 13) <= titleColumn, "\(lang) \(p.title())")
                 }

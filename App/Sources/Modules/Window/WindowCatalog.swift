@@ -51,8 +51,8 @@ enum WindowCatalog {
             // parts
             Item(id: "sidebar", title: { WindowText.gallerySidebar }) {
                 AnyView(StaticSidebar(groups: MainWindowModel.groups(WindowSamples.sidebarPages), selection: "hikes")
-                    .frame(width: Metrics.Window.sidebarIdeal, height: Metrics.Window.minSize.height)
-                    .padding(Metrics.Window.sidebarInset)
+                    .frame(width: Metrics.sidebarWidth, height: Metrics.Window.minSize.height)
+                    .padding(Metrics.Sidebar.panelInset)
                     .background(SceneBackground()))
             },
             Item(id: "page-scaffold", title: { WindowCodeNames.pageScaffold }, size: CGSize(width: 760, height: 440)) {

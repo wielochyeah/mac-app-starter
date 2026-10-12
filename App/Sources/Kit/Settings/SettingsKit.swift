@@ -88,16 +88,11 @@ enum SettingsScenes {
 
 /// The sidebar on its own, as macOS 26 draws it (floating panel, no traffic lights), for the gallery.
 private struct SidebarSample: View {
-    @Environment(\.colorScheme) private var scheme
-
     var body: some View {
-        let t = Theme(scheme)
-        let panel = RoundedRectangle(cornerRadius: Radius.panel, style: .continuous)
         SettingsSidebar(hub: SettingsHub(pane: "general", persists: false), top: Metrics.Sidebar.topAlone,
                         footer: { AnyView(LocalOnlyFooter()) })
             .frame(width: Metrics.sidebarWidth, height: Metrics.sidebarSample)
-            .background(panel.fill(t.sidebarPanel))
-            .overlay(panel.strokeBorder(t.sidebarPanelStroke, lineWidth: Metrics.hairline))
+            .staticSidebarPanel()
             .environment(\.renderStatic, true)
     }
 }
