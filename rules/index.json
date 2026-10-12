@@ -104,7 +104,7 @@
       "pfad": ".claude/workflows/red-team.js"
     },
     {
-      "name": "`bin/starter` (`init`, `remove`, `strip-examples`, `sync`, `check-kit`)",
+      "name": "`bin/starter` (`init`, `remove`, `strip-examples`, `sync`, `check-kit`, `modules`, `doctor`)",
       "regeln": ["A-06", "T-03"],
       "pfad": "bin/starter"
     },
@@ -184,9 +184,14 @@
       "pfad": "App/Sources/Kit/Permissions"
     },
     {
-      "name": "`RenderRunner` (`--render`, `make shots`) und `--selftest`",
+      "name": "`RenderRunner` (`--render`, `make shots`)",
       "regeln": ["D-13", "T-08"],
       "pfad": "App/Sources/Kit/Render/RenderRunner.swift"
+    },
+    {
+      "name": "`SelfTestRunner` (`--selftest [präfix]`)",
+      "regeln": ["T-08"],
+      "pfad": "App/Sources/Kit/Main/SelfTest.swift"
     },
     {
       "name": "Test-Harness `TestSuite`",

@@ -123,7 +123,7 @@ Wo die Werkzeuge und Bausteine liegen, die die Regeln nennen. `make check-rules`
 | Session-Hook: Werkzeuge, Git-Hooks und Git-Identität aus `starter.json` beim Start jeder Session | A-04 | `.claude/hooks/session-start.py` |
 | Subagenten für Prüfung und Widerlegung | A-07 | `.claude/agents` |
 | Red-Team-Workflow über die Renders | A-07 | `.claude/workflows/red-team.js` |
-| `bin/starter` (`init`, `remove`, `strip-examples`, `sync`, `check-kit`) | A-06, T-03 | `bin/starter` |
+| `bin/starter` (`init`, `remove`, `strip-examples`, `sync`, `check-kit`, `modules`, `doctor`) | A-06, T-03 | `bin/starter` |
 | `make check-kit`: Kit-Dateien unverändert, jedes Modul entfernbar, Prüfungen eingeschaltet | A-06 | `scripts/check_kit.py` |
 | `make icon`: App-Symbol aus Akzent und SF Symbol | D-04 | `scripts/icon.sh` |
 | Gestaltung der Oberfläche mit Beispielen | D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14 | `docs/DESIGN.md` |
@@ -139,7 +139,8 @@ Wo die Werkzeuge und Bausteine liegen, die die Regeln nennen. `make check-rules`
 | `Modules.registerAll()`, die einzige Liste der Module | T-03 | `App/Sources/Kit/Main/Modules.swift` |
 | `AppForm`, `WindowHost`, `AppActions` | D-14, T-04 | `App/Sources/Kit/Main` |
 | Berechtigungen | T-04, T-06 | `App/Sources/Kit/Permissions` |
-| `RenderRunner` (`--render`, `make shots`) und `--selftest` | D-13, T-08 | `App/Sources/Kit/Render/RenderRunner.swift` |
+| `RenderRunner` (`--render`, `make shots`) | D-13, T-08 | `App/Sources/Kit/Render/RenderRunner.swift` |
+| `SelfTestRunner` (`--selftest [präfix]`) | T-08 | `App/Sources/Kit/Main/SelfTest.swift` |
 | Test-Harness `TestSuite` | T-09 | `App/Tests/Harness` |
 | Build mit einem `swiftc`-Aufruf und SDK-Wahl | T-01 | `scripts/build.sh` |
 | Erzeugte Konfiguration (`AppConfig`, Info.plist, InfoPlist.strings) | T-10 | `scripts/gen_config.py` |
