@@ -41,9 +41,10 @@ def starter(cwd, *args):
 
 
 def copy_tree(src: Path, dst: Path) -> None:
-    """The project with its Git history; of build/ only the compiler cache, so each copy builds faster."""
+    """The project with its Git history, without build/ (clang's module cache records its own path
+    and refuses to be reused from another folder)."""
     def ignore(folder, names):
-        return [n for n in names if Path(folder) == src / "build" and n != "cache"]
+        return [n for n in names if Path(folder) == src and n == "build"]
     shutil.copytree(src, dst, symlinks=True, ignore=ignore)
 
 
