@@ -1,9 +1,17 @@
-# Bilder für README.md, kopiert von make readme-shots aus build/shots nach docs/screenshots/
-# (aus "de-light/window.main.png" wird "docs/screenshots/de-light-window.main.png").
-# Eine Zeile je Bild: <sprache>-<erscheinung>/<szene>.png. Nur wenige, sorgfältig gewählte Bilder;
-# alles andere bleibt in build/shots und kommt nie ins Repository.
-de-light/window.main.png
-de-dark/settings.window.png
+# Bilder für README.md, geschrieben von make readme-shots (scripts/readme-shots.sh) nach docs/screenshots/,
+# jedes höchstens 1200 Pixel breit (aus "de-light/window.main.png" wird "docs/screenshots/de-light-window.main.png").
+# Eine Zeile je Bild: <sprache>-<erscheinung>/<szene>.png aus build/shots (vorher make shots), dazu
+# tools/icon.png (App-Symbol) und tools/dmg.png (DMG-Fenster), die die Werkzeuge in tools/ zeichnen.
+# Nur wenige, sorgfältig gewählte Bilder; alles andere bleibt in build/shots und kommt nie ins Repository.
+de-light/examples.overview.png
+en-dark/examples.detail-done.png
+de-dark/island.done-hover.png
+de-light/examples.menubar.png
 de-light/onboarding.welcome.png
-en-dark/island.done.png
-en-light/menubar.panel.png
+de-light/onboarding.language.png
+de-dark/onboarding.permission-restart.png
+de-light/settings.window.png
+de-dark/island.pane.png
+de-light/ai.pane.png
+tools/dmg.png
+tools/icon.png

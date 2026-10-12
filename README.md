@@ -2,7 +2,7 @@
 
 Vorlage, aus der jede neue native Mac-App startet, auch eine fachlich völlig andere. Ein Agent baut ab dem ersten Auftrag Funktionen und muss Fenster, Einstellungen, Onboarding, Gestaltung, Sprachen und Verteilung nicht neu bauen. Gebaut wird ohne Xcode, mit den Command Line Tools allein.
 
-![Hauptfenster](docs/screenshots/de-light-window.main.png)
+![Übersicht im Hauptfenster mit dem Beispiel „Notizen“](docs/screenshots/de-light-examples.overview.png)
 
 Fertig verdrahtet sind:
 
@@ -18,15 +18,70 @@ Fertig verdrahtet sind:
 - programmatisches App-Symbol, DMG mit gestaltetem Fenster, Signatur ad hoc oder mit Developer ID, Notarisierung
 - Regeln für Agenten, die Prüfskripte, Hooks, Subagenten und CI erzwingen
 
-| | |
-|---|---|
-| ![Einstellungen](docs/screenshots/de-dark-settings.window.png) | ![Onboarding](docs/screenshots/de-light-onboarding.welcome.png) |
-| ![Insel](docs/screenshots/en-dark-island.done.png) | ![Statusmenü](docs/screenshots/en-light-menubar.panel.png) |
+## Rundgang
+
+Alle Bilder rendert die App selbst, ohne Fenster auf dem Bildschirm (`make shots`, dann `make readme-shots`). Sie zeigen das Beispiel „Notizen“, das `bin/starter strip-examples` wieder entfernt; ein Projekt ersetzt sie über `docs/screenshots/list.txt` durch eigene.
+
+### Hauptfenster
+
+Eine Notiz öffnet sich über der Liste, aus der sie kommt, und daneben fasst Apples Modell auf dem Mac den Text zusammen und schlägt Titel und Stichwörter vor.
+
+![Notizseite mit Zusammenfassung und Titelvorschlag der lokalen KI](docs/screenshots/en-dark-examples.detail-done.png)
+
+### Insel
+
+Ergebnisse wachsen als Karte aus der Notch und klappen beim Überfahren mit dem ganzen Text, „Kopieren“ und einer eigenen Aktion auf.
+
+![Aufgeklappte Ergebniskarte der Insel](docs/screenshots/de-dark-island.done-hover.png)
+
+### Menüleiste
+
+Das Panel unter dem Statussymbol zeigt die Abschnitte der Funktionen, hier die drei zuletzt bearbeiteten Notizen, und darunter die Befehle der App.
+
+![Panel der Menüleiste mit dem Abschnitt „Notizen“](docs/screenshots/de-light-examples.menubar.png)
+
+### Einrichtung
+
+Im ersten Schritt wächst die echte Insel aus einer gezeichneten Notch und meldet eine gesicherte Notiz; ohne Modul `island` steht dort das App-Symbol vor dem Akzent.
+
+![Begrüßung mit der Insel](docs/screenshots/de-light-onboarding.welcome.png)
+
+Danach wählst du die Sprache der App, Englisch oder Deutsch, und sie wechselt sofort.
+
+![Schritt „Sprache“](docs/screenshots/de-light-onboarding.language.png)
+
+Jede Berechtigung bekommt einen eigenen Schritt; braucht eine Freigabe einen Neustart, startet die App per Knopf neu und setzt die Einrichtung an dieser Stelle fort.
+
+![Schritt „Eingabeüberwachung“, der auf den Neustart wartet](docs/screenshots/de-dark-onboarding.permission-restart.png)
+
+### Einstellungen
+
+Das Einstellungsfenster ist wie die Systemeinstellungen aufgebaut: oben die Bereiche der Funktionen, darunter „Allgemein“ mit Sprache, Erscheinungsbild und Zurücksetzen.
+
+![Einstellungen, Bereich „Allgemein“](docs/screenshots/de-light-settings.window.png)
+
+„Insel und Kapsel“ zeigt die echte Insel als Vorschau und regelt Darstellung, Dauer der Karte, Ausklappen und Töne.
+
+![Bereich „Insel und Kapsel“](docs/screenshots/de-dark-island.pane.png)
+
+„Modelle“ sagt, ob Apple Intelligence bereit ist, und schickt eine Testfrage an das Modell auf dem Mac; gespeichert werden nur Anzahl und Dauer der Anfragen.
+
+![Bereich „Modelle“ mit Testantwort](docs/screenshots/de-light-ai.pane.png)
+
+### Weitergabe
+
+`make dmg` legt ein DMG mit gestaltetem Fenster in beiden Sprachen an; solange es nicht notarisiert ist, steht der Weg über „Dennoch öffnen“ darunter.
+
+![Fenster des DMG](docs/screenshots/tools-dmg.png)
+
+`make icon` zeichnet das App-Symbol aus Akzent und SF Symbol für hell und dunkel; vor der Weitergabe kommt ein eigenes Motiv hinein.
+
+![App-Symbol auf hellem und dunklem Grund](docs/screenshots/tools-icon.png)
 
 <!-- nur-im-starter:anfang -->
 ## Stand
 
-Fassung 1.0.0 im Bau, die Änderungen stehen in `CHANGELOG.md`. Bauplan, Strang-Plan und Statusberichte liegen während des Baus unter `docs/bau/`; `bin/starter init` entfernt sie in einem Projekt. Ein neues Projekt richtet sich nach `docs/UEBERGABE.md`.
+Fassung 1.0.0 vom 12.10.2026, die Änderungen stehen in `CHANGELOG.md`. Die Bauunterlagen (Statusberichte der Stränge und der Integration) liegen unter `docs/bau/`; `bin/starter init` entfernt sie in einem Projekt. Ein neues Projekt richtet sich nach `docs/UEBERGABE.md`.
 <!-- nur-im-starter:ende -->
 
 ## Ein neues Projekt starten
@@ -121,7 +176,7 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 | `make test` | Swift-Tests (`build/tests/run-tests`) und Python-Tests; `ONLY=<präfix>` führt nur passende Swift-Tests aus |
 | `make check` | Regeln, Texte, Design, Kit, Build und Tests; vor jedem Push |
 | `make shots` | jede Szene in en und de, hell und dunkel nach `build/shots/` mit `index.html`; `ONLY=<präfix>` |
-| `make readme-shots` | Bilder aus `docs/screenshots/list.txt` nach `docs/screenshots/` kopieren |
+| `make readme-shots` | Bilder aus `docs/screenshots/list.txt` nach `docs/screenshots/`, höchstens 1200 Pixel breit, dazu App-Symbol und DMG-Fenster |
 | `make icon` | App-Symbol aus Akzent und SF Symbol nach `App/Resources/AppIcon.icns`, nur für die Entwicklung (vor der Weitergabe ein eigenes Motiv, `docs/VERTEILUNG.md`) |
 | `make dmg` | Release-Build und DMG nach `build/dmg/` |
 | `make notarize` | ein DMG aus `make dmg` mit Developer ID erneut einreichen; der Weg zur Notarisierung ist `signing.notarize: true` und `make dmg` (`docs/VERTEILUNG.md`) |
