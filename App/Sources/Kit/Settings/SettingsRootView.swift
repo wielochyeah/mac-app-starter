@@ -20,7 +20,6 @@ struct SettingsRootView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .toolbar(removing: .sidebarToggle)
-        .frame(minWidth: Metrics.settingsWindowMin.width, minHeight: Metrics.settingsWindowMin.height)
     }
 }
 

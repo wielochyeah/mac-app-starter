@@ -25,6 +25,7 @@ enum SettingsKit {
             if SettingsHub.resolve("about", current: nil, available: ids) != "about" { return "deep link to about fails" }
             return nil
         })
+        Registry.selfTests.append(SelfTestCheck(id: "settings.window") { SettingsController.checkWindow() })
         SettingsScenes.register()
     }
 }

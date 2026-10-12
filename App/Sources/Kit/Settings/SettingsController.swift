@@ -3,8 +3,8 @@ import SwiftUI
 
 /// Opens and closes the settings window (VoiceBud HubController, notes vb-onboarding-hub §3.1).
 ///
-/// `WindowHost` builds the window (900 x 620, min 760 x 500, empty unified toolbar for the 52 pt
-/// band, frame autosave that gives up its name on close, views released on close, switching between
+/// `WindowHost` builds the window (900 x 620, min 760 x 500 held through the SwiftUI root, empty
+/// unified toolbar for the 52 pt band, frame autosave that gives up its name on close, views released on close, switching between
 /// accessory and regular through `AppForm`). On top of that this controller
 /// - selects the requested pane (`AppActions.openSettings(pane:)`),
 /// - routes ⌘W / ⌘F / ⌘, and the editing keys while the window is key (an accessory app may run
@@ -44,6 +44,30 @@ enum SettingsController {
     }
 
     static func close() { WindowHost.close(windowID) }
+
+    /// Builds the real settings window offscreen (never shown: `--selftest` is headless) and checks
+    /// the chrome and that the 760 x 500 minimum holds after the hosting controller's first layout.
+    static func checkWindow() -> String? {
+        let hub = SettingsHub(pane: "general", persists: false)
+        let window = WindowHost.make(id: "settings-selftest", style: .settings, title: CommonText.settings) {
+            AnyView(SettingsRootView(hub: hub))
+        }
+        window.layoutIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.4))
+        defer {
+            window.contentViewController = nil
+            window.close()
+        }
+        var problems: [String] = []
+        if window.isVisible { problems.append("settings window became visible") }
+        if window.toolbarStyle != .unified { problems.append("toolbar style is not unified") }
+        if window.titleVisibility != .hidden { problems.append("title is visible") }
+        if window.minSize != Metrics.settingsWindowMin {
+            problems.append("minimum size \(window.minSize), expected \(Metrics.settingsWindowMin)")
+        }
+        if window.frame.size != Metrics.settingsWindow { problems.append("size \(window.frame.size) after layout") }
+        return problems.isEmpty ? nil : problems.joined(separator: "; ")
+    }
 
     private static func didClose() {
         if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }

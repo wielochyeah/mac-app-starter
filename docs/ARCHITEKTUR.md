@@ -68,7 +68,7 @@ App/Sources/
 
 **Fenster öffnen** geht nur über `AppActions` (`openSettings(pane:)`, `openOnboarding()`, `openMainWindow()`, `showAbout()`, `quit()`). Kit und Module setzen beim Start die passenden Handler. Fehlt ein Handler (etwa ohne `window`), fällt die Aktion auf die Einstellungen zurück; Aufrufer brauchen kein `#if`.
 
-**Fenster** entstehen über `WindowHost.show(id:style:size:minSize:title:content:)`: `NSWindow` mit `NSHostingController`, Titel folgt der Sprache, Views werden beim Schließen freigegeben, `AppForm` zählt offene Fenster und schaltet eine Accessory-App vorübergehend auf `.regular`, bis das letzte Kit-Fenster zu ist.
+**Fenster** entstehen über `WindowHost.show(id:style:size:minSize:title:configure:content:)`: `NSWindow` mit `NSHostingController`, Titel folgt der Sprache, die Mindestgröße eines größenveränderlichen Fensters hält die SwiftUI-Wurzel (ein bloßes `window.minSize` setzt `NSHostingController` beim ersten Layout zurück), Views werden beim Schließen freigegeben, `AppForm` zählt offene Fenster und schaltet eine Accessory-App vorübergehend auf `.regular`, bis das letzte Kit-Fenster zu ist.
 
 ## 4. Sprache
 
