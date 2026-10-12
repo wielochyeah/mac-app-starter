@@ -4,7 +4,8 @@ import SwiftUI
 // a fixed clock, a login item with fixed status: deterministic, nothing is scheduled or registered.
 
 enum BackgroundScenes {
-    static let ids = ["background.pane", "background.pane-unavailable", "background.onboarding"]
+    static let ids = ["background.pane", "background.pane-unavailable", "background.pane-approval", "background.onboarding",
+                      "background.onboarding-approval"]
 
     static func register() {
         Registry.renderScenes.append(RenderScene(id: "background.pane", size: .zero) {
@@ -16,16 +17,25 @@ enum BackgroundScenes {
             AnyView(BackgroundPane(jobs: BackgroundSamples.emptyJobs(), login: LoginItemModel(status: .unavailable, unavailable: .notInstalled))
                 .frame(width: BackgroundSamples.paneSize.width, height: BackgroundSamples.emptyPaneHeight))
         })
+        // macOS waits for approval, a change failed, and a task that has not run yet
+        Registry.renderScenes.append(RenderScene(id: "background.pane-approval", size: .zero) {
+            AnyView(BackgroundPane(jobs: BackgroundSamples.newJob(),
+                                   login: LoginItemModel(status: .requiresApproval,
+                                                         error: BackgroundText.loginItemFailed(BackgroundSampleText.notPermitted)))
+                .frame(width: BackgroundSamples.paneSize.width, height: BackgroundSamples.emptyPaneHeight))
+        })
         Registry.renderScenes.append(RenderScene(id: "background.onboarding", size: .zero) {
             AnyView(BackgroundSamples.OnboardingWindow {
                 LoginItemStep(login: LoginItemModel(status: .disabled), settings: BackgroundSamples.settings())
             })
         })
-        Registry.gallery.append(GalleryEntry(id: "background.jobs", area: "background", title: { BackgroundText.galleryJobs }) {
-            let jobs = BackgroundSamples.jobs()
-            return AnyView(ListCard(BackgroundText.jobs, items: jobs.jobs, emptyTitle: BackgroundText.noJobs) { job, hovered in
-                JobRow(job: job, jobs: jobs, hovered: hovered)
+        Registry.renderScenes.append(RenderScene(id: "background.onboarding-approval", size: .zero) {
+            AnyView(BackgroundSamples.OnboardingWindow {
+                LoginItemStep(login: LoginItemModel(status: .requiresApproval), settings: BackgroundSamples.settings())
             })
+        })
+        Registry.gallery.append(GalleryEntry(id: "background.jobs", area: "background", title: { BackgroundText.galleryJobs }) {
+            AnyView(JobList(jobs: BackgroundSamples.jobs()))
         })
     }
 }
@@ -73,6 +83,13 @@ enum BackgroundSamples {
         return jobs
     }
 
+    /// One task that has not run yet.
+    static func newJob() -> BackgroundJobs {
+        let jobs = emptyJobs()
+        jobs.register(id: "sample.index", title: { BackgroundSampleText.newJob }, interval: 3600) { .nothingToDo }
+        return jobs
+    }
+
     static func emptyJobs() -> BackgroundJobs {
         BackgroundJobs(store: MemoryJobStore(), scheduler: NoJobScheduler(), settings: nil, now: { now })
     }
@@ -89,7 +106,8 @@ enum BackgroundSamples {
                     OnboardingFrame {
                         page
                     } footer: {
-                        OnboardingFooter(count: 7, index: 6, back: {}, advance: {})
+                        // the login step comes before Done (order 1000), so it is never the last
+                        OnboardingFooter(count: 7, index: 5, back: {}, advance: {})
                     }
                 }
             }

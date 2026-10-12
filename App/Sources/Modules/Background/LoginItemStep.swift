@@ -29,12 +29,14 @@ struct LoginItemStep: View {
                 SettingsSection(tone: .onboarding) {
                     ToggleRow(BackgroundText.openAtLogin, subtitle: BackgroundText.stepToggleDetail, isOn: isOn)
                 }
-                OnboardingFootnote(BackgroundText.stepFootnote, lines: 2)
                 if login.status == .requiresApproval {
+                    // the notice names the same place in System Settings, so it replaces the footnote
                     InlineNotice(BackgroundText.needsApproval, kind: .warning, actionTitle: BackgroundText.openLoginItems) {
                         LoginItem.openSystemSettings()
                     }
                     .padding(.top, Space.s)
+                } else {
+                    OnboardingFootnote(BackgroundText.stepFootnote, lines: 2)
                 }
             }
             .frame(width: BackgroundMetrics.stepCard)

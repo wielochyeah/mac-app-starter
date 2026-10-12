@@ -12,7 +12,8 @@ enum LoginItem {
     enum Status: Equatable {
         case enabled
         case disabled
-        /// Registered, but the person still has to allow it in System Settings, Login Items.
+        /// Registered, but the person still has to allow it in System Settings, General, Login
+        /// Items & Extensions.
         case requiresApproval
         /// This copy of the app cannot be a login item (`unavailableReason`).
         case unavailable
@@ -117,10 +118,11 @@ enum LoginItem {
     }
 
     /// Fixed values for renders and tests; `set` changes only the shown status.
-    init(status: LoginItem.Status, unavailable: LoginItem.Unavailable? = nil) {
+    init(status: LoginItem.Status, unavailable: LoginItem.Unavailable? = nil, error: String? = nil) {
         isLive = false
         self.status = status
         self.unavailable = unavailable
+        self.error = error
     }
 
     var isOn: Bool { status == .enabled || status == .requiresApproval }

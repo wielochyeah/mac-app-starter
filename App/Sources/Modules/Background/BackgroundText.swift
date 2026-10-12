@@ -14,8 +14,8 @@ enum BackgroundText {
     static var startSection: String { tr(en: "Start", de: "Start") }
     static var openAtLogin: String { tr(en: "Open at login", de: "Beim Anmelden starten") }
     static var openAtLoginDetail: String {
-        tr(en: "\(AppInfo.displayName) starts with your Mac and waits quietly in the background.",
-           de: "\(AppInfo.displayName) startet mit deinem Mac und wartet still im Hintergrund.")
+        tr(en: "Opens with your Mac and waits quietly in the background.",
+           de: "Öffnet sich mit deinem Mac und wartet still im Hintergrund.")
     }
 
     static func unavailable(_ reason: LoginItem.Unavailable) -> String {
@@ -32,13 +32,13 @@ enum BackgroundText {
                de: "macOS hat \(app) an einem vorläufigen Ort geöffnet. Zieh die App in den Programme-Ordner und öffne sie erneut.")
         case .notInstalled:
             tr(en: "Only for the installed app: move \(app) to Applications and open it from there.",
-               de: "Nur für die installierte App: Zieh \(app) in den Programme-Ordner und öffne sie dort.")
+               de: "Nur für die installierte App: Zieh \(app) in den Programme-Ordner und öffne die App von dort.")
         }
     }
 
     static var needsApproval: String {
-        tr(en: "macOS waits for your approval in System Settings, General, Login Items.",
-           de: "macOS wartet auf deine Freigabe in den Systemeinstellungen unter Allgemein, Anmeldeobjekte.")
+        tr(en: "macOS waits for your approval in System Settings under General > Login Items & Extensions.",
+           de: "macOS wartet auf deine Freigabe in den Systemeinstellungen unter Allgemein > Anmeldeobjekte & Erweiterungen.")
     }
     static var openLoginItems: String { tr(en: "Open System Settings", de: "Systemeinstellungen öffnen") }
 
@@ -115,15 +115,15 @@ enum BackgroundText {
 
     static var stepTitle: String { tr(en: "Start with Your Mac", de: "Mit dem Mac starten") }
     static var stepSubtitle: String {
-        tr(en: "\(AppInfo.displayName) can open when you log in and wait quietly in the background.",
-           de: "\(AppInfo.displayName) kann beim Anmelden starten und still im Hintergrund warten.")
+        tr(en: "\(AppInfo.displayName) is there as soon as you log in, and waits quietly in the background.",
+           de: "\(AppInfo.displayName) ist da, sobald du dich anmeldest, und wartet still im Hintergrund.")
     }
     static var stepToggleDetail: String {
         tr(en: "You can change this any time in Settings.", de: "Das kannst du jederzeit in den Einstellungen ändern.")
     }
     static var stepFootnote: String {
-        tr(en: "macOS lists \(AppInfo.displayName) in System Settings under General, Login Items.",
-           de: "macOS führt \(AppInfo.displayName) in den Systemeinstellungen unter Allgemein, Anmeldeobjekte.")
+        tr(en: "macOS lists \(AppInfo.displayName) in System Settings under General > Login Items & Extensions.",
+           de: "macOS führt \(AppInfo.displayName) in den Systemeinstellungen unter Allgemein > Anmeldeobjekte & Erweiterungen.")
     }
 
     // MARK: Gallery
@@ -140,4 +140,6 @@ enum BackgroundSampleText {
     static var report: String { tr(en: "Weekly summary", de: "Wochenübersicht") }
     static var folderMissing: String { tr(en: "The shared folder is not connected.", de: "Der geteilte Ordner ist nicht verbunden.") }
     static var removed: String { tr(en: "12 files removed", de: "12 Dateien entfernt") }
+    static var newJob: String { tr(en: "Index new documents", de: "Neue Dokumente erfassen") }
+    static var notPermitted: String { tr(en: "Operation not permitted.", de: "Vorgang nicht erlaubt.") }
 }

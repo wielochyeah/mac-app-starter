@@ -375,6 +375,8 @@ final class BackgroundTests: TestSuite {
             expectEqual(JobRow.tone(.failed("x")), .warn)
             expectEqual(JobRow.tone(.nothingToDo), .neutral)
             expectEqual(JobRow.tone(nil), .neutral)
+            expectEqual(JobRow.tone(.done(), enabled: false), .neutral, "a switched-off job's badge is grey")
+            expectEqual(JobRow.tone(.failed("x"), enabled: false), .neutral)
         }
 
         // MARK: Login item
