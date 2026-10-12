@@ -118,6 +118,14 @@ bin/starter sync --ziel v1.1.0 --probelauf
 bin/starter sync --ziel v1.1.0
 ```
 
+Ohne `--quelle` holt `sync` die Tags von GitHub (`source` in `starter.lock.json`), per SSH, wenn `origin` des Projekts SSH nutzt, sonst per HTTPS. Ist der Starter privat und das Projekt per HTTPS geklont, die Quelle per SSH angeben, damit kein Passwort gefragt wird:
+
+```sh
+bin/starter sync --ziel v1.1.0 --quelle git@github.com:wielochyeah/mac-app-starter.git
+```
+
+Zugangsdaten in der Adresse (`https://<token>@github.com/…`) lehnt `sync` ab. Ein lokaler Klon des Starters geht als Pfad (`--quelle ../mac-app-starter`).
+
 Der Probelauf zeigt, was sich ändert. Der echte Lauf übernimmt Kit-Pfade, führt gemeinsame Dateien dreifach zusammen und lässt entfernte Module entfernt; er committet nichts und endet mit Code 2, wenn Konflikte bleiben. Danach zuerst `git diff` lesen, vor allem Hooks, CI und Skripte, dann `make rules`, Konflikte lösen, `make check`. Was im Starter allgemein fehlt, kommt nach `docs/STARTER_FEEDBACK.md`; der Skill `starter-rueckfluss` macht daraus einen Pull Request im Starter.
 
 ## 8. Nie
