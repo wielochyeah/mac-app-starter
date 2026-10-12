@@ -6,6 +6,9 @@ Fault flags (Swift MLXWorkerTests and tests/test_worker.py use them):
   --load S         a load takes S seconds
   --crash          exit with code 3 on the first generate (after "started")
   --crash-at-start exit with code 4 before "ready"
+  --crash-after N --marker PATH
+                   send N words, then exit with code 3, but only while PATH does not exist (it is
+                   created first), so the next worker answers: a crash mid-answer, then a retry
   --hang           a generate sends "started" and then never answers (ignores cancel)
   --noise          print to stdout and to fd 1 on every request (must never reach the protocol)
   --idle S         as worker.py (exit after S seconds without a request)
@@ -30,6 +33,8 @@ class FakeBackend:
         self.crash = "--crash" in sys.argv
         self.hang = "--hang" in sys.argv
         self.noise = "--noise" in sys.argv
+        self.crash_after = int(flag("--crash-after", -1))
+        self.marker = sys.argv[sys.argv.index("--marker") + 1] if "--marker" in sys.argv else None
 
     @property
     def loaded(self):
@@ -61,8 +66,15 @@ class FakeBackend:
             while True:
                 time.sleep(3600)
         words = ("echo: " + req.get("prompt", "")).split(" ")
+        crash_at = -1
+        if self.crash_after >= 0 and self.marker and not os.path.exists(self.marker):
+            open(self.marker, "w").close()
+            crash_at = self.crash_after
         text = ""
         for i, w in enumerate(words):
+            if i == crash_at:
+                sys.stderr.write("fake worker: crashing mid-answer as asked\n")
+                os._exit(3)
             time.sleep(self.gen_s)
             piece = w if i == 0 else " " + w
             text += piece

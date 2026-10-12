@@ -90,9 +90,12 @@ import Observation
 
     // MARK: Requests
 
-    /// Generates text. `onToken` gets each piece as it arrives (streaming).
+    /// Generates text. `onToken` gets each piece as it arrives (streaming). When the worker crashes
+    /// mid-answer the request is sent once more to a fresh worker; `onRestart` is called first, so a
+    /// caller that collects pieces starts over instead of appending the second answer to the first.
     func generate(prompt: String, system: String?, model: String?, maxTokens: Int, temperature: Double = 0,
-                  priority: Int = 0, timeout: TimeInterval? = nil, onToken: ((String) -> Void)? = nil) async throws -> GenerateResult {
+                  priority: Int = 0, timeout: TimeInterval? = nil, onToken: ((String) -> Void)? = nil,
+                  onRestart: (() -> Void)? = nil) async throws -> GenerateResult {
         let budget = timeout ?? WorkerBudget.timeout(maxTokens: maxTokens)
         func once() async throws -> GenerateResult {
             let event = try await request(timeout: budget, onToken: onToken) { id in
@@ -108,6 +111,7 @@ import Observation
         } catch AIError.workerCrashed where policy.wait(crashes: crashes, lastCrash: lastCrash, now: now()) == 0 {
             // one more try on a fresh worker (VoiceBud: a single crash must not cost the answer)
             Log.warn("mlx: worker ended during a request; sending it once more", "mlx")
+            onRestart?()
             return try await once()
         }
     }

@@ -101,10 +101,14 @@ extension SettingKey {
             let task = Task { @MainActor in
                 var text = ""
                 do {
-                    let result = try await self.run(request) { piece in
+                    let result = try await self.run(request, onToken: { piece in
                         text += piece
                         continuation.yield(text)
-                    }
+                    }, onRestart: {
+                        // the worker crashed mid-answer and the request starts again on a fresh one
+                        text = ""
+                        continuation.yield(text)
+                    })
                     if result.text != text { continuation.yield(result.text) }
                     continuation.finish()
                 } catch {
@@ -115,12 +119,12 @@ extension SettingKey {
         }
     }
 
-    func run(_ request: AIRequest, onToken: ((String) -> Void)?) async throws -> MLXWorkerClient.GenerateResult {
+    func run(_ request: AIRequest, onToken: ((String) -> Void)?, onRestart: (() -> Void)? = nil) async throws -> MLXWorkerClient.GenerateResult {
         refreshAvailability()
         if case .unavailable(let reason) = availability { throw AIError.unavailable(reason) }
         guard let model = selected, let path = downloads.path(model) else { throw AIError.unavailable(.modelMissing) }
         let maxTokens = request.maxTokens ?? WorkerBudget.maxTokens(promptCharacters: request.prompt.count)
         return try await client.generate(prompt: request.prompt, system: request.instructions, model: path.path, maxTokens: maxTokens,
-                                         temperature: request.temperature ?? 0, onToken: onToken)
+                                         temperature: request.temperature ?? 0, onToken: onToken, onRestart: onRestart)
     }
 }

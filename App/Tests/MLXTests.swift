@@ -266,6 +266,29 @@ final class MLXTests: TestSuite {
             expectEqual(client.crashes, 0, "an answer resets the count")
         }
 
+        test("a crash mid-answer: the stream starts over, never two answers glued together") {
+            let tmp = tempDir()
+            let client = fakeClient(["--crash-after", "2", "--marker", tmp.appendingPathComponent("crashed").path])
+            defer { client.shutdown() }
+            let hub = tmp.appendingPathComponent("hub")
+            fakeModel(hub)
+            let provider = MLXProvider(client: client, downloads: ModelDownloads(catalog: .builtIn, hub: hub) { _ in nil },
+                                       settings: Settings(fileURL: tmp.appendingPathComponent("s.json")), isInstalled: { true })
+            var snaps: [String] = []
+            let out = AIWait.run(timeout: 10) { () async throws -> String in
+                for try await s in provider.stream(AIRequest(prompt: "eins zwei drei", instructions: nil, maxTokens: 20)) { snaps.append(s) }
+                return snaps.last ?? ""
+            }
+            guard case .value(let text) = out else { return fail("no answer: \(out)") }
+            expectEqual(text, "echo: eins zwei drei")
+            expectEqual(client.starts, 2, "sent once more after the crash")
+            expect(snaps.contains(""), "the restart was signalled: \(snaps)")
+            for (a, b) in zip(snaps, snaps.dropFirst()) where !(b.hasPrefix(a) || b.isEmpty) {
+                fail("snapshot \(b.debugDescription) does not continue \(a.debugDescription)")
+            }
+            expect(!snaps.contains { $0.components(separatedBy: "echo:").count > 2 }, "\(snaps)")
+        }
+
         test("a worker that dies before ready is a crash") {
             let client = fakeClient(["--crash-at-start"])
             defer { client.shutdown() }
@@ -376,6 +399,21 @@ final class MLXTests: TestSuite {
                 expect((png?.count ?? 0) > 5_000, id)
             }
         }
+    }
+
+    /// A complete snapshot of the built-in "small" model (tiny files) under `hub`.
+    static func fakeModel(_ hub: URL, model id: String = "small") {
+        let fm = FileManager.default
+        let spec = ModelCatalog.builtIn.model(id)!
+        let repo = HubCache.repoDir(hub: hub, repo: spec.repo)
+        let blobs = repo.appendingPathComponent("blobs")
+        let snap = repo.appendingPathComponent("snapshots/\(spec.revision!)")
+        try? fm.createDirectory(at: blobs, withIntermediateDirectories: true)
+        try? fm.createDirectory(at: snap, withIntermediateDirectories: true)
+        fm.createFile(atPath: blobs.appendingPathComponent("cfg").path, contents: Data("{}".utf8))
+        fm.createFile(atPath: blobs.appendingPathComponent("w").path, contents: Data(count: 10))
+        try? fm.createSymbolicLink(atPath: snap.appendingPathComponent("config.json").path, withDestinationPath: "../../blobs/cfg")
+        try? fm.createSymbolicLink(atPath: snap.appendingPathComponent("model.safetensors").path, withDestinationPath: "../../blobs/w")
     }
 
     static func makeDownloads(_ mode: String) -> (ModelDownloads, URL) {
