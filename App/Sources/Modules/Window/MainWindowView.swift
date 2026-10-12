@@ -93,7 +93,8 @@ private struct MainSidebar: View {
     }
 }
 
-/// The status lines at the foot of the sidebar (`WindowSidebarFooter`), above a hairline.
+/// The status lines at the foot of the sidebar (`WindowSidebarFooter`), below a hairline. Lines
+/// and hairline share the rows' leading inset, so the dot sits under the row symbols.
 struct SidebarFooterView: View {
     @Environment(\.colorScheme) private var scheme
 
@@ -103,8 +104,8 @@ struct SidebarFooterView: View {
             VStack(alignment: .leading, spacing: Space.xs) {
                 Separator()
                 ForEach(items) { item in item.content() }
-                    .padding(.horizontal, Space.s)
             }
+            .padding(.horizontal, Metrics.Window.sidebarContentInset)
             .padding(.bottom, Space.s)
         }
     }
@@ -120,6 +121,7 @@ struct SidebarStatusLine: View {
         let t = Theme(scheme)
         HStack(spacing: Space.xs) {
             Circle().fill(ok ? t.ok : t.warn).frame(width: Metrics.dot, height: Metrics.dot)
+                .frame(width: Metrics.Window.sidebarSymbolColumn)
             Text(text).font(TypeScale.subtitle).foregroundStyle(t.fg2).lineLimit(1)
         }
         .accessibilityElement(children: .combine)

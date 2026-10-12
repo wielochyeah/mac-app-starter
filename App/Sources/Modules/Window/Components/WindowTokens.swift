@@ -20,6 +20,8 @@ extension Metrics {
         static let sidebarRow: CGFloat = 30
         static let sidebarSymbol: CGFloat = 15
         static let sidebarSymbolColumn: CGFloat = 22
+        /// Leading inset of sidebar content from the panel edge (section titles, row symbols, footer).
+        static var sidebarContentInset: CGFloat { 2 * Space.xs }
         static let sidebarSectionTop: CGFloat = 14
         static let sidebarSectionHeight: CGFloat = 24
         /// The toolbar band above the detail column (macOS 26 unified toolbar, 52 pt like the hub).

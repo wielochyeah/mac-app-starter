@@ -66,7 +66,7 @@ struct StaticSidebar: View {
                             .foregroundStyle(t.sideGroup)
                             .frame(height: Metrics.Window.sidebarSectionHeight, alignment: .bottom)
                             .padding(.top, Metrics.Window.sidebarSectionTop)
-                            .padding(.leading, Space.xs)
+                            .padding(.leading, Metrics.Window.sidebarContentInset - Space.xs)
                     }
                     ForEach(group.pages) { page in
                         StaticSidebarRow(title: page.title(), symbol: page.symbol, selected: page.id == selection)
