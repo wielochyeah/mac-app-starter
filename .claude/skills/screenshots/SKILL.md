@@ -13,7 +13,8 @@ description: Rendert jede Szene der App ohne Fenster auf dem Bildschirm in Engli
 | `App/Sources/Kit/Render/RenderRunner.swift` | rendert jede `RenderScene` aus `Registry.renderScenes` über `NSHostingView.cacheDisplay` mit Faktor 2 |
 | `App/Sources/Kit/Core/Registry.swift` | `RenderScene(id:size:content:)`, Kennung `<bereich>.<name>`, `size: .zero` für die passende Größe |
 | `App/Sources/Kit/Core/RenderMode.swift` | `RenderMode.isStatic` beim Rendern: Glas wird zu einer Fläche in Token-Farbe, Bewegung steht still, Scrollen ist aus |
-| `docs/screenshots/list.txt` | ausgewählte Bilder für das README, je Zeile `<sprache>-<erscheinung>/<szene>.png` |
+| `docs/screenshots/list.txt` | ausgewählte Bilder für das README, je Zeile `<sprache>-<erscheinung>/<szene>.png`, `tools/icon.png` oder `tools/dmg.png` |
+| `scripts/readme-shots.sh` | gestartet mit `make readme-shots`; kopiert und verkleinert die Auswahl nach `docs/screenshots/` |
 
 ## Aufruf
 
@@ -23,7 +24,7 @@ make shots ONLY=island.                     # nur Szenen, deren Kennung so begin
 make shots ONLY=settings. SHOTS_LANG=de     # nur Deutsch
 make shots ONLY=window. SHOTS_APPEARANCE=dark   # nur dunkel
 NO_BUILD=1 make shots ONLY=onboarding.      # vorhandenen Build nutzen
-make readme-shots                           # Bilder aus docs/screenshots/list.txt nach docs/screenshots/ kopieren
+make readme-shots                           # Bilder aus docs/screenshots/list.txt nach docs/screenshots/, höchstens 1200 px breit
 ```
 
 Es öffnet sich kein Fenster, es bleibt kein Prozess zurück, es wird keine Berechtigung angefragt. Daten liegen dabei unter `build/render-data`, nie unter `~/Library`.
@@ -40,7 +41,7 @@ Jede betroffene Szene in allen vier Fassungen (`en-light`, `en-dark`, `de-light`
 - Raster und Kanten: gleiche Abstände, gemeinsame linke Kante, Haarlinien zwischen Zeilen.
 - Nichts doppelt, kein Kasten im Kasten, keine Deko ohne Aufgabe.
 
-Befunde gehören in die Statusdatei (Abschnitt „Beweise“: welche Szenen angesehen wurden). Bilder aus `build/` kommen nie ins Repository; nur die Auswahl in `docs/screenshots/` über `make readme-shots`.
+Befunde gehören in die Statusdatei (Abschnitt „Beweise“: welche Szenen angesehen wurden). Bilder aus `build/` kommen nie ins Repository; nur die Auswahl in `docs/screenshots/` über `make readme-shots` (`scripts/readme-shots.sh`): je Zeile von `list.txt` eine Szene `<sprache>-<erscheinung>/<szene>.png` aus `build/shots`, dazu `tools/icon.png` und `tools/dmg.png`, die die Werkzeuge in `tools/` zeichnen. Breitere Bilder verkleinert `sips` auf 1200 px (`README_MAX_WIDTH`), damit das Repository klein bleibt; jedes gewählte Bild vorher mit Read ansehen.
 
 ## Grenzen
 

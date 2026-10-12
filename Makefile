@@ -26,7 +26,7 @@ help:
 	@print "make test          Swift tests (build/tests/run-tests) + Python tests   (ONLY=<prefix>)"
 	@print "make check         rules, texts, design, kit checks + build + test (before every push)"
 	@print "make shots         render every scene to build/shots (+ index.html)   (ONLY=<prefix>)"
-	@print "make readme-shots  copy docs/screenshots/list.txt entries from build/shots"
+	@print "make readme-shots  docs/screenshots/list.txt into docs/screenshots (max 1200 px wide)"
 	@print "make icon          render App/Resources/AppIcon.icns"
 	@print "make dmg           release build + designed DMG in build/dmg"
 	@print "make rules         write CLAUDE.md part A and word lists from rules/"
@@ -49,13 +49,10 @@ test:
 shots:
 	@scripts/render.sh
 
+# Pictures of docs/screenshots/list.txt into docs/screenshots/, at most 1200 px wide (sips), icon and
+# DMG previews drawn by the packaging tools (scripts/readme-shots.sh).
 readme-shots:
-	@if [[ ! -f docs/screenshots/list.txt ]]; then print "make: docs/screenshots/list.txt is not yet available (skipped)"; \
-	else mkdir -p docs/screenshots; missing=0; \
-	  while IFS= read -r line; do line="$${line%%#*}"; line="$${line//[[:space:]]/}"; [[ -z "$$line" ]] && continue; \
-	    if [[ -f "build/shots/$$line" ]]; then cp "build/shots/$$line" "docs/screenshots/$${line//\//-}"; print "copied $$line"; \
-	    else print -u2 "missing build/shots/$$line (make shots)"; missing=1; fi; \
-	  done < docs/screenshots/list.txt; exit $$missing; fi
+	@scripts/readme-shots.sh
 
 icon:
 	$(call run_script,scripts/icon.sh)
