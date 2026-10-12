@@ -7,6 +7,7 @@ that project and builds it:
   island, background, hotkeys, examples, mlx, menubar   removed, make build green, check-kit part 1 green
   ai        refused (mlx still there); then mlx and ai removed, build green
   window    removed, build green; then menubar refused (one of window/menubar stays)
+and checks that a first feature with its tests in the project paths keeps check-kit green.
 Runs only in the starter itself (starter.lock.json without project). STARTER_PROBE_KEEP=1 keeps the
 temp folder; STARTER_PROBE_JOBS sets how many copies build at once (default 3).
 """
@@ -123,6 +124,35 @@ class TemplateProbe(unittest.TestCase):
         findings = kitcheck.Findings()
         kitcheck.check_project(self.base, read_manifest(self.base), lock, kitcheck.working_files(self.base), findings)
         self.assertEqual(findings.problems, [])
+
+    def test_a_feature_keeps_check_kit_green(self):
+        """A project's first feature and its tests go to project paths; no kit file changes."""
+        if self.init_code != 0:
+            self.skipTest("init ist rot")
+        added = {
+            "App/Sources/Features/Notes/NotesFeature.swift": "enum NotesFeature {\n    static func register() {}\n}\n",
+            "App/Tests/Features/NotesTests.swift": "#if TESTING\nfinal class NotesTests: TestSuite {}\n#endif\n",
+        }
+        features = self.base / "App" / "Sources" / "Features" / "Features.swift"
+        before = features.read_text(encoding="utf-8") if features.exists() else None
+        try:
+            for path, text in added.items():
+                (self.base / path).parent.mkdir(parents=True, exist_ok=True)
+                (self.base / path).write_text(text, encoding="utf-8")
+            if before is not None:
+                features.write_text(before.replace("static func register() {",
+                                                   "static func register() {\n        NotesFeature.register()"),
+                                    encoding="utf-8")
+            lock = read_lock(self.base)
+            findings = kitcheck.Findings()
+            kitcheck.check_project(self.base, read_manifest(self.base), lock, kitcheck.working_files(self.base),
+                                   findings)
+            self.assertEqual(findings.problems, [])
+        finally:
+            for path in added:
+                shutil.rmtree(self.base / Path(path).parent, ignore_errors=True)
+            if before is not None:
+                features.write_text(before, encoding="utf-8")
 
     def test_commit_fails_without_identity(self):
         hook = self.base / "scripts" / "hooks" / "commit-msg"
