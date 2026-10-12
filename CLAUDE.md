@@ -120,6 +120,13 @@ Wo die Werkzeuge und Bausteine liegen, die die Regeln nennen. `make check-rules`
 | `make check-design`: Swift-Code in `App/Sources`, `App/Tests` und `tools` gegen die Pakete `gestaltung` und `swift-technik` | D-01, D-02, D-03, D-04, D-07, D-09, T-01, T-02, T-03, T-04, T-05, T-06 | `scripts/check_design.py` |
 | Prüfung der Commit-Nachricht und des Autors, in CI mit `--bereich origin/main..HEAD` | S-01, S-02, S-03, S-04, A-03, A-04 | `scripts/check_commit_msg.py` |
 | Git-Hooks `commit-msg` und `pre-push` (`make hooks`) | A-02, A-03, A-04 | `scripts/hooks` |
+| Session-Hook: Werkzeuge, Git-Hooks und Git-Identität aus `starter.json` beim Start jeder Session | A-04 | `.claude/hooks/session-start.py` |
+| Subagenten für Prüfung und Widerlegung | A-07 | `.claude/agents` |
+| Red-Team-Workflow über die Renders | A-07 | `.claude/workflows/red-team.js` |
+| `bin/starter` (`init`, `remove`, `strip-examples`, `sync`, `check-kit`) | A-06, T-03 | `bin/starter` |
+| `make check-kit`: Kit-Dateien unverändert, jedes Modul entfernbar, Prüfungen eingeschaltet | A-06 | `scripts/check_kit.py` |
+| `make icon`: App-Symbol aus Akzent und SF Symbol | D-04 | `scripts/icon.sh` |
+| Gestaltung der Oberfläche mit Beispielen | D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14 | `docs/DESIGN.md` |
 | Baselines der Prüfungen (dürfen nur schrumpfen, im Projekt leer) | A-06 | `rules/baseline` |
 | `make check`, `make build`, `make test`, `make shots`, `make doctor` | A-02, T-01, T-09, D-13 | `Makefile` |
 | Tokens `Theme`, `Space`, `Radius`, `TypeScale`, `Motion`, `Metrics`, `IslandPalette` | D-01, D-02, D-03, D-07, D-09 | `App/Sources/Kit/Design` |
@@ -148,8 +155,9 @@ Zweck, Zielgruppe, Fachsprache, App-Formen und offene Fragen stehen in `docs/PRO
 1. `docs/agents/VORGABEN.md`: neue Vorgaben, gehen allem vor.
 2. `docs/PROJECT.md`: das Projekt, seine Festlegungen und offenen Fragen.
 3. `CONTRIBUTING.md`: Branch, Commit, Prüfung und Merge.
-4. Vor jeder Oberfläche `docs/DESIGN.md`; vor Arbeiten an Aufbau, Modulen und Build `docs/ARCHITEKTUR.md` und `docs/MODULE.md`; vor lokaler KI `docs/KI.md`; vor Signatur und DMG `docs/VERTEILUNG.md`.
-5. Im Strangbetrieb die eigene Datei-Zuständigkeit in `docs/agents/straenge.json`. Ein Strang ist ein Arbeitspaket mit eigener Session, eigenem Branch und festen Dateien; die Integration führt die Stränge zusammen und pflegt die gemeinsamen Dateien.
+4. Vor jeder Oberfläche `docs/DESIGN.md`; vor Arbeiten an Aufbau, Modulen und Build `docs/ARCHITEKTUR.md` und `docs/MODULE.md`; vor Signatur und DMG `docs/VERTEILUNG.md`.
+5. Vor lokaler KI `docs/KI.md`. <!-- modul:ai -->
+6. Im Strangbetrieb die eigene Datei-Zuständigkeit in `docs/agents/straenge.json`. Ein Strang ist ein Arbeitspaket mit eigener Session, eigenem Branch und festen Dateien; die Integration führt die Stränge zusammen und pflegt die gemeinsamen Dateien.
 
 Der Einstieg für einen Agenten in ein neues Projekt (Bootstrap) steht in `README.md` im Abschnitt „Ein neues Projekt starten“.
 

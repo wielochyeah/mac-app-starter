@@ -89,6 +89,41 @@
       "pfad": "scripts/hooks"
     },
     {
+      "name": "Session-Hook: Werkzeuge, Git-Hooks und Git-Identität aus `starter.json` beim Start jeder Session",
+      "regeln": ["A-04"],
+      "pfad": ".claude/hooks/session-start.py"
+    },
+    {
+      "name": "Subagenten für Prüfung und Widerlegung",
+      "regeln": ["A-07"],
+      "pfad": ".claude/agents"
+    },
+    {
+      "name": "Red-Team-Workflow über die Renders",
+      "regeln": ["A-07"],
+      "pfad": ".claude/workflows/red-team.js"
+    },
+    {
+      "name": "`bin/starter` (`init`, `remove`, `strip-examples`, `sync`, `check-kit`)",
+      "regeln": ["A-06", "T-03"],
+      "pfad": "bin/starter"
+    },
+    {
+      "name": "`make check-kit`: Kit-Dateien unverändert, jedes Modul entfernbar, Prüfungen eingeschaltet",
+      "regeln": ["A-06"],
+      "pfad": "scripts/check_kit.py"
+    },
+    {
+      "name": "`make icon`: App-Symbol aus Akzent und SF Symbol",
+      "regeln": ["D-04"],
+      "pfad": "scripts/icon.sh"
+    },
+    {
+      "name": "Gestaltung der Oberfläche mit Beispielen",
+      "regeln": ["D-01", "D-02", "D-03", "D-04", "D-05", "D-06", "D-07", "D-08", "D-09", "D-10", "D-11", "D-12", "D-13", "D-14"],
+      "pfad": "docs/DESIGN.md"
+    },
+    {
       "name": "Baselines der Prüfungen (dürfen nur schrumpfen, im Projekt leer)",
       "regeln": ["A-06"],
       "pfad": "rules/baseline"

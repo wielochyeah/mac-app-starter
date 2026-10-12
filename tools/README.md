@@ -23,14 +23,14 @@ Kleine Programme, die beim Bauen auf diesem Mac laufen. Sie landen nie in der Ap
 - Fenster 640 x 400 pt Hintergrund (+ 32 pt Titelleiste ab macOS 26), Icons 112 pt bei (170, 158) und (470, 158). Die eine Quelle dafür ist `tools/dmg/layout.json`; `settings.py` (dmgbuild) und `Background.swift` lesen sie.
 - Der Link heißt in jeder Sprache `Applications`: Finder übersetzt den Namen eines Links nicht. Der deutsche Hinweis sagt deshalb „Zieh … auf „Applications““.
 - Die Zieh-Zeile nennt die App so, wie Finder sie unter dem Icon zeigt: mit dem Dateinamen des Bundles (`app.name`). Die Überschrift zeigt `displayName` (bei rein deutschem Fenster `displayName.de`).
-- Texte: `DMG_LANG=en|de|both`, Standard `both`, wenn das Projekt beide Sprachen hat. Englisch oben, Deutsch leiser darunter. Die deutsche Anrede folgt `texts.anrede` („Zieh …“ oder „Ziehen Sie …“).
-- Der Gatekeeper-Hinweis („Beim ersten Start blockiert? Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen““, englisch „Open Anyway“) erscheint, solange die DMG nicht notarisiert ist. Er steht klein und ohne Rahmen unter der Zieh-Zeile. Die Taste gibt es erst, nachdem macOS einen Start blockiert hat, deshalb die Frage vorweg. Rechtsklick › Öffnen hilft seit macOS 15 nicht mehr, deshalb steht es nicht da.
+- Texte: `DMG_LANG=en|de|both`, Standard `both`, wenn das Projekt beide Sprachen hat. Englisch oben, Deutsch leiser darunter. Die deutsche Anrede folgt `texts.anrede` (`Zieh …` oder `Ziehen Sie …`).
+- Der Gatekeeper-Hinweis (`Beim ersten Start blockiert? Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“`, englisch „Open Anyway“) erscheint, solange die DMG nicht notarisiert ist. Er steht klein und ohne Rahmen unter der Zieh-Zeile. Die Taste gibt es erst, nachdem macOS einen Start blockiert hat, deshalb die Frage vorweg. Rechtsklick und „Öffnen“ hilft seit macOS 15 nicht mehr, deshalb steht es nicht da.
 - `build/dmg/preview.png` zeigt das Fenster mit schwarzen Beschriftungen wie in Finder, `preview-dark.png` mit weißen (falls Finder sie im Dunkelmodus weiß zeichnet; auf dem hellen Hintergrund wären sie dann kaum lesbar).
 - `DMG_NO_BUILD=1 make dmg` verpackt die vorhandene `build/<Name>.app` ohne neuen Build, aber nur einen Release-Build (ein Debug-Build hat eine Debug-Map und wird abgelehnt). `NO_BUILD` (für Bilder und Tests) gilt für `make dmg` nicht.
 - dmgbuild läuft in `build/tools-venv` (System-Python 3.9). Die Versionen stehen mit Hash in `tools/dmg/requirements.txt`; sie werden einmal von PyPI geladen. dmgbuild 1.6.6+ braucht Python 3.10, deshalb 1.6.5.
 - Kein `hide_extensions`: das setzt Finder-Infos an der App und bricht die strenge Signaturprüfung („beschädigt“ statt „Dennoch öffnen“).
 - Die App wird in `build/dmg/work.noindex` zusammengestellt (Spotlight und Launchpad zeigen sie dort nicht als zweite App) und danach gelöscht; `KEEP_WORK=1` behält sie.
-- Ist das Modul `mlx` an, ruft `make dmg` `ai-worker/package.sh <Pfad zur .app>` auf, sobald es das Skript gibt, und sagt es in der Ausgabe.
+- Ist das Modul `mlx` an, ruft `make dmg` `ai-worker/package.sh <Pfad zur .app>` auf, sobald es das Skript gibt, und sagt es in der Ausgabe. <!-- modul:mlx -->
 
 ## Signieren und Notarisieren
 
