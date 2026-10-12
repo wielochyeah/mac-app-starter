@@ -1,0 +1,90 @@
+import AppKit
+
+/// Text in and out of the clipboard: the system pasteboard in the app, a fake in tests.
+protocol NotesPasteboard {
+    func text() -> String?
+    func write(_ text: String)
+}
+
+struct SystemPasteboard: NotesPasteboard {
+    func text() -> String? { NSPasteboard.general.string(forType: .string) }
+
+    func write(_ text: String) {
+        let board = NSPasteboard.general
+        board.clearContents()
+        board.setString(text, forType: .string)
+    }
+}
+
+/// Quick capture: the copied text becomes a note (source `clipboard`) in the default collection.
+enum NotesCapture {
+    enum Outcome: Equatable {
+        case saved(NoteItem)
+        /// Nothing to save (no text, or only spaces and line breaks).
+        case empty
+    }
+
+    /// Longest title taken from the text; longer first lines are cut at a word.
+    static let titleLimit = 60
+
+    /// Saves the clipboard's text as a new note.
+    static func capture(from pasteboard: NotesPasteboard, into store: NotesStore) -> Outcome {
+        let text = (pasteboard.text() ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty,
+              let note = store.add(title: title(for: text), body: text, collectionID: store.defaultCollectionID, source: .clipboard)
+        else { return .empty }
+        return .saved(note)
+    }
+
+    /// The first non-empty line, spaces collapsed, at most `titleLimit` characters (cut at the last
+    /// word that fits, with "…").
+    static func title(for text: String) -> String {
+        let line = text.split(whereSeparator: \.isNewline)
+            .map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+            .first { !$0.isEmpty } ?? ""
+        guard line.count > titleLimit else { return line }
+        let head = String(line.prefix(titleLimit))
+        let cut = head.lastIndex(of: " ").map { String(head[..<$0]) } ?? head
+        return cut.trimmingCharacters(in: .punctuationCharacters.union(.whitespaces)) + "…"
+    }
+
+    /// The app's action (hotkey, menu, status menu panel): capture, then show what happened in the
+    /// island when that module is there.
+    static func captureClipboard(pasteboard: NotesPasteboard = SystemPasteboard(), store: NotesStore = .shared) {
+        #if MODUL_ISLAND
+        NotesIsland.capturing()
+        #endif
+        let outcome = capture(from: pasteboard, into: store)
+        #if MODUL_ISLAND
+        NotesIsland.captured(outcome, store: store)
+        #endif
+        if case .saved(let note) = outcome { Log.info("notes: saved clipboard as note \(note.id)", "notes") }
+    }
+}
+
+/// What the other app forms do with a note: open it, copy it, start a new one.
+enum NotesActions {
+    /// Shows the note in the main window. Without the window module the Notes settings pane
+    /// opens instead (it is the app's way to the notes then).
+    static func open(_ id: Int64) {
+        #if MODUL_WINDOW
+        NotesNavigator.shared.show(id)
+        #else
+        AppActions.openSettings(pane: NotesPane.id)
+        #endif
+    }
+
+    /// Copies title and text of a note.
+    static func copy(_ note: NoteItem, to pasteboard: NotesPasteboard = SystemPasteboard()) {
+        pasteboard.write(text(of: note))
+        #if MODUL_ISLAND
+        NotesIsland.copied()
+        #endif
+    }
+
+    /// What "Copy" puts on the clipboard: the title on its own line, then the text.
+    static func text(of note: NoteItem) -> String {
+        let body = note.body.trimmingCharacters(in: .whitespacesAndNewlines)
+        return body.isEmpty ? note.title : note.title + "\n\n" + body
+    }
+}
