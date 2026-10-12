@@ -88,11 +88,13 @@ enum RenderRunner {
                                          pixelsWide: Int((target.width * scale).rounded()),
                                          pixelsHigh: Int((target.height * scale).rounded()),
                                          bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-                                         colorSpaceName: .calibratedRGB, bytesPerRow: 0, bitsPerPixel: 0)?
-            .retagging(with: .sRGB) else { return nil }
+                                         colorSpaceName: .calibratedRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
         rep.size = target
         host.cacheDisplay(in: host.bounds, to: rep)
-        return rep.representation(using: .png, properties: [:])
+        // Capture colour-managed, then convert: the PNG holds exact sRGB token values (#1E1E20
+        // stays #1E1E20). Retagging the bitmap as sRGB before drawing shifts dark colours.
+        let srgb = rep.converting(to: .sRGB, renderingIntent: .default) ?? rep
+        return srgb.representation(using: .png, properties: [:])
     }
 
     private static func writeIndex(scenes: [RenderScene], dir: URL) {
