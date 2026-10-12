@@ -55,6 +55,11 @@ enum MenuBarPanelPlacement {
         return NSRect(x: x, y: (top - size.height).rounded(), width: size.width, height: size.height)
     }
 
+    /// The panel's size from the content's fitting size: never narrower than the panel width.
+    static func size(fitting: NSSize) -> NSSize {
+        NSSize(width: max(fitting.width, MenuBarPanelMetrics.width).rounded(.up), height: fitting.height.rounded(.up))
+    }
+
     /// The same frame with a new height, the top edge kept (content grew or shrank).
     static func resized(_ frame: NSRect, height: CGFloat) -> NSRect {
         NSRect(x: frame.minX, y: frame.maxY - height, width: frame.width, height: height)
@@ -118,9 +123,7 @@ final class MenuBarPanelController: NSObject, NSWindowDelegate {
         let root = MenuBarPanelView(close: { [weak self] in self?.close() }) { [weak self] height in
             self?.fit(height: height)
         }
-        let host = NSHostingView(rootView: root)
-        host.sizingOptions = []
-        let size = host.fittingSize
+        let (host, size) = Self.host(root)
         window.contentView = host
         window.setFrame(MenuBarPanelPlacement.frame(below: item, size: size, visible: screen.visibleFrame), display: false)
         panel = window
@@ -154,6 +157,17 @@ final class MenuBarPanelController: NSObject, NSWindowDelegate {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { malloc_zone_pressure_relief(nil, 0) }
             }
         })
+    }
+
+    /// The hosting view and the panel's first size. The size is measured while the hosting view
+    /// still sizes itself; only then are its own size constraints switched off (the panel follows
+    /// the content's height through `fit`). Measuring after `sizingOptions = []` gives 0 x 0, a
+    /// panel nobody sees (review 12.10.). The width never drops below the panel's width.
+    static func host<Root: View>(_ root: Root) -> (NSHostingView<Root>, NSSize) {
+        let host = NSHostingView(rootView: root)
+        let fitting = host.fittingSize
+        host.sizingOptions = []
+        return (host, MenuBarPanelPlacement.size(fitting: fitting))
     }
 
     /// The content changed height: keep the top edge under the menu bar.
@@ -197,7 +211,11 @@ enum MenuBarPanelMetrics {
     static let width: CGFloat = 340
     static let appIcon: CGFloat = 32
     static let toggleCircle: CGFloat = 28
+    /// Fades of the AppKit panel. `Motion.fade` is a SwiftUI `Animation` and `NSAnimationContext`
+    /// needs seconds; fade in matches its 0.12 s. Kit candidate: `Motion.panelFadeIn/Out`.
+    // design-ausnahme: AppKit fade durations, Motion has only SwiftUI animations (Kit candidate)
     static let fadeIn: TimeInterval = 0.12
+    // design-ausnahme: AppKit fade durations, Motion has only SwiftUI animations (Kit candidate)
     static let fadeOut: TimeInterval = 0.16
     /// A click on the item within this time after the panel closed does not reopen it.
     static let reopenGuard: TimeInterval = 0.3

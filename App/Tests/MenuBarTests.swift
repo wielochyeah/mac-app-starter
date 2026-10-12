@@ -220,6 +220,21 @@ final class MenuBarTests: TestSuite {
             expectEqual(grown.height, 420)
         }
 
+        test("the panel opens at its width: sizing is measured before AppKit sizing is switched off") {
+            let root = MenuBarPanelView(close: {}, sections: MenuBarSamples.sections, actions: MenuBarSamples.actions,
+                                        status: MenuBarStatus(), showsWindowAction: true)
+            // the same steps `open(from:)` takes, without ordering a window front
+            let (host, size) = MenuBarPanelController.host(root)
+            expectEqual(host.sizingOptions, [], "the panel follows the content through fit(height:)")
+            expect(size.width >= 320 && size.width <= 360, "width \(size.width)")
+            expect(size.height > 100, "height \(size.height)")
+            let visible = NSRect(x: 0, y: 0, width: 1512, height: 949)
+            let frame = MenuBarPanelPlacement.frame(below: NSRect(x: 900, y: 949, width: 32, height: 33), size: size, visible: visible)
+            expect(frame.width >= 320, "frame \(frame)")
+            expectEqual(MenuBarPanelPlacement.resized(frame, height: 200).width, frame.width, "fit keeps the width")
+            expectEqual(MenuBarPanelPlacement.size(fitting: .zero).width, MenuBarPanelMetrics.width, "never narrower than the panel")
+        }
+
         // MARK: Registration and scenes
 
         test("register adds the pane, hooks, self-test and scenes") {
