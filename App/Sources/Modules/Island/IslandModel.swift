@@ -130,7 +130,7 @@ extension View {
 
 // MARK: - Content transitions (VoiceBud SPEC §0)
 
-/// Entering: blur 10, scaleX 0.75 from the notch side, opacity 0 → identity. Leaving: blur 4,
+/// Entering: blur 10, scaleX 0.75 from the notch side, opacity 0 to identity. Leaving: blur 4,
 /// scaleX 0.25, opacity 0.
 private struct IslandBlurScaleFX: ViewModifier {
     var blur: CGFloat
@@ -146,7 +146,7 @@ private struct IslandBlurScaleFX: ViewModifier {
     }
 }
 
-/// Swapping inside a surface that stays: scale 0.8, 4 pt down, blur, opacity 0 → identity.
+/// Swapping inside a surface that stays: scale 0.8, 4 pt down, blur, opacity 0 to identity.
 private struct IslandSwapFX: ViewModifier {
     var scale: CGFloat
     var y: CGFloat
@@ -205,7 +205,7 @@ extension AnyTransition {
         swap ? .islandSwap(reduce: reduce) : .islandEnter(toward: anchor, reduce: reduce)
     }
 
-    /// Preview ↔ whole text on a hovered card: both start with the same words at the same place,
+    /// Preview and whole text on a hovered card: both start with the same words at the same place,
     /// so the outgoing block fades quickly and the incoming one enters 50 ms later.
     static func islandHandOver(reduce: Bool) -> AnyTransition {
         if RenderMode.isStatic { return .identity }

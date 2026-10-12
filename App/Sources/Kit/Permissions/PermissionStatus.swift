@@ -41,7 +41,7 @@ nonisolated enum PermissionRules {
         }
     }
 
-    // MARK: System values → status
+    // MARK: System values to status
 
     static func av(_ s: AVAuthorizationStatus) -> PermissionStatus {
         switch s {

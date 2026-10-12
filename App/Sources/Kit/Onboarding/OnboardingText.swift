@@ -27,6 +27,7 @@ enum OnboardingText {
     }
     /// In the other language on purpose: the way to the switch for whoever needs it (VoiceBud).
     static var languageCrossHint: String {
+        // text-ausnahme: the hint is written in the other language so whoever needs it can read it
         tr(en: "Lieber auf Deutsch? Wähle unten bei App „Deutsch“.", de: "Prefer English? Choose English next to App below.")
     }
     static var languageApp: String { tr(en: "App", de: "App") }

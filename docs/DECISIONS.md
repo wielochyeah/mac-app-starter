@@ -96,7 +96,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 - **Entscheidung:** Standard ist die Ad-hoc-Signatur; mit `signing.identity` in `starter.json` signiert der Build mit Developer ID und Hardened Runtime, `make notarize` notarisiert.
 - **Grund:** Ohne Apple-Mitgliedschaft muss der Starter bauen und laufen; mit Mitgliedschaft genügt ein Wert.
-- **Folgen:** Ad hoc signierte Builds verlieren Berechtigungen bei jedem neuen Build und brauchen beim Empfänger „Trotzdem öffnen“ (`docs/VERTEILUNG.md`).
+- **Folgen:** Ad hoc signierte Builds verlieren Berechtigungen bei jedem neuen Build und brauchen beim Empfänger „Dennoch öffnen“ (`docs/VERTEILUNG.md`).
 
 ### E-16 (12.10.2026): Werkzeuge in Python 3.9 und zsh, kein Node
 

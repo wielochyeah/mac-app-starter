@@ -31,32 +31,8 @@
     "pfeil | →",
     "pfeil | →"
   ],
-  "App/Sources/Kit/Gallery/GalleryKit.swift": [
-    "kommentar-verweis | Strand E"
-  ],
-  "App/Sources/Kit/Gallery/GalleryText.swift": [
-    "kommentar-verweis | Strand E"
-  ],
   "App/Sources/Kit/Main/AppForm.swift": [
     "kommentar-verweis | BAUPLAN"
-  ],
-  "App/Sources/Kit/Onboarding/OnboardingKit.swift": [
-    "kommentar-verweis | Strand D"
-  ],
-  "App/Sources/Kit/Onboarding/OnboardingText.swift": [
-    "kommentar-verweis | Strand D",
-    "floskel-en | Welcome to",
-    "floskel | Willkommen bei",
-    "floskel | Los geht’s"
-  ],
-  "App/Sources/Kit/Permissions/Permission.swift": [
-    "kommentar-verweis | strand D"
-  ],
-  "App/Sources/Kit/Settings/SettingsKit.swift": [
-    "kommentar-verweis | Strand E"
-  ],
-  "App/Sources/Kit/Settings/SettingsText.swift": [
-    "kommentar-verweis | Strand E"
   ],
   "App/Sources/Kit/Texts/DesignText.swift": [
     "mittelpunkt | ·",

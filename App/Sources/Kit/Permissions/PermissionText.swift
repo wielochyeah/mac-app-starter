@@ -48,15 +48,18 @@ enum PermissionText {
             tr(en: "\(app) needs your permission to use the camera.",
                de: "\(app) braucht deine Erlaubnis für die Kamera.")
         case .accessibility:
+            // umbruch: a balanced two-line subtitle under the step title (VoiceBud)
             tr(en: "\(app) needs your permission to work with other apps,\nfor example to insert text at your cursor.",
                de: "\(app) braucht deine Erlaubnis, um mit anderen Apps zu arbeiten,\nzum Beispiel um Text an deinem Cursor einzufügen.")
         case .inputMonitoring:
+            // umbruch: a balanced two-line subtitle under the step title (VoiceBud)
             tr(en: "\(app) needs your permission to notice\nyour keyboard shortcuts in every app.",
                de: "\(app) braucht deine Erlaubnis, um deine\nKurzbefehle in jeder App zu erkennen.")
         case .screenRecording:
             tr(en: "\(app) needs your permission to see what is on your screen.",
                de: "\(app) braucht deine Erlaubnis, um zu sehen, was auf dem Bildschirm ist.")
         case .notifications:
+            // umbruch: a balanced two-line subtitle under the step title (VoiceBud)
             tr(en: "\(app) needs your permission to send you notifications,\neven while you work in another app.",
                de: "\(app) braucht deine Erlaubnis für Mitteilungen,\nauch wenn du gerade in einer anderen App bist.")
         case .automation(let bundleId):
@@ -188,9 +191,11 @@ enum PermissionText {
 
     private static func changeLater(_ kind: PermissionKind) -> String {
         if kind == .notifications {
+            // umbruch: a balanced two-line subtitle under the step title (VoiceBud)
             return tr(en: "You can change this anytime in System Settings\nunder “Notifications”.",
                       de: "Ändern kannst du das jederzeit in den Systemeinstellungen\nunter „Mitteilungen“.")
         }
+        // umbruch: a balanced two-line subtitle under the step title (VoiceBud)
         return tr(en: "You can change this anytime in System Settings\nunder “Privacy & Security”.",
                   de: "Ändern kannst du das jederzeit in den Systemeinstellungen\nunter „Datenschutz & Sicherheit“.")
     }

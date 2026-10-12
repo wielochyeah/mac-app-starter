@@ -48,7 +48,7 @@ Stand: `<TT.MM.JJJJ>`, geprüft auf Commit `<Hash>`
 
 | Kennung | Priorität | Kriterium | Prüfung | Strang | Ergebnis |
 |---|---|---|---|---|---|
-| AK-60 | MUSS | `make dmg` erzeugt ein DMG mit gestaltetem Fenster, die App startet nach „Trotzdem öffnen“ auf einem zweiten Mac oder Benutzer | `[Installiert]` | | |
+| AK-60 | MUSS | `make dmg` erzeugt ein DMG mit gestaltetem Fenster, die App startet nach „Dennoch öffnen“ auf einem zweiten Mac oder Benutzer | `[Installiert]` | | |
 | AK-61 | SOLL | Mit Developer ID: `codesign --verify --deep --strict`, `spctl -a -vv` und `xcrun stapler validate` bestehen | `[Installiert]` | | |
 
 ## 7. Offene Punkte aus der Abnahme

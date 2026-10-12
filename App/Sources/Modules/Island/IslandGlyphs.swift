@@ -150,7 +150,7 @@ struct IslandPercent: View {
 // MARK: - Level meter
 
 /// Calm level meter: 4 bars, 2 pt wide with 1.5 pt gaps, 2…14 pt tall (dots in silence), a
-/// vertical gradient lo → hi in the tint. Live bands are smoothed (attack 0.3 / release 0.1 per
+/// vertical gradient from lo to hi in the tint. Live bands are smoothed (attack 0.3 / release 0.1 per
 /// 60 Hz frame, time-corrected); without bands a synthetic speech rhythm plays (previews).
 /// Ported from VoiceBud WaveformView ("fein").
 struct IslandMeter: View {

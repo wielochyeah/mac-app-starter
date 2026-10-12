@@ -95,8 +95,8 @@ enum IslandText {
     static var onboardingNote: String {
         // the pane's name never breaks across lines
         let place = pane.replacingOccurrences(of: " ", with: "\u{00A0}")
-        return tr(en: "Screens without a notch always show the capsule. You can change this later in Settings › \(place).",
-                  de: "Bildschirme ohne Notch zeigen immer die Kapsel. Du kannst das später unter Einstellungen › \(place) ändern.")
+        return tr(en: "Screens without a notch always show the capsule. You can change this later in Settings > \(place).",
+                  de: "Bildschirme ohne Notch zeigen immer die Kapsel. Du kannst das später unter Einstellungen > \(place) ändern.")
     }
 
     // MARK: Gallery
@@ -114,12 +114,12 @@ enum IslandSampleText {
     static var saved: String { tr(en: "Saved to Reports", de: "In Berichte gesichert") }
     static var savedDetail: String { tr(en: "3 files", de: "3 Dateien") }
     static var savedBody: String {
-        tr(en: "Quarterly report.pdf, the slides and the chart sheet are in Documents › Reports. The originals stay in the project folder.",
-           de: "Quartalsbericht.pdf, die Folien und das Diagrammblatt liegen in Dokumente › Berichte. Die Originale bleiben im Projektordner.")
+        tr(en: "Quarterly report.pdf, the slides and the chart sheet are in Documents/Reports. The originals stay in the project folder.",
+           de: "Quartalsbericht.pdf, die Folien und das Diagrammblatt liegen in Dokumente/Berichte. Die Originale bleiben im Projektordner.")
     }
     static var savedLong: String {
         tr(en: """
-            Quarterly report.pdf, the slides and the chart sheet are in Documents › Reports. The originals stay in the project folder.
+            Quarterly report.pdf, the slides and the chart sheet are in Documents/Reports. The originals stay in the project folder.
 
             The report has 14 pages. Charts 3 and 5 now use the new colors, the table on page 9 is split in two so it fits the page again.
 
@@ -130,7 +130,7 @@ enum IslandSampleText {
             Next week the numbers for the third quarter come in. The report then gets a second chart sheet, and the slides move the outlook to the end.
             """,
            de: """
-            Quartalsbericht.pdf, die Folien und das Diagrammblatt liegen in Dokumente › Berichte. Die Originale bleiben im Projektordner.
+            Quartalsbericht.pdf, die Folien und das Diagrammblatt liegen in Dokumente/Berichte. Die Originale bleiben im Projektordner.
 
             Der Bericht hat 14 Seiten. Die Diagramme 3 und 5 nutzen jetzt die neuen Farben, die Tabelle auf Seite 9 ist zweigeteilt und passt wieder auf die Seite.
 

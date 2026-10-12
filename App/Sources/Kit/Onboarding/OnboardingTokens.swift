@@ -1,7 +1,7 @@
 import SwiftUI
 
 // Sizes and colours only the onboarding's own steps use (welcome art, done badge, feature rows).
-// Kept here until another area needs them; candidates for Kit/Design (see docs/bau/status/D.md).
+// Kept here until another area needs them; then they move to Kit/Design.
 
 extension Metrics {
     /// Welcome: the app icon in the hero art, and the art's distance from the window top

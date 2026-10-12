@@ -124,7 +124,7 @@ nonisolated enum PermissionKind: Hashable, Sendable {
         }
     }
 
-    /// The pane in System Settings → Privacy & Security (Notifications: the app's own entry).
+    /// The pane in System Settings, Privacy & Security (Notifications: the app's own entry).
     func settingsURL(bundleId: String = AppConfig.bundleId) -> URL? {
         let privacy = "x-apple.systempreferences:com.apple.preference.security?Privacy_"
         let anchor: String

@@ -135,7 +135,7 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 
 ## Betrieb
 
-Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Trotzdem öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert erteilte Berechtigungen. Mit `signing.identity` in `starter.json` signiert der Build mit Developer ID und Hardened Runtime; `make notarize` notarisiert mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
+Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Dennoch öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert erteilte Berechtigungen. Mit `signing.identity` in `starter.json` signiert der Build mit Developer ID und Hardened Runtime; `make notarize` notarisiert mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
 
 ## Pflege
 

@@ -98,7 +98,7 @@ import SwiftUI
     /// Marks a kind as requested without asking (tests).
     func markAsked(_ kind: PermissionKind) { asked.insert(kind) }
 
-    /// Opens the kind's pane in System Settings → Privacy & Security.
+    /// Opens the kind's pane in System Settings under Privacy & Security.
     func openSettings(_ kind: PermissionKind) {
         guard pinned[kind] == nil, !RenderMode.isHeadless, let url = kind.settingsURL() else { return }
         NSWorkspace.shared.open(url)

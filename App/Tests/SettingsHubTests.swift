@@ -208,7 +208,7 @@ final class SettingsHubTests: TestSuite {
                 if case .title = NoticesText.blocks(text).first {} else { fail("\(lang.rawValue).md does not start with a # title") }
             }
             expectEqual(files[.en].map(codeBlocks), files[.de].map(codeBlocks), "both languages carry the same licence texts")
-            // the developers' list at the root (strand G) may not exist on every branch
+            // the developers' list at the root may be missing in a stripped-down copy
             if let root = try? String(contentsOf: repoRoot.appendingPathComponent("THIRD_PARTY_NOTICES.md"), encoding: .utf8) {
                 for block in codeBlocks(root) {
                     for (lang, text) in files {

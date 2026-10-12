@@ -46,7 +46,7 @@ enum DMGText {
     /// German „Dennoch öffnen“), shown bold.
     static let openAnyway = DMGCopy(en: "“Open Anyway”", de: "„Dennoch öffnen“")
 
-    /// "Version 1.2.0 · macOS 26+": the same in both languages.
+    /// The line with the app version and the minimum macOS: the same in both languages.
     static func versionLine(_ version: String, minimumMacOS: String) -> String {
         let macOS = minimumMacOS.hasSuffix(".0") ? String(minimumMacOS.dropLast(2)) : minimumMacOS
         return "Version \(version) · macOS \(macOS)+"

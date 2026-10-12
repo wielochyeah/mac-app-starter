@@ -36,8 +36,8 @@ Wie aus dem Quellcode eine App wird, die jemand auf einem anderen Mac installier
 `make dmg` baut die Release-Fassung und daraus `build/dmg/<Name>-<version>.dmg`:
 
 - Fenster 640 x 432 pt (400 pt Hintergrund und 32 pt Titelleiste von macOS 26), App-Symbol links und die Verknüpfung „Applications“ rechts, je 112 pt groß, dazwischen ein gepunkteter Pfeil.
-- Hintergrund aus `tools/dmg/Background.swift` im Stil der App (Akzent aus `starter.json`), als TIFF mit 1x und 2x; bei ad hoc signierten Builds mit einem Hinweis auf „Trotzdem öffnen“.
-- Layout über dmgbuild (Python-Paket in `build/tools-venv`, legt `make dmg` beim ersten Lauf an), ohne Finder-Skripte und ohne Automatisierungsrecht. `hide_extensions` bleibt aus: es setzt Finder-Informationen an der App, und eine signierte App mit solchen Informationen besteht die strenge Signaturprüfung nicht mehr („beschädigt“ statt „Trotzdem öffnen“).
+- Hintergrund aus `tools/dmg/Background.swift` im Stil der App (Akzent aus `starter.json`), als TIFF mit 1x und 2x; bei ad hoc signierten Builds mit einem Hinweis auf „Dennoch öffnen“.
+- Layout über dmgbuild (Python-Paket in `build/tools-venv`, legt `make dmg` beim ersten Lauf an), ohne Finder-Skripte und ohne Automatisierungsrecht. `hide_extensions` bleibt aus: es setzt Finder-Informationen an der App, und eine signierte App mit solchen Informationen besteht die strenge Signaturprüfung nicht mehr („beschädigt“ statt „Dennoch öffnen“).
 - Der Hintergrund ist mit `chflags hidden` verborgen, das Abbild komprimiert (ULMO, ersatzweise UDZO), das Volume trägt das App-Symbol.
 - Prüfen ohne Finder: `hdiutil attach -nobrowse -readonly -mountpoint <ordner> <dmg>`, Inhalt ansehen, `codesign --verify --deep --strict <ordner>/<Name>.app`, `hdiutil detach <ordner>`.
 
@@ -54,7 +54,7 @@ Nach der Notarisierung: `spctl -a -vv <app>` meldet „Notarized Developer ID“
 | Build | erster Start |
 |---|---|
 | notarisiert | startet nach der üblichen Rückfrage für Apps aus dem Internet |
-| ad hoc signiert | macOS blockiert den Start. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ erscheint die App mit „Trotzdem öffnen“; danach startet sie. Den früheren Weg über Rechtsklick und „Öffnen“ gibt es auf aktuellem macOS nicht mehr |
+| ad hoc signiert | macOS blockiert den Start. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ erscheint die App mit „Dennoch öffnen“; danach startet sie. Den früheren Weg über Rechtsklick und „Öffnen“ gibt es auf aktuellem macOS nicht mehr |
 
 Verwaltete Macs (MDM) können nicht notarisierte Apps ganz sperren. Wer an solche Macs verteilt, braucht eine Developer ID.
 

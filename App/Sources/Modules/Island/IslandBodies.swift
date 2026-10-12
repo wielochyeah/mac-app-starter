@@ -192,6 +192,7 @@ struct IslandFullText: View {
         VStack(spacing: 0) {
             LinearGradient(colors: [.black.opacity(fadeAbove ? 0 : 1), .black], startPoint: .top, endPoint: .bottom)
                 .frame(height: IslandLook.fadeTop)
+            // design-ausnahme: a mask, only its alpha counts
             Rectangle().fill(Color.black)
             LinearGradient(colors: [.black, .black.opacity(fadeBelow ? 0 : 1)], startPoint: .top, endPoint: .bottom)
                 .frame(height: IslandLook.fadeBottom)

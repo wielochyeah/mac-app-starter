@@ -151,7 +151,7 @@ enum IslandTiming {
 extension Motion.Island {
     /// Reduce Motion: every island change is a 0.2 s cross-fade.
     static var crossFade: Animation { Motion.reduced }
-    /// Preview → whole text on hover: the outgoing block fades quickly, the incoming one
+    /// Preview to whole text on hover: the outgoing block fades quickly, the incoming one
     /// enters 50 ms later.
     static var handOverIn: Animation { enter.delay(0.05) }
 }
