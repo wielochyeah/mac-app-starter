@@ -40,6 +40,8 @@ struct OnboardingAdvance: Equatable {
     @ObservationIgnored private let settings: Settings?
     /// Called once by `finish()` (closes the window and so on).
     @ObservationIgnored var onFinish: () -> Void = {}
+    /// Set by `finish()`: a second click on Done (or Return pressed twice) does nothing.
+    @ObservationIgnored private(set) var isFinished = false
 
     /// - settings: where the step and the done flag are saved; nil for renders (nothing written).
     init(steps: [OnboardingStep], monitor: PermissionMonitor = .shared, settings: Settings? = .shared,
@@ -80,6 +82,7 @@ struct OnboardingAdvance: Equatable {
     // MARK: Moving
 
     func next() {
+        guard !isFinished else { return }
         if isLast { return finish() }
         go(to: index + 1)
     }
@@ -117,6 +120,8 @@ struct OnboardingAdvance: Equatable {
 
     /// Marks onboarding done, forgets the step and calls `onFinish`.
     func finish() {
+        guard !isFinished else { return }
+        isFinished = true
         if let settings {
             settings[.onboardingDone] = true
             settings.reset(.onboardingResume)

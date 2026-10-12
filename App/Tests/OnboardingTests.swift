@@ -91,7 +91,9 @@ final class OnboardingTests: TestSuite {
             flow.save()
             expect(flow.isLast)
             flow.next()
-            expectEqual(finished, 1)
+            flow.next()
+            flow.finish()
+            expectEqual(finished, 1, "Done pressed twice finishes once")
             expect(store[.onboardingDone])
             expect(!store.hasValue(.onboardingResume))
             // shown again later (from Settings): starts at the top
