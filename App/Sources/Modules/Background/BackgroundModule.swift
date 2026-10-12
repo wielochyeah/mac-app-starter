@@ -1,6 +1,42 @@
-// STUB (S0): the owning strand replaces this with the real module. Keep the name and
-// `register()`: Kit/Main/Modules.swift calls it inside `#if MODUL_BACKGROUND`.
+import SwiftUI
 
+/// The background worker app form: scheduled jobs (`BackgroundJobs`), "Open at login"
+/// (`LoginItem`, only for the installed app), the settings pane "Background" and the onboarding
+/// step "Open at Login".
+///
+/// Public API for features and other modules (wave 2):
+/// - `BackgroundJobs.shared.register(id:title:interval:tolerance:qos:exact:run:)`
+/// - `BackgroundJobs.shared.runNow(_:)`, `.perform(_:) async`, `.record(_:)`, `.isRunning(_:)`
+/// - `LoginItem.isAvailable`, `.status`, `.setEnabled(_:)`, `LoginItemModel.shared`
 enum BackgroundModule {
-    static func register() {}
+    static func register() {
+        Registry.settingsPanes.append(SettingsPane(id: "background", group: .settings, order: 310, title: { BackgroundText.paneTitle },
+                                                   symbol: "clock.arrow.circlepath", tint: .teal) { AnyView(BackgroundPane()) })
+        Registry.onboardingSteps.append(OnboardingStep(id: "background.login", order: 900, isIncluded: { LoginItem.isAvailable }) { _ in
+            AnyView(LoginItemStep())
+        })
+        // jobs run in the real app only: never in renders, self-tests or headless test runs
+        Registry.launchHooks.append {
+            guard !RenderMode.isHeadless, !RenderMode.isStatic else { return }
+            BackgroundJobs.shared.start()
+        }
+        Registry.terminateHooks.append { BackgroundJobs.shared.stop() }
+        Registry.selfTests.append(SelfTestCheck(id: "background.jobs") { BackgroundSelfTest.jobs(BackgroundJobs.shared.jobs) })
+        BackgroundScenes.register()
+    }
+}
+
+enum BackgroundSelfTest {
+    /// Registered jobs have sane schedules (ids are unique by construction).
+    static func jobs(_ jobs: [BackgroundJobs.Job]) -> String? {
+        for job in jobs {
+            if job.id.isEmpty { return "a job has an empty id" }
+            if job.schedule.interval < 1 { return "job \(job.id): interval below one second" }
+            if job.schedule.tolerance < 0 || job.schedule.tolerance > job.schedule.interval {
+                return "job \(job.id): tolerance must be between 0 and the interval"
+            }
+            if job.title().isEmpty { return "job \(job.id): empty title" }
+        }
+        return nil
+    }
 }
