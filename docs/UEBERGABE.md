@@ -39,7 +39,7 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
    bin/starter init --name "<Name>" --bundle-id <com.firma.app> --accent <akzent> --symbol <sf.symbol> --anrede du
    ```
 
-   `init` schreibt `starter.json` um, entfernt die Bauunterlagen des Starters, legt Plan, Vorgaben und Strang-Plan als leere Vorlagen an, verschiebt die Entscheidungen des Starters nach `docs/STARTER_DECISIONS.md`, leert die Commit-Identität, die Unterzeile des Starters (`app.tagline`) und die Namensliste `texts.personen`, schreibt `starter.lock.json` und führt `make rules` aus, damit `CLAUDE.md` Teil A und die Wortlisten zur Anrede passen. Ohne Schalter fragt es nach; mit `--non-interactive` nimmt es die Angaben aus den Schaltern. Mit `--module-aus <modul>` fallen Module gleich weg. `--anrede sie` wählt die förmliche Anrede: die Texte des Kits sind in der du-Form geschrieben, `make check-texts` listet danach jede Stelle, die umzuschreiben ist. Eine eigene Unterzeile für den Willkommensschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
+   `init` schreibt `starter.json` um, entfernt die Bauunterlagen des Starters, legt Plan, Vorgaben und Strang-Plan als leere Vorlagen an, verschiebt die Entscheidungen des Starters nach `docs/STARTER_DECISIONS.md`, leert die Commit-Identität, die Unterzeile des Starters (`app.tagline`) und die Namensliste `texts.personen`, schreibt `starter.lock.json` und führt `make rules` aus, damit `CLAUDE.md` Teil A und die Wortlisten zur Anrede passen. Ohne `--non-interactive` fragt es nach und bietet die angegebenen Schalter als Vorschlag an; mit `--non-interactive` nimmt es die Angaben nur aus den Schaltern (`--name` ist dann Pflicht). Mit `--module-aus <modul>` fallen Module gleich weg. `--anrede sie` wählt die förmliche Anrede: die Texte des Kits sind in der du-Form geschrieben, `make check-texts` listet danach jede Stelle, die umzuschreiben ist. Eine eigene Unterzeile für den Willkommensschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
 3. Commit-Identität in `starter.json` eintragen (`commit.name`, `commit.email`), dann `make hooks`. Bis die Identität gesetzt ist, nimmt der Hook `commit-msg` keinen Commit an.
 4. Prüfen und ansehen:
 
@@ -101,7 +101,7 @@ Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. 
 | Jobs | wann |
 |---|---|
 | `Regeln, Texte, Design, Kit, Commits` (Linux), `make check (starter.json)` (Mac, mit Selbsttest und den Python-Werkzeugen unter `/usr/bin/python3` 3.9) | jeder Push |
-| `Build (<module>)` je Kombination, `Release-Build`, `Renders` | Pull Requests, Standard-Branch, Tags `v*` |
+| `Build (<module>)` je Kombination, `Release-Build`, `Renders (en, de, hell, dunkel)` | Pull Requests, Standard-Branch, Tags `v*` |
 | `Template-Probe`, `Modul entfernen (<modul>)` | dazu nur im Starter selbst |
 | `DMG` | Tags `v*` |
 

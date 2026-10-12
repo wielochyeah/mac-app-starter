@@ -355,9 +355,26 @@ def check_symbol(value: str) -> Optional[str]:
     return None
 
 
+def with_flag_defaults(config: dict, accent: Optional[str] = None, symbol: Optional[str] = None,
+                       anrede: Optional[str] = None) -> dict:
+    """starter.json with the values given as flags, so the interactive questions offer them as defaults
+    instead of asking past them."""
+    out = dict(config)
+    app = dict(out.get("app") or {})
+    texts = dict(out.get("texts") or {})
+    if accent:
+        app["accent"] = accent
+    if symbol:
+        app["symbol"] = symbol
+    if anrede:
+        texts["anrede"] = anrede
+    out["app"], out["texts"] = app, texts
+    return out
+
+
 def interactive_values(manifest: Manifest, config: dict, ask, present: List[str],
                        name: Optional[str] = None, say=print) -> InitOptions:
-    """Asks for name (unless given), bundle id, accent, symbol and the modules to keep;
+    """Asks for name (unless given), bundle id, accent, symbol, address form and the modules to keep;
     `ask(prompt, default, check)` returns the answer (default on empty input) and asks again while
     `check(answer)` returns a reason. The module rules are checked with each answer: a module whose
     dependency goes is removed with it (no question), and the last module of an atLeastOne group

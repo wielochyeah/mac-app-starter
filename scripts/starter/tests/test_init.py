@@ -248,6 +248,15 @@ class InitTests(TempDirCase):
         self.assertEqual(sum(1 for p in asked if p.startswith("Modul menubar")), 2)
         self.assertTrue(any("window, menubar" in s for s in said))
 
+    def test_flags_become_the_defaults_of_the_questions(self):
+        from starter.project import with_flag_defaults
+        config = {"app": {"accent": "violett", "symbol": "sparkles"}, "texts": {"anrede": "du"}}
+        answers = iter(["Notizen", "", "", "", "", "j", "j", "j", "j", "j", "j", "j", "j"])
+        opts = interactive_values(manifest_obj(), with_flag_defaults(config, accent="blau", symbol="note.text", anrede="sie"),
+                                  lambda prompt, default, check: next(answers) or default, list(manifest_obj().modules))
+        self.assertEqual((opts.accent, opts.symbol, opts.anrede), ("blau", "note.text", "sie"))
+        self.assertEqual(config["app"]["accent"], "violett", "the read config stays as it was")
+
     def test_default_bundle_id(self):
         self.assertEqual(default_bundle_id("Meine App 2"), "com.example.meineapp2")
 

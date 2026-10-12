@@ -183,12 +183,11 @@ def cmd_init(root: Path, a) -> int:
               "(docs/bau) und leert die Commit-Identität.")
         config = cfg.read_config(root)
         present = remove.present_modules(root, manifest, working_files(root), config)
-        opts = project.interactive_values(manifest, config, _ask, present, name=a.name)
+        defaults = project.with_flag_defaults(config, accent=a.accent, symbol=a.symbol, anrede=a.anrede)
+        opts = project.interactive_values(manifest, defaults, _ask, present, name=a.name)
         opts.remove += _split_modules(a.module_aus)
         if a.bundle_id:
             opts.bundle_id = a.bundle_id
-        if a.anrede:
-            opts.anrede = a.anrede
         print(project.summary(opts), end="")
         confirm = _ask("Fortfahren? j/n", "n")
         if not confirm.lower().startswith("j"):
