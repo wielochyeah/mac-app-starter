@@ -69,15 +69,15 @@ nonisolated struct ModelCatalog: Codable, Equatable, Sendable {
         ])
 }
 
-/// The Hugging Face cache layout on disk (`<hub>/models--org--name/{blobs,snapshots/<rev>}`),
+/// The Hugging Face cache layout on disk (`<hub>/models--<org>--<name>/{blobs,snapshots/<rev>}`),
 /// read without the hub client (port of VoiceBud's `hf_snapshot`; same rules as download.py).
 nonisolated enum HubCache {
     static func repoDir(hub: URL, repo: String) -> URL {
         hub.appendingPathComponent("models--" + repo.replacingOccurrences(of: "/", with: "--"), isDirectory: true)
     }
 
-    /// The snapshot folder of a complete download: config.json plus a weights file whose blob exists
-    /// (a link to a half-written blob does not count). nil revision: the newest snapshot.
+    /// The snapshot folder of a complete download: config.json plus every weights file (see
+    /// `weightsComplete`). nil revision: the newest snapshot.
     static func snapshot(hub: URL, repo: String, revision: String?) -> URL? {
         let fm = FileManager.default
         let snaps = repoDir(hub: hub, repo: repo).appendingPathComponent("snapshots", isDirectory: true)
@@ -95,13 +95,29 @@ nonisolated enum HubCache {
         for name in names {
             let snap = snaps.appendingPathComponent(name, isDirectory: true)
             guard fm.fileExists(atPath: snap.appendingPathComponent("config.json").path) else { continue }
-            let files = (try? fm.contentsOfDirectory(atPath: snap.path)) ?? []
-            // fileExists follows the symlink into blobs/
-            if files.contains(where: { $0.hasSuffix(".safetensors") && fm.fileExists(atPath: snap.appendingPathComponent($0).path) }) {
-                return snap
-            }
+            if weightsComplete(snap) { return snap }
         }
         return nil
+    }
+
+    static let weightsIndex = "model.safetensors.index.json"
+
+    /// Every weights file is there. A model split into shards lists them in its index file; without
+    /// one, a single `*.safetensors` whose blob exists is enough. `fileExists` follows the link into
+    /// blobs/, so a link to a half-written blob does not count. Same rule as download.py.
+    static func weightsComplete(_ snap: URL) -> Bool {
+        let fm = FileManager.default
+        let index = snap.appendingPathComponent(weightsIndex)
+        // attributesOfItem does not follow the link: an index whose blob is missing still counts as there
+        if (try? fm.attributesOfItem(atPath: index.path)) != nil {
+            guard let data = try? Data(contentsOf: index),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let map = json["weight_map"] as? [String: String] else { return false }
+            let shards = Set(map.values)
+            return !shards.isEmpty && shards.allSatisfy { fm.fileExists(atPath: snap.appendingPathComponent($0).path) }
+        }
+        let files = (try? fm.contentsOfDirectory(atPath: snap.path)) ?? []
+        return files.contains { $0.hasSuffix(".safetensors") && fm.fileExists(atPath: snap.appendingPathComponent($0).path) }
     }
 
     /// Bytes in the repo's blob folder, finished and partial files alike.

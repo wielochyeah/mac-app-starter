@@ -147,6 +147,28 @@ final class MLXTests: TestSuite {
             expect(!fm.fileExists(atPath: repo.path))
         }
 
+        test("hub cache: a sharded model is complete only with every shard") {
+            let hub = tempDir()
+            let fm = FileManager.default
+            let repo = HubCache.repoDir(hub: hub, repo: "org/big")
+            let blobs = repo.appendingPathComponent("blobs"), snap = repo.appendingPathComponent("snapshots/r")
+            try fm.createDirectory(at: blobs, withIntermediateDirectories: true)
+            try fm.createDirectory(at: snap, withIntermediateDirectories: true)
+            let index = #"{"weight_map": {"a": "model-00001-of-00002.safetensors", "b": "model-00002-of-00002.safetensors"}}"#
+            for (name, body) in [("cfg", "{}"), ("idx", index), ("s1", "1"), ("s2", "2")] {
+                fm.createFile(atPath: blobs.appendingPathComponent(name).path, contents: Data(body.utf8))
+            }
+            func link(_ name: String, _ blob: String) throws {
+                try fm.createSymbolicLink(atPath: snap.appendingPathComponent(name).path, withDestinationPath: "../../blobs/" + blob)
+            }
+            try link("config.json", "cfg")
+            try link(HubCache.weightsIndex, "idx")
+            try link("model-00001-of-00002.safetensors", "s1")
+            expect(HubCache.snapshot(hub: hub, repo: "org/big", revision: "r") == nil, "one shard of two")
+            try link("model-00002-of-00002.safetensors", "s2")
+            expectEqual(HubCache.snapshot(hub: hub, repo: "org/big", revision: "r")?.lastPathComponent, "r")
+        }
+
         test("MLX availability: fix the first missing piece first") {
             expectEqual(MLXProvider.availability(appleSilicon: false, systemOK: false, installed: false, modelPresent: false),
                         .unavailable(.unsupportedHardware))

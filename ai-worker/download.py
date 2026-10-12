@@ -50,9 +50,27 @@ def repo_dir(hub, repo):
     return os.path.join(hub, "models--" + repo.replace("/", "--"))
 
 
+WEIGHTS_INDEX = "model.safetensors.index.json"
+
+
+def weights_complete(snap):
+    """Every weights file is there. A model split into shards lists them in its index file; without
+    one, a single *.safetensors whose blob exists is enough (a link to a half-written blob does not
+    count, os.path.exists follows the link)."""
+    index = os.path.join(snap, WEIGHTS_INDEX)
+    if os.path.lexists(index):
+        try:
+            with open(index, encoding="utf-8") as f:
+                shards = set(json.load(f).get("weight_map", {}).values())
+        except (OSError, ValueError, AttributeError):
+            return False
+        return bool(shards) and all(os.path.exists(os.path.join(snap, n)) for n in shards)
+    return any(n.endswith(".safetensors") and os.path.exists(os.path.join(snap, n)) for n in os.listdir(snap))
+
+
 def snapshot_path(hub, repo, revision=None):
-    """The snapshot folder of a complete download, else None. Complete = config.json and at least
-    one weights file whose blob exists (a symlink to a half-written blob does not count)."""
+    """The snapshot folder of a complete download, else None. Complete = config.json and all
+    weights files (see weights_complete)."""
     snaps = os.path.join(repo_dir(hub, repo), "snapshots")
     if not os.path.isdir(snaps):
         return None
@@ -62,7 +80,7 @@ def snapshot_path(hub, repo, revision=None):
         snap = os.path.join(snaps, name)
         if not os.path.isdir(snap) or not os.path.exists(os.path.join(snap, "config.json")):
             continue
-        if any(n.endswith(".safetensors") and os.path.exists(os.path.join(snap, n)) for n in os.listdir(snap)):
+        if weights_complete(snap):
             return snap
     return None
 

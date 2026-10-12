@@ -64,6 +64,18 @@ class CacheTest(unittest.TestCase):
         self.assertIsNone(download.snapshot_path(self.hub, REPO, "r1"))
         self.assertIsNone(download.snapshot_path(self.hub, REPO, "r3"))
 
+    def test_sharded_snapshot_needs_every_shard(self):
+        cfg, one = self.blob("cfg", 10), self.blob("s1", 20)
+        index = os.path.join(self.repo, "blobs", "idx")
+        with open(index, "w") as f:
+            json.dump({"weight_map": {"a": "model-00001-of-00002.safetensors", "b": "model-00002-of-00002.safetensors"}}, f)
+        files = {"config.json": cfg, download.WEIGHTS_INDEX: index, "model-00001-of-00002.safetensors": one}
+        snap = self.snapshot("r1", files)
+        self.assertIsNone(download.snapshot_path(self.hub, REPO, "r1"), "the second shard is missing")
+        two = self.blob("s2", 20)
+        os.symlink(os.path.relpath(two, snap), os.path.join(snap, "model-00002-of-00002.safetensors"))
+        self.assertEqual(download.snapshot_path(self.hub, REPO, "r1"), snap)
+
     def test_present_model_reports_done_without_network(self):
         cfg, weights = self.blob("cfg", 10), self.blob("w", 90)
         snap = self.snapshot("rev", {"config.json": cfg, "model.safetensors": weights})
