@@ -6,6 +6,9 @@ import AppKit
 enum MainMenu {
     private static var targets: [ClosureTarget] = []
     private static var tracking = false
+    /// Modules that extend the standard menus (e.g. the window module adds File, View and Help).
+    /// Each runs on every rebuild, after the kit menus are in place.
+    static var decorators: [(NSMenu) -> Void] = []
 
     static func install() {
         rebuild()
@@ -62,6 +65,7 @@ enum MainMenu {
         add(window, to: bar)
         NSApp.windowsMenu = window
 
+        for decorate in decorators { decorate(bar) }
         NSApp.mainMenu = bar
     }
 

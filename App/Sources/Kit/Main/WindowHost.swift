@@ -25,9 +25,11 @@ enum WindowHost {
     static var openIDs: Set<String> { Set(windows.keys) }
 
     /// Shows the window with this id, creating it (with `content`) when it is not open.
+    /// `configure` runs once on a new window, before its saved frame is restored and it is shown.
     @discardableResult
     static func show(id: String, style: Style, size: CGSize? = nil, minSize: CGSize? = nil,
-                     title: @escaping () -> String, content: () -> AnyView) -> NSWindow {
+                     title: @escaping () -> String, configure: ((NSWindow) -> Void)? = nil,
+                     content: () -> AnyView) -> NSWindow {
         if let existing = windows[id] {
             AppForm.windowWillShow(id)
             existing.makeKeyAndOrderFront(nil)
@@ -64,6 +66,7 @@ enum WindowHost {
         case .main:
             window.minSize = minSize ?? Metrics.settingsWindowMin
         }
+        configure?(window)
         let autosave = "\(AppConfig.bundleId).\(id)"
         if style == .onboarding || !window.setFrameUsingName(autosave) { window.center() }
         if style != .onboarding { window.setFrameAutosaveName(autosave) }

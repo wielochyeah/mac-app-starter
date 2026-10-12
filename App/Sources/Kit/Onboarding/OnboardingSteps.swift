@@ -53,27 +53,6 @@ struct WelcomeArt: View {
     }
 }
 
-/// The app icon (`AppIcon.icns` from the bundle), or the accent squircle with `app.symbol` while
-/// no icon exists yet. Loaded by the view that shows it and released with it (VoiceBud).
-struct AppIconImage: View {
-    let size: CGFloat
-    @State private var icon = AppInfo.icon()
-
-    var body: some View {
-        if let icon {
-            Image(nsImage: icon)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: size, height: size)
-                .accessibilityHidden(true)
-        } else {
-            // an icon file draws its body at 824 of 1024 px; match that so both sit the same
-            SquircleIcon(symbol: AppInfo.symbol, tint: .accent, size: (size * 824 / 1024).rounded())
-                .frame(width: size, height: size)
-        }
-    }
-}
-
 // MARK: - Language
 
 /// App language: English or German, or the Mac's, switching live (VoiceBud's second step).
