@@ -1,6 +1,6 @@
 # Status I (Modul examples: „Notizen“)
 
-Stand: 2026-10-12, Branch `strang/I` (Worktree `wt/I`), mit `main` zusammengeführt (zuletzt vor dem Abschluss, siehe Prüfung). Gebaut ist alles aus WAVE2.md Abschnitt I: ein kleines Notiz-Feature, das jede App-Form und jedes Modul nutzt, jeweils in eigenen `#if MODUL_<X>`-Blöcken, gebaut nach den Skills `neues-feature`, `neue-ansicht`, `neue-einstellung`, `insel-zustand`, `menueleisten-app`, `hintergrund-job`, `kurzbefehl` und `ki-funktion`. `bin/starter strip-examples` entfernt es ohne Rest.
+Stand: 2026-10-12, Branch `strang/I` (Worktree `wt/I`), `main` zuletzt mit `4cb1eb1` hineingeführt; die Prüfung unten lief auf dem zusammengeführten Stand. Gebaut ist alles aus WAVE2.md Abschnitt I: ein kleines Notiz-Feature, das jede App-Form und jedes Modul nutzt, jeweils in eigenen `#if MODUL_<X>`-Blöcken, gebaut nach den Skills `neues-feature`, `neue-ansicht`, `neue-einstellung`, `insel-zustand`, `menueleisten-app`, `hintergrund-job`, `kurzbefehl` und `ki-funktion`. `bin/starter strip-examples` entfernt es ohne Rest.
 
 ## Was gebaut ist
 
@@ -77,16 +77,16 @@ Stand: 2026-10-12, Branch `strang/I` (Worktree `wt/I`), mit `main` zusammengefü
 ```
 make build                                   -> grün (window,menubar,island,background,hotkeys,ai,examples), 0 Warnungen
 MODULES=… make build + STARTER_HEADLESS=1 STARTER_DATA_DIR=<tmp> …/Starter --selftest (Datenordner danach leer):
-  window,examples                            -> grün, 0 Warnungen, 21 checks, 0 failures
-  menubar,examples                           -> grün, 0 Warnungen, 18 checks, 0 failures
-  menubar,island,examples                    -> grün, 0 Warnungen, 20 checks, 0 failures
-  window,ai,examples                         -> grün, 0 Warnungen, 22 checks, 0 failures
-  menubar,hotkeys,examples                   -> grün, 0 Warnungen, 21 checks, 0 failures
-  window,background,examples                 -> grün, 0 Warnungen, 22 checks, 0 failures
-  menubar,ai,examples                        -> grün, 0 Warnungen, 19 checks, 0 failures
-  alle inkl. mlx                             -> grün, 0 Warnungen, 30 checks, 0 failures
+  window,examples                            -> grün, 0 Warnungen, 22 checks, 0 failures
+  menubar,examples                           -> grün, 0 Warnungen, 19 checks, 0 failures
+  menubar,island,examples                    -> grün, 0 Warnungen, 21 checks, 0 failures
+  window,ai,examples                         -> grün, 0 Warnungen, 23 checks, 0 failures
+  menubar,hotkeys,examples                   -> grün, 0 Warnungen, 22 checks, 0 failures
+  window,background,examples                 -> grün, 0 Warnungen, 23 checks, 0 failures
+  menubar,ai,examples                        -> grün, 0 Warnungen, 20 checks, 0 failures
+  alle inkl. mlx                             -> grün, 0 Warnungen, 31 checks, 0 failures
 STARTER_LANG=de … --selftest examples.ai     -> 1 check, 0 failures (Apple-Modell, 216 Zeichen, ca. 1,5 s)
-make test                                    -> Swift "386 tests, 0 failures" (34 ExamplesTests), Python 219 + 115 + 23 OK
+make test                                    -> Swift "389 tests, 0 failures" (34 ExamplesTests), Python 220 + 117 + 23 OK
 MODULES=menubar,examples ONLY=Examples make test -> 22 tests, 0 failures
 MODULES=window,examples ONLY=Examples make test  -> 24 tests, 0 failures
 make check                                   -> grün: rules_sync gültig, check_texts und check_design ohne neue Befunde,
@@ -94,7 +94,10 @@ make check                                   -> grün: rules_sync gültig, check
 bin/starter strip-examples (Kopie aus git ls-files, git init + Commit, ohne origin)
                                              -> 20 Dateien gelöscht, Blöcke in Modules.swift, Markierungen in
                                                 neues-feature/SKILL.md und docs/MODULE.md entfernt, ExamplesTests.swift
-                                                leer und gelöscht, modules.examples gestrichen, make build grün
+                                                leer und gelöscht, modules.examples gestrichen, make build grün;
+                                                make test in der Kopie "355 tests, 0 failures". check-kit meldet dort nur,
+                                                dass ein Starter ohne init kein Modul verlieren soll (Lock, starter.json):
+                                                in einem Projekt nach bin/starter init gilt das nicht
 git grep Notes|Notizen|Examples in der Kopie -> nur Treffer, die auf main schon vor Strang I da waren (Werkzeugnamen
                                                 strip-examples, Modultabellen, Doku-Beispiele wie NotesText in
                                                 neue-einstellung, Wortlisten in rules/, Musterszenen im Kit)
