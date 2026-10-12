@@ -37,7 +37,13 @@ enum TestRun {
     static var failures: [String] = []
     static var current = ""
     static var currentSuite = ""
-    static var tempDirs: [URL] = []
+    /// Root of this run's temp dirs: inside STARTER_DATA_DIR when set (scripts/test.sh deletes that
+    /// folder through its trap), else in the system temp dir. Removed as a whole after the run.
+    static let tempRoot: URL = {
+        let env = ProcessInfo.processInfo.environment["STARTER_DATA_DIR"]
+        let base = env.map { URL(fileURLWithPath: $0, isDirectory: true) } ?? FileManager.default.temporaryDirectory
+        return base.appendingPathComponent("starter-tests-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
+    }()
 }
 
 /// Registers a test in the current suite.
@@ -77,11 +83,8 @@ func fail(_ message: String, file: StaticString = #fileID, line: UInt = #line) {
 
 /// A fresh empty directory, removed after the run.
 func tempDir() -> URL {
-    let url = FileManager.default.temporaryDirectory
-        .appendingPathComponent("starter-tests-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
-        .appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let url = TestRun.tempRoot.appendingPathComponent(UUID().uuidString, isDirectory: true)
     try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-    TestRun.tempDirs.append(url)
     return url
 }
 
@@ -111,7 +114,7 @@ var repoRoot: URL {
             do { try c.body() } catch { TestRun.failures.append("\(c.name): threw \(error)") }
             print("\(TestRun.failures.count == before ? "ok  " : "FAIL") \(c.name)")
         }
-        for dir in TestRun.tempDirs { try? FileManager.default.removeItem(at: dir) }
+        try? FileManager.default.removeItem(at: TestRun.tempRoot)
         for f in TestRun.failures { FileHandle.standardError.write(Data("FAIL \(f)\n".utf8)) }
         print("\(selected.count) tests, \(TestRun.failures.count) failures")
         exit(TestRun.failures.isEmpty && !selected.isEmpty ? 0 : 1)
