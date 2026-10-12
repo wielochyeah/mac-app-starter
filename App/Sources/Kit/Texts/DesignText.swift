@@ -22,6 +22,7 @@ enum DesignText {
     static var emptyState: String { tr(en: "Empty state", de: "Leerer Zustand") }
     static var sectionHeader: String { tr(en: "Pane header", de: "Bereichskopf") }
     static var glass: String { tr(en: "Glass surface", de: "Glasfläche") }
+    static var island: String { tr(en: "Island", de: "Insel") }
     static var statusMark: String { tr(en: "Status", de: "Status") }
     static var sampleSettings: String { tr(en: "Settings pane", de: "Einstellungsbereich") }
     static var sampleOnboarding: String { tr(en: "Setup step", de: "Einrichtungsschritt") }
@@ -60,5 +61,12 @@ enum DesignText {
     static var newNote: String { tr(en: "New Note", de: "Neue Notiz") }
     static var glassSample: String { tr(en: "Floats above the content", de: "Schwebt über dem Inhalt") }
     static var typeSample: String { tr(en: "Calm, precise, local", de: "Ruhig, genau, lokal") }
+    static var islandDone: String { tr(en: "Copied", de: "Kopiert") }
+    static var islandMeta: String { tr(en: "Notes · 0.7 s", de: "Notizen · 0,7 s") }
+    static var islandPreview: String {
+        tr(en: "Pick up the printed plans before Friday and bring them to the site meeting.",
+           de: "Hol die gedruckten Pläne vor Freitag ab und bring sie zur Baubesprechung mit.")
+    }
+    static var islandHint: String { tr(en: "Hover to read everything", de: "Zeigen, um alles zu lesen") }
     static var disabled: String { tr(en: "Not available", de: "Nicht verfügbar") }
 }

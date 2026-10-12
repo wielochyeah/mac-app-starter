@@ -98,7 +98,7 @@ struct EmptyState: View {
         let t = Theme(scheme)
         VStack(spacing: Space.s) {
             Image(systemName: symbol)
-                .font(TypeScale.symbol(34, weight: .light))
+                .symbolFont(Metrics.emptyStateSymbol, weight: .light)
                 .foregroundStyle(t.fg3)
                 .padding(.bottom, Space.xxs)
             Text(title).font(TypeScale.headline).foregroundStyle(t.fg)

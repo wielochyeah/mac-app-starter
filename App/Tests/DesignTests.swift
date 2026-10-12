@@ -98,7 +98,7 @@ final class DesignTests: TestSuite {
             let scenes = Set(Registry.renderScenes.map(\.id))
             let gallery = Set(Registry.gallery.map(\.id))
             for name in ["buttons", "card", "row", "group-label", "separator", "footnote", "switch", "segmented", "chip",
-                         "badge", "squircle", "keycaps", "progress", "spinner", "empty-state", "section-header", "glass"] {
+                         "badge", "squircle", "keycaps", "progress", "spinner", "empty-state", "section-header", "glass", "island"] {
                 expect(scenes.contains("design.\(name)"), "scene design.\(name)")
                 expect(gallery.contains("design.\(name)"), "gallery design.\(name)")
             }

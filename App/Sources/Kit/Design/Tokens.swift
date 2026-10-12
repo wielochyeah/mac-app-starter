@@ -80,8 +80,14 @@ enum TypeScale {
 
     /// Glyph inside a squircle of `size`.
     static func squircleGlyph(_ size: CGFloat) -> Font { .system(size: size * 0.5, weight: .semibold) }
-    /// SF Symbol at a fixed point size (icons in rows, empty states).
-    static func symbol(_ size: CGFloat, weight: Font.Weight = .regular) -> Font { .system(size: size, weight: weight) }
+}
+
+extension Image {
+    /// An SF Symbol at a fixed point size (icons in rows, empty states). Only for images: text
+    /// uses the `TypeScale` steps, so a free size cannot leak into copy.
+    func symbolFont(_ size: CGFloat, weight: Font.Weight = .regular) -> some View {
+        font(.system(size: size, weight: weight))
+    }
 }
 
 /// Motion: springs from VoiceBud. Respect Reduce Motion with `Motion.adaptive(_:reduce:)`.
@@ -146,6 +152,7 @@ enum Metrics {
     static let progressSegment = CGSize(width: 18, height: 3)
     static let progressSpacing: CGFloat = 4
     static let spinner: CGFloat = 16
+    static let emptyStateSymbol: CGFloat = 34
     static let paneHeader: CGFloat = 52
     static let settingsColumn: CGFloat = 640
     static let onboardingWindow = CGSize(width: 720, height: 560)

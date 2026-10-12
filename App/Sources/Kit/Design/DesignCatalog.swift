@@ -44,6 +44,7 @@ enum DesignKit {
             Item(id: "empty-state", title: { DesignText.emptyState }) { AnyView(EmptyStateSample()) },
             Item(id: "section-header", title: { DesignText.sectionHeader }) { AnyView(SectionHeaderSample()) },
             Item(id: "glass", title: { DesignText.glass }) { AnyView(GlassSample()) },
+            Item(id: "island", title: { DesignText.island }) { AnyView(IslandSample()) },
             Item(id: "sample-settings", title: { DesignText.sampleSettings }, specimen: false) { AnyView(SampleSettingsPane()) },
             Item(id: "sample-onboarding", title: { DesignText.sampleOnboarding }, specimen: false) { AnyView(SampleOnboardingStep()) },
         ]
@@ -351,6 +352,54 @@ private struct GlassSample: View {
             }
         }
         .frame(height: 140)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+    }
+}
+
+/// The island tokens on the wallpaper stage: notch with a compact island, a capsule pill and a
+/// done card (all token values; the real island lives in the island module).
+private struct IslandSample: View {
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        let t = Theme(scheme)
+        let accent = IslandAccent.of()
+        let notch = Metrics.Island.renderNotch
+        ZStack(alignment: .top) {
+            Rectangle().fill(t.wallpaper)
+            t.menuBarTint.frame(height: Metrics.Island.renderMenuBar)
+            UnevenRoundedRectangle(bottomLeadingRadius: Radius.Island.bottomCompact, bottomTrailingRadius: Radius.Island.bottomCompact,
+                                   style: .continuous)
+                .fill(IslandPalette.surface)
+                .frame(width: notch.width + 2 * Metrics.Island.compactWing, height: notch.height)
+                .overlay {
+                    HStack {
+                        Circle().fill(IslandPalette.rec).frame(width: Metrics.Island.recDot, height: Metrics.Island.recDot)
+                        Spacer()
+                        Text(Format.seconds(4.2)).font(TypeScale.secondaryMedium.monospacedDigit()).foregroundStyle(IslandPalette.timer)
+                    }
+                    .padding(.horizontal, Metrics.Island.bodyPad)
+                }
+            VStack(alignment: .leading, spacing: Space.xxs) {
+                HStack(spacing: Space.xs) {
+                    Image(systemName: "checkmark.circle.fill").font(TypeScale.secondarySemibold).foregroundStyle(accent.line)
+                    Text(DesignText.islandDone).font(TypeScale.secondarySemibold).foregroundStyle(IslandPalette.text)
+                    Spacer()
+                    Text(DesignText.islandMeta).font(TypeScale.secondaryMedium).foregroundStyle(IslandPalette.meta)
+                }
+                Text(DesignText.islandPreview).font(TypeScale.preview).foregroundStyle(IslandPalette.body)
+                    .lineSpacing(TypeScale.previewLineSpacing)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(DesignText.islandHint).font(TypeScale.subtitle).foregroundStyle(IslandPalette.warning)
+            }
+            .padding(.horizontal, Metrics.Island.bodyPad)
+            .padding(.vertical, Space.s)
+            .frame(width: Metrics.Island.doneWidth - 2 * Space.xxl)
+            .background(RoundedRectangle(cornerRadius: Radius.Island.capsuleCard, style: .continuous).fill(IslandPalette.surface)
+                .shadow(color: IslandPalette.shadow, radius: Space.s, y: Space.xs))
+            .padding(.top, notch.height + Space.l)
+        }
+        .frame(height: 190)
         .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
     }
 }
