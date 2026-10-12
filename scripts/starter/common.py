@@ -1,0 +1,196 @@
+"""Shared helpers of the starter tools: errors, git, file lists, JSON, checksums, block cutting."""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import subprocess
+from pathlib import Path
+from typing import Dict, List, Optional, Sequence
+
+
+class StarterError(Exception):
+    """An expected failure: the CLI prints only its message (a stack trace would read like a crash)."""
+
+
+def repo_root(start: Optional[Path] = None) -> Path:
+    """The folder with starter.manifest.json, from start (default: the current folder) upwards."""
+    here = (start or Path.cwd()).resolve()
+    for folder in [here, *here.parents]:
+        if (folder / "starter.manifest.json").is_file() and (folder / "starter.json").is_file():
+            return folder
+    raise StarterError("kein Starter-Repository gefunden (starter.manifest.json und starter.json fehlen); "
+                       "im Wurzelordner des Projekts aufrufen")
+
+
+def git(root: Path, args: Sequence[str], check: bool = True, timeout: Optional[float] = None) -> str:
+    """Runs git in root and returns stdout. Errors name the git subcommand and the last stderr line,
+    never the arguments (a source URL may carry an address)."""
+    try:
+        res = subprocess.run(["git", *args], cwd=str(root), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise StarterError(f"git {_subcommand(args)}: keine Antwort nach {int(timeout or 0)} s")
+    if res.returncode != 0:
+        if not check:
+            return ""
+        last = (res.stderr.decode("utf-8", "replace").strip().splitlines() or [""])[-1]
+        raise StarterError(f"git {_subcommand(args)} ist gescheitert: {last}")
+    return res.stdout.decode("utf-8", "replace").strip()
+
+
+def git_bytes(root: Path, args: Sequence[str]) -> Optional[bytes]:
+    res = subprocess.run(["git", *args], cwd=str(root), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    return res.stdout if res.returncode == 0 else None
+
+
+def _subcommand(args: Sequence[str]) -> str:
+    skip_next = False
+    for a in args:
+        if skip_next:
+            skip_next = False
+            continue
+        if a == "-c":
+            skip_next = True
+            continue
+        if not a.startswith("-"):
+            return a
+    return ""
+
+
+def origin_url(root: Path) -> str:
+    return git(root, ["remote", "get-url", "origin"], check=False)
+
+
+def is_starter_origin(url: str, repository: str) -> bool:
+    """True when the origin URL points at the starter repository itself (https or ssh form)."""
+    remote = url.strip()
+    if remote.endswith(".git"):
+        remote = remote[:-4]
+    remote = remote.rstrip("/")
+    return bool(remote) and (remote.endswith("/" + repository) or remote.endswith(":" + repository))
+
+
+def working_files(root: Path) -> List[str]:
+    """Tracked and new files of the working tree, without ignored ones, that exist on disk."""
+    out = git(root, ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], check=False)
+    files = sorted({f for f in out.split("\0") if f})
+    return [f for f in files if (root / f).is_file()]
+
+
+def tracked_files(root: Path) -> List[str]:
+    out = git(root, ["ls-files", "-z"], check=False)
+    return sorted(f for f in out.split("\0") if f)
+
+
+SAFE_SEGMENT_BAD = {"", ".", ".."}
+
+
+def is_safe_repo_path(path: str) -> bool:
+    """A relative path inside the repository: no "..", "." or ".git" segment, no backslash or
+    control character, not absolute. Paths come from the manifest and from a starter tag, and
+    every tool writes or deletes with them."""
+    if not path or path.startswith("/") or re.match(r"^[A-Za-z]:", path) or re.search(r"[\\\x00-\x1f]", path):
+        return False
+    return all(seg not in SAFE_SEGMENT_BAD and seg.lower() != ".git" for seg in path.split("/"))
+
+
+def inside(root: Path, path: str) -> Path:
+    """root/path, refusing anything that would land outside root."""
+    if not is_safe_repo_path(path):
+        raise StarterError(f"{path} ist kein sicherer Pfad im Repository; nichts geschrieben")
+    full = (root / path).resolve()
+    base = root.resolve()
+    if base != full and base not in full.parents:
+        raise StarterError(f"{path} liegt außerhalb des Repositorys; nichts geschrieben")
+    return root / path
+
+
+def read_json(path: Path) -> dict:
+    try:
+        with open(path, encoding="utf-8") as f:
+            value = json.load(f)
+    except FileNotFoundError:
+        raise StarterError(f"{path.name} fehlt")
+    except json.JSONDecodeError as e:
+        raise StarterError(f"{path.name} ist kein gültiges JSON: {e}")
+    if not isinstance(value, dict):
+        raise StarterError(f"{path.name}: ein JSON-Objekt erwartet")
+    return value
+
+
+def write_text(path: Path, text: str) -> None:
+    """Writes atomically (temp file + rename), creating folders as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".starter-tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def write_json(path: Path, value: dict) -> None:
+    write_text(path, json.dumps(value, indent=2, ensure_ascii=False) + "\n")
+
+
+def is_binary(data: bytes) -> bool:
+    return b"\0" in data
+
+
+def to_lf(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def checksum_bytes(data: bytes) -> str:
+    """SHA-256; for text, line endings do not count (a CRLF checkout must not look like a change)."""
+    if not is_binary(data):
+        data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
+def checksum(root: Path, path: str) -> str:
+    return checksum_bytes((root / path).read_bytes())
+
+
+def cut_blocks(text: str, start: str, end: str) -> str:
+    """Cuts every block from a line that is exactly the start marker to a line that is exactly the
+    end marker (both included) and leaves one blank line where it was."""
+    kept: List[str] = []
+    inside_block = False
+    for line in text.split("\n"):
+        if not inside_block and line.strip() == start:
+            inside_block = True
+            continue
+        if inside_block:
+            if line.strip() == end:
+                inside_block = False
+            continue
+        kept.append(line)
+    if inside_block:
+        raise StarterError(f"Markierung {start} ohne {end}")
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept))
+
+
+def remove_empty_dirs(root: Path, files: Sequence[str]) -> None:
+    """Removes folders the deleted files left empty, bottom up, never root itself."""
+    dirs = sorted({str(Path(f).parent) for f in files}, key=len, reverse=True)
+    for d in dirs:
+        current = Path(d)
+        while str(current) not in (".", ""):
+            full = root / current
+            if not full.is_dir() or any(full.iterdir()):
+                break
+            full.rmdir()
+            current = current.parent
+
+
+def is_text_path(path: str) -> bool:
+    name = path.rsplit("/", 1)[-1]
+    return bool(TEXT_FILE.search(path)) or name in TEXT_NAMES
+
+
+TEXT_FILE = re.compile(r"\.(swift|py|sh|zsh|md|txt|yml|yaml|json|toml|cfg|html|css|js|plist|entitlements|c|h|m)$")
+TEXT_NAMES = {"Makefile", ".gitignore", ".editorconfig"}
+
+
+def checksums(root: Path, files: Sequence[str]) -> Dict[str, str]:
+    return {f: checksum(root, f) for f in sorted(files) if (root / f).is_file()}
