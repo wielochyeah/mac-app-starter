@@ -6,6 +6,8 @@ import AppKit
 ///     <App> --selftest
 ///     <App> --demo        normal launch, no onboarding, runs every `Registry.demoDrivers` entry
 ///                         (scripted loops such as the island's); fails when no module adds one
+///     <App> --background  normal launch without opening windows (login item start); also set when
+///                         macOS launched the app as a login item
 ///
 /// Unknown `--` flags are errors (exit 2), so a mistyped tool flag never starts the GUI app.
 /// Single-dash arguments are macOS's own (`-NSDocumentRevisionsDebugMode YES`, `-psn_…`) and pass.
@@ -19,6 +21,7 @@ struct LaunchFlags: Equatable {
     var appearance: Appearance?
     var selftest = false
     var demo = false
+    var background = false
     var errors: [String] = []
 
     var isTool: Bool { renderDir != nil || selftest }
@@ -53,6 +56,8 @@ struct LaunchFlags: Equatable {
                 flags.selftest = true
             case "--demo":
                 flags.demo = true
+            case "--background":
+                flags.background = true
             default:
                 // macOS adds its own single-dash arguments (-NSDocumentRevisionsDebugMode, -AppleLanguages …)
                 if arg.hasPrefix("--") { flags.errors.append("unknown flag \(arg)") }
@@ -74,6 +79,8 @@ enum Launch {
     private static var delegate: AppDelegate?
     /// True for `--demo`: AppDelegate skips onboarding and runs `Registry.demoDrivers`.
     private(set) static var isDemo = false
+    /// True for `--background` (or a login-item launch, see AppDelegate): no window opens at launch.
+    static var isBackground = false
 
     static func run(_ flags: LaunchFlags) -> Never {
         if !flags.errors.isEmpty {
@@ -105,6 +112,7 @@ enum Launch {
             }
             isDemo = true
         }
+        isBackground = flags.background
         let delegate = AppDelegate()
         Launch.delegate = delegate
         app.delegate = delegate

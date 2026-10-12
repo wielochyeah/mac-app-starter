@@ -14,11 +14,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             for driver in Registry.demoDrivers { driver() }
             return
         }
+        if Launch.isBackground || launchedAsLoginItem {
+            Launch.isBackground = true
+            Log.info("background launch: no windows", "app")
+            return
+        }
         if !Settings.shared[.onboardingDone] && !Registry.orderedOnboardingSteps.isEmpty {
             AppActions.openOnboarding()
         } else if AppInfo.isEnabled("window") {
             AppActions.openMainWindow()
         }
+    }
+
+    /// macOS marks the open-application event of a login-item launch (keyAELaunchedAsLogInItem).
+    private var launchedAsLoginItem: Bool {
+        guard let event = NSAppleEventManager.shared().currentAppleEvent, event.eventID == kAEOpenApplication else { return false }
+        return event.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
