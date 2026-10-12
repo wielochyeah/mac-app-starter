@@ -50,7 +50,7 @@ App/Sources/
 ```
 
 - **Kit** kennt kein Modul. Es stellt Bausteine und die Registry bereit und liest daraus, was Module und Features beitragen.
-- **Module** nutzen nur das Kit, nie einander direkt. Was ein Modul von einem anderen braucht, steht in `#if MODUL_<NAME>` … `#endif` (ein Flag je Block, nie verschachtelt, nie `||` oder `&&`), damit `bin/starter remove` es sauber entfernen kann.
+- **Module** nutzen nur das Kit, nie einander direkt. Was ein Modul von einem anderen braucht, steht in `#if MODUL_<NAME>` … `#endif`, damit `bin/starter remove` es sauber entfernen kann: genau ein Flag je `#if`, ohne `||`, `&&`, `!` und `#elseif`. Ein `#else`-Zweig bleibt nach dem Entfernen stehen. Braucht Code zwei Module, stehen zwei einfache Blöcke ineinander (`#if MODUL_AI` außen, `#if MODUL_WINDOW` innen); `bin/starter remove` und `make check-kit` lösen jeden für sich auf.
 - **Features** nutzen Kit und, in eigenen `#if`-Blöcken, Module. Jedes meldet sich mit einer Zeile in `Features.register()` an (`App/Sources/Features/Features.swift`); `Modules.registerAll()` ruft das nach dem Kit und allen Modulen auf.
 - `App/Sources/Kit/Main/Modules.swift` ist die einzige Stelle, die Module aufzählt.
 

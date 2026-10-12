@@ -70,8 +70,8 @@ Für jedes wiederkehrende Problem gibt es genau einen Weg. Wer einen zweiten fin
 | Einstellung | `SettingKey` neben dem Besitzer, `Settings.shared[.key]` |
 | gespeicherte Daten | `Database` mit nummerierten Migrationen; Pfade nur über `Paths` |
 | Beitrag zur Oberfläche | `Registry` im `register()` des Features oder Moduls |
-| Fenster öffnen | `AppActions.openSettings(pane:)`, `openOnboarding()`, `openMainWindow()`; eigene Fenster über `WindowHost.show` |
-| Bezug auf ein Modul | ein eigener `#if MODUL_<NAME>` … `#endif`, ein Flag je Block, nie verschachtelt |
+| Fenster öffnen | `AppActions.openSettings(pane:)`, `openOnboarding()`, `openMainWindow(page:)`; eigene Fenster über `WindowHost.show` |
+| Bezug auf ein Modul | ein eigener `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `\|\|`, `&&` und `!`; für zwei Module zwei einfache Blöcke ineinander |
 | Beobachten außerhalb von SwiftUI | `Observing.track(_:while:onChange:)` |
 | Protokoll | `Log.debug`, `info`, `warn`, `error`; nie Inhalte der Nutzerin |
 | Einstellungsbereich | `PaneScaffold` mit `SettingsSection` und den Zeilenmustern |

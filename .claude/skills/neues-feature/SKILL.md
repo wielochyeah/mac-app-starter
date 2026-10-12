@@ -28,7 +28,17 @@ Ein Ordner `App/Sources/Features/<Name>/`, Namen auf Englisch in UpperCamelCase:
 - `<Name>View.swift` und weitere Views: nur Tokens und Bausteine des Kits.
 - `App/Tests/Features/<Name>Tests.swift`: Tests für jede Logik, in `#if TESTING`.
 
-Features nutzen nur das Kit. Braucht ein Feature ein Modul (Insel, Statusmenü, Hintergrund, Kurzbefehle, KI), steht jeder Bezug in einem eigenen `#if MODUL_<NAME>` … `#endif`, ein Flag je Block, nie verschachtelt, nie mit `||` oder `&&`. So baut das Projekt auch nach `bin/starter remove <modul>`.
+Features nutzen nur das Kit. Braucht ein Feature ein Modul (Insel, Statusmenü, Hintergrund, Kurzbefehle, KI), steht jeder Bezug in einem eigenen `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `||`, `&&`, `!` und `#elseif`. Ein `#else`-Zweig ist erlaubt und bleibt ohne das Modul stehen (etwa: mit Fenster öffnet eine Aktion die Seite, sonst den Einstellungsbereich). Braucht ein Teil zwei Module (eine KI-Spalte auf einer Fensterseite), stehen zwei einfache Blöcke ineinander:
+
+```swift
+#if MODUL_AI
+#if MODUL_WINDOW
+struct SummaryColumn: View { … }
+#endif
+#endif
+```
+
+`bin/starter remove` löst jeden der beiden Blöcke für sich auf, `make check-kit` spielt das für jedes Modul durch. So baut das Projekt auch nach `bin/starter remove <modul>`.
 
 Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/` dasselbe Muster an einem vollständigen Beispiel. <!-- modul:examples -->
 

@@ -46,8 +46,8 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 ### E-07 (12.10.2026): Module als Compiler-Flags
 
-- **Entscheidung:** `scripts/build.sh` übersetzt die Module aus `starter.json` in `-D MODUL_<NAME>` und kompiliert `App/Sources/Modules/<Name>/` nur für eingeschaltete Module. Querbezüge stehen in je einem `#if MODUL_<NAME>` … `#endif`, ein Flag je Block, nie verschachtelt, nie mit `||` oder `&&`. `App/Sources/Kit/Main/Modules.swift` ist die einzige Liste der Module.
-- **Grund:** `bin/starter remove` kann einfache Blöcke sicher entfernen; verschachtelte oder kombinierte Bedingungen ließen sich nicht ohne Compiler auflösen. Ein Build je Kombination beweist, dass jede Auswahl baut.
+- **Entscheidung:** `scripts/build.sh` übersetzt die Module aus `starter.json` in `-D MODUL_<NAME>` und kompiliert `App/Sources/Modules/<Name>/` nur für eingeschaltete Module. Querbezüge stehen in je einem `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `||`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander. `App/Sources/Kit/Main/Modules.swift` ist die einzige Liste der Module.
+- **Grund:** `bin/starter remove` kann einfache Blöcke sicher entfernen, auch ineinander stehende, weil jeder nur ein Flag nennt; kombinierte Bedingungen ließen sich nicht ohne Compiler auflösen. Ein Build je Kombination beweist, dass jede Auswahl baut.
 - **Folgen:** `make build MODULES=a,b` baut jede Kombination; die CI baut eine Matrix und entfernt jedes Modul in einer frischen Kopie.
 
 ### E-08 (12.10.2026): Texte in Englisch und Deutsch, Wechsel ohne Neustart

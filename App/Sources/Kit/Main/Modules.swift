@@ -1,5 +1,5 @@
-// The ONLY place that lists modules. One plain `#if MODUL_<NAME>` block per module (never nested,
-// never combined with || or &&): `bin/starter remove <module>` strips these blocks.
+// The ONLY place that lists modules. One plain `#if MODUL_<NAME>` block per module, one flag each
+// (never combined with || or &&): `bin/starter remove <module>` strips these blocks.
 
 enum Modules {
     private static var registered = false
