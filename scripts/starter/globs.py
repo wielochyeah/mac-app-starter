@@ -42,7 +42,7 @@ def _compile(glob: str) -> "re.Pattern[str]":
 
 def matches(path: str, globs: Iterable[str]) -> bool:
     """True when the repository path (forward slashes) matches any of the globs."""
-    return any(_compile(g).match(path) for g in globs)
+    return any(_compile(g).search(path) for g in globs)
 
 
 def literal_prefix(glob: str) -> str:
