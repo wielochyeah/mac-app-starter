@@ -1,0 +1,51 @@
+{
+  "_comment": "Usage descriptions shown by macOS when the app asks for a permission. scripts/gen_config.py copies the keys of the permissions listed in starter.json into Info.plist (en) and <lang>.lproj/InfoPlist.strings. Say concretely what the app does with the access.",
+  "NSMicrophoneUsageDescription": {
+    "en": "The microphone is used only while you record. Audio stays on your Mac.",
+    "de": "Das Mikrofon läuft nur, während du aufnimmst. Der Ton bleibt auf deinem Mac."
+  },
+  "NSCameraUsageDescription": {
+    "en": "The camera is used only while you take a picture. Images stay on your Mac.",
+    "de": "Die Kamera läuft nur, während du ein Bild aufnimmst. Bilder bleiben auf deinem Mac."
+  },
+  "NSAppleEventsUsageDescription": {
+    "en": "Lets the app ask other apps for the details it needs for your action.",
+    "de": "Damit die App andere Apps nach den Angaben fragen kann, die sie für deine Aktion braucht."
+  },
+  "NSSpeechRecognitionUsageDescription": {
+    "en": "Speech is turned into text on your Mac.",
+    "de": "Sprache wird auf deinem Mac in Text umgewandelt."
+  },
+  "NSContactsUsageDescription": {
+    "en": "Contacts are read to fill in names you pick. Nothing is uploaded.",
+    "de": "Kontakte werden gelesen, um Namen einzusetzen, die du auswählst. Nichts wird hochgeladen."
+  },
+  "NSCalendarsFullAccessUsageDescription": {
+    "en": "Calendar events are read and created only when you ask for it.",
+    "de": "Termine werden nur gelesen und angelegt, wenn du darum bittest."
+  },
+  "NSRemindersFullAccessUsageDescription": {
+    "en": "Reminders are read and created only when you ask for it.",
+    "de": "Erinnerungen werden nur gelesen und angelegt, wenn du darum bittest."
+  },
+  "NSPhotoLibraryUsageDescription": {
+    "en": "Photos you pick are opened in the app. Nothing is uploaded.",
+    "de": "Fotos, die du auswählst, werden in der App geöffnet. Nichts wird hochgeladen."
+  },
+  "NSLocationUsageDescription": {
+    "en": "Your location is used for local results and never leaves your Mac.",
+    "de": "Dein Standort wird für Ergebnisse in deiner Nähe benutzt und verlässt deinen Mac nie."
+  },
+  "NSLocationWhenInUseUsageDescription": {
+    "en": "Your location is used for local results and never leaves your Mac.",
+    "de": "Dein Standort wird für Ergebnisse in deiner Nähe benutzt und verlässt deinen Mac nie."
+  },
+  "NSBluetoothAlwaysUsageDescription": {
+    "en": "Bluetooth is used to connect the devices you choose.",
+    "de": "Bluetooth verbindet die Geräte, die du auswählst."
+  },
+  "NSLocalNetworkUsageDescription": {
+    "en": "The local network is used to find devices on your network.",
+    "de": "Das lokale Netzwerk wird benutzt, um Geräte in deinem Netz zu finden."
+  }
+}
