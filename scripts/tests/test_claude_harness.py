@@ -411,11 +411,12 @@ def expected_skills(root):
 
 class AgentsAndSkillsTests(unittest.TestCase):
     def test_module_skills_are_expected_only_with_their_module(self):
-        self.assertEqual(expected_skills(ROOT), KIT_SKILLS | set(MODULE_SKILLS))
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            for folder in ("Window", "MenuBar", "Background", "Hotkeys", "AI"):
+            for folder in ("Window", "MenuBar", "Island", "Background", "Hotkeys", "AI"):
                 (root / "App" / "Sources" / "Modules" / folder).mkdir(parents=True)
+            self.assertEqual(expected_skills(root), KIT_SKILLS | set(MODULE_SKILLS))
+            shutil.rmtree(root / "App" / "Sources" / "Modules" / "Island")
             self.assertEqual(expected_skills(root), KIT_SKILLS | set(MODULE_SKILLS) - {"insel-zustand"})
             shutil.rmtree(root / "App" / "Sources" / "Modules")
             self.assertEqual(expected_skills(root), KIT_SKILLS)
