@@ -118,7 +118,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
   | Registrierung | `ExamplesModule`, `NotesScenes`, `NotesWindowScenes`, `NotesIslandScenes`, `NotesDemo`, `NotesText`, `NotesLook` | Bereich, Menüeintrag, Hooks, Selbsttests, Szenen, Demo, Texte und Maße |
 
 - **Einstellungen:** `notes.defaultCollection` (Sammlung für neue Notizen und Schnellnotizen), `notes.layout` (Raster oder Liste auf Sammlungsseiten).
-- **Onboarding:** kein eigener Schritt. Drei Karten im Kit-Schritt „Funktionen“ über `OnboardingFeatures`: Schnellnotiz (mit `hotkeys`), Sammlungen (mit `window`), Lokale KI (mit `ai`), jeweils nur, wenn das Modul gebaut ist; der Kurzbefehl steht im Schritt „Dein Kurzbefehl“.
+- **Onboarding:** kein eigener Schritt. Drei Karten im Kit-Schritt „Funktionen“ über `OnboardingFeatures`: Schnellnotiz (mit `hotkeys`), Sammlungen (mit `window`), Lokale KI (mit `ai`), jeweils nur, wenn das Modul gebaut ist; der Kurzbefehl steht im Schritt „Dein Kurzbefehl“. Mit `island` sichert die Insel im Begrüßungsschritt eine Schnellnotiz.
 - **Szenen:** `examples.*` für jede Seite und jeden Zustand (leer, Suche ohne Treffer, KI läuft, KI nicht verfügbar, Insel und Kapsel, Statusmenü, Bereich, Rückfrage).
 - **Selbsttests:** `examples.store`, `examples.symbols`; `examples.ai.live` nur benannt (`--selftest examples.ai`), fragt das echte Modell.
 - **Demo:** `--demo examples` legt Beispieldaten in den Speicher, öffnet das Fenster, sichert eine Schnellnotiz aus festem Text und fasst sie zusammen (nur für die Person am Mac).

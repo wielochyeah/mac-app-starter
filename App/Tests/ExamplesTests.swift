@@ -378,6 +378,18 @@ final class ExamplesTests: TestSuite {
             expect(folded.canExpand)
             expectEqual(NotesIsland.progress("x") {}.cancelAction?.id, "notes.cancel")
         }
+
+        test("island: the setup's welcome art plays a quick note being saved") {
+            NotesIsland.register()
+            expectEqual(IslandWelcome.working(), NotesIsland.saving)
+            guard case .done(let title, let detail, let body, _, _) = IslandWelcome.result() else {
+                fail("the welcome take ends without a done card")
+                return
+            }
+            expectEqual(title, NotesText.islandSaved)
+            expectEqual(detail, NotesSampleText.home)
+            expectEqual(body, NotesSampleText.welcomeClip)
+        }
         #endif
 
         #if MODUL_AI

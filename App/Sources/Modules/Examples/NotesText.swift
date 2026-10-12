@@ -315,6 +315,10 @@ enum NotesSampleText {
     }
 
     /// The text `--demo examples` saves as if it had been copied.
+    /// Short enough for one line of the folded card in the setup's welcome art.
+    static var welcomeClip: String {
+        tr(en: "Pick up the parcel at the post office by 6 pm.", de: "Paket bis 18 Uhr bei der Post abholen.")
+    }
     static var demoClip: String {
         tr(en: "Pick up the parcel at the post office, open until 18:00. Bring an ID and the notice card.",
            de: "Paket bei der Post abholen, geöffnet bis 18 Uhr. Ausweis und Benachrichtigungskarte mitnehmen.")

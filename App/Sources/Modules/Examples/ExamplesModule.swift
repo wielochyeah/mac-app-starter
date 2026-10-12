@@ -11,7 +11,7 @@ import SwiftUI
 //              render scenes, self-tests, --demo examples
 //   window     Overview, All Notes (search), Trash, a page per collection, the note page
 //   menubar    the three notes edited last in the status menu panel
-//   island     capture and AI progress
+//   island     capture and AI progress, the take of the setup's welcome art
 //   hotkeys    ⌃⌥N quick note from the clipboard
 //   ai         Summarize (streamed), Suggest Title (structured)
 //   background Empty Trash, daily
@@ -33,6 +33,9 @@ enum ExamplesModule {
         #endif
         #if MODUL_MENUBAR
         NotesMenuBar.register()
+        #endif
+        #if MODUL_ISLAND
+        NotesIsland.register()
         #endif
         #if MODUL_HOTKEYS
         NotesHotkeys.register()

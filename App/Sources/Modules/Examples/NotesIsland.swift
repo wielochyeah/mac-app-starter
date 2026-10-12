@@ -9,6 +9,16 @@ import SwiftUI
 enum NotesIsland {
     private static var live: Bool { !RenderMode.isHeadless && !RenderMode.isStatic }
 
+    /// The setup's welcome art plays a quick note being saved.
+    static func register() {
+        IslandWelcome.working = { saving }
+        IslandWelcome.result = {
+            let note = NoteItem(id: 0, title: "", body: NotesSampleText.welcomeClip, collectionID: NotesSeed.home, pinned: false,
+                                trashedAt: nil, createdAt: NotesSamples.now, updatedAt: NotesSamples.now, source: .clipboard)
+            return saved(note, collection: NotesSampleText.home, hoverExpands: true, open: {}, copy: {})
+        }
+    }
+
     // MARK: Contents (pure: the render scenes show the same)
 
     static var saving: IslandContent {
@@ -24,6 +34,14 @@ enum NotesIsland {
             actions.append(IslandAction(id: "notes.copy", title: CommonText.copy, symbol: "doc.on.doc", perform: copy))
         }
         return .done(title: NotesText.islandSaved, detail: collection, body: note.body, actions: actions, tint: .amber)
+    }
+
+    /// The card after saving the sample note "Train to Hamburg" (render scenes); built on each
+    /// call, so it is in the language of the moment.
+    static var sample: IslandContent {
+        let note = NoteItem(id: 0, title: NotesSampleText.trainTitle, body: NotesSampleText.trainBody, collectionID: NotesSeed.travel,
+                            pinned: false, trashedAt: nil, createdAt: NotesSamples.now, updatedAt: NotesSamples.now, source: .clipboard)
+        return saved(note, collection: NotesSampleText.travel, hoverExpands: true, open: {}, copy: {})
     }
 
     static var clipboardEmpty: IslandContent { .notice(text: NotesText.clipboardEmpty, kind: .warning) }

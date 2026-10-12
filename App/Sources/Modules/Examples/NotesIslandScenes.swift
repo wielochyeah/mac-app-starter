@@ -6,11 +6,7 @@ import SwiftUI
 enum NotesIslandScenes {
     static func register() {
         // built when the scene renders, in the language of that render
-        let saved = {
-            let note = NoteItem(id: 0, title: NotesSampleText.trainTitle, body: NotesSampleText.trainBody, collectionID: NotesSeed.travel,
-                            pinned: false, trashedAt: nil, createdAt: NotesSamples.now, updatedAt: NotesSamples.now, source: .clipboard)
-            return NotesIsland.saved(note, collection: NotesSampleText.travel, hoverExpands: true, open: {}, copy: {})
-        }
+        let saved = { NotesIsland.sample }
         add("island-saving", kind: .notch) { NotesIsland.saving }
         add("island-saved", kind: .notch, sample: IslandScenes.Sample(id: "", crop: IslandLook.hoverCrop, content: saved) {
             $0.hover = .expanded
