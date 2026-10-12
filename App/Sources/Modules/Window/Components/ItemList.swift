@@ -35,8 +35,9 @@ struct ItemListColumns {
 }
 
 /// Rows like a Music track list: number or small artwork, title, a secondary column, meta on the
-/// right. Every other row is lightly striped; hover tints a row, a click selects it, a double
-/// click opens it, and `menu` adds a context menu.
+/// right. Every other row is lightly striped; hover tints a row clearly above the stripe, a click
+/// selects it (solid accent while the window is active, a soft tint when it is not), a double click
+/// opens it, and `menu` adds a context menu.
 ///
 ///     ItemList(items: rows, leading: .index, columns: ItemListColumns(title: T.title, meta: T.length),
 ///              selection: $selected, open: { play($0) }) { item in
@@ -146,6 +147,10 @@ private struct ItemListRow<Menu: View>: View {
 
     @State private var hovering = false
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.controlActiveState) private var activeState
+
+    /// Solid accent selection like macOS lists, while the window is key or active.
+    private var strongSelection: Bool { isSelected && activeState != .inactive }
 
     var body: some View {
         let t = Theme(scheme)
@@ -154,7 +159,7 @@ private struct ItemListRow<Menu: View>: View {
             case .index:
                 Text(Format.number(index + 1))
                     .font(TypeScale.secondary.monospacedDigit())
-                    .foregroundStyle(isSelected ? t.accentText : t.fg3)
+                    .foregroundStyle(strongSelection ? t.onAccent : isSelected ? t.accentText : t.fg3)
                     .frame(width: Metrics.Window.listIndex, alignment: .trailing)
             case .artwork:
                 Artwork(seed: item.seed ?? item.id, symbol: item.symbol)
@@ -164,19 +169,19 @@ private struct ItemListRow<Menu: View>: View {
             }
             Text(item.title)
                 .font(TypeScale.body)
-                .foregroundStyle(isSelected ? t.accentText : t.fg)
+                .foregroundStyle(strongSelection ? t.onAccent : isSelected ? t.accentText : t.fg)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if hasSecondary {
                 Text(item.secondary ?? "")
                     .font(TypeScale.body)
-                    .foregroundStyle(t.fg2)
+                    .foregroundStyle(strongSelection ? t.onAccent : t.fg2)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             Text(item.meta ?? "")
                 .font(TypeScale.secondary.monospacedDigit())
-                .foregroundStyle(t.fg2)
+                .foregroundStyle(strongSelection ? t.onAccent : t.fg2)
                 .lineLimit(1)
                 .frame(width: Metrics.Window.listMeta, alignment: .trailing)
         }
@@ -193,8 +198,9 @@ private struct ItemListRow<Menu: View>: View {
     }
 
     private func background(_ t: Theme) -> Color {
+        if strongSelection { return t.accent }
         if isSelected { return t.accentSoft }
-        if hovering || previewHovered { return t.chip }
+        if hovering || previewHovered { return t.listHover }
         return index.isMultiple(of: 2) ? .clear : t.rowHover
     }
 }

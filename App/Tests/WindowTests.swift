@@ -214,6 +214,16 @@ final class WindowTests: TestSuite {
             expect(!HeroBackdrop.showsGlyph(width: 600, height: Metrics.Window.heroHeight), "minimum window: no glyph under the title")
         }
 
+        test("list: a hovered row stands apart from a striped one in both schemes") {
+            // stripe = rowHover (black 3.5 % / white 5 %), hover = listHover, both over the window
+            let light = Contrast.ratio(Contrast.over(0x000000, 0.035, ThemeHex.windowBgLight),
+                                       Contrast.over(0x000000, Theme.listHoverLight, ThemeHex.windowBgLight))
+            let dark = Contrast.ratio(Contrast.over(0xFFFFFF, 0.05, ThemeHex.windowBgDark),
+                                      Contrast.over(0xFFFFFF, Theme.listHoverDark, ThemeHex.windowBgDark))
+            expect(light >= 1.1, "light \(light)")
+            expect(dark >= 1.1, "dark \(dark)")
+        }
+
         // MARK: Samples
 
         test("sample search: outdoor matches three, kayak none, empty shows all") {
