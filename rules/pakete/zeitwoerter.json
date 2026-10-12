@@ -1,0 +1,70 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "zeitwoerter",
+  "titel": "Zeitwörter ohne Datum",
+  "gruppe": "schreiben",
+  "standardAktiv": false,
+  "abschaltbar": true,
+  "sprachen": ["de", "en"],
+  "beschreibung": "Frische-Wörter und relative Zeiten als fester Text. Native Ansichten zeichnen neu und relative Zeiten kommen aus Format, deshalb ist das Paket aus; Projekte mit Datenständen (Berichte, Listen mit Stand) schalten es in starter.json unter texts.zusatzpakete ein.",
+  "begriffe": [
+    {
+      "id": "zeitwort",
+      "label": "Zeitwort ohne Datum",
+      "hinweis": "Stand-Datum aus den Daten über Format nennen, etwa „Stand 25.09.2026“",
+      "regeln": ["S-14"],
+      "art": "woerter",
+      "muster": [
+        "live(?:daten|werte?|ansicht|feed|ticker)?",
+        "tagesaktuell\\w*",
+        "aktuell\\w*",
+        "heute",
+        "heutige[mnrs]?",
+        "echtzeit\\w*",
+        "real-?time",
+        "gestern",
+        "vorgestern",
+        "soeben",
+        "gerade\\s+eben",
+        "neulich",
+        "vor\\s+(?:etwa\\s+|rund\\s+|über\\s+)?(?:\\d+|einer?|einem|einigen|ein\\s+paar|mehreren|wenigen|zwei|drei|vier|fünf|zehn)\\s+(?:Sek\\.|Min\\.|Std\\.|Sekunden?|Minuten?|Stunden?|Tag(?:en)?|Wochen?)",
+        "jetzt",
+        "derzeit",
+        "momentan",
+        "zurzeit",
+        "kürzlich",
+        "just\\s+now",
+        "vor\\s+kurzem",
+        "(?:minutes?|hours?|days?|weeks?)\\s+ago",
+        "today",
+        "yesterday",
+        "right\\s+now",
+        "currently"
+      ],
+      "flags": "i",
+      "bereiche": ["ui", "ki"],
+      "beispiele": {
+        "treffer": [
+          "Live-Daten",
+          "aktueller Stand",
+          "Stand heute",
+          "in Echtzeit",
+          "real-time",
+          "vor 2 Tagen",
+          "vor einer Woche",
+          "gestern",
+          "2 days ago",
+          "Jetzt aktualisieren",
+          "updated just now"
+        ],
+        "erlaubt": [
+          "Aktualisieren",
+          "Stand 25.09.2026",
+          "vor dem Stichtag",
+          "Daten vor 2009",
+          "Bisheriges Passwort"
+        ]
+      }
+    }
+  ]
+}

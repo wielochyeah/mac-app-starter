@@ -1,0 +1,315 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "gestaltung",
+  "titel": "Gestaltung im Swift-Code",
+  "gruppe": "design",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "pruefer": "check_design",
+  "beschreibung": "Werte, die Tokens umgehen: freie Farben, Systemfarben und dynamisches NSColor, Schriftgrößen und Textstile des Systems, Abstände (auch negative), Radien, Federn, Unschärfe und Bild-Assets. Sie gehören nach Kit/Design (Theme, Space, Radius, TypeScale, Motion, Metrics). 0 und 1 bleiben bei Abständen erlaubt, 0 bei Radien. Gilt für App/Sources außer Kit/Design; App/Tests und tools/ sind ausgenommen, weil Tests Farben für Kontrastrechnungen bauen und die Werkzeuge in tools/ ohne Kit kompilieren und ihre Farben aus starter.json lesen. Eine Ausnahme steht mit Grund als Kommentar „// design-ausnahme: Grund“ in derselben Zeile oder direkt darüber.",
+  "ausnahmeKommentar": "design-ausnahme",
+  "ausgenommenePfade": [
+    "App/Sources/Kit/Design/**",
+    "App/Tests/**",
+    "tools/**"
+  ],
+  "begriffe": [
+    {
+      "id": "farbe-literal",
+      "label": "Freie Farbe",
+      "hinweis": "Farbe aus Theme(scheme) oder IslandPalette; neue Farbe als Token in Kit/Design mit Kontrasttest",
+      "regeln": [
+        "D-01"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\bColor(?:\\.init)?\\(\\s*(?:red|hue|white|hex\\w*|cgColor|nsColor)\\s*:",
+        "\\bColor(?:\\.init)?\\(\\s*\\.(?:sRGB|displayP3|sRGBLinear)\\s*,",
+        "\\bColor(?:\\.init)?\\(\\s*0x",
+        "\\bColor(?:\\.init)?\\(\\s*(?:NSColor)?\\.(?:system[A-Z]\\w*|\\w*[cC]olor)\\b",
+        "\\bNSColor(?:\\.init)?\\(\\s*(?:red|calibratedRed|srgbRed|deviceRed|displayP3Red|white|calibratedWhite|deviceWhite|genericGamma22White|hue|calibratedHue|deviceHue|cgColor|colorSpace|name)\\s*:",
+        "#colorLiteral\\(",
+        "\\bCGColor(?:\\.init)?\\(\\s*(?:red|gray|srgbRed)\\s*:"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          "Color(red: 0.5, green: 0.2, blue: 0.9)",
+          "Color(hex: 0x8F6CF2)",
+          "NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)",
+          "#colorLiteral(red: 1, green: 0, blue: 0, alpha: 1)",
+          "Color(.sRGB, red: 1, green: 1, blue: 1)",
+          "Color(white: 0.2)",
+          "Color(.systemBlue)",
+          "Color(.labelColor)",
+          "Color(NSColor.windowBackgroundColor)",
+          "Color.init(red: 1, green: 0, blue: 0)",
+          "Color(hexString: \"#FF0000\")"
+        ],
+        "erlaubt": [
+          "t.accent",
+          "Theme(scheme).fg2",
+          "IslandPalette.text",
+          "Color.clear",
+          "Color(t.fg)",
+          "Color(nsImageTint)"
+        ]
+      }
+    },
+    {
+      "id": "systemfarbe",
+      "label": "Systemfarbe statt Token",
+      "hinweis": "Token aus Theme(scheme), etwa t.fg2 statt .secondary, t.accent statt .blue",
+      "regeln": [
+        "D-01"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\b(?:Color|NSColor)\\.(?:red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown|gray|grey|black|white|primary|secondary|accentColor|system[A-Z]\\w*|\\w*[lL]abelColor|controlAccentColor|windowBackgroundColor)\\b",
+        "\\.(?:foregroundStyle|foregroundColor|tint|fill|stroke|strokeBorder|background|border|accentColor|shadow)\\(\\s*(?:color:\\s*)?\\.(?:red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown|gray|grey|black|white|primary|secondary|tertiary|quaternary|accentColor)\\b",
+        "\\bcolor:\\s*\\.(?:red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown|gray|grey|black|white|primary|secondary|tertiary|quaternary|accentColor)\\b",
+        "\\b(?:HierarchicalShapeStyle|ShapeStyle)\\.(?:primary|secondary|tertiary|quaternary|quinary)\\b"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "umsetzung": "Farben kommen aus dem ColorScheme, damit Renders ohne Fenster genau wie das Fenster aussehen; Systemfarben folgen dem Fenster und weichen dort ab.",
+      "beispiele": {
+        "treffer": [
+          ".foregroundStyle(.secondary)",
+          ".background(.black)",
+          "Color.purple",
+          "NSColor.systemBlue",
+          ".shadow(color: .black.opacity(0.2), radius: 3)",
+          "NSColor.secondaryLabelColor",
+          ".foregroundColor(.accentColor)",
+          ".foregroundStyle(HierarchicalShapeStyle.secondary)"
+        ],
+        "erlaubt": [
+          ".foregroundStyle(t.fg2)",
+          ".buttonStyle(.secondary)",
+          ".fill(.clear)",
+          "Color.clear",
+          ".tint(t.accent)",
+          ".background(.ultraThinMaterial)"
+        ]
+      }
+    },
+    {
+      "id": "schriftgroesse",
+      "label": "Freie Schriftgröße, Textstil oder Schrift",
+      "hinweis": "Schriftgrad aus TypeScale, nie ein Textstil wie .headline; Symbole in freier Größe über Image.symbolFont",
+      "regeln": [
+        "D-03"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\.system\\(\\s*size\\s*:\\s*(?:CGFloat\\(\\s*)?-?\\d+(?:\\.\\d+)?",
+        "\\bNSFont\\.(?:systemFont|boldSystemFont|monospacedSystemFont|monospacedDigitSystemFont)\\(\\s*ofSize\\s*:\\s*(?:CGFloat\\(\\s*)?-?\\d+(?:\\.\\d+)?",
+        "\\bFont\\.custom\\(",
+        "\\.font\\(\\s*\\.custom\\(",
+        "\\.font\\(\\s*(?:Font)?\\.(?:system\\(\\s*\\.)?(?:largeTitle|title[23]?|headline|subheadline|body|callout|footnote|caption2?)\\b",
+        "\\bFont\\.(?:system\\(\\s*\\.)?(?:largeTitle|title[23]?|headline|subheadline|body|callout|footnote|caption2?)\\b",
+        "\\bNSFont\\.preferredFont\\("
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          ".font(.system(size: 13))",
+          "Font.system(size: 15.5, weight: .bold)",
+          "NSFont.systemFont(ofSize: 13)",
+          ".font(.custom(\"Helvetica\", size: 12))",
+          ".font(.system(size: CGFloat(14)))",
+          ".font(.headline)",
+          ".font(.title2.bold())",
+          ".font(.system(.body))",
+          "Font.caption",
+          "NSFont.preferredFont(forTextStyle: .body)"
+        ],
+        "erlaubt": [
+          ".font(TypeScale.body)",
+          ".font(TypeScale.caption.monospaced())",
+          ".font(Image.symbolFont(18))",
+          ".font(TypeScale.headline)",
+          ".font(TypeScale.body.monospacedDigit())"
+        ]
+      }
+    },
+    {
+      "id": "abstand",
+      "label": "Freier Abstand",
+      "hinweis": "Abstand aus Space (8, 12, 16, 24, 32, Feinausgleich 2 und 4, pane 20) oder Metrics; 0 und 1 bleiben erlaubt",
+      "regeln": [
+        "D-02"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\.padding\\(\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+        "\\.padding\\(\\s*(?:\\.[A-Za-z]+|\\[[^\\]\\n]*\\])\\s*,\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+        "(?:\\bs|(?<=[a-z])S)pacing\\s*:\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+        "\\bEdgeInsets\\([^)\\n]*?(?:top|leading|bottom|trailing)\\s*:\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+        "\\.lineSpacing\\(\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+        "\\b(?:Space|Radius|Metrics|TypeScale)\\.[\\w.]+\\s*[-+]\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])(?!\\s*[*/])"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          ".padding(16)",
+          ".padding(.horizontal, 12)",
+          ".padding([.top, .bottom], 6)",
+          "VStack(spacing: 10)",
+          "EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)",
+          ".padding(.bottom, Space.s - 2)",
+          ".lineSpacing(3)",
+          ".padding(.horizontal, -4)",
+          ".padding(-4)",
+          "VStack(spacing: -2)",
+          "Grid(horizontalSpacing: 10, verticalSpacing: 8)",
+          "LazyVGrid(columns: cols, spacing: 6)"
+        ],
+        "erlaubt": [
+          ".padding(Space.m)",
+          ".padding(.horizontal, Space.rowX)",
+          "HStack(spacing: 0)",
+          "VStack(spacing: 1)",
+          ".padding(0)",
+          "Space.s * 2",
+          "Metrics.rowHeight - 1",
+          "Metrics.settingsColumn + 2 * Space.pane",
+          "Grid(horizontalSpacing: Space.s, verticalSpacing: Space.xs)",
+          "let progressSpacing = Metrics.progressSpacing"
+        ]
+      }
+    },
+    {
+      "id": "radius",
+      "label": "Freier Eckenradius",
+      "hinweis": "Radius aus Radius (row 10, card 13, window 16 …), immer mit style: .continuous",
+      "regeln": [
+        "D-02"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\bcornerRadius\\s*[:=]\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+        "\\.cornerRadius\\(\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+        "\\b(?:topLeading|topTrailing|bottomLeading|bottomTrailing)Radius\\s*:\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          "RoundedRectangle(cornerRadius: 12)",
+          ".clipShape(.rect(cornerRadius: 8))",
+          ".cornerRadius(6)",
+          "layer.cornerRadius = 10",
+          "UnevenRoundedRectangle(topLeadingRadius: 9, bottomLeadingRadius: 12)"
+        ],
+        "erlaubt": [
+          "RoundedRectangle(cornerRadius: Radius.card, style: .continuous)",
+          "RoundedRectangle(cornerRadius: 0)"
+        ]
+      }
+    },
+    {
+      "id": "bewegung",
+      "label": "Freie Animation",
+      "hinweis": "Feder aus Motion (page, press, selection, toggle, expand …), unter Reduce Motion über Motion.adaptive",
+      "regeln": [
+        "D-09"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\.(?:spring|interpolatingSpring|interactiveSpring)\\(",
+        "\\.(?:easeInOut|easeIn|easeOut|linear)\\(\\s*duration\\s*:",
+        "\\.(?:bouncy|snappy|smooth)\\(\\s*(?:duration|extraBounce)\\s*:",
+        "(?:withAnimation|\\.animation)\\(\\s*\\.(?:spring|bouncy|snappy|smooth|easeInOut|easeIn|easeOut|linear|default)\\b",
+        "\\bduration\\s*=\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          "withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { }",
+          ".animation(.easeInOut(duration: 0.2), value: x)",
+          "withAnimation(.snappy) { }",
+          "context.duration = 0.25",
+          ".animation(.default, value: x)"
+        ],
+        "erlaubt": [
+          "withAnimation(Motion.page) { }",
+          ".animation(Motion.adaptive(Motion.toggle, reduce: reduceMotion), value: on)",
+          "context.duration = 0",
+          ".progressViewStyle(.linear)"
+        ]
+      }
+    },
+    {
+      "id": "unschaerfe",
+      "label": "Unschärfe als Schmuck",
+      "hinweis": "Glas über GlassSurface oder Systemmaterial; Unschärfe nur als Token in Kit/Design",
+      "regeln": [
+        "D-07"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\.blur\\(\\s*radius\\s*:\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          ".blur(radius: 20)",
+          ".blur(radius: -2)"
+        ],
+        "erlaubt": [
+          ".blur(radius: blur)",
+          ".blur(radius: 0)"
+        ]
+      }
+    },
+    {
+      "id": "bild-asset",
+      "label": "Bild-Asset statt SF Symbol",
+      "hinweis": "Image(systemName:) mit einem SF Symbol; das App-Icon entsteht mit make icon",
+      "regeln": [
+        "D-04"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\bImage\\(\\s*\\\"",
+        "\\bNSImage\\(\\s*named\\s*:\\s*\\\""
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          "Image(\"logo\")",
+          "NSImage(named: \"AppIcon\")"
+        ],
+        "erlaubt": [
+          "Image(systemName: \"gear\")",
+          "NSImage(named: NSImage.applicationIconName)",
+          "Image(nsImage: icon)"
+        ]
+      }
+    }
+  ]
+}

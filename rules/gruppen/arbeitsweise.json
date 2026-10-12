@@ -1,0 +1,89 @@
+{
+  "$schema": "../schema/gruppe.schema.json",
+  "id": "arbeitsweise",
+  "titel": "Arbeitsweise",
+  "praefix": "A",
+  "geltung": "Gilt für jede Session und jeden Subagenten, der im Repository arbeitet.",
+  "regeln": [
+    {
+      "id": "A-01",
+      "schluessel": "vorgaben",
+      "text": "Neue Vorgaben stehen in `docs/agents/VORGABEN.md` und gehen allem anderen vor. Jede Vorgabe wird innerhalb eines Arbeitstags als Regel eingearbeitet (im Projekt in `rules/projekt/`, im Starter in `rules/gruppen/` und `rules/pakete/`), mit `make rules` verteilt und in `VORGABEN.md` als eingearbeitet markiert. Jede Vorgabe wird an jeden gestarteten Subagenten weitergegeben.",
+      "pakete": [],
+      "durchsetzung": ["make check-rules", "Review"],
+      "ki": false
+    },
+    {
+      "id": "A-02",
+      "schluessel": "pruefen",
+      "text": "Vor jedem Push ist `make check` grün (Regeln, Texte, Gestaltung, Kit, Build, Tests; der Hook `pre-push` führt es aus), für geänderte Module zusätzlich `make build MODULES=…` der betroffenen Kombinationen. Warnungen gelten als Fehler. Nach dem Prüfen läuft kein Prozess der App mehr.",
+      "pakete": [],
+      "durchsetzung": ["scripts/hooks/pre-push", "CI"],
+      "ki": false
+    },
+    {
+      "id": "A-03",
+      "schluessel": "commits",
+      "text": "Kleine Commits auf einem eigenen Branch, nie direkt auf `main` (Ausnahme: die Integration mit Freigabe), nie fremde Branches umschreiben. Nachrichten auf Englisch im Format `type(scope): subject`, die erste Zeile höchstens 100 Zeichen, Zeile 2 leer. Hooks werden nie umgangen (`--no-verify`, `core.hooksPath`).",
+      "pakete": [],
+      "durchsetzung": ["scripts/hooks/commit-msg", "CI (Bereich der Commits)"],
+      "ki": false
+    },
+    {
+      "id": "A-04",
+      "schluessel": "identitaet",
+      "text": "Die Commit-Identität steht in `starter.json` (`commit`) und wird vor dem ersten Commit gesetzt (`git config user.name`, `git config user.email`, der Hook `session-start` tut es). Nach `bin/starter init` ist sie leer, und `commit-msg` nimmt keinen Commit an, bis das Projekt seine eigene einträgt. Die Identität nennt der Auftraggeber, sie wird nie erfunden.",
+      "pakete": [],
+      "durchsetzung": ["scripts/hooks/commit-msg"],
+      "ki": false
+    },
+    {
+      "id": "A-05",
+      "schluessel": "eigene-dateien",
+      "text": "Jeder Strang ändert nur seine eigenen Dateien (`docs/agents/straenge.json`); Bedarf an fremden Dateien steht als Anfrage in der eigenen Statusdatei. Gemeinsame Dateien (`Makefile`, `starter.json`, `CLAUDE.md`, `rules/`, Manifest) ändert nur die Integration. Ausnahme: wer einen Befund behebt, der in `rules/baseline/` steht, verkleinert die Baseline mit `--baseline-aktualisieren` und nennt das in der Statusdatei; lokal ist ein veralteter Eintrag nur ein Hinweis, in CI (`--ci`) ein Fehler.",
+      "pakete": [],
+      "durchsetzung": ["Review (pruefer-integration)"],
+      "ki": false
+    },
+    {
+      "id": "A-06",
+      "schluessel": "kit-pfade",
+      "text": "In einem Projekt bleiben Kit-Pfade aus `starter.manifest.json`, Teil A von `CLAUDE.md`, alle Dateien in `rules/` außer `rules/projekt/` und die leeren Baselines der Prüfungen unverändert. Eigene Regeln und Sprachpakete stehen in `rules/projekt/`; Bedarf am Kit steht in `docs/STARTER_FEEDBACK.md` mit Datei, Grund und Test.",
+      "pakete": [],
+      "durchsetzung": ["bin/starter check-kit", "CI"],
+      "ki": false
+    },
+    {
+      "id": "A-07",
+      "schluessel": "gegenpruefung",
+      "text": "Kein Paket gilt ohne Gegenprüfung als fertig: die Subagenten `pruefer-korrektheit`, `pruefer-laie-ux`, `pruefer-sicherheit`, `pruefer-integration` und `pruefer-design` suchen Fehler, höchstens zwei gleichzeitig, danach versucht `widerleger`, jeden Befund zu widerlegen (Workflow `red-team`).",
+      "pakete": [],
+      "durchsetzung": ["Workflow red-team", "Statusdatei"],
+      "ki": false
+    },
+    {
+      "id": "A-08",
+      "schluessel": "beweise",
+      "text": "Beweise statt Behauptungen: Befehle mit Ausgabe, Tests und die angesehenen Renders stehen in der Statusdatei, dazu ein Abschnitt `Bekannte Schwächen`. Was nicht ausgeführt wurde, gilt als nicht geprüft; ein ausgefallener Prüfer ist kein Ergebnis ohne Befund.",
+      "pakete": [],
+      "durchsetzung": ["Review (pruefer-integration)"],
+      "ki": false
+    },
+    {
+      "id": "A-09",
+      "schluessel": "fragen",
+      "text": "Offene Fragen an den Auftraggeber stehen gesammelt in `docs/PROJECT.md`, statt zu raten.",
+      "pakete": [],
+      "durchsetzung": ["Review"],
+      "ki": false
+    },
+    {
+      "id": "A-10",
+      "schluessel": "repo-sauber",
+      "text": "Renders, Build-Ausgaben, DMGs, Modelle, venvs und Testberichte gehören nie ins Repository (`build/` ist ausgenommen). Bilder für die Doku kommen nur über `make readme-shots` aus der Liste `docs/screenshots/list.txt`.",
+      "pakete": [],
+      "durchsetzung": [".gitignore", "Review"],
+      "ki": false
+    }
+  ]
+}

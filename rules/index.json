@@ -1,0 +1,235 @@
+{
+  "version": 1,
+  "titel": "Regeln des Mac-App-Starters",
+  "praeambel": [
+    "Diese Regeln gelten für jede Session und jeden Subagenten in diesem Repository. Wer gegen eine Regel verstößt, hat seine Aufgabe nicht erfüllt, auch wenn alle Tests grün sind.",
+    "Die einzige Quelle der Regeln ist `rules/`. Teil A dieser Datei, die Wortlisten der Prüfungen (`rules/generated/begriffe.json`) und die Schreibregeln für KI-Texte (`rules/generated/ki-schreibregeln.json`) entstehen daraus mit `make rules`; `make check` prüft, dass alle drei übereinstimmen, und führt jedes Beispiel der Sprachpakete als Test aus."
+  ],
+  "rangfolge": [
+    {
+      "pfad": "docs/agents/VORGABEN.md",
+      "was": "neue Vorgaben des Auftraggebers, bis sie in `rules/` eingearbeitet sind"
+    },
+    {
+      "pfad": "CLAUDE.md",
+      "was": "Teil A mit diesen Regeln, Teil B mit dem Verweis auf das Projekt"
+    },
+    {
+      "pfad": "docs/PROJECT.md",
+      "was": "Zweck, Zielgruppe, Fachsprache und Festlegungen des Projekts"
+    },
+    {
+      "pfad": "docs/DESIGN.md",
+      "was": "Tokens, Muster, Maße und Beispiele zur Gestaltung"
+    }
+  ],
+  "gruppen": [
+    "gruppen/schreiben.json",
+    "gruppen/design.json",
+    "gruppen/technik.json",
+    "gruppen/arbeitsweise.json"
+  ],
+  "pakete": [
+    "pakete/zeichen.json",
+    "pakete/floskeln.json",
+    "pakete/floskeln-en.json",
+    "pakete/neutral.json",
+    "pakete/neutral-en.json",
+    "pakete/anrede.json",
+    "pakete/fehlende-werte.json",
+    "pakete/platzhalter.json",
+    "pakete/englisch.json",
+    "pakete/deutsch.json",
+    "pakete/kommentare.json",
+    "pakete/zeitwoerter.json",
+    "pakete/layout.json",
+    "pakete/gestaltung.json",
+    "pakete/swift-technik.json"
+  ],
+  "code": "code.json",
+  "werkzeuge": [
+    {
+      "name": "`make rules` und `make check-rules`",
+      "regeln": ["A-01", "T-10"],
+      "pfad": "scripts/rules_sync.py"
+    },
+    {
+      "name": "`make check-texts`: UI-Texte, InfoPlist, Kommentare und Doku gegen die Sprachpakete",
+      "regeln": [
+        "S-01",
+        "S-02",
+        "S-03",
+        "S-04",
+        "S-05",
+        "S-06",
+        "S-08",
+        "S-09",
+        "S-10",
+        "S-11",
+        "S-12",
+        "S-14",
+        "D-04",
+        "D-10"
+      ],
+      "pfad": "scripts/check_texts.py"
+    },
+    {
+      "name": "`make check-design`: Swift-Code in `App/Sources`, `App/Tests` und `tools` gegen die Pakete `gestaltung` und `swift-technik`",
+      "regeln": ["D-01", "D-02", "D-03", "D-04", "D-07", "D-09", "T-01", "T-02", "T-03", "T-04", "T-05", "T-06"],
+      "pfad": "scripts/check_design.py"
+    },
+    {
+      "name": "Prüfung der Commit-Nachricht und des Autors, in CI mit `--bereich origin/main..HEAD`",
+      "regeln": ["S-01", "S-02", "S-03", "S-04", "A-03", "A-04"],
+      "pfad": "scripts/check_commit_msg.py"
+    },
+    {
+      "name": "Git-Hooks `commit-msg` und `pre-push` (`make hooks`)",
+      "regeln": ["A-02", "A-03", "A-04"],
+      "pfad": "scripts/hooks"
+    },
+    {
+      "name": "Baselines der Prüfungen (dürfen nur schrumpfen, im Projekt leer)",
+      "regeln": ["A-06"],
+      "pfad": "rules/baseline"
+    },
+    {
+      "name": "`make check`, `make build`, `make test`, `make shots`, `make doctor`",
+      "regeln": ["A-02", "T-01", "T-09", "D-13"],
+      "pfad": "Makefile"
+    },
+    {
+      "name": "Tokens `Theme`, `Space`, `Radius`, `TypeScale`, `Motion`, `Metrics`, `IslandPalette`",
+      "regeln": ["D-01", "D-02", "D-03", "D-07", "D-09"],
+      "pfad": "App/Sources/Kit/Design"
+    },
+    {
+      "name": "Muster für Onboarding-Schritte und Einstellungsbereiche",
+      "regeln": ["D-05", "D-06", "D-11"],
+      "pfad": "App/Sources/Kit/Design/Patterns"
+    },
+    {
+      "name": "Kontrasttests der Tokens",
+      "regeln": ["D-08"],
+      "pfad": "App/Tests/DesignTests.swift"
+    },
+    {
+      "name": "`tr(en:de:)`, `Localizer`, `Format`",
+      "regeln": ["S-10", "S-11", "S-13"],
+      "pfad": "App/Sources/Kit/Core/Lang.swift"
+    },
+    {
+      "name": "`SettingKey` und `Settings`",
+      "regeln": ["T-04"],
+      "pfad": "App/Sources/Kit/Core/Settings.swift"
+    },
+    {
+      "name": "`Database` mit Migrationen",
+      "regeln": ["T-04"],
+      "pfad": "App/Sources/Kit/Core/Database.swift"
+    },
+    {
+      "name": "`Registry` für Beiträge der Module",
+      "regeln": ["T-03", "T-04"],
+      "pfad": "App/Sources/Kit/Core/Registry.swift"
+    },
+    {
+      "name": "`Modules.registerAll()`, die einzige Liste der Module",
+      "regeln": ["T-03"],
+      "pfad": "App/Sources/Kit/Main/Modules.swift"
+    },
+    {
+      "name": "`AppForm`, `WindowHost`, `AppActions`",
+      "regeln": ["D-14", "T-04"],
+      "pfad": "App/Sources/Kit/Main"
+    },
+    {
+      "name": "Berechtigungen",
+      "regeln": ["T-04", "T-06"],
+      "pfad": "App/Sources/Kit/Permissions"
+    },
+    {
+      "name": "`RenderRunner` (`--render`, `make shots`) und `--selftest`",
+      "regeln": ["D-13", "T-08"],
+      "pfad": "App/Sources/Kit/Render/RenderRunner.swift"
+    },
+    {
+      "name": "Test-Harness `TestSuite`",
+      "regeln": ["T-09"],
+      "pfad": "App/Tests/Harness"
+    },
+    {
+      "name": "Build mit einem `swiftc`-Aufruf und SDK-Wahl",
+      "regeln": ["T-01"],
+      "pfad": "scripts/build.sh"
+    },
+    {
+      "name": "Erzeugte Konfiguration (`AppConfig`, Info.plist, InfoPlist.strings)",
+      "regeln": ["T-10"],
+      "pfad": "scripts/gen_config.py"
+    },
+    {
+      "name": "Nutzungsbeschreibungen der Berechtigungen in beiden Sprachen",
+      "regeln": ["S-10", "T-06"],
+      "pfad": "App/Resources/InfoPlist.json"
+    },
+    {
+      "name": "Einstellungen des Projekts: Name, Akzent, Module, Anrede, Commit-Identität, Signatur",
+      "regeln": ["S-05", "A-04", "T-03", "T-11"],
+      "pfad": "starter.json"
+    }
+  ],
+  "projekt": {
+    "gruppe": "projekt/projekt.json",
+    "pakete": "projekt/pakete",
+    "beschreibung": "Regeln und Sprachpakete des Projekts. Der Ordner gehört dem Projekt, alle anderen Dateien in rules/ dem Starter. rules_sync lädt die Gruppe und jedes Paket im Ordner pakete ohne Eintrag in dieser Datei."
+  },
+  "konfiguration": {
+    "datei": "starter.json",
+    "anrede": "texts.anrede: du (Standard) oder sie; wählt den Begriff des Pakets anrede",
+    "zusatzpakete": "texts.zusatzpakete: Liste von Paketen, die standardmäßig aus sind und eingeschaltet werden (etwa zeitwoerter)",
+    "personen": "texts.personen: Namen, die in Code-Kommentaren nicht stehen sollen (Paket kommentare)"
+  },
+  "bereiche": {
+    "ui": "UI-Texte: die beiden Literale jedes tr(en:de:) und die Werte in App/Resources/InfoPlist.json, je nach Sprache",
+    "kommentar": "Kommentare in Swift- und Python-Dateien (Sprache Englisch)",
+    "doku": "jede Markdown-Datei im Repository außer den Ausnahmen, ohne Code-Blöcke, Inline-Code, HTML-Kommentare und Link-Ziele (Sprache Deutsch)",
+    "commit": "Betreff und Text einer Commit-Nachricht (Sprache Englisch), geprüft vom Hook commit-msg",
+    "ki": "Texte, die die App mit lokaler KI in eigener Stimme schreibt, vor der Anzeige; und die Schreibregeln im Prompt",
+    "swift": "Swift-Code ohne Kommentare und Literale in App/Sources, App/Tests und tools/, geprüft von check_design.py"
+  },
+  "pruefumfang": {
+    "swift": ["App/Sources"],
+    "swiftCode": ["App/Sources", "App/Tests", "tools"],
+    "kommentare": ["App", "tools", "scripts", "ai-worker", ".claude"],
+    "doku": ["."],
+    "infoplist": "App/Resources/InfoPlist.json",
+    "ausnahmen": [
+      {
+        "pfad": "docs/bau/**",
+        "grund": "Bauakten des Starters mit Zitaten aus Plan und Quellprojekt; bin/starter init entfernt sie"
+      },
+      {
+        "pfad": "THIRD_PARTY_NOTICES.md",
+        "grund": "Lizenztexte stehen im Wortlaut der Rechteinhaber"
+      },
+      {
+        "pfad": "**/.venv/**",
+        "grund": "fremde Pakete einer virtuellen Umgebung"
+      },
+      {
+        "pfad": "**/node_modules/**",
+        "grund": "fremde Pakete"
+      },
+      {
+        "pfad": "App/Resources/Notices/**",
+        "grund": "Lizenzhinweise im Wortlaut der Rechteinhaber, in beiden Sprachen der App"
+      },
+      {
+        "pfad": "scripts/tests/**",
+        "nurBereiche": ["doku"],
+        "grund": "Tests der Prüfungen nennen verbotene Wörter und Zeichen absichtlich"
+      }
+    ]
+  }
+}

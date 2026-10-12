@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gruppe.schema.json",
+  "title": "Regelgruppe",
+  "description": "Verbindliche Regeln einer Gruppe; Teil A von CLAUDE.md entsteht daraus.",
+  "type": "object",
+  "required": ["id", "titel", "praefix", "geltung", "regeln"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "enum": ["schreiben", "design", "technik", "arbeitsweise", "projekt"],
+      "description": "projekt nur für rules/projekt/projekt.json"
+    },
+    "titel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "praefix": {
+      "type": "string",
+      "pattern": "^[A-Z]$"
+    },
+    "geltung": {
+      "type": "string",
+      "minLength": 1
+    },
+    "regeln": {
+      "type": "array",
+      "description": "mindestens eine Regel; nur die Gruppe projekt darf leer sein",
+      "items": {
+        "type": "object",
+        "required": ["id", "schluessel", "text", "pakete", "durchsetzung", "ki"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z]-\\d{2}$",
+            "description": "Präfix der Gruppe, Bindestrich, zweistellige Nummer; Nummern werden nie neu vergeben"
+          },
+          "schluessel": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "verbindlicher Wortlaut in einem Absatz; Beispiele verbotener Wörter und Zeichen nur in Code-Formatierung"
+          },
+          "pakete": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Sprachpakete, die diese Regel prüfen"
+          },
+          "durchsetzung": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "ki": {
+            "type": "boolean",
+            "description": "Teil der Schreibregeln für KI-Texte"
+          },
+          "vorgabe": {
+            "type": "string",
+            "description": "Kennung der Vorgabe aus docs/agents/VORGABEN.md, die diese Regel eingeführt oder geändert hat"
+          },
+          "aufgehoben": {
+            "type": "string",
+            "description": "Grund, falls die Regel nicht mehr gilt; die Nummer bleibt belegt"
+          }
+        }
+      }
+    }
+  }
+}

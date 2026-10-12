@@ -1,0 +1,50 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "neutral",
+  "titel": "Neutrale Sprache (Deutsch)",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de"],
+  "beschreibung": "Texte beschreiben, statt zu werben oder zu versprechen. Fachliche Neutralitätsregeln eines Projekts kommen als eigenes Paket dazu.",
+  "begriffe": [
+    {
+      "id": "werbeversprechen",
+      "label": "Superlativ oder Versprechen",
+      "hinweis": "beschreiben, was die Funktion tut und woran das messbar ist",
+      "regeln": ["S-06"],
+      "art": "woerter",
+      "muster": [
+        "(?:die|der|das|den|dem|des)\\s+beste[nrms]?",
+        "perfekt\\w*",
+        "garantiert\\w*",
+        "einzigartig\\w*",
+        "unschlagbar\\w*",
+        "erstklassig\\w*",
+        "weltklasse",
+        "ultimativ\\w*",
+        "kinderleicht\\w*",
+        "spielend\\s+leicht",
+        "im\\s+Handumdrehen",
+        "blitzschnell\\w*",
+        "state[- ]of[- ]the[- ]art",
+        "best[- ]in[- ]class",
+        "world[- ]class",
+        "next[- ]level"
+      ],
+      "flags": "i",
+      "bereiche": ["ui", "doku", "ki"],
+      "beispiele": {
+        "treffer": [
+          "Die beste Lösung",
+          "perfekte Übersicht",
+          "garantiert sicher",
+          "einzigartige Suche",
+          "kinderleicht bedienbar",
+          "State of the Art"
+        ],
+        "erlaubt": ["sortiert nach Datum", "nach bestem Wissen"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "anrede",
+  "titel": "Anrede",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de"],
+  "beschreibung": "Deutsche Texte nutzen eine Anrede: die aus starter.json (texts.anrede), Standard du wie bei Apple und VoiceBud. Die andere Form ist ein Fehler. Welcher Begriff gilt, steht im Feld beiAnrede.",
+  "begriffe": [
+    {
+      "id": "sie-form",
+      "label": "Sie-Form",
+      "hinweis": "du-Form wie im Rest der App: „Wähle einen Eintrag“, „deine Notizen“",
+      "regeln": ["S-05"],
+      "art": "regex",
+      "muster": [
+        "(?<=[a-zäöüß,;]\\s)Sie(?![\\w-])",
+        "(?<=[a-zäöüß,]\\s)(?:Ihre[mnrs]?|Ihr|Ihnen)(?!\\w)",
+        "(?:Ihr|Ihre[mnrs]?)\\s+(?:Passwort|Konto|Zugang|E-Mail|Liste|Auswahl|Eingabe|Daten|Einstellungen|Mac|App|Apps|Mikrofon|Kamera|Bildschirm|Dateien|Datei|Notiz|Notizen|Aufnahme|Sprache|Standort|Kontakte|Termine|Fotos|Geräte|Nachricht|Mediathek)(?!\\w)"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "doku", "ki"],
+      "beiAnrede": "du",
+      "umsetzung": "Groß- und Kleinschreibung zählt. „Sie“ am Satzanfang (dritte Person) wird nicht gemeldet.",
+      "beispiele": {
+        "treffer": [
+          "Legen Sie eine Notiz an",
+          "Wählen Sie einen Eintrag",
+          "Das Passwort erhalten Sie vom Admin",
+          "für Ihre Notizen",
+          "Ihr Mac ist bereit",
+          "Die Datei ist gespeichert und Sie können sie teilen",
+          "Danach, Sie sehen die Liste"
+        ],
+        "erlaubt": [
+          "Sie wurde am 26.09.2026 angelegt.",
+          "Notiz anlegen",
+          "keine Sie-Form",
+          "Gespeichert. Sie erscheint in der Liste.",
+          "Du kannst sie später ändern.",
+          "Ihre Umsätze stiegen um 4 %"
+        ]
+      }
+    },
+    {
+      "id": "du-form",
+      "label": "Du-Form",
+      "hinweis": "Sie-Form wie im Rest der App: „Wählen Sie einen Eintrag“",
+      "regeln": ["S-05"],
+      "art": "woerter",
+      "muster": [
+        "(?<!-)[Dd]u(?!-)",
+        "(?<!-)[Dd]ich(?!-)",
+        "(?<!-)[Dd]ir(?!-)",
+        "(?<!-)[Dd]ein(?:e[mnrs]?)?(?!-)"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "doku", "ki"],
+      "beiAnrede": "sie",
+      "beispiele": {
+        "treffer": ["Hast du Fragen", "Ändere dein Passwort", "Deine Notizen", "Wir zeigen dir"],
+        "erlaubt": [
+          "Durchschnitt",
+          "Direktlink",
+          "Passwort ändern",
+          "Deinstallation",
+          "keine Du-Form",
+          "--output-dir"
+        ]
+      }
+    }
+  ]
+}

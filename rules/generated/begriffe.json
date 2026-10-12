@@ -1,0 +1,1006 @@
+{
+  "hinweis": "Erzeugt mit make rules (scripts/rules_sync.py) aus rules/ und starter.json. Nicht von Hand ändern.",
+  "anrede": "du",
+  "zusatzpakete": [],
+  "personen": [],
+  "begriffe": [
+    {
+      "id": "mittelpunkt",
+      "paket": "zeichen",
+      "regeln": [
+        "S-01"
+      ],
+      "pruefer": "check_texts",
+      "label": "Mittelpunkt als Trenner",
+      "hinweis": "eigene Zeile, Abstand im Layout oder ein Komma; Multiplikation als „×“",
+      "art": "regex",
+      "quelle": "[\\u00B7\\u0387\\u16EB\\u2022\\u2024\\u2027\\u2043\\u22C5\\u2219\\u25CF\\u25E6\\u2981\\u2E31\\u30FB\\uFF65]",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "kommentar",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "gedankenstrich",
+      "paket": "zeichen",
+      "regeln": [
+        "S-02"
+      ],
+      "pruefer": "check_texts",
+      "label": "Gedankenstrich zwischen Satzteilen",
+      "hinweis": "zwei Sätze, ein Komma, ein Doppelpunkt oder Klammern; Halbgeviertstrich nur für Bereiche wie „2023–2026“",
+      "art": "regex",
+      "quelle": "[\\u2012\\u2014\\u2015\\u2E3A\\u2E3B\\uFE58]|(?:(?<=[^\\W\\d_])|(?<=[),.“\"]))[ \\t\\u00A0\\u202F\\u2009]+\\u2013[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W_]|[(„\"])|(?<=\\d)[ \\t\\u00A0\\u202F\\u2009]+\\u2013[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W\\d_]|[(„\"])(?![A-ZÄÖÜ]\\d)|(?:(?<=[^\\W\\d_])|(?<=[,)“\"]))[ \\t\\u00A0\\u202F\\u2009]+-[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W\\d_]|[„\"])|(?<=[^\\W_])(?:[ \\t]+--[ \\t]+|--)(?=[^\\W\\d_])",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "kommentar",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "pfeil",
+      "paket": "zeichen",
+      "regeln": [
+        "S-03"
+      ],
+      "pruefer": "check_texts",
+      "label": "Deko-Pfeil",
+      "hinweis": "Verb oder Präposition („zu“, „bis“, „wird zu“) oder ein SF Symbol",
+      "art": "regex",
+      "quelle": "(?!^[←-↓]\\s*$)(?<![⌘⌥⌃⇧])(?<![←-↓↖↘⇞⇟])(?<![←-⇿]/)(?<![←-↓] / )(?<![←-↓], )(?<![←-↓] or )(?<![←-↓] and )(?<![←-↓] und )(?<![←-↓] bis )(?<![←-↓] oder )[←-↕↗↙-↨↪-⇝⇠-⇣⇦⇨⇩⇫-⇿▶-►➔-➿⟰-⟿⤀-⥿⬀-⬑⭠-⯿\\U0001F800-\\U0001F8FF](?![←-↓↖↘⇞⇟])(?!\\s?/\\s?[←-⇿])(?!(?:,| or| and| und| oder| bis) [←-↓])(?![ -]?(?:[Tt]aste|key)\\b)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "kommentar",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "pfeil-ascii",
+      "paket": "zeichen",
+      "regeln": [
+        "S-03"
+      ],
+      "pruefer": "check_texts",
+      "label": "Pfeil aus Zeichen",
+      "hinweis": "Verb oder Präposition („zu“, „bis“, „wird zu“) oder ein SF Symbol",
+      "art": "regex",
+      "quelle": "(?:(?<=[ \\t])|(?<=[^\\W_]))->(?=[ \\t]|$)|(?<=[ \\t])=>(?=[ \\t]|$)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "glyphe",
+      "paket": "zeichen",
+      "regeln": [
+        "S-03",
+        "D-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Glyphe statt Symbol",
+      "hinweis": "SF Symbol über Image(systemName:) mit Text für VoiceOver",
+      "art": "regex",
+      "quelle": "[\\u25B2-\\u25B5\\u25BC-\\u25BF]|(?<!\\w)[\\u2039\\u203A](?!\\w)|[\\u00AB\\u00BB\\u2660\\u2663\\u2665\\u2666\\u25C6\\u25C7]",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "emoji",
+      "paket": "zeichen",
+      "regeln": [
+        "S-03",
+        "D-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Emoji",
+      "hinweis": "Text ohne Emoji; Zustände über Badge, StatusMark oder ein SF Symbol",
+      "art": "regex",
+      "quelle": "(?!\\U0001F310(?:︎|[A-Z0-9]|[←-⇿⌘⌥⌃]|[ -]?(?:[Tt]aste|key|Globe)\\b))[\\U0001F000-\\U0001FAFF\\u2600-\\u27BF\\u2B50\\u2B55\\u2B1B\\u2B1C\\u231A\\u231B\\u2328\\u23CF\\u23E9-\\u23F3\\u23F8-\\u23FA\\u3030\\u303D\\u3297\\u3299]",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "kommentar",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "ausrufezeichen",
+      "paket": "zeichen",
+      "regeln": [
+        "S-03"
+      ],
+      "pruefer": "check_texts",
+      "label": "Ausrufezeichen",
+      "hinweis": "sachlicher Satz mit Punkt",
+      "art": "regex",
+      "quelle": "(?:(?<=[^\\W_])|(?<=[)\\]“”\"'’.]))[ ]?[!\\uFF01]+(?![=\\w-])",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "auslassung",
+      "paket": "zeichen",
+      "regeln": [
+        "S-11"
+      ],
+      "pruefer": "check_texts",
+      "label": "Drei Punkte statt Auslassungszeichen",
+      "hinweis": "„…“ (U+2026); im Deutschen mit Leerzeichen davor: „Einstellungen …“",
+      "art": "regex",
+      "quelle": "(?<!\\.)\\.\\.\\.(?!\\.)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "floskel",
+      "paket": "floskeln",
+      "regeln": [
+        "S-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Floskel",
+      "hinweis": "konkret sagen, was passiert, mit Zahl und Einheit",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:nahtlos\\w*|mühelos\\w*|muehelos\\w*|revolution(?:är|aer)\\w*|bahnbrechend\\w*|innovativ\\w*|leistungsstark\\w*|ganzheitlich\\w*|ma(?:ß|ss?)geschneidert\\w*|KI[- ]?(?:gestützt|basiert)\\w*|AI[- ]powered|seamless\\w*|effortless\\w*|game[- ]?changer\\w*|Insights?|Einblicke|Magie|magisch\\w*|auf\\s+einen\\s+Blick|tauch(?:e|en\\s+Sie)\\s+(?:\\w+\\s+)?ein|lass(?:\\s+uns|t\\s+uns)|willkommen\\s+(?:zurück|bei|im|in|zu|zum|an\\s+Bord)|hier\\s+(?:findest|siehst)\\s+du|hier\\s+finden\\s+Sie|alles,?\\s+was\\s+(?:du|Sie)\\s+(?:brauch(?:st|en)|wissen\\s+(?:musst|müssen))|mehr\\s+erfahren|los\\s+geht['’]s|ups|hoppla|oh\\s+nein|Superkr(?:a|ä)ft\\w*)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "floskel-entdecke",
+      "paket": "floskeln",
+      "regeln": [
+        "S-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Floskel „Entdecke“ oder „Erlebe“",
+      "hinweis": "die Handlung benennen, etwa „Notizen filtern“",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:Entdecke(?:n|n\\s+Sie)?|entdecke|Erlebe(?:n|n\\s+Sie)?)(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "floskel-reise",
+      "paket": "floskeln",
+      "regeln": [
+        "S-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Floskel „Reise“",
+      "hinweis": "den Ablauf konkret beschreiben („in drei Schritten“)",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:(?:deine|Ihre|eure|unsere|die)\\s+(?:\\w+-)?Reise|journey)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "floskel-schmuckwort",
+      "paket": "floskeln",
+      "regeln": [
+        "S-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Schmuckwort „intelligent“ oder „smart“",
+      "hinweis": "beschreiben, was die Funktion tut, etwa „sortiert nach Datum“",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:intelligent(?:e[mnrs]?)?|smarte?[mnrs]?|smart)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "verkuerzung",
+      "paket": "floskeln",
+      "regeln": [
+        "S-11"
+      ],
+      "pruefer": "check_texts",
+      "label": "Verkürzung mit Apostroph",
+      "hinweis": "ausschreiben oder kürzer sagen: „Weiter“ statt „Weiter geht’s“, „So funktioniert es“",
+      "art": "regex",
+      "quelle": "[^\\W\\d_]+['’]s(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "floskel-en",
+      "paket": "floskeln-en",
+      "regeln": [
+        "S-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Floskel",
+      "hinweis": "konkret sagen, was passiert, mit Zahl und Einheit",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:seamless\\w*|effortless\\w*|game[- ]?chang(?:er|ers|ing)|cutting[- ]edge|revolutioni[sz](?:e|es|ed|ing)|revolutionary|supercharg\\w*|delv(?:e|es|ed|ing)|unleash\\w*|next[- ]gen(?:eration)?|in\\s+today['’]s|whether\\s+you['’]re|deep[- ]dive\\w*|let['’]s|at\\s+your\\s+fingertips|AI[- ]powered|welcome\\s+(?:to|aboard))(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "kommentar",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "floskel-en-ui",
+      "paket": "floskeln-en",
+      "regeln": [
+        "S-04"
+      ],
+      "pruefer": "check_texts",
+      "label": "Floskel in der Oberfläche",
+      "hinweis": "konkret sagen, was die Funktion tut",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:leverag(?:e|es|ed|ing)|unlock(?:s|ed|ing)?|elevat(?:e|es|ed|ing)|empower\\w*|streamlin(?:e|es|ed|ing)|harness(?:es|ed|ing)?|dive\\s+(?:in|into)|(?:your|the|a)\\s+journey|insights?|magic(?:al|ally)?|delightful\\w*|(?:blazing(?:ly)?|lightning)[- ]fast|all[- ]in[- ]one|one[- ]stop|welcome\\s+back|oops|whoops|uh[- ]oh|yay|woo-?hoo|awesome|amazing\\w*|stunning\\w*|powerful\\w*|smart(?:er|est)?|robust\\w*|transformative)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "werbeversprechen",
+      "paket": "neutral",
+      "regeln": [
+        "S-06"
+      ],
+      "pruefer": "check_texts",
+      "label": "Superlativ oder Versprechen",
+      "hinweis": "beschreiben, was die Funktion tut und woran das messbar ist",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:(?:die|der|das|den|dem|des)\\s+beste[nrms]?|perfekt\\w*|garantiert\\w*|einzigartig\\w*|unschlagbar\\w*|erstklassig\\w*|weltklasse|ultimativ\\w*|kinderleicht\\w*|spielend\\s+leicht|im\\s+Handumdrehen|blitzschnell\\w*|state[- ]of[- ]the[- ]art|best[- ]in[- ]class|world[- ]class|next[- ]level)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "werbeversprechen-en",
+      "paket": "neutral-en",
+      "regeln": [
+        "S-06"
+      ],
+      "pruefer": "check_texts",
+      "label": "Superlativ oder Versprechen",
+      "hinweis": "beschreiben, was die Funktion tut und woran das messbar ist",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:the\\s+best|best[- ]in[- ]class|world[- ]class|state[- ]of[- ]the[- ]art|perfect(?:ly|ion)?|guarantee[sd]?|ultimate(?:ly)?|unbeatable|unparalleled|unmatched|flawless(?:ly)?|incredibl[ey]|next[- ]level)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "sie-form",
+      "paket": "anrede",
+      "regeln": [
+        "S-05"
+      ],
+      "pruefer": "check_texts",
+      "label": "Sie-Form",
+      "hinweis": "du-Form wie im Rest der App: „Wähle einen Eintrag“, „deine Notizen“",
+      "art": "regex",
+      "quelle": "(?<=[a-zäöüß,;]\\s)Sie(?![\\w-])|(?<=[a-zäöüß,]\\s)(?:Ihre[mnrs]?|Ihr|Ihnen)(?!\\w)|(?:Ihr|Ihre[mnrs]?)\\s+(?:Passwort|Konto|Zugang|E-Mail|Liste|Auswahl|Eingabe|Daten|Einstellungen|Mac|App|Apps|Mikrofon|Kamera|Bildschirm|Dateien|Datei|Notiz|Notizen|Aufnahme|Sprache|Standort|Kontakte|Termine|Fotos|Geräte|Nachricht|Mediathek)(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "doku",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "fehlender-wert",
+      "paket": "fehlende-werte",
+      "regeln": [
+        "S-08"
+      ],
+      "pruefer": "check_texts",
+      "label": "Abkürzung für einen fehlenden Wert",
+      "hinweis": "den Grund nennen, etwa „noch kein Lauf“ oder „nicht verfügbar, Modell fehlt“",
+      "art": "regex",
+      "quelle": "(?<!\\w)[Nn]\\.\\s?[Vv]\\.(?!\\w)|(?<!\\w)[Kk]\\.\\s?[Aa]\\.(?!\\w)|(?<![\\w/])(?:N/A|n/a)(?![\\w/])",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "strich-als-wert",
+      "paket": "fehlende-werte",
+      "regeln": [
+        "S-08"
+      ],
+      "pruefer": "check_texts",
+      "label": "Strich als Wert",
+      "hinweis": "den Grund statt eines Strichs, etwa „noch kein Lauf“",
+      "art": "regex",
+      "quelle": "^\\s*[-\\u2013\\u2014]\\s*$",
+      "flags": "",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "technischer-wert",
+      "paket": "fehlende-werte",
+      "regeln": [
+        "S-08"
+      ],
+      "pruefer": "check_texts",
+      "label": "Technischer Wert im sichtbaren Text",
+      "hinweis": "den fehlenden Wert abfangen und seinen Grund zeigen",
+      "art": "regex",
+      "quelle": "(?<!\\w)(?:NaN|undefined|Infinity|Invalid\\s+Date)(?!\\w)|\\[object\\s+Object\\]|Optional\\(",
+      "flags": "",
+      "bereiche": [
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "platzhaltertext",
+      "paket": "platzhalter",
+      "regeln": [
+        "S-09"
+      ],
+      "pruefer": "check_texts",
+      "label": "Blindtext oder Merkzettel",
+      "hinweis": "echten Text schreiben oder den Abschnitt weglassen; offene Punkte gehören in die Statusdatei",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:[Ll]orem\\s+[Ii]psum|dolor\\s+sit\\s+amet|TODO|FIXME|TBD|XXX)(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "kommentar",
+        "doku",
+        "commit",
+        "ki"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "englisch-phrase",
+      "paket": "englisch",
+      "regeln": [
+        "S-10"
+      ],
+      "pruefer": "check_texts",
+      "label": "Englische Wendung",
+      "hinweis": "deutscher Text, etwa „Anmelden“, „Mehr anzeigen“, „Erneut versuchen“, „Keine Treffer“",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:get\\s+started|learn\\s+more|read\\s+more|sign\\s+(?:in|up|out)|log\\s+(?:in|out)|something\\s+went\\s+wrong|no\\s+(?:results|data|items|entries)(?:\\s+found)?|nothing\\s+(?:found|here)|click\\s+here|try\\s+again|go\\s+back|back\\s+to\\s+(?:home|top|the)|show\\s+(?:more|less|all)|(?:view|see)\\s+(?:all|more|details)|load\\s+more|are\\s+you\\s+sure|coming\\s+soon|(?:forgot|reset|change)\\s+(?:your\\s+)?password|save\\s+changes|welcome\\s+back|search\\s+for|(?:select|clear)\\s+all|last\\s+updated|powered\\s+by|privacy\\s+policy|(?:open|close|toggle)\\s+(?:menu|sidebar|window|dialog)|(?:dark|light)\\s+mode|(?:loading|searching|saving)(?:\\.\\.\\.|\\u2026)|search(?:\\.\\.\\.|\\u2026)|open\\s+anyway|allow\\s+access|system\\s+settings)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "englisch-wort",
+      "paket": "englisch",
+      "regeln": [
+        "S-10"
+      ],
+      "pruefer": "check_texts",
+      "label": "Englisches Befehlswort",
+      "hinweis": "deutsches Wort, etwa Abbrechen, Weiter, Einstellungen, Sichern, Löschen, Schließen, Beenden",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:Please|Submit|Cancel|Continue|Welcome|Settings|Preferences|Loading|Save|Delete|Edit|Close|Confirm|Retry|Previous|Next|Done|Quit|Allow|Deny|Skip|Undo|Redo|Copy|Paste|Search)(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "deutsch-zeichen",
+      "paket": "deutsch",
+      "regeln": [
+        "S-10"
+      ],
+      "pruefer": "check_texts",
+      "label": "Umlaut oder deutsches Anführungszeichen",
+      "hinweis": "englischen Text schreiben; Anführungszeichen im Englischen “…”",
+      "art": "regex",
+      "quelle": "[äöüÄÖÜß„]",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "deutsch-wort",
+      "paket": "deutsch",
+      "regeln": [
+        "S-10"
+      ],
+      "pruefer": "check_texts",
+      "label": "Deutsches Wort",
+      "hinweis": "englischen Text schreiben",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:[Uu]nd|[Nn]icht|[Oo]der|mit|[Ww]ird|[Ww]erden|[Bb]itte|[Dd]eine?|[Dd]ein[emnrs]|[Ee]instellungen|[Aa]bbrechen|[Ww]eiter|[Ff]ertig|[Ss]peichern|[Ee]ine?|[Ee]ine[mnrs]|[Dd]er|[Dd]as|[Ii]st|[Ss]ind|[Aa]uf|[Ff]ehler)(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "kommentar-verweis",
+      "paket": "kommentare",
+      "regeln": [
+        "S-12"
+      ],
+      "pruefer": "check_texts",
+      "label": "Kommentar mit Projektverweis",
+      "hinweis": "den Grund selbst nennen statt auf Plan, Strang, Statusbericht oder Person zu verweisen",
+      "art": "regex",
+      "quelle": "(?<!\\w)(?:VORGABEN|STRAENGE|BAUPLAN|STRANDS|[Ss]trang|[Ss]tr[aä]nge|[Ss]trands?\\s+[A-Z]\\d?|Vorgabe\\s+V?\\d+)(?!\\w)|(?<!\\w)V[1-9]\\d?(?=\\s*(?:Nr\\.|[:),]))|(?<![\\w/.])[A-Z]\\d{0,2}b?\\.md(?!\\w)|docs/bau/",
+      "flags": "",
+      "bereiche": [
+        "kommentar"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "harter-umbruch",
+      "paket": "layout",
+      "regeln": [
+        "D-10"
+      ],
+      "pruefer": "check_texts",
+      "label": "Harter Zeilenumbruch im Satz",
+      "hinweis": "Umbruch entfernen und den Satz frei laufen lassen; zwei Absätze als zwei Texte",
+      "art": "regex",
+      "quelle": "(?:(?<=[^\\W_])|(?<=[,;]))[ \\t]*\\n[ \\t]*(?=[^\\W_])",
+      "flags": "",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "absatz-umbruch",
+      "paket": "layout",
+      "regeln": [
+        "D-10"
+      ],
+      "pruefer": "check_texts",
+      "label": "Auf Zeilenlänge umbrochener Absatz",
+      "hinweis": "jeden Absatz, Listenpunkt und jedes Zitat in eine Zeile schreiben",
+      "art": "verfahren",
+      "verfahren": "markdown-absatz",
+      "bereiche": [
+        "doku"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "farbe-literal",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-01"
+      ],
+      "pruefer": "check_design",
+      "label": "Freie Farbe",
+      "hinweis": "Farbe aus Theme(scheme) oder IslandPalette; neue Farbe als Token in Kit/Design mit Kontrasttest",
+      "art": "regex",
+      "quelle": "\\bColor(?:\\.init)?\\(\\s*(?:red|hue|white|hex\\w*|cgColor|nsColor)\\s*:|\\bColor(?:\\.init)?\\(\\s*\\.(?:sRGB|displayP3|sRGBLinear)\\s*,|\\bColor(?:\\.init)?\\(\\s*0x|\\bColor(?:\\.init)?\\(\\s*(?:NSColor)?\\.(?:system[A-Z]\\w*|\\w*[cC]olor)\\b|\\bNSColor(?:\\.init)?\\(\\s*(?:red|calibratedRed|srgbRed|deviceRed|displayP3Red|white|calibratedWhite|deviceWhite|genericGamma22White|hue|calibratedHue|deviceHue|cgColor|colorSpace|name)\\s*:|#colorLiteral\\(|\\bCGColor(?:\\.init)?\\(\\s*(?:red|gray|srgbRed)\\s*:",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "systemfarbe",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-01"
+      ],
+      "pruefer": "check_design",
+      "label": "Systemfarbe statt Token",
+      "hinweis": "Token aus Theme(scheme), etwa t.fg2 statt .secondary, t.accent statt .blue",
+      "art": "regex",
+      "quelle": "\\b(?:Color|NSColor)\\.(?:red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown|gray|grey|black|white|primary|secondary|accentColor|system[A-Z]\\w*|\\w*[lL]abelColor|controlAccentColor|windowBackgroundColor)\\b|\\.(?:foregroundStyle|foregroundColor|tint|fill|stroke|strokeBorder|background|border|accentColor|shadow)\\(\\s*(?:color:\\s*)?\\.(?:red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown|gray|grey|black|white|primary|secondary|tertiary|quaternary|accentColor)\\b|\\bcolor:\\s*\\.(?:red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown|gray|grey|black|white|primary|secondary|tertiary|quaternary|accentColor)\\b|\\b(?:HierarchicalShapeStyle|ShapeStyle)\\.(?:primary|secondary|tertiary|quaternary|quinary)\\b",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "schriftgroesse",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-03"
+      ],
+      "pruefer": "check_design",
+      "label": "Freie Schriftgröße, Textstil oder Schrift",
+      "hinweis": "Schriftgrad aus TypeScale, nie ein Textstil wie .headline; Symbole in freier Größe über Image.symbolFont",
+      "art": "regex",
+      "quelle": "\\.system\\(\\s*size\\s*:\\s*(?:CGFloat\\(\\s*)?-?\\d+(?:\\.\\d+)?|\\bNSFont\\.(?:systemFont|boldSystemFont|monospacedSystemFont|monospacedDigitSystemFont)\\(\\s*ofSize\\s*:\\s*(?:CGFloat\\(\\s*)?-?\\d+(?:\\.\\d+)?|\\bFont\\.custom\\(|\\.font\\(\\s*\\.custom\\(|\\.font\\(\\s*(?:Font)?\\.(?:system\\(\\s*\\.)?(?:largeTitle|title[23]?|headline|subheadline|body|callout|footnote|caption2?)\\b|\\bFont\\.(?:system\\(\\s*\\.)?(?:largeTitle|title[23]?|headline|subheadline|body|callout|footnote|caption2?)\\b|\\bNSFont\\.preferredFont\\(",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "abstand",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-02"
+      ],
+      "pruefer": "check_design",
+      "label": "Freier Abstand",
+      "hinweis": "Abstand aus Space (8, 12, 16, 24, 32, Feinausgleich 2 und 4, pane 20) oder Metrics; 0 und 1 bleiben erlaubt",
+      "art": "regex",
+      "quelle": "\\.padding\\(\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])|\\.padding\\(\\s*(?:\\.[A-Za-z]+|\\[[^\\]\\n]*\\])\\s*,\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])|(?:\\bs|(?<=[a-z])S)pacing\\s*:\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])|\\bEdgeInsets\\([^)\\n]*?(?:top|leading|bottom|trailing)\\s*:\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])|\\.lineSpacing\\(\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])|\\b(?:Space|Radius|Metrics|TypeScale)\\.[\\w.]+\\s*[-+]\\s*(?!(?:0|1)(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])(?!\\s*[*/])",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "radius",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-02"
+      ],
+      "pruefer": "check_design",
+      "label": "Freier Eckenradius",
+      "hinweis": "Radius aus Radius (row 10, card 13, window 16 …), immer mit style: .continuous",
+      "art": "regex",
+      "quelle": "\\bcornerRadius\\s*[:=]\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])|\\.cornerRadius\\(\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])|\\b(?:topLeading|topTrailing|bottomLeading|bottomTrailing)Radius\\s*:\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "bewegung",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-09"
+      ],
+      "pruefer": "check_design",
+      "label": "Freie Animation",
+      "hinweis": "Feder aus Motion (page, press, selection, toggle, expand …), unter Reduce Motion über Motion.adaptive",
+      "art": "regex",
+      "quelle": "\\.(?:spring|interpolatingSpring|interactiveSpring)\\(|\\.(?:easeInOut|easeIn|easeOut|linear)\\(\\s*duration\\s*:|\\.(?:bouncy|snappy|smooth)\\(\\s*(?:duration|extraBounce)\\s*:|(?:withAnimation|\\.animation)\\(\\s*\\.(?:spring|bouncy|snappy|smooth|easeInOut|easeIn|easeOut|linear|default)\\b|\\bduration\\s*=\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "unschaerfe",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-07"
+      ],
+      "pruefer": "check_design",
+      "label": "Unschärfe als Schmuck",
+      "hinweis": "Glas über GlassSurface oder Systemmaterial; Unschärfe nur als Token in Kit/Design",
+      "art": "regex",
+      "quelle": "\\.blur\\(\\s*radius\\s*:\\s*(?!0(?:\\.0+)?(?![\\w.]))-?\\d+(?:\\.\\d+)?(?![\\w.])",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "bild-asset",
+      "paket": "gestaltung",
+      "regeln": [
+        "D-04"
+      ],
+      "pruefer": "check_design",
+      "label": "Bild-Asset statt SF Symbol",
+      "hinweis": "Image(systemName:) mit einem SF Symbol; das App-Icon entsteht mit make icon",
+      "art": "regex",
+      "quelle": "\\bImage\\(\\s*\\\"|\\bNSImage\\(\\s*named\\s*:\\s*\\\"",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Design/**",
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "design-ausnahme"
+    },
+    {
+      "id": "xcode-makro",
+      "paket": "swift-technik",
+      "regeln": [
+        "T-01"
+      ],
+      "pruefer": "check_design",
+      "label": "Makro oder Framework, das Xcode braucht",
+      "hinweis": "ohne Makro schreiben: EnvironmentKey von Hand, DynamicGenerationSchema, Database, Test-Harness in App/Tests",
+      "art": "regex",
+      "quelle": "#Preview\\b|@Entry\\b|@Generable\\b|@Guide\\b|@Model\\b|\\bimport\\s+(?:XCTest|Testing|SwiftData|CoreData)\\b",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausnahmeKommentar": "technik-ausnahme"
+    },
+    {
+      "id": "erzwungen",
+      "paket": "swift-technik",
+      "regeln": [
+        "T-02"
+      ],
+      "pruefer": "check_design",
+      "label": "Erzwungenes try oder as",
+      "hinweis": "Fehler werfen oder mit guard behandeln; in App/Tests und tools/ erlaubt",
+      "art": "regex",
+      "quelle": "\\btry!|\\bas!",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Tests/**",
+        "tools/**"
+      ],
+      "ausnahmeKommentar": "technik-ausnahme"
+    },
+    {
+      "id": "netzwerk",
+      "paket": "swift-technik",
+      "regeln": [
+        "T-05"
+      ],
+      "pruefer": "check_design",
+      "label": "Netzwerkzugriff",
+      "hinweis": "kein Netz außer einem Modell-Download, den die Person startet (Module ai und mlx)",
+      "art": "regex",
+      "quelle": "\\bURLSession\\b|\\bURLRequest\\b|\\bNWConnection\\b|\\bNWBrowser\\b|\\bimport\\s+Network\\b",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Modules/AI/**",
+        "App/Sources/Modules/MLX/**",
+        "App/Tests/**"
+      ],
+      "ausnahmeKommentar": "technik-ausnahme"
+    },
+    {
+      "id": "berechtigung-direkt",
+      "paket": "swift-technik",
+      "regeln": [
+        "T-04",
+        "T-06"
+      ],
+      "pruefer": "check_design",
+      "label": "Berechtigung außerhalb von Kit/Permissions",
+      "hinweis": "PermissionKind und Permission aus Kit/Permissions nutzen",
+      "art": "regex",
+      "quelle": "\\bAVCaptureDevice\\.requestAccess\\b|\\bAXIsProcessTrustedWithOptions\\b|\\bCGRequestScreenCaptureAccess\\b|\\bIOHIDRequestAccess\\b|\\.requestAuthorization\\(|\\bAEDeterminePermissionToAutomateTarget\\b|\\.requestFullAccessTo(?:Events|Reminders)\\b|\\.requestAccess\\(\\s*for\\s*:|\\.request(?:WhenInUse|Always)Authorization\\(|\\brequestRecordPermission\\b",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Permissions/**",
+        "App/Tests/**"
+      ],
+      "ausnahmeKommentar": "technik-ausnahme"
+    },
+    {
+      "id": "anmeldeobjekt",
+      "paket": "swift-technik",
+      "regeln": [
+        "T-04"
+      ],
+      "pruefer": "check_design",
+      "label": "Anmeldeobjekt außerhalb des Moduls background",
+      "hinweis": "LoginItem aus Modules/Background nutzen",
+      "art": "regex",
+      "quelle": "\\bSMAppService\\b",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Modules/Background/**",
+        "App/Tests/**"
+      ],
+      "ausnahmeKommentar": "technik-ausnahme"
+    },
+    {
+      "id": "einstellungen-direkt",
+      "paket": "swift-technik",
+      "regeln": [
+        "T-04"
+      ],
+      "pruefer": "check_design",
+      "label": "Einstellungen außerhalb von Kit/Core",
+      "hinweis": "SettingKey und Settings.shared aus Kit/Core/Settings.swift nutzen",
+      "art": "regex",
+      "quelle": "\\bUserDefaults\\b|@AppStorage\\b|@SceneStorage\\b",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Core/**",
+        "App/Tests/**"
+      ],
+      "ausnahmeKommentar": "technik-ausnahme"
+    },
+    {
+      "id": "modul-bedingung",
+      "paket": "swift-technik",
+      "regeln": [
+        "T-03"
+      ],
+      "pruefer": "check_design",
+      "label": "Modul-Bedingung, die bin/starter remove nicht auflösen kann",
+      "hinweis": "ein Flag je #if, ohne ||, && und !; braucht Code zwei Module, zwei einfache Blöcke ineinander",
+      "art": "regex",
+      "quelle": "#if\\b[^\\n]*\\bMODUL_\\w+[^\\n]*(?:\\|\\||&&)|#if\\b[^\\n]*(?:\\|\\||&&)[^\\n]*\\bMODUL_|#elseif\\b[^\\n]*\\bMODUL_|#if\\s*!\\s*\\(?\\s*MODUL_",
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "sprachen": [],
+      "erlaubt": [],
+      "ausnahmeKommentar": "technik-ausnahme"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "neutral-en",
+  "titel": "Neutrale Sprache (Englisch)",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["en"],
+  "beschreibung": "Englische Texte beschreiben, statt zu werben oder zu versprechen.",
+  "begriffe": [
+    {
+      "id": "werbeversprechen-en",
+      "label": "Superlativ oder Versprechen",
+      "hinweis": "beschreiben, was die Funktion tut und woran das messbar ist",
+      "regeln": ["S-06"],
+      "art": "woerter",
+      "muster": [
+        "the\\s+best",
+        "best[- ]in[- ]class",
+        "world[- ]class",
+        "state[- ]of[- ]the[- ]art",
+        "perfect(?:ly|ion)?",
+        "guarantee[sd]?",
+        "ultimate(?:ly)?",
+        "unbeatable",
+        "unparalleled",
+        "unmatched",
+        "flawless(?:ly)?",
+        "incredibl[ey]",
+        "next[- ]level"
+      ],
+      "flags": "i",
+      "bereiche": ["ui", "ki"],
+      "beispiele": {
+        "treffer": [
+          "The best way to write",
+          "Perfect for teams",
+          "Guaranteed private",
+          "The ultimate tool",
+          "Flawless sync",
+          "Next-level notes"
+        ],
+        "erlaubt": ["Works offline", "Sorted by date"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "deutsch",
+  "titel": "Deutsch in englischen Texten",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["en"],
+  "beschreibung": "Deutsche Wörter, Umlaute und deutsche Anführungszeichen in einem englischen Text: meist fehlt die Übersetzung oder die Argumente von tr(en:de:) sind vertauscht.",
+  "begriffe": [
+    {
+      "id": "deutsch-zeichen",
+      "label": "Umlaut oder deutsches Anführungszeichen",
+      "hinweis": "englischen Text schreiben; Anführungszeichen im Englischen “…”",
+      "regeln": ["S-10"],
+      "art": "regex",
+      "muster": ["[äöüÄÖÜß„]"],
+      "flags": "",
+      "bereiche": ["ui", "ki"],
+      "beispiele": {
+        "treffer": ["Schließen", "Größe", "Open „Notes“"],
+        "erlaubt": ["Close", "Size", "Open “Notes”"]
+      }
+    },
+    {
+      "id": "deutsch-wort",
+      "label": "Deutsches Wort",
+      "hinweis": "englischen Text schreiben",
+      "regeln": ["S-10"],
+      "art": "woerter",
+      "muster": [
+        "[Uu]nd",
+        "[Nn]icht",
+        "[Oo]der",
+        "mit",
+        "[Ww]ird",
+        "[Ww]erden",
+        "[Bb]itte",
+        "[Dd]eine?",
+        "[Dd]ein[emnrs]",
+        "[Ee]instellungen",
+        "[Aa]bbrechen",
+        "[Ww]eiter",
+        "[Ff]ertig",
+        "[Ss]peichern",
+        "[Ee]ine?",
+        "[Ee]ine[mnrs]",
+        "[Dd]er",
+        "[Dd]as",
+        "[Ii]st",
+        "[Ss]ind",
+        "[Aa]uf",
+        "[Ff]ehler"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "ki"],
+      "beispiele": {
+        "treffer": [
+          "Open und close",
+          "Nicht allowed",
+          "Bitte wait",
+          "Einstellungen",
+          "Das ist ok",
+          "Fehler"
+        ],
+        "erlaubt": ["MIT License", "Done", "Undo", "1st place", "under", "Fertile", "Isthmus"]
+      }
+    }
+  ]
+}

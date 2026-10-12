@@ -1,0 +1,140 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "floskeln",
+  "titel": "Floskeln (Deutsch)",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de"],
+  "beschreibung": "Werbe- und Füllwörter in deutschen Texten. Ersatz ist eine konkrete Aussage: was passiert, mit Zahl und Einheit.",
+  "begriffe": [
+    {
+      "id": "floskel",
+      "label": "Floskel",
+      "hinweis": "konkret sagen, was passiert, mit Zahl und Einheit",
+      "regeln": ["S-04"],
+      "art": "woerter",
+      "muster": [
+        "nahtlos\\w*",
+        "mühelos\\w*",
+        "muehelos\\w*",
+        "revolution(?:är|aer)\\w*",
+        "bahnbrechend\\w*",
+        "innovativ\\w*",
+        "leistungsstark\\w*",
+        "ganzheitlich\\w*",
+        "ma(?:ß|ss?)geschneidert\\w*",
+        "KI[- ]?(?:gestützt|basiert)\\w*",
+        "AI[- ]powered",
+        "seamless\\w*",
+        "effortless\\w*",
+        "game[- ]?changer\\w*",
+        "Insights?",
+        "Einblicke",
+        "Magie",
+        "magisch\\w*",
+        "auf\\s+einen\\s+Blick",
+        "tauch(?:e|en\\s+Sie)\\s+(?:\\w+\\s+)?ein",
+        "lass(?:\\s+uns|t\\s+uns)",
+        "willkommen\\s+(?:zurück|bei|im|in|zu|zum|an\\s+Bord)",
+        "hier\\s+(?:findest|siehst)\\s+du",
+        "hier\\s+finden\\s+Sie",
+        "alles,?\\s+was\\s+(?:du|Sie)\\s+(?:brauch(?:st|en)|wissen\\s+(?:musst|müssen))",
+        "mehr\\s+erfahren",
+        "los\\s+geht['’]s",
+        "ups",
+        "hoppla",
+        "oh\\s+nein",
+        "Superkr(?:a|ä)ft\\w*"
+      ],
+      "flags": "i",
+      "bereiche": ["ui", "doku", "ki"],
+      "beispiele": {
+        "treffer": [
+          "Nahtlose Integration",
+          "Mühelos filtern",
+          "revolutionäre Analyse",
+          "bahnbrechende Ergebnisse",
+          "innovative Methodik",
+          "leistungsstarke Suche",
+          "ganzheitlicher Ansatz",
+          "maßgeschneiderte Listen",
+          "KI-gestützte Einordnung",
+          "Neue Insights",
+          "Ein wenig Magie",
+          "Das ist ein Game-Changer",
+          "Alle Werte auf einen Blick",
+          "Tauche ein in die Daten",
+          "Lass uns starten",
+          "Willkommen zurück",
+          "Willkommen bei Starter",
+          "Hier findest du alle Notizen",
+          "Alles, was du brauchst",
+          "Mehr erfahren",
+          "Einblicke in die Nutzung",
+          "Los geht’s",
+          "Los geht's",
+          "Ups, das ging schief"
+        ],
+        "erlaubt": ["Notiz anlegen", "Einblick", "Willkommen", "Dann taucht ein Hinweis auf"]
+      }
+    },
+    {
+      "id": "floskel-entdecke",
+      "label": "Floskel „Entdecke“ oder „Erlebe“",
+      "hinweis": "die Handlung benennen, etwa „Notizen filtern“",
+      "regeln": ["S-04"],
+      "art": "woerter",
+      "muster": ["Entdecke(?:n|n\\s+Sie)?", "entdecke", "Erlebe(?:n|n\\s+Sie)?"],
+      "flags": "",
+      "bereiche": ["ui", "doku", "ki"],
+      "umsetzung": "Groß- und Kleinschreibung zählt: der Imperativ am Satzanfang oder im Knopf ist gemeint.",
+      "beispiele": {
+        "treffer": ["Entdecke die Funktionen", "Entdecken Sie mehr", "Erlebe die neue Insel"],
+        "erlaubt": ["Fehler entdeckt am 26.09.2026"]
+      }
+    },
+    {
+      "id": "floskel-reise",
+      "label": "Floskel „Reise“",
+      "hinweis": "den Ablauf konkret beschreiben („in drei Schritten“)",
+      "regeln": ["S-04"],
+      "art": "woerter",
+      "muster": ["(?:deine|Ihre|eure|unsere|die)\\s+(?:\\w+-)?Reise", "journey"],
+      "flags": "i",
+      "bereiche": ["ui", "doku", "ki"],
+      "beispiele": {
+        "treffer": ["Deine Reise beginnt", "die Kunden-Reise"],
+        "erlaubt": ["Reisebranche", "Dienstreise am 12.03.2026"]
+      }
+    },
+    {
+      "id": "floskel-schmuckwort",
+      "label": "Schmuckwort „intelligent“ oder „smart“",
+      "hinweis": "beschreiben, was die Funktion tut, etwa „sortiert nach Datum“",
+      "regeln": ["S-04"],
+      "art": "woerter",
+      "muster": ["intelligent(?:e[mnrs]?)?", "smarte?[mnrs]?", "smart"],
+      "flags": "i",
+      "bereiche": ["ui", "doku", "ki"],
+      "beispiele": {
+        "treffer": ["Intelligente Filter", "smarte Suche"],
+        "erlaubt": ["Filter nach Datum", "Smartphone"]
+      }
+    },
+    {
+      "id": "verkuerzung",
+      "label": "Verkürzung mit Apostroph",
+      "hinweis": "ausschreiben oder kürzer sagen: „Weiter“ statt „Weiter geht’s“, „So funktioniert es“",
+      "regeln": ["S-11"],
+      "art": "regex",
+      "muster": ["[^\\W\\d_]+['’]s(?!\\w)"],
+      "flags": "",
+      "bereiche": ["ui", "doku", "ki"],
+      "beispiele": {
+        "treffer": ["So funktioniert’s", "Gibt's ein Update", "Weiter geht’s"],
+        "erlaubt": ["Andreas’ Notizen", "Weiter", "Status"]
+      }
+    }
+  ]
+}

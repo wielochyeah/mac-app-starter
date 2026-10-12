@@ -1,0 +1,108 @@
+{
+  "$schema": "../schema/gruppe.schema.json",
+  "id": "technik",
+  "titel": "Technik",
+  "praefix": "T",
+  "geltung": "Gilt für jeden Code im Repository: App, Tests, Skripte, Werkzeuge und Konfiguration.",
+  "regeln": [
+    {
+      "id": "T-01",
+      "schluessel": "ohne-xcode",
+      "text": "Gebaut wird ohne Xcode und ohne SwiftPM: `make build` ruft über `scripts/build.sh` einmal `swiftc` auf, das SDK wählt `scripts/pick-sdk.sh`. `Package.swift` ist der Zweitweg für Xcode; die Quellen bauen auf beiden Wegen. Verboten sind `#Preview`, `@Entry`, `@Generable`, `@Model` (SwiftData), `.xcassets`, `.icon`, `.xib`, Storyboards, Core-Data-Modelle, mlx-swift, XCTest und Swift Testing. Mindestens macOS 26.0; jede neuere API steht hinter `#available`.",
+      "pakete": ["swift-technik"],
+      "durchsetzung": ["make check-design (Paket swift-technik)", "make build", "CI-Matrix"],
+      "ki": false
+    },
+    {
+      "id": "T-02",
+      "schluessel": "swift-6",
+      "text": "Swift 6 mit `-default-isolation MainActor`. Werte, die Isolationsgrenzen überqueren, sind `nonisolated` und `Sendable`; `@unchecked Sendable` und `nonisolated(unsafe)` nur mit Kommentar, der den Grund nennt. Kein `try!`, kein `as!` und kein `!` zum Entpacken außerhalb von Tests; Fehler werden geworfen und mit einem Text aus `*Text.swift` gezeigt.",
+      "pakete": ["swift-technik"],
+      "durchsetzung": [
+        "make check-design (Paket swift-technik)",
+        "make build",
+        "Review (pruefer-korrektheit)"
+      ],
+      "ki": false
+    },
+    {
+      "id": "T-03",
+      "schluessel": "module",
+      "text": "Module sind Schalter beim Kompilieren (`-D MODUL_<NAME>`); jedes registriert sich nur über `<Name>Module.register()` in `Kit/Main/Modules.swift`. Modulübergreifender Code steht in `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `||`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander. Jede erlaubte Kombination baut (`make build MODULES=a,b`), `bin/starter remove <modul>` entfernt ein Modul vollständig.",
+      "pakete": ["swift-technik"],
+      "durchsetzung": [
+        "make check-design (Paket swift-technik)",
+        "CI-Matrix der Module",
+        "Review (pruefer-integration)"
+      ],
+      "ki": false
+    },
+    {
+      "id": "T-04",
+      "schluessel": "kit-wege",
+      "text": "Jede Sache hat einen Weg: Einstellungen nur über `SettingKey` und `Settings.shared`, gespeichert in `~/Library/Application Support/<bundleId>/settings.json`; Daten über `Database` (sqlite3, nummerierte Migrationen); Berechtigungen nur über `Kit/Permissions`; Fenster über `WindowHost` und `AppForm`; Texte über `tr`; Formatierung über `Format`; Protokolle über `Log`. Beiträge von Modulen (Seiten, Bereiche, Schritte, Menüeinträge, Szenen) laufen über `Registry`.",
+      "pakete": ["swift-technik"],
+      "durchsetzung": ["make check-design (Einstellungen, Berechtigungen, Anmeldeobjekte)", "Review (pruefer-integration)"],
+      "ki": false
+    },
+    {
+      "id": "T-05",
+      "schluessel": "kein-netz",
+      "text": "Kein Netz im Normalfall: keine Analyse, keine Telemetrie, keine Update-Prüfung, keine Absturzberichte. Einzige Ausnahme ist ein Modell-Download, den die Person ausdrücklich startet, mit Größe vorher und Abbruch (Module `ai` und `mlx`), und Entwicklerwerkzeuge unter `scripts/` (pip in einer Projekt-venv).",
+      "pakete": ["swift-technik"],
+      "durchsetzung": [
+        "make check-design (URLSession nur in Modules/AI und Modules/MLX)",
+        "Review (pruefer-sicherheit)"
+      ],
+      "ki": false
+    },
+    {
+      "id": "T-06",
+      "schluessel": "privatsphaere",
+      "text": "Eine Berechtigung wird erst angefragt, wenn ihre Funktion sie braucht, mit Nutzungsbeschreibung in beiden Sprachen aus `App/Resources/InfoPlist.json`. Inhalte der Person (Texte, Aufnahmen, Dateien) werden nie protokolliert und verlassen den Mac nicht; Modelle liegen nie im Repository.",
+      "pakete": ["swift-technik"],
+      "durchsetzung": ["make check-design (Berechtigungen)", "Review (pruefer-sicherheit)"],
+      "ki": false
+    },
+    {
+      "id": "T-07",
+      "schluessel": "abhaengigkeiten",
+      "text": "Keine neue Abhängigkeit (Swift-Paket, pip-Paket, Binärdatei, Werkzeug) ohne Eintrag in `docs/DECISIONS.md` mit Grund. Werkzeuge in `scripts/` sind Python 3.9 nur mit Standardbibliothek (`/usr/bin/python3`) oder zsh mit `set -euo pipefail`; kein Node.",
+      "pakete": [],
+      "durchsetzung": ["Review (pruefer-integration)"],
+      "ki": false
+    },
+    {
+      "id": "T-08",
+      "schluessel": "nie-auf-dem-bildschirm",
+      "text": "Bauen und Prüfen zeigt nie ein Fenster, fragt nie nach Berechtigungen, meldet keine Anmeldeobjekte an und lässt keinen Prozess laufen: Prüfungen laufen über `--render`, `--selftest` und `STARTER_HEADLESS=1`. `make run` und der Blick in die laufende App sind Sache eines Menschen am Ende.",
+      "pakete": [],
+      "durchsetzung": ["make test (headless)", "Review"],
+      "ki": false
+    },
+    {
+      "id": "T-09",
+      "schluessel": "tests",
+      "text": "Logik ohne Oberfläche hat Tests in `App/Tests` (`TestSuite` aus `App/Tests/Harness`), Skripte in `scripts/tests` (unittest). Tests nutzen nie das Netz, nie echte Einstellungen und nie Application Support (`STARTER_DATA_DIR`); Uhren und Bildschirme werden hineingereicht statt abzuwarten. Erwartungswerte kommen aus der Anforderung oder einer Handrechnung, nie aus der Ausgabe des Codes.",
+      "pakete": [],
+      "durchsetzung": ["make test", "Review (pruefer-korrektheit)"],
+      "ki": false
+    },
+    {
+      "id": "T-10",
+      "schluessel": "erzeugt",
+      "text": "Erzeugte Dateien werden nie von Hand geändert (`build/gen/`, `rules/generated/`, Teil A dieser Datei). Geändert wird die Quelle (`starter.json`, `rules/`), danach `make rules` oder `make build`.",
+      "pakete": [],
+      "durchsetzung": ["make check-rules", "make build"],
+      "ki": false
+    },
+    {
+      "id": "T-11",
+      "schluessel": "signieren",
+      "text": "Standard ist die Ad-hoc-Signatur; Developer ID, Hardened Runtime und Notarisierung nur über `signing` in `starter.json`. Zugangsdaten (Notarisierung, Schlüssel) stehen nie im Repository, in Protokollen oder in Argumenten, sondern im Schlüsselbund.",
+      "pakete": [],
+      "durchsetzung": ["Review (pruefer-sicherheit)"],
+      "ki": false
+    }
+  ]
+}

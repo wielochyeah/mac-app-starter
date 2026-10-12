@@ -1,0 +1,250 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "swift-technik",
+  "titel": "Technik im Swift-Code",
+  "gruppe": "technik",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "pruefer": "check_design",
+  "beschreibung": "Was im Standardweg ohne Xcode nicht baut, was abstürzen kann und was nur an einer Stelle der App stehen darf: Netzwerk, Einstellungen, Berechtigungsanfragen, Anmeldeobjekte und Modul-Bedingungen, die bin/starter remove nicht sicher entfernen kann. Gilt für App/Sources, App/Tests und tools/; erzwungenes try und as bleiben in App/Tests und tools/ erlaubt. Eine Ausnahme steht mit Grund als Kommentar „// technik-ausnahme: Grund“ in derselben Zeile oder direkt darüber.",
+  "ausnahmeKommentar": "technik-ausnahme",
+  "begriffe": [
+    {
+      "id": "xcode-makro",
+      "label": "Makro oder Framework, das Xcode braucht",
+      "hinweis": "ohne Makro schreiben: EnvironmentKey von Hand, DynamicGenerationSchema, Database, Test-Harness in App/Tests",
+      "regeln": [
+        "T-01"
+      ],
+      "art": "regex",
+      "muster": [
+        "#Preview\\b",
+        "@Entry\\b",
+        "@Generable\\b",
+        "@Guide\\b",
+        "@Model\\b",
+        "\\bimport\\s+(?:XCTest|Testing|SwiftData|CoreData)\\b"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          "#Preview { MyView() }",
+          "@Entry var foo = 1",
+          "@Generable struct Answer {}",
+          "import XCTest",
+          "import SwiftData",
+          "@Model final class Item {}"
+        ],
+        "erlaubt": [
+          "import SwiftUI",
+          "import FoundationModels",
+          "@Observable final class Model {}",
+          "@MainActor"
+        ]
+      }
+    },
+    {
+      "id": "erzwungen",
+      "label": "Erzwungenes try oder as",
+      "hinweis": "Fehler werfen oder mit guard behandeln; in App/Tests und tools/ erlaubt",
+      "regeln": [
+        "T-02"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\btry!",
+        "\\bas!"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          "let data = try! Data(contentsOf: url)",
+          "let view = x as! NSView"
+        ],
+        "erlaubt": [
+          "try? Data(contentsOf: url)",
+          "x as? NSView",
+          "a != b"
+        ]
+      },
+      "ausgenommenePfade": [
+        "App/Tests/**",
+        "tools/**"
+      ]
+    },
+    {
+      "id": "netzwerk",
+      "label": "Netzwerkzugriff",
+      "hinweis": "kein Netz außer einem Modell-Download, den die Person startet (Module ai und mlx)",
+      "regeln": [
+        "T-05"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\bURLSession\\b",
+        "\\bURLRequest\\b",
+        "\\bNWConnection\\b",
+        "\\bNWBrowser\\b",
+        "\\bimport\\s+Network\\b"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "ausgenommenePfade": [
+        "App/Sources/Modules/AI/**",
+        "App/Sources/Modules/MLX/**",
+        "App/Tests/**"
+      ],
+      "beispiele": {
+        "treffer": [
+          "URLSession.shared.data(from: url)",
+          "var request = URLRequest(url: url)",
+          "import Network"
+        ],
+        "erlaubt": [
+          "FileManager.default"
+        ]
+      }
+    },
+    {
+      "id": "berechtigung-direkt",
+      "label": "Berechtigung außerhalb von Kit/Permissions",
+      "hinweis": "PermissionKind und Permission aus Kit/Permissions nutzen",
+      "regeln": [
+        "T-04",
+        "T-06"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\bAVCaptureDevice\\.requestAccess\\b",
+        "\\bAXIsProcessTrustedWithOptions\\b",
+        "\\bCGRequestScreenCaptureAccess\\b",
+        "\\bIOHIDRequestAccess\\b",
+        "\\.requestAuthorization\\(",
+        "\\bAEDeterminePermissionToAutomateTarget\\b",
+        "\\.requestFullAccessTo(?:Events|Reminders)\\b",
+        "\\.requestAccess\\(\\s*for\\s*:",
+        "\\.request(?:WhenInUse|Always)Authorization\\(",
+        "\\brequestRecordPermission\\b"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Permissions/**",
+        "App/Tests/**"
+      ],
+      "beispiele": {
+        "treffer": [
+          "AVCaptureDevice.requestAccess(for: .audio) { _ in }",
+          "UNUserNotificationCenter.current().requestAuthorization(options: [.alert])",
+          "CNContactStore().requestAccess(for: .contacts) { _, _ in }",
+          "CLLocationManager().requestWhenInUseAuthorization()",
+          "AVAudioApplication.requestRecordPermission { _ in }"
+        ],
+        "erlaubt": [
+          "Permission.request(.microphone)"
+        ]
+      }
+    },
+    {
+      "id": "anmeldeobjekt",
+      "label": "Anmeldeobjekt außerhalb des Moduls background",
+      "hinweis": "LoginItem aus Modules/Background nutzen",
+      "regeln": [
+        "T-04"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\bSMAppService\\b"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "ausgenommenePfade": [
+        "App/Sources/Modules/Background/**",
+        "App/Tests/**"
+      ],
+      "beispiele": {
+        "treffer": [
+          "try SMAppService.mainApp.register()"
+        ],
+        "erlaubt": [
+          "LoginItem.register()"
+        ]
+      }
+    },
+    {
+      "id": "einstellungen-direkt",
+      "label": "Einstellungen außerhalb von Kit/Core",
+      "hinweis": "SettingKey und Settings.shared aus Kit/Core/Settings.swift nutzen",
+      "regeln": [
+        "T-04"
+      ],
+      "art": "regex",
+      "muster": [
+        "\\bUserDefaults\\b",
+        "@AppStorage\\b",
+        "@SceneStorage\\b"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "ausgenommenePfade": [
+        "App/Sources/Kit/Core/**",
+        "App/Tests/**"
+      ],
+      "beispiele": {
+        "treffer": [
+          "UserDefaults.standard.set(true, forKey: \"x\")",
+          "@AppStorage(\"x\") var x = false"
+        ],
+        "erlaubt": [
+          "Settings.shared[SettingKey.launchAtLogin]"
+        ]
+      }
+    },
+    {
+      "id": "modul-bedingung",
+      "label": "Modul-Bedingung, die bin/starter remove nicht auflösen kann",
+      "hinweis": "ein Flag je #if, ohne ||, && und !; braucht Code zwei Module, zwei einfache Blöcke ineinander",
+      "regeln": [
+        "T-03"
+      ],
+      "art": "regex",
+      "muster": [
+        "#if\\b[^\\n]*\\bMODUL_\\w+[^\\n]*(?:\\|\\||&&)",
+        "#if\\b[^\\n]*(?:\\|\\||&&)[^\\n]*\\bMODUL_",
+        "#elseif\\b[^\\n]*\\bMODUL_",
+        "#if\\s*!\\s*\\(?\\s*MODUL_"
+      ],
+      "flags": "",
+      "bereiche": [
+        "swift"
+      ],
+      "beispiele": {
+        "treffer": [
+          "#if MODUL_WINDOW || MODUL_MENUBAR",
+          "#if os(macOS) && MODUL_AI",
+          "#elseif MODUL_ISLAND",
+          "#if !MODUL_WINDOW"
+        ],
+        "erlaubt": [
+          "#if MODUL_WINDOW",
+          "#if TESTING",
+          "#if DEBUG || TESTING"
+        ]
+      }
+    }
+  ]
+}

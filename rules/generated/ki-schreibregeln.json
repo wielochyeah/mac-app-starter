@@ -1,0 +1,50 @@
+{
+  "hinweis": "Erzeugt mit make rules (scripts/rules_sync.py) aus rules/ und starter.json. Nicht von Hand ändern.",
+  "anrede": "du",
+  "regeln": [
+    {
+      "id": "S-01",
+      "text": "Kein Mittelpunkt (`·`, U+00B7) und kein verwandter Punkt (`•`, `⋅`) als Trenner. Stattdessen eine eigene Zeile, Abstand im Layout, ein Komma oder ein Satz."
+    },
+    {
+      "id": "S-02",
+      "text": "Keine Gedankenstriche zwischen Satzteilen (`—`, ` – `, ` - `, `--`). Der Halbgeviertstrich steht nur für Bereiche wie `2023–2026` oder `10–20 %`."
+    },
+    {
+      "id": "S-03",
+      "text": "Keine Emojis, keine Deko-Pfeile (`→`, `->`, `=>`), keine Glyphen statt Symbolen (`▲`, `‹`, `✓`, `★`) und keine Ausrufezeichen. Symbole kommen aus SF Symbols über `Image(systemName:)`. Die Zeichen der Mac-Tasten sind erlaubt (`⌘ ⌥ ⌃ ⇧ ⇥ ⇤ ⇪ ⏎ ↩ ⌤ ⌫ ⌦ ⎋ ⇞ ⇟ ↖ ↘`, `🌐` vor einer Taste wie `🌐E`), Pfeiltasten nach einer Modifikatortaste (`⌘←`), als Paar (`↑/↓`, `↑ oder ↓`, `← and →`) und mit dem Wort Taste oder key (`↓-Taste`)."
+    },
+    {
+      "id": "S-04",
+      "text": "Keine Floskeln und Schmuckwörter, weder deutsch (`nahtlos`, `mühelos`, `revolutionär`, `innovativ`, `leistungsstark`, `smart`, `intelligent` als Schmuck, `Entdecke`, `Tauche ein`, `auf einen Blick`, `Magie`, `Reise`, `Lass uns`, `Willkommen bei`, `Mehr erfahren`, `Los geht’s`) noch englisch (`seamless`, `effortless`, `leverage`, `unlock`, `elevate`, `empower`, `delve`, `robust`, `cutting-edge`, `game-changer`, `revolutionize`, `supercharge`, `harness`, `streamline`, `in today’s …`, `whether you’re …`, `dive into`, `Let’s`, `Oops`). Stattdessen sagt der Text konkret, was passiert."
+    },
+    {
+      "id": "S-05",
+      "text": "Deutsche Texte nutzen genau eine Anrede: die aus `starter.json` (`texts.anrede`), Standard `du` wie bei Apple und VoiceBud, sonst `Sie`. Die andere Form ist ein Fehler. Die Texte des Kits sind in der du-Form geschrieben; wer `sie` wählt, schreibt die deutschen Texte der `*Text.swift`-Dateien und der `App/Resources/InfoPlist.json` um (gemeinsame Pfade, die ein Projekt ändern darf), `make check-texts` listet jede Stelle. Knöpfe und Menübefehle stehen im Infinitiv (`Einstellungen öffnen`, `Freigabe erteilen`), englische im Imperativ (`Open Settings`)."
+    },
+    {
+      "id": "S-06",
+      "text": "Neutral beschreiben statt werben oder versprechen: keine Superlative und Versprechen (`die beste`, `perfekt`, `garantiert`, `the best`, `perfect`, `ultimate`), keine Wertung ohne Maßstab. Fachliche Neutralitätsregeln eines Projekts kommen als eigenes Sprachpaket in `rules/projekt/pakete/` dazu."
+    },
+    {
+      "id": "S-07",
+      "text": "Kurz und konkret: ein Gedanke je Satz, eine Zahl mit Einheit statt eines Adjektivs, der Grund einer Bitte steht dabei (`Das Mikrofon läuft nur, während du aufnimmst`). Jede Zeile muss sich rechtfertigen, jeder Hinweis steht einmal je Ansicht, Fachbegriffe bekommen einen erklärenden Satz in der Fußnote oder eine Ebene tiefer."
+    },
+    {
+      "id": "S-08",
+      "text": "Ein fehlender Wert wird mit seinem Grund benannt (`noch kein Lauf`, `nicht verfügbar, Modell fehlt`), nie als 0, nie als Abkürzung (`n. v.`, `N/A`), nie als Strich und nie als leere Zeile."
+    },
+    {
+      "id": "S-09",
+      "text": "Kein Blindtext und keine offenen Merkzettel (`TODO`, `FIXME`, `Lorem ipsum`) in Texten und Kommentaren. Offene Punkte stehen in der Statusdatei oder in `docs/PROJECT.md`."
+    },
+    {
+      "id": "S-11",
+      "text": "Auslassungszeichen `…` statt drei Punkten; ein Menübefehl, der einen Dialog öffnet, endet damit, englisch direkt angehängt (`Settings…`), deutsch mit Leerzeichen wie bei Apple (`Einstellungen …`). Deutsche Anführungszeichen `„…“`, englische `“…”`. Keine Verkürzungen mit Apostroph im Deutschen (`geht’s`, `gibt’s`). Zahlen, Daten, Dauern und Größen nur über `Format` und `ByteText` in der UI-Sprache, Einheit mit schmalem geschütztem Leerzeichen."
+    },
+    {
+      "id": "S-14",
+      "text": "Zeitangaben kommen aus Daten und `Format`, nie als fester Text: relative Zeiten (`vor 5 Minuten`) erzeugt `RelativeDateTimeFormatter` oder `Format`, nicht ein Literal. Projekte mit Datenständen schalten das Paket `zeitwoerter` in `starter.json` unter `texts.zusatzpakete` ein."
+    }
+  ]
+}
