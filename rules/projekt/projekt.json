@@ -1,0 +1,8 @@
+{
+  "$schema": "../schema/gruppe.schema.json",
+  "id": "projekt",
+  "titel": "Projekt",
+  "praefix": "P",
+  "geltung": "Regeln dieses Projekts, zusätzlich zu Teil A. Neue Vorgaben aus `docs/agents/VORGABEN.md`, die nur dieses Projekt betreffen, landen hier.",
+  "regeln": []
+}

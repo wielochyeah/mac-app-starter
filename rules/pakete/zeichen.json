@@ -1,0 +1,171 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "zeichen",
+  "titel": "Zeichen",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de", "en"],
+  "beschreibung": "Zeichen, die als maschinell erzeugter Schmuck wirken. Ersatz sind ein Komma, ein Doppelpunkt, ein eigener Satz oder ein SF Symbol. Die Zeichen der Tastenkürzel (⌘ ⌥ ⌃ ⇧ ⇥ ⇪ ⏎ ⌫) bleiben erlaubt, Pfeiltasten direkt nach einer Modifikatortaste ebenfalls.",
+  "begriffe": [
+    {
+      "id": "mittelpunkt",
+      "label": "Mittelpunkt als Trenner",
+      "hinweis": "eigene Zeile, Abstand im Layout oder ein Komma; Multiplikation als „×“",
+      "regeln": ["S-01"],
+      "art": "regex",
+      "muster": [
+        "[\\u00B7\\u0387\\u16EB\\u2022\\u2024\\u2027\\u2043\\u22C5\\u2219\\u25CF\\u25E6\\u2981\\u2E31\\u30FB\\uFF65]"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "kommentar", "doku", "commit", "ki"],
+      "beispiele": {
+        "treffer": ["Stand 2026 · intern", "Name • Rolle", "a ⋅ b"],
+        "erlaubt": ["Stand 2026, intern", "3 × 4"]
+      }
+    },
+    {
+      "id": "gedankenstrich",
+      "label": "Gedankenstrich zwischen Satzteilen",
+      "hinweis": "zwei Sätze, ein Komma, ein Doppelpunkt oder Klammern; Halbgeviertstrich nur für Bereiche wie „2023–2026“",
+      "regeln": ["S-02"],
+      "art": "regex",
+      "muster": [
+        "[\\u2012\\u2014\\u2015\\u2E3A\\u2E3B\\uFE58]",
+        "(?:(?<=[^\\W\\d_])|(?<=[),.“\"]))[ \\t\\u00A0\\u202F\\u2009]+\\u2013[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W_]|[(„\"])",
+        "(?<=\\d)[ \\t\\u00A0\\u202F\\u2009]+\\u2013[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W\\d_]|[(„\"])(?![A-ZÄÖÜ]\\d)",
+        "(?:(?<=[^\\W_])|(?<=[,)“\"]))[ \\t\\u00A0\\u202F\\u2009]+-[ \\t\\u00A0\\u202F\\u2009]+(?=[^\\W\\d_]|[„\"])",
+        "(?<=[^\\W_])(?:[ \\t]+--[ \\t]+|--)(?=[^\\W\\d_])"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "kommentar", "doku", "commit", "ki"],
+      "beispiele": {
+        "treffer": [
+          "Beispieldaten – nicht berechnet",
+          "Status — aktiv",
+          "Stand—26.09.2026",
+          "Beispieldaten - nicht berechnet",
+          "Umsatz 2025 – leicht gestiegen",
+          "alt -- neu",
+          "alt--neu",
+          "Saved - restart to apply"
+        ],
+        "erlaubt": [
+          "2023–2026",
+          "10 – 20 %",
+          "Q1–Q4",
+          "Wert: -3 %",
+          "end-to-end",
+          "Status-Band",
+          "Punkt\n- Liste",
+          "make check --streng",
+          "mit --only design. rendern"
+        ]
+      }
+    },
+    {
+      "id": "pfeil",
+      "label": "Deko-Pfeil",
+      "hinweis": "Verb oder Präposition („zu“, „bis“, „wird zu“) oder ein SF Symbol",
+      "regeln": ["S-03"],
+      "art": "regex",
+      "muster": [
+        "(?<![\\u2318\\u2325\\u2303\\u21E7])(?<![\\u2190-\\u21FF]/)[\\u2190-\\u21E3\\u21E6\\u21E8\\u21E9\\u21EB-\\u21FF\\u25B6-\\u25BA\\u2794-\\u27BF\\u27F0-\\u27FF\\u2900-\\u297F\\u2B00-\\u2B11\\u2B60-\\u2BFF\\U0001F800-\\U0001F8FF](?!/[\\u2190-\\u21FF])"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "kommentar", "doku", "commit", "ki"],
+      "umsetzung": "Die Pfeile der Tastenkürzel (⇧ ⇥ ⇪ ⇤) gehören nicht zum Muster; jeder andere Pfeil direkt nach ⌘, ⌥, ⌃ oder ⇧ ist eine Pfeiltaste und bleibt erlaubt, ebenso ein Tastenpaar wie ↑/↓.",
+      "beispiele": {
+        "treffer": ["Entwurf → Freigabe", "↗", "Weiter ⇒", "Öffnen ▶"],
+        "erlaubt": [
+          "Entwurf wird zu Freigabe",
+          "⇧⌘K",
+          "⌃⇥",
+          "⇪ ist an",
+          "⌃⌥←",
+          "⌘↓",
+          "⇤ springt zurück",
+          "Mit ↑/↓ wählen"
+        ]
+      }
+    },
+    {
+      "id": "pfeil-ascii",
+      "label": "Pfeil aus Zeichen",
+      "hinweis": "Verb oder Präposition („zu“, „bis“, „wird zu“) oder ein SF Symbol",
+      "regeln": ["S-03"],
+      "art": "regex",
+      "muster": ["(?:(?<=[ \\t])|(?<=[^\\W_]))->(?=[ \\t]|$)", "(?<=[ \\t])=>(?=[ \\t]|$)"],
+      "flags": "",
+      "bereiche": ["ui", "doku", "commit", "ki"],
+      "umsetzung": "Nicht in Kommentaren, weil -> dort Swift-Syntax beschreibt.",
+      "beispiele": {
+        "treffer": ["Einstieg -> Ausstieg", "alt => neu", "build -> test"],
+        "erlaubt": ["<!-- regeln:anfang -->", "a >= b", "a->b"]
+      }
+    },
+    {
+      "id": "glyphe",
+      "label": "Glyphe statt Symbol",
+      "hinweis": "SF Symbol über Image(systemName:) mit Text für VoiceOver",
+      "regeln": ["S-03", "D-04"],
+      "art": "regex",
+      "muster": [
+        "[\\u25B2-\\u25B5\\u25BC-\\u25BF]",
+        "(?<!\\w)[\\u2039\\u203A](?!\\w)",
+        "[\\u00AB\\u00BB\\u2660\\u2663\\u2665\\u2666\\u25C6\\u25C7]"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "doku", "commit", "ki"],
+      "beispiele": {
+        "treffer": ["▲ 1,2 %", "‹ Zurück", "Weiter »", "♥ Merkliste"],
+        "erlaubt": ["+1,2 %", "Zurück"]
+      }
+    },
+    {
+      "id": "emoji",
+      "label": "Emoji",
+      "hinweis": "Text ohne Emoji; Zustände über Badge, StatusMark oder ein SF Symbol",
+      "regeln": ["S-03", "D-04"],
+      "art": "regex",
+      "muster": [
+        "[\\U0001F000-\\U0001FAFF\\u2600-\\u27BF\\u2B50\\u2B55\\u2B1B\\u2B1C\\u231A\\u231B\\u2328\\u23CF\\u23E9-\\u23F3\\u23F8-\\u23FA\\u3030\\u303D\\u3297\\u3299]"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "kommentar", "doku", "commit", "ki"],
+      "umsetzung": "Bereiche der Emoji-Blöcke ohne die Tastenkürzel-Zeichen aus „Verschiedene technische Zeichen“ (⌘ ⌥ ⌃ ⏎ ⌫ ⎋). Häkchen und Stern gelten ebenfalls als Schmuck.",
+      "beispiele": {
+        "treffer": ["Gespeichert 🚀", "Fertig ✅", "Neu ✨", "✓ erledigt", "★ Favorit", "⚠ Achtung"],
+        "erlaubt": ["© 2026 Beispiel GmbH", "Marke®", "⌘,", "⏎ fügt eine Zeile ein", "⌫ löscht"]
+      }
+    },
+    {
+      "id": "ausrufezeichen",
+      "label": "Ausrufezeichen",
+      "hinweis": "sachlicher Satz mit Punkt",
+      "regeln": ["S-03"],
+      "art": "regex",
+      "muster": ["(?:(?<=[^\\W_])|(?<=[)\\]“”\"'’.]))[ ]?[!\\uFF01]+(?![=\\w-])"],
+      "flags": "",
+      "bereiche": ["ui", "doku", "commit", "ki"],
+      "beispiele": {
+        "treffer": ["Gespeichert!", "Achtung!!", "(Fertig!)", "Done!"],
+        "erlaubt": ["a != b", "a!==b", "!important", "if !ready"]
+      }
+    },
+    {
+      "id": "auslassung",
+      "label": "Drei Punkte statt Auslassungszeichen",
+      "hinweis": "„…“ (U+2026); im Deutschen mit Leerzeichen davor: „Einstellungen …“",
+      "regeln": ["S-11"],
+      "art": "regex",
+      "muster": ["(?<!\\.)\\.\\.\\.(?!\\.)"],
+      "flags": "",
+      "bereiche": ["ui", "doku", "ki"],
+      "beispiele": {
+        "treffer": ["Wird geladen...", "Loading..."],
+        "erlaubt": ["Wird geladen …", "Loading…", "origin/main..HEAD"]
+      }
+    }
+  ]
+}

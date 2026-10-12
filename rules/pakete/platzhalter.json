@@ -1,0 +1,25 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "platzhalter",
+  "titel": "Platzhaltertext",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de", "en"],
+  "beschreibung": "Kein Blindtext und keine offenen Merkzettel in Texten, die Menschen lesen. Offene Punkte stehen in der Statusdatei.",
+  "begriffe": [
+    {
+      "id": "platzhaltertext",
+      "label": "Blindtext oder Merkzettel",
+      "hinweis": "echten Text schreiben oder den Abschnitt weglassen; offene Punkte gehören in die Statusdatei",
+      "art": "woerter",
+      "muster": ["[Ll]orem\\s+[Ii]psum", "dolor\\s+sit\\s+amet", "TODO", "FIXME", "TBD", "XXX"],
+      "flags": "",
+      "bereiche": ["ui", "kommentar", "doku", "commit", "ki"],
+      "beispiele": {
+        "treffer": ["Lorem ipsum dolor", "TODO: Text", "FIXME", "// XXX später"],
+        "erlaubt": ["Notiz anlegen", "todo"]
+      }
+    }
+  ]
+}

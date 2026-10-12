@@ -1,0 +1,40 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "layout",
+  "titel": "Umbrüche",
+  "gruppe": "design",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de", "en"],
+  "beschreibung": "Text bricht dort um, wo sein Platz endet; die Breite bestimmt das Layout. Keine harten Umbrüche mitten im Satz in UI-Texten und keine auf Zeilenlänge umbrochenen Markdown-Absätze.",
+  "begriffe": [
+    {
+      "id": "harter-umbruch",
+      "label": "Harter Zeilenumbruch im Satz",
+      "hinweis": "Umbruch entfernen und den Satz frei laufen lassen; zwei Absätze als zwei Texte",
+      "art": "regex",
+      "muster": ["(?:(?<=[^\\W_])|(?<=[,;]))[ \\t]*\\n[ \\t]*(?=[^\\W_])"],
+      "flags": "",
+      "bereiche": ["ui"],
+      "umsetzung": "Ein Umbruch nach einem Satzende bleibt erlaubt (zwei Zeilen im Onboarding wie bei VoiceBud).",
+      "beispiele": {
+        "treffer": ["Einträge der\nListe"],
+        "erlaubt": ["Einträge der Liste", "Gespeichert.\nNächster Schritt", "Punkt\n- Liste"]
+      }
+    },
+    {
+      "id": "absatz-umbruch",
+      "label": "Auf Zeilenlänge umbrochener Absatz",
+      "hinweis": "jeden Absatz, Listenpunkt und jedes Zitat in eine Zeile schreiben",
+      "art": "verfahren",
+      "muster": ["markdown-absatz"],
+      "flags": "",
+      "bereiche": ["doku"],
+      "umsetzung": "Eine Zeile, auf die eine Fortsetzungszeile desselben Blocks folgt (Fließtext, eingerückte Fortsetzung eines Listenpunkts oder weitere Zitatzeile), ist ein harter Umbruch, außer sie endet mit zwei Leerzeichen oder einem Backslash. Überschriften, Tabellen, Code-Blöcke, HTML und neue Listenpunkte beginnen einen neuen Block.",
+      "beispiele": {
+        "treffer": ["Ein Absatz, der\nin der nächsten Zeile weiterläuft."],
+        "erlaubt": ["- Punkt eins\n- Punkt zwei", "Zeile mit Umbruch  \nweiter", "# Titel\nText"]
+      }
+    }
+  ]
+}

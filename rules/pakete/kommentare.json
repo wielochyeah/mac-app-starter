@@ -1,0 +1,49 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "kommentare",
+  "titel": "Kommentare ohne Projektverweis",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de", "en"],
+  "beschreibung": "Code-Kommentare nennen den Grund selbst. Verweise auf Bauplan, Stränge, Statusberichte, Vorgaben-Nummern oder Personen veralten und helfen beim Lesen des Codes nicht.",
+  "personenAusKonfiguration": true,
+  "begriffe": [
+    {
+      "id": "kommentar-verweis",
+      "label": "Kommentar mit Projektverweis",
+      "hinweis": "den Grund selbst nennen statt auf Plan, Strang, Statusbericht oder Person zu verweisen",
+      "art": "regex",
+      "muster": [
+        "(?<!\\w)(?:VORGABEN|STRAENGE|BAUPLAN|STRANDS|[Ss]trang|[Ss]tr[aä]nge|[Ss]trands?\\s+[A-Z]\\d?|Vorgabe\\s+V?\\d+|[Ww]elle\\s+\\d|[Ww]ave\\s+\\d)(?!\\w)",
+        "(?<!\\w)V[1-9]\\d?(?=\\s*(?:Nr\\.|[:),]))",
+        "(?<![\\w/.])[A-Z]\\d{0,2}b?\\.md(?!\\w)",
+        "docs/bau/"
+      ],
+      "flags": "",
+      "bereiche": ["kommentar"],
+      "umsetzung": "Die Prüfung ergänzt die Namen aus starter.json (texts.personen) als weitere Wörter dieses Begriffs.",
+      "beispiele": {
+        "treffer": [
+          "// VORGABEN V1 Nr. 5: nur Datenbank",
+          "/* Strang D baut das */",
+          "// siehe STRAENGE",
+          "// (V9) keine Begrenzung",
+          "// V12: ein Chart",
+          "// strand C owns the island",
+          "// BAUPLAN §2.17",
+          "// wave 2 wires this",
+          "// see S0.md",
+          "// docs/bau/status/G1.md"
+        ],
+        "erlaubt": [
+          "// Settings are written atomically.",
+          "// V8 optimiert diese Schleife nicht",
+          "// UUID v4",
+          "// see README.md",
+          "// a strand of text"
+        ]
+      }
+    }
+  ]
+}

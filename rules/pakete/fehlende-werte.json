@@ -1,0 +1,61 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "fehlende-werte",
+  "titel": "Fehlende Werte",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de", "en"],
+  "beschreibung": "Ein fehlender Wert wird mit seinem Grund benannt: der Grund allein, wenn er eindeutig ist („noch kein Lauf“), sonst „nicht verfügbar“ mit Grund; nie 0, nie eine Abkürzung, nie ein Strich und nie eine leere Zeile.",
+  "begriffe": [
+    {
+      "id": "fehlender-wert",
+      "label": "Abkürzung für einen fehlenden Wert",
+      "hinweis": "den Grund nennen, etwa „noch kein Lauf“ oder „nicht verfügbar, Modell fehlt“",
+      "art": "regex",
+      "muster": [
+        "(?<!\\w)[Nn]\\.\\s?[Vv]\\.(?!\\w)",
+        "(?<!\\w)[Kk]\\.\\s?[Aa]\\.(?!\\w)",
+        "(?<![\\w/])(?:N/A|n/a)(?![\\w/])"
+      ],
+      "flags": "",
+      "bereiche": ["ui", "ki"],
+      "beispiele": {
+        "treffer": ["Umsatz: n. v.", "k. A.", "N/A"],
+        "erlaubt": ["nicht verfügbar, noch kein Eintrag", "Inv.-Nr. 4"]
+      }
+    },
+    {
+      "id": "strich-als-wert",
+      "label": "Strich als Wert",
+      "hinweis": "den Grund statt eines Strichs, etwa „noch kein Lauf“",
+      "art": "regex",
+      "muster": ["^\\s*[-\\u2013\\u2014]\\s*$"],
+      "flags": "",
+      "bereiche": ["ui"],
+      "umsetzung": "Gilt für einen Text, der nur aus dem Strich besteht.",
+      "beispiele": {
+        "treffer": ["–", "-", " — "],
+        "erlaubt": ["-3 %", "nicht verfügbar"]
+      }
+    },
+    {
+      "id": "technischer-wert",
+      "label": "Technischer Wert im sichtbaren Text",
+      "hinweis": "den fehlenden Wert abfangen und seinen Grund zeigen",
+      "art": "regex",
+      "muster": [
+        "(?<!\\w)(?:NaN|undefined|Infinity|Invalid\\s+Date)(?!\\w)",
+        "\\[object\\s+Object\\]",
+        "Optional\\("
+      ],
+      "flags": "",
+      "bereiche": ["ki"],
+      "umsetzung": "Nur in KI-Texten vor der Anzeige; in Quelltext und deutschen Texten sind Wörter wie null keine Fehler.",
+      "beispiele": {
+        "treffer": ["Summe: NaN", "Stand undefined", "Wert Optional(3)"],
+        "erlaubt": ["Summe: 12", "nicht verfügbar"]
+      }
+    }
+  ]
+}

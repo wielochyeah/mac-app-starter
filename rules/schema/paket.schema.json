@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paket.schema.json",
+  "title": "Sprachpaket",
+  "description": "Begriffe mit Mustern und Beispielen für check_texts.py, check_design.py, den Commit-Hook und KI-Texte.",
+  "type": "object",
+  "required": ["id", "titel", "gruppe", "standardAktiv", "abschaltbar", "beschreibung", "begriffe"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "gleich dem Dateinamen ohne .json"
+    },
+    "titel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gruppe": {
+      "enum": ["schreiben", "design", "technik", "arbeitsweise", "projekt"]
+    },
+    "standardAktiv": {
+      "type": "boolean",
+      "description": "aktiv, ohne dass ein Projekt es einschaltet"
+    },
+    "abschaltbar": {
+      "type": "boolean",
+      "description": "ein Projekt darf es ausgeschaltet lassen; nicht abschaltbare Pakete sind immer aktiv"
+    },
+    "pruefer": {
+      "enum": ["check_texts", "check_design"],
+      "description": "wer die Begriffe prüft; Standard check_texts (auch Commit-Hook und KI-Texte)"
+    },
+    "sprachen": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": ["de", "en"]
+      },
+      "description": "Sprachen der Texte, für die das Paket gilt; Pflicht für check_texts"
+    },
+    "beschreibung": {
+      "type": "string",
+      "minLength": 1
+    },
+    "personenAusKonfiguration": {
+      "type": "boolean",
+      "description": "die Prüfung ergänzt die Namen aus starter.json (texts.personen)"
+    },
+    "ausnahmeKommentar": {
+      "type": "string",
+      "pattern": "^[a-z][a-z-]*$",
+      "description": "Kommentar, mit dem eine Stelle begründet ausgenommen wird (check_design)"
+    },
+    "ausgenommenePfade": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Globs, für die das ganze Paket nicht gilt"
+    },
+    "begriffe": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/begriff"
+      }
+    },
+    "erlaubt": {
+      "type": "array",
+      "description": "Phrasen, in denen ein Treffer dieses Pakets erlaubt ist (ohne Groß- und Kleinschreibung, beliebiger Leerraum)",
+      "items": {
+        "type": "object",
+        "required": ["phrase", "grund"],
+        "additionalProperties": false,
+        "properties": {
+          "phrase": {
+            "type": "string",
+            "minLength": 1
+          },
+          "grund": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pfade": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Globs der Dateien, in denen die Phrase erlaubt ist; ohne Angabe überall"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "begriff": {
+      "type": "object",
+      "required": ["id", "label", "hinweis", "art", "muster", "flags", "bereiche", "beispiele"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "eindeutig über alle Pakete"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hinweis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Ersatz, den die Meldung nennt"
+        },
+        "regeln": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]-\\d{2}$"
+          },
+          "description": "Regeln, die dieser Begriff prüft; ohne Angabe alle Regeln, die das Paket nennen"
+        },
+        "art": {
+          "enum": ["regex", "woerter", "verfahren"],
+          "description": "regex: Alternativen werden mit | verbunden. woerter: zusätzlich als ganze Wörter eingerahmt. verfahren: Muster nennt ein Prüfverfahren (markdown-absatz)."
+        },
+        "muster": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "reguläre Ausdrücke im Format von Python re; ein Apostroph steht als ['’]"
+        },
+        "flags": {
+          "type": "string",
+          "pattern": "^[imsx]*$",
+          "description": "i ohne Groß- und Kleinschreibung, m, s, x wie in Python re"
+        },
+        "bereiche": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": ["ui", "kommentar", "doku", "commit", "ki", "swift"]
+          }
+        },
+        "beiAnrede": {
+          "enum": ["du", "sie"],
+          "description": "der Begriff gilt nur, wenn starter.json texts.anrede diesen Wert hat"
+        },
+        "ausgenommenePfade": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Globs, für die dieser Begriff nicht gilt"
+        },
+        "umsetzung": {
+          "type": "string",
+          "description": "Hinweis zur Prüfung"
+        },
+        "beispiele": {
+          "type": "object",
+          "required": ["treffer", "erlaubt"],
+          "additionalProperties": false,
+          "properties": {
+            "treffer": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "erlaubt": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
