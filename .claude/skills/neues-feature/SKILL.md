@@ -14,7 +14,7 @@ description: Baut eine Funktion des Projekts unter App/Sources/Features nach den
 | Einstellungen | `App/Sources/Kit/Core/Settings.swift` | `SettingKey`, `Settings.shared[.schluessel]` |
 | Speicher | `App/Sources/Kit/Core/Database.swift`, `Paths.swift` | `Database(url:migrations:)`, `Paths.database(_:)` |
 | Design | `App/Sources/Kit/Design/` | Tokens (`Theme`, `Space`, `Radius`, `TypeScale`, `Motion`), Komponenten, Muster unter `Patterns/` |
-| Aktionen | `App/Sources/Kit/Main/AppActions.swift` | `openSettings(pane:)`, `openMainWindow()`, `openOnboarding()` |
+| Aktionen | `App/Sources/Kit/Main/AppActions.swift` | `openSettings(pane:)`, `openMainWindow(page:)` (Seite optional), `openOnboarding()` |
 | Tests | `App/Tests/Harness/Harness.swift` | `TestSuite`, `expect`, `expectEqual`, `tempDir()` |
 
 ## Dateien eines Features

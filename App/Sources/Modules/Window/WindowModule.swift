@@ -13,7 +13,7 @@ enum WindowModule {
         // state, not a preference, so "Reset settings" keeps them
         SettingsReset.keep("window.")
         Registry.pages.append(HomePage.page)
-        AppActions.mainWindowHandler = { MainWindowController.show() }
+        AppActions.mainWindowHandler = { page in open(page) }
         WindowMainMenu.install()
         WindowSidebarFooter.add(id: "window.local", order: 1000) {
             AnyView(SidebarStatusLine(text: CommonText.allLocal))
@@ -24,5 +24,12 @@ enum WindowModule {
         Registry.onboardingFinishedHooks.append { firstTime in
             if firstTime { AppActions.openMainWindow() }
         }
+    }
+
+    /// `AppActions.openMainWindow(page:)`: selects the page when one is given, then shows the
+    /// window.
+    static func open(_ page: String?, model: MainWindowModel = .shared, show: () -> Void = { MainWindowController.show() }) {
+        if let page { model.select(page) }
+        show()
     }
 }

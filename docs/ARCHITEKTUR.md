@@ -72,7 +72,7 @@ App/Sources/
 
 `Registry.problems()` meldet doppelte Kennungen und Szenen ohne Bereichspräfix; ein Test prüft das.
 
-**Fenster öffnen** geht nur über `AppActions` (`openSettings(pane:)`, `openOnboarding()`, `openMainWindow()`, `showAbout()`, `quit()`). Kit und Module setzen beim Start die passenden Handler. Ohne Modul `window` fällt `openMainWindow()` auf die Einstellungen zurück; Aufrufer brauchen kein `#if`.
+**Fenster öffnen** geht nur über `AppActions` (`openSettings(pane:)`, `openOnboarding()`, `openMainWindow(page:)`, `showAbout()`, `quit()`). Kit und Module setzen beim Start die passenden Handler. Ohne Modul `window` fällt `openMainWindow()` auf die Einstellungen zurück; Aufrufer brauchen kein `#if`.
 
 **Fenster** entstehen über `WindowHost.show(id:style:size:minSize:title:configure:content:)`: `NSWindow` mit `NSHostingController`, Titel folgt der Sprache, die Mindestgröße eines größenveränderlichen Fensters hält die SwiftUI-Wurzel (ein bloßes `window.minSize` setzt `NSHostingController` beim ersten Layout zurück), Views werden beim Schließen freigegeben, `AppForm` zählt offene Fenster und schaltet eine Accessory-App vorübergehend auf `.regular`, bis das letzte Kit-Fenster zu ist. `WindowHost.make(…)` baut ein Fenster, ohne es zu zeigen oder anzumelden; die Selbsttests `window.chrome` und `settings.window` prüfen damit Werkzeugleiste und Mindestgröße.
 

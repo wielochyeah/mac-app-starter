@@ -8,8 +8,9 @@ enum AppActions {
     static var settingsHandler: ((String?) -> Void)?
     /// Opens the onboarding window. Installed by Kit/Onboarding.
     static var onboardingHandler: (() -> Void)?
-    /// Opens (or focuses) the main window. Installed by the window module.
-    static var mainWindowHandler: (() -> Void)?
+    /// Opens (or focuses) the main window, at a page id when one is given. Installed by the window
+    /// module.
+    static var mainWindowHandler: ((String?) -> Void)?
 
     static func openSettings(pane: String? = nil) {
         guard !RenderMode.isHeadless || settingsHandler != nil else { return }
@@ -20,9 +21,10 @@ enum AppActions {
         if let onboardingHandler { onboardingHandler() } else { Log.warn("openOnboarding: no onboarding handler", "app") }
     }
 
-    /// Without a window module this opens Settings (the app's only window).
-    static func openMainWindow() {
-        if let mainWindowHandler { mainWindowHandler() } else { openSettings() }
+    /// Opens the main window, with `page` (an `AppPage` id) selected when given. Without a window
+    /// module this opens Settings (the app's only window) and the page is ignored.
+    static func openMainWindow(page: String? = nil) {
+        if let mainWindowHandler { mainWindowHandler(page) } else { openSettings() }
     }
 
     static func showAbout() { openSettings(pane: "about") }

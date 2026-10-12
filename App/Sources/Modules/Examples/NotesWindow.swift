@@ -98,9 +98,8 @@ enum NotesPages {
     func show(_ id: Int64, window: MainWindowModel = .shared) {
         let current = window.currentPage?.id ?? ""
         let target = current.hasPrefix("notes.") && current != NotesPages.trash ? current : NotesPages.all
-        window.select(target)
         open(id, on: target)
-        AppActions.openMainWindow()
+        AppActions.openMainWindow(page: target)
     }
 }
 

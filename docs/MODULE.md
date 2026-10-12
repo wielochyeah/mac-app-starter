@@ -28,7 +28,8 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Onboarding:** keiner.
 - **Szenen:** `window.main` (ganzes Fenster), `window.home`, je Baustein eine Szene.
 - **Skill:** `neue-ansicht`.
-- **Ohne das Modul:** `AppActions.openMainWindow()` öffnet die Einstellungen; die App läuft als Menüleisten-App.
+- **Öffnen:** `AppActions.openMainWindow()` holt das Fenster nach vorn, `AppActions.openMainWindow(page:)` wählt vorher eine Seite.
+- **Ohne das Modul:** `AppActions.openMainWindow()` öffnet die Einstellungen (eine Seite wird ignoriert); die App läuft als Menüleisten-App.
 <!-- modul:window:ende -->
 
 <!-- modul:menubar:anfang -->

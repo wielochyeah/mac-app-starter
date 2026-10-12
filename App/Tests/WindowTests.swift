@@ -52,12 +52,30 @@ final class WindowTests: TestSuite {
         test("the first setup closes into the main window, a setup shown again does not") {
             let saved = AppActions.mainWindowHandler
             var opened = 0
-            AppActions.mainWindowHandler = { opened += 1 }
+            AppActions.mainWindowHandler = { _ in opened += 1 }
             defer { AppActions.mainWindowHandler = saved }
             for hook in Registry.onboardingFinishedHooks { hook(false) }
             expectEqual(opened, 0)
             for hook in Registry.onboardingFinishedHooks { hook(true) }
             expectEqual(opened, 1)
+        }
+
+        test("open main window: the page reaches the handler, the window module selects it, then shows") {
+            let saved = AppActions.mainWindowHandler
+            var asked: [String?] = []
+            AppActions.mainWindowHandler = { asked.append($0) }
+            AppActions.openMainWindow()
+            AppActions.openMainWindow(page: "library")
+            AppActions.mainWindowHandler = saved
+            expectEqual(asked, [nil, "library"])
+
+            let model = MainWindowModel(settings: scratchSettings())
+            var shown = 0
+            WindowModule.open("library", model: model) { shown += 1 }
+            expectEqual(model.selection, "library")
+            WindowModule.open(nil, model: model) { shown += 1 }
+            expectEqual(model.selection, "library")
+            expectEqual(shown, 2)
         }
 
         test("reset settings keeps the selected page and the sidebar state") {
