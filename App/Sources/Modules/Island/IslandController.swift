@@ -245,10 +245,10 @@ final class Island {
 
     // MARK: Take lifecycle
 
-    /// Really on screen: presented, ordered in and not on its way out (content that arrives
-    /// during a dismiss starts over).
+    /// On screen or growing in (the 16 ms before the first frame), and not on its way out:
+    /// content that arrives during a dismiss starts over.
     private var isShowing: Bool {
-        model.presented && model.content != nil && orderedIn && orderOutTask == nil
+        (model.presented || presentTask != nil) && model.content != nil && orderedIn && orderOutTask == nil
     }
 
     /// The current content with its live bands.

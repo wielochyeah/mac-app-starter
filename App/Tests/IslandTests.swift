@@ -485,6 +485,16 @@ final class IslandControllerTests: TestSuite {
             expectEqual(r.host.orderIns.last?.origin.x, 1512 + 1280 - 320)
         }
 
+        test("update right after present (before the first frame) stays in the same take") {
+            let r = Rig()
+            r.island.present(.levels([0.1]))
+            r.island.update(.levels([0.2]))
+            r.island.update(.progress(title: "x"))
+            r.clock.advance(0.1)
+            expectEqual(r.host.orderIns.count, 1)
+            expect(r.model.presented && r.model.phase == .progress)
+        }
+
         test("present during a dismiss starts over") {
             let r = Rig()
             r.show(.notice(text: "x"))
