@@ -72,12 +72,14 @@ struct Segmented<Value: Hashable>: View {
 }
 
 /// A small action pill (VoiceBud HubChip): height 24, radius 7, 11.5 medium, optional symbol.
+/// Dims like every kit control when disabled (`.disabled(true)`).
 struct Chip: View {
     let title: String
     var symbol: String?
     var active = false
     let action: () -> Void
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.isEnabled) private var enabled
 
     init(_ title: String, symbol: String? = nil, active: Bool = false, action: @escaping () -> Void) {
         self.title = title
@@ -99,6 +101,7 @@ struct Chip: View {
             .frame(height: Metrics.chipHeight)
             .background(RoundedRectangle(cornerRadius: Radius.chip, style: .continuous).fill(active ? t.chipActive : t.chip))
             .contentShape(Rectangle())
+            .opacity(enabled ? 1 : Metrics.disabledOpacity)
         }
         .buttonStyle(PressStyle())
     }

@@ -66,7 +66,7 @@ Unter `Kit/Design/Components/`, in der Galerie und als Szenen `design.*`:
 | `Card { }` | Karte mit Rand und Fläche aus Tokens |
 | `Row(title, subtitle:, symbol:, tint:, dot:) { trailing }` | Zeile mit Symbol, Titel, Untertitel und Bedienelement rechts |
 | `GroupLabel`, `Separator`, `Footnote`, `SectionHeader` | Gruppentitel, Haarlinie, Fußnote, Kopf eines Abschnitts |
-| `SwitchToggle`, `Segmented`, `Chip`, `Badge`, `KeyCaps` | Schalter, Segmente, Chip, Marke, Tastenkappen (⌘ ⌥ ⌃ ⇧) |
+| `SwitchToggle`, `Segmented`, `Chip`, `Badge`, `KeyCaps` | Schalter, Segmente, Chip, Marke, Tastenkappen (⌘ ⌥ ⌃ ⇧); gesperrt (`.disabled(true)`) dimmen Schalter, Chip und Knöpfe auf `Metrics.disabledOpacity` |
 | `SquircleIcon(symbol:, tint:, size:)` | farbiges Symbol wie in den Systemeinstellungen |
 | `SegmentedProgress`, `Spinner`, `StatusMark` | Schritte, laufend, Zustand mit Text |
 | `EmptyState` | Symbol, Titel, ein Satz, höchstens eine Aktion |

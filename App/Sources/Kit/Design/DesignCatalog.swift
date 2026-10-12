@@ -228,7 +228,7 @@ private struct ChipSamples: View {
             Chip(CommonText.copy, symbol: "doc.on.doc") {}
             Chip(CommonText.copied, symbol: "checkmark", active: true) {}
             Chip(CommonText.reset) {}
-            Chip(CommonText.change) {}
+            Chip(CommonText.change) {}.disabled(true)
         }
     }
 }

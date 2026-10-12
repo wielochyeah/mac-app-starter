@@ -49,7 +49,6 @@ struct NotesAISection: View {
                 Chip(NotesText.summarizeButton) { session.summarize(note) }
                     .fixedSize()
                     .disabled(off)
-                    .opacity(off ? Metrics.disabledOpacity : 1)
             }
         }
         switch session.summary {
@@ -96,7 +95,6 @@ struct NotesAISection: View {
                 Chip(NotesText.suggestButton) { session.suggestTitle(note) }
                     .fixedSize()
                     .disabled(off)
-                    .opacity(off ? Metrics.disabledOpacity : 1)
             }
         }
         switch session.suggestion {
