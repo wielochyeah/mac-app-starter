@@ -46,6 +46,15 @@ extension Metrics {
         /// Artwork glyph as a share of the artwork's shorter side.
         static let artworkGlyph: CGFloat = 0.36
         static let artworkGlyphWide: CGFloat = 0.62
+        /// Glyph shadow radius and drop, and the wide glyph's distance from the trailing edge, as
+        /// shares of the artwork's shorter side (they scale from list rows to the hero).
+        static let artworkGlyphShadow: CGFloat = 0.05
+        static let artworkGlyphShadowY: CGFloat = 0.015
+        static let artworkGlyphTrailing: CGFloat = 0.3
+        /// Disabled buttons on artwork (the kit buttons use the same 45 %).
+        static let disabledOpacity: Double = 0.45
+        /// Opacity of the shade spot at its centre.
+        static let artworkShadeStrength: Double = 0.75
         /// Below this side length artwork uses the small radius.
         static let artworkSmall: CGFloat = 64
     }
@@ -79,17 +88,21 @@ extension Radius {
 extension Theme {
     /// Text and glyphs on generated artwork.
     var onArtwork: Color { squircleGlyph }
-    var onArtworkSecondary: Color { squircleGlyph.opacity(0.82) }
     /// Scrim under text on artwork (hero) and under hover buttons (tiles).
     // design-ausnahme: fixed scrim on artwork, same in both schemes
     var artworkScrim: Color { Color.black.opacity(0.55) }
     // design-ausnahme: fixed scrim on artwork, same in both schemes
     var artworkScrimLight: Color { Color.black.opacity(0.28) }
-    /// Round buttons on artwork (tile hover).
+    /// Buttons on artwork (tile hover, the hero's secondary action).
     // design-ausnahme: fixed button fill on artwork, same in both schemes
     var artworkButton: Color { Color.black.opacity(0.42) }
+    // design-ausnahme: fixed button edge on artwork, same in both schemes
+    var artworkButtonEdge: Color { Color.white.opacity(0.22) }
     /// Hairline around artwork.
+    // design-ausnahme: hairline around generated artwork, per scheme
     var artworkEdge: Color { dark ? .white.opacity(0.08) : .black.opacity(0.08) }
+    /// Shadow of artwork and of glyphs on it.
+    // design-ausnahme: artwork shadow, per scheme
     var artworkShadow: Color { .black.opacity(dark ? 0.4 : 0.22) }
 }
 

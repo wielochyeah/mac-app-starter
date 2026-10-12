@@ -122,8 +122,9 @@ final class WindowTests: TestSuite {
         test("artwork: recipe values stay in their ranges") {
             for i in 0..<500 {
                 let r = ArtworkRecipe(seed: "s\(i)")
-                expect((-60...60).contains(r.hueShift), "hue \(r.hueShift)")
-                expect((20...70).contains(abs(r.lightShift)), "light shift \(r.lightShift)")
+                expect((-25...25).contains(r.hueShift), "hue \(r.hueShift)")
+                expect((10...30).contains(abs(r.lightShift)), "light shift \(r.lightShift)")
+                expect((-35...35).contains(r.lightHue), "light hue \(r.lightHue)")
                 expect((0.9...1.15).contains(r.saturation))
                 expect((0...1).contains(r.light.x) && (0...1).contains(r.light.y))
                 expect((0...1).contains(r.start.x) && (0...1).contains(r.end.y))
@@ -154,6 +155,63 @@ final class WindowTests: TestSuite {
                     expect(c.shade.hsb.b < c.bottom.hsb.b + 1e-9, "shade is darker")
                 }
             }
+        }
+
+        test("artwork: every accent keeps its hue family and white glyphs at 3:1 or more") {
+            func hueDistance(_ a: ArtworkRGB, _ b: ArtworkRGB) -> Double {
+                let d = abs(a.hsb.h - b.hsb.h) * 360
+                return min(d, 360 - d)
+            }
+            let white = ArtworkRGB(hex: 0xFFFFFF)
+            for accent in AccentName.allCases {
+                let palette = AccentPalette.of(accent)
+                let brand = ArtworkRGB(hex: palette.brand), top = ArtworkRGB(hex: palette.gradientTop)
+                for i in 0..<300 {
+                    let c = ArtworkRecipe(seed: "family-\(i)").colors(palette)
+                    for rgb in [c.top, c.bottom, c.light] {
+                        expect(white.contrast(rgb) >= 3, "\(accent) seed \(i): white on \(rgb) is \(white.contrast(rgb))")
+                    }
+                    guard accent != .graphit else { continue }   // grey has no hue to keep
+                    expect(hueDistance(c.bottom, brand) <= 25.01, "\(accent) bottom hue")
+                    expect(hueDistance(c.top, top) <= 25.01, "\(accent) top hue")
+                    expect(hueDistance(c.light, top) <= 35.01, "\(accent) light hue")
+                }
+            }
+        }
+
+        test("artwork: capping the luminance keeps the hue and only darkens") {
+            let yellow = ArtworkRGB(hex: 0xF6D74D)
+            let capped = yellow.capped(luminance: ArtworkRecipe.maxLuminance)
+            expect(capped.luminance <= ArtworkRecipe.maxLuminance + 1e-6 && capped.luminance > ArtworkRecipe.maxLuminance - 0.01)
+            expect(abs(capped.hsb.h - yellow.hsb.h) < 1e-6 && abs(capped.hsb.s - yellow.hsb.s) < 1e-6)
+            let dark = ArtworkRGB(hex: 0x303040)
+            expect(dark.capped(luminance: 0.28) == dark, "dark colours stay as they are")
+        }
+
+        test("hero: white text keeps 4.5:1 across the text column for every accent") {
+            let size = CGSize(width: 820, height: Metrics.Window.heroHeight)
+            for accent in AccentName.allCases {
+                for seed in ["hero-hikes", "hero-a", "hero-b", "hero-c"] {
+                    let view = AnyView(HeroBackdrop(seed: seed, symbol: "figure.hiking").environment(\.artworkAccent, accent))
+                    guard let png = RenderRunner.png(view, size: size, appearance: .dark, lang: .en),
+                          let image = NSBitmapImageRep(data: png) else { return fail("no render") }
+                    let scale = CGFloat(image.pixelsWide) / size.width
+                    var worst = 21.0
+                    for x in stride(from: Space.l, through: Space.l + Metrics.Window.heroTextWidth, by: 10) {
+                        for y in stride(from: Space.l, through: size.height - Space.l, by: 10) {
+                            guard let c = image.colorAt(x: Int(x * scale), y: Int(y * scale))?.usingColorSpace(.sRGB) else { continue }
+                            let rgb = ArtworkRGB(r: c.redComponent, g: c.greenComponent, b: c.blueComponent)
+                            worst = min(worst, ArtworkRGB(hex: 0xFFFFFF).contrast(rgb))
+                        }
+                    }
+                    expect(worst >= 4.5, "\(accent) \(seed): \(worst)")
+                }
+            }
+        }
+
+        test("hero: the glyph shows only beside the text column") {
+            expect(HeroBackdrop.showsGlyph(width: 820, height: Metrics.Window.heroHeight))
+            expect(!HeroBackdrop.showsGlyph(width: 600, height: Metrics.Window.heroHeight), "minimum window: no glyph under the title")
         }
 
         // MARK: Samples

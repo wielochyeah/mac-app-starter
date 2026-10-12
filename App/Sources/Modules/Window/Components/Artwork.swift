@@ -4,9 +4,19 @@ import SwiftUI
 /// the light falls and how big it is. Same seed, same picture, on every Mac and every launch
 /// (FNV-1a + SplitMix64, not `hashValue`, which changes per process).
 nonisolated struct ArtworkRecipe: Equatable, Sendable {
-    /// Degrees the accent gradient is turned on the colour wheel (-60 … 60).
+    /// How far the base gradient may turn away from the accent on the colour wheel (degrees).
+    static let maxHueShift = 25.0
+    /// How far the light spot may sit from the accent (degrees), so every picture stays in the
+    /// accent's family (a red app gets reds and pinks, not yellows).
+    static let maxLightHue = 35.0
+    /// Brightest relative luminance any colour of the picture may have: white glyphs keep at least
+    /// 3:1 against it ((1 + 0.05) / (0.28 + 0.05) = 3.18).
+    static let maxLuminance = 0.28
+
+    /// Degrees the accent gradient is turned on the colour wheel (-25 … 25).
     let hueShift: Double
-    /// Extra turn of the light spot against the base (20 … 70 degrees, either way).
+    /// Extra turn of the light spot against the base (10 … 30 degrees, either way); the sum with
+    /// `hueShift` is held within ±35 in `colors`.
     let lightShift: Double
     /// Gradient from `start` to `end` (unit points, opposite corners or edges).
     let start: UnitPoint
@@ -22,8 +32,8 @@ nonisolated struct ArtworkRecipe: Equatable, Sendable {
 
     init(seed: String) {
         var rng = SplitMix64(seed: Self.hash(seed))
-        hueShift = rng.next(in: -60...60)
-        let lightTurn = rng.next(in: 20...70)
+        hueShift = rng.next(in: -Self.maxHueShift...Self.maxHueShift)
+        let lightTurn = rng.next(in: 10...30)
         lightShift = rng.nextBool() ? lightTurn : -lightTurn
         let angle = rng.next(in: 0..<360) * .pi / 180
         start = UnitPoint(x: 0.5 - cos(angle) / 2, y: 0.5 - sin(angle) / 2)
@@ -45,15 +55,20 @@ nonisolated struct ArtworkRecipe: Equatable, Sendable {
         return h
     }
 
+    /// The light spot's turn away from the accent: `hueShift + lightShift`, held within ±35.
+    var lightHue: Double { min(Self.maxLightHue, max(-Self.maxLightHue, hueShift + lightShift)) }
+
     /// The four colours of the picture: the accent's gradient turned by `hueShift`, the light spot
-    /// turned further, the shade a darker bottom colour. Computed here, not with SwiftUI's
-    /// `hueRotation`, because offscreen renders drop that filter and would not match the window.
+    /// turned further, the shade a darker bottom colour. Top, bottom and light are held at or below
+    /// `maxLuminance`, so white glyphs stay readable for every accent (orange and green included).
+    /// Computed here, not with SwiftUI's `hueRotation`, because offscreen renders drop that filter
+    /// and would not match the window.
     func colors(_ palette: AccentPalette) -> (top: ArtworkRGB, bottom: ArtworkRGB, light: ArtworkRGB, shade: ArtworkRGB) {
-        // the light top colour is deepened a little so white glyphs keep their edge
-        let top = ArtworkRGB(hex: palette.gradientTop).rotated(hueShift, saturation: saturation * 1.2, brightness: 0.93)
-        let bottom = ArtworkRGB(hex: palette.brand).rotated(hueShift, saturation: saturation)
-        let light = ArtworkRGB(hex: palette.gradientTop).rotated(hueShift + lightShift, saturation: saturation)
-        let shade = ArtworkRGB(hex: palette.brand).rotated(hueShift - lightShift / 2, saturation: saturation, brightness: 0.62)
+        let cap = Self.maxLuminance
+        let top = ArtworkRGB(hex: palette.gradientTop).rotated(hueShift, saturation: saturation * 1.2).capped(luminance: cap)
+        let bottom = ArtworkRGB(hex: palette.brand).rotated(hueShift, saturation: saturation).capped(luminance: cap)
+        let light = ArtworkRGB(hex: palette.gradientTop).rotated(lightHue, saturation: saturation).capped(luminance: cap)
+        let shade = bottom.rotated(-lightShift / 2, brightness: 0.62)
         return (top, bottom, light, shade)
     }
 
@@ -120,10 +135,45 @@ nonisolated struct ArtworkRGB: Equatable, Sendable {
         }
     }
 
+    /// WCAG relative luminance (0 black … 1 white).
+    var luminance: Double {
+        func channel(_ c: Double) -> Double { c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+    }
+
+    /// Contrast ratio against another colour (1 … 21).
+    func contrast(_ other: ArtworkRGB) -> Double {
+        let a = luminance, b = other.luminance
+        return (max(a, b) + 0.05) / (min(a, b) + 0.05)
+    }
+
+    /// The same hue and saturation, darkened (HSB brightness) until the luminance is at most `limit`.
+    func capped(luminance limit: Double) -> ArtworkRGB {
+        guard luminance > limit else { return self }
+        var low = 0.0, high = 1.0
+        for _ in 0..<24 {
+            let mid = (low + high) / 2
+            if rotated(0, brightness: mid).luminance > limit { high = mid } else { low = mid }
+        }
+        return rotated(0, brightness: low)
+    }
+
     /// Turned by `degrees` on the colour wheel, saturation and brightness scaled (clamped to 0 … 1).
     func rotated(_ degrees: Double, saturation: Double = 1, brightness: Double = 1) -> ArtworkRGB {
         let c = hsb
         return ArtworkRGB(h: c.h + degrees / 360, s: min(1, max(0, c.s * saturation)), b: min(1, max(0, c.b * brightness)))
+    }
+}
+
+private nonisolated struct ArtworkAccentKey: EnvironmentKey {
+    static let defaultValue: AccentName? = nil
+}
+
+extension EnvironmentValues {
+    /// Draws artwork in another accent than the app's (tests and the gallery compare accents).
+    var artworkAccent: AccentName? {
+        get { self[ArtworkAccentKey.self] }
+        set { self[ArtworkAccentKey.self] = newValue }
     }
 }
 
@@ -141,6 +191,7 @@ struct Artwork: View {
     /// nil picks by size: `Radius.tile`, or `Radius.artworkSmall` below 64 pt.
     var cornerRadius: CGFloat?
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.artworkAccent) private var accent
 
     init(seed: String, symbol: String? = nil, placement: GlyphPlacement = .center, cornerRadius: CGFloat? = nil) {
         self.seed = seed
@@ -159,7 +210,7 @@ struct Artwork: View {
             let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
             ZStack {
                 background(recipe, size: geo.size, long: long)
-                glyph(t, side: side, size: geo.size)
+                if let symbol { ArtworkGlyph(symbol: symbol, placement: placement, size: geo.size) }
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .clipShape(shape)
@@ -169,7 +220,7 @@ struct Artwork: View {
     }
 
     private func background(_ r: ArtworkRecipe, size: CGSize, long: CGFloat) -> some View {
-        let c = r.colors(AccentPalette.of(AppConfig.accent))
+        let c = r.colors(AccentPalette.of(accent ?? AppConfig.accent))
         let light = Color(artwork: c.light), shade = Color(artwork: c.shade)
         return ZStack {
             LinearGradient(colors: [Color(artwork: c.top), Color(artwork: c.bottom)], startPoint: r.start, endPoint: r.end)
@@ -178,31 +229,41 @@ struct Artwork: View {
                 .frame(width: long * r.lightSize, height: long * r.lightSize)
                 .position(x: size.width * r.light.x, y: size.height * r.light.y)
             Circle()
-                .fill(RadialGradient(colors: [shade.opacity(0.75), shade.opacity(0)], center: .center, startRadius: 0, endRadius: long * r.shadeSize / 2))
+                .fill(RadialGradient(colors: [shade.opacity(Metrics.Window.artworkShadeStrength), shade.opacity(0)], center: .center,
+                                     startRadius: 0, endRadius: long * r.shadeSize / 2))
                 .frame(width: long * r.shadeSize, height: long * r.shadeSize)
                 .position(x: size.width * r.shade.x, y: size.height * r.shade.y)
         }
     }
+}
 
-    @ViewBuilder
-    private func glyph(_ t: Theme, side: CGFloat, size: CGSize) -> some View {
-        if let symbol {
-            switch placement {
-            case .center:
-                Image(systemName: symbol)
-                    .symbolFont(side * Metrics.Window.artworkGlyph, weight: .semibold)
-                    .foregroundStyle(t.onArtwork.opacity(0.92))
-                    .shadow(color: t.artworkShadow, radius: side * 0.05, y: side * 0.015)
-            case .trailing:
-                Image(systemName: symbol)
-                    .symbolFont(side * Metrics.Window.artworkGlyphWide, weight: .semibold)
-                    .foregroundStyle(t.onArtwork.opacity(0.9))
-                    .shadow(color: t.artworkShadow, radius: side * 0.05, y: side * 0.015)
-                    .padding(.trailing, side * 0.3)
-                    .frame(width: size.width, height: size.height, alignment: .trailing)
-            case .none:
-                EmptyView()
-            }
+/// The SF Symbol on artwork: white with a soft shadow, centred or large at the trailing side.
+/// Its own view so a header can draw it above a scrim (`HeroBackdrop`).
+struct ArtworkGlyph: View {
+    let symbol: String
+    let placement: Artwork.GlyphPlacement
+    let size: CGSize
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        let t = Theme(scheme)
+        let side = min(size.width, size.height)
+        switch placement {
+        case .center:
+            Image(systemName: symbol)
+                .symbolFont(side * Metrics.Window.artworkGlyph, weight: .semibold)
+                .foregroundStyle(t.onArtwork)
+                .shadow(color: t.artworkShadow, radius: side * Metrics.Window.artworkGlyphShadow, y: side * Metrics.Window.artworkGlyphShadowY)
+                .frame(width: size.width, height: size.height)
+        case .trailing:
+            Image(systemName: symbol)
+                .symbolFont(side * Metrics.Window.artworkGlyphWide, weight: .semibold)
+                .foregroundStyle(t.onArtwork)
+                .shadow(color: t.artworkShadow, radius: side * Metrics.Window.artworkGlyphShadow, y: side * Metrics.Window.artworkGlyphShadowY)
+                .padding(.trailing, side * Metrics.Window.artworkGlyphTrailing)
+                .frame(width: size.width, height: size.height, alignment: .trailing)
+        case .none:
+            EmptyView()
         }
     }
 }
