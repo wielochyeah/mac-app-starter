@@ -56,6 +56,16 @@ macho_files() {
   done
 }
 
+_sign() {
+  # codesign without its "replacing existing signature" chatter; the output shows on failure.
+  local out
+  if ! out="$(codesign "$@" 2>&1)"; then
+    print -u2 -r -- "$out"
+    print -u2 -r -- "packaging: signing ${@[-1]} failed"
+    return 1
+  fi
+}
+
 sign_app() {
   # sign_app <app> <identity> [entitlements]: inside out. Nested bundles and loose Mach-O files
   # first (no --deep: it skips code in Resources/ and signs helpers with the wrong options),
@@ -65,13 +75,11 @@ sign_app() {
   local -a base
   if [[ "$identity" == "-" ]]; then base=(--force --sign -)
   else base=(--force --options runtime --timestamp --sign "$identity"); fi
-  for f in ${(f)"$(macho_files "$app")"}; do
-    codesign "${base[@]}" "$f" || { print -u2 "packaging: signing $f failed"; return 1; }
-  done
-  for f in ${(f)"$(find "$app/Contents" -depth \( -name '*.app' -o -name '*.framework' -o -name '*.xpc' -o -name '*.appex' \) -type d 2>/dev/null)"}; do
-    codesign "${base[@]}" "$f" || { print -u2 "packaging: signing $f failed"; return 1; }
+  for f in ${(f)"$(macho_files "$app")"} \
+           ${(f)"$(find "$app/Contents" -depth \( -name '*.app' -o -name '*.framework' -o -name '*.xpc' -o -name '*.appex' \) -type d 2>/dev/null)"}; do
+    _sign "${base[@]}" "$f" || return 1
   done
   if [[ -n "$ents" ]]; then base+=(--entitlements "$ents"); fi
-  codesign "${base[@]}" "$app" || { print -u2 "packaging: signing $app failed (identity: $identity)"; return 1; }
+  _sign "${base[@]}" "$app" || return 1
   codesign --verify --strict --deep "$app" || { print -u2 "packaging: signature check failed for $app"; return 1; }
 }

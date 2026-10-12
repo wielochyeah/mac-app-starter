@@ -1,0 +1,9 @@
+{
+  "comment": "Finder layout of the DMG window, read by tools/dmg/settings.py (dmgbuild) and tools/dmg/Background.swift. Points; positions are icon centres. The window is 32 pt taller than the background: macOS 26 counts the title bar.",
+  "window": { "x": 240, "y": 160, "width": 640, "height": 400, "titlebar": 32 },
+  "iconSize": 112,
+  "textSize": 13,
+  "app": [170, 158],
+  "applications": [470, 158],
+  "applicationsName": "Applications"
+}
