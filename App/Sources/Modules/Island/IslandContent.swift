@@ -34,6 +34,12 @@ struct IslandAction: Identifiable, Equatable {
         self.perform = perform
     }
 
+    /// Runs the action, then closes the card when it `dismisses`.
+    func run(dismiss: () -> Void) {
+        perform()
+        if dismisses { dismiss() }
+    }
+
     static func == (a: IslandAction, b: IslandAction) -> Bool {
         a.id == b.id && a.title == b.title && a.symbol == b.symbol && a.dismisses == b.dismisses
     }
@@ -51,14 +57,17 @@ enum IslandNoticeKind: String, CaseIterable, Equatable, Sendable {
 ///     Island.shared.present(.notice(text: "No connection", kind: .error))
 enum IslandContent: Equatable {
     /// Something is going on: badge + short title left of the notch, detail right (e.g. "2:14").
+    /// An empty title (here and in `.progress`) shows the badge alone.
     case activity(symbol: String, title: String, detail: String? = nil, tint: IslandTint = .accent)
     /// Work in progress: a spinner, or a ring when `fraction` (0…1) is known. From 5 s on the
     /// seconds count; from 10 s a small card says it takes longer and offers `cancel`.
     case progress(title: String, fraction: Double? = nil, symbol: String = "arrow.triangle.2.circlepath",
                   tint: IslandTint = .accent, cancel: IslandAction? = nil)
-    /// A live level meter (e.g. a microphone): bands 0…1, any count; empty = calm synthetic motion.
-    /// Updating only the bands is cheap (`Island.shared.update(.levels(…))` does not re-render).
-    case levels([Float], symbol: String = "waveform", tint: IslandTint = .accent)
+    /// A live level meter (playback, throughput, a microphone): bands 0…1, any count; empty = calm
+    /// synthetic motion. Updating only the bands is cheap (`Island.shared.update(.levels(…))` does
+    /// not re-render). `recording: true` adds the red recording dot and the elapsed time (capsule):
+    /// only for apps that really capture (microphone, screen), macOS's privacy signal.
+    case levels([Float], symbol: String = "waveform", tint: IslandTint = .accent, recording: Bool = false)
     /// Finished: a card with title, dim detail and an optional text. Hovering unfolds the whole
     /// text with Copy and the `actions`. Hides after the confirmation time from settings.
     case done(title: String, detail: String? = nil, body: String? = nil, actions: [IslandAction] = [],
@@ -85,15 +94,29 @@ enum IslandContent: Equatable {
 
     /// The bands of a `.levels` content.
     var bands: [Float]? {
-        if case .levels(let b, _, _) = self { return b }
+        if case .levels(let b, _, _, _) = self { return b }
         return nil
     }
 
     /// The same content without its bands: two levels contents with equal `withoutBands`
     /// differ only in the live values.
     var withoutBands: IslandContent {
-        if case .levels(_, let symbol, let tint) = self { return .levels([], symbol: symbol, tint: tint) }
+        if case .levels(_, let symbol, let tint, let recording) = self {
+            return .levels([], symbol: symbol, tint: tint, recording: recording)
+        }
         return self
+    }
+
+    /// A `.levels` content that shows the recording dot and timer.
+    var isRecording: Bool {
+        if case .levels(_, _, _, true) = self { return true }
+        return false
+    }
+
+    /// The buttons of a done card.
+    var actions: [IslandAction] {
+        if case .done(_, _, _, let actions, _) = self { return actions }
+        return []
     }
 
     /// A done card with something to unfold (text or actions).
@@ -127,7 +150,7 @@ enum IslandBadgeKind: Equatable {
 
     init(_ content: IslandContent) {
         switch content {
-        case .activity(let symbol, _, _, let tint), .progress(_, _, let symbol, let tint, _), .levels(_, let symbol, let tint):
+        case .activity(let symbol, _, _, let tint), .progress(_, _, let symbol, let tint, _), .levels(_, let symbol, let tint, _):
             self = .symbol(symbol, tint)
         case .done(_, _, _, _, let tint):
             self = .check(tint)

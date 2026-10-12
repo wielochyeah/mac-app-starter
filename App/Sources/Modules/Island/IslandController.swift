@@ -44,7 +44,11 @@ final class Island {
 
     let model = IslandModel()
     /// Another notch app (or the app itself) occupies the notch right now: with style `auto`
-    /// the next take shows as a capsule just below the notch. Default: nobody.
+    /// the next take shows as a capsule just below the notch. The starter detects no other notch
+    /// apps: while this is nil, `auto` behaves like `island` and the settings offer only
+    /// Automatic and Capsule. A project that knows when the notch is taken sets it at launch:
+    ///
+    ///     Island.shared.notchBusy = { NotchWatcher.shared.isBusy }
     var notchBusy: (() -> Bool)?
 
     private let deps: Dependencies
@@ -86,39 +90,52 @@ final class Island {
 
     /// Shows `content` as a new take on the screen under the pointer. A surface that is still up
     /// on the same screen in the same form morphs into it instead of growing again.
-    func present(_ content: IslandContent) {
-        let previous = isShowing ? model.content : nil
-        cancelTimers()
+    func present(_ content: IslandContent) { present(content, continuing: false) }
+
+    /// `continuing`: the running content shown again after a self-heal or a display change. It
+    /// keeps its start time, the slow counter, the "takes longer" card and their timers, and
+    /// plays no sound; only the screen, the form and the panel are decided again.
+    private func present(_ content: IslandContent, continuing: Bool) {
+        // no screen (displays reconfiguring, sleep): leave whatever runs, a dismiss included, alone
         guard let screen = IslandScreen.containing(deps.mouse(), in: deps.screens()) else { return }
+        let previous = isShowing ? model.content : nil
+        cancelTimers(keepSlow: continuing)
         let geo = IslandScreenGeometry(screen)
         let prefs = deps.prefs()
         let busy = geo.notch != nil && (notchBusy?() ?? false)
         let kind = geo.kind(style: prefs.style, notchBusy: busy)
         let capsuleTop = geo.capsuleTop(style: prefs.style, notchBusy: busy)
-        let reuse = model.presented && model.kind == kind && targetDisplay == geo.displayID && orderedIn
+        let nowSuppressed = prefs.hideInFullscreen && deps.isFullscreen(geo)
+        // the panel must also really be up as wanted: one ordered out behind our back (or one
+        // that should come back after full screen) is ordered in again, not morphed
+        let visibleAsWanted = deps.headless || (nowSuppressed ? suppressed : host.isVisible)
+        let reuse = model.presented && model.kind == kind && targetDisplay == geo.displayID && orderedIn && visibleAsWanted
 
-        suppressed = prefs.hideInFullscreen && deps.isFullscreen(geo)
+        suppressed = nowSuppressed
         targetDisplay = geo.displayID
         let start = deps.scheduler.now
         let configure = { [model] in
             model.kind = kind
             model.capsuleTop = capsuleTop
-            model.startedAt = start
             model.content = content.withoutBands
             model.bands = content.bands ?? []
             model.hover = .none
             model.acceptsClicks = false
-            model.slowSince = nil
-            model.slowHint = false
+            model.foldedActions = !prefs.hoverExpand
+            if !continuing {
+                model.startedAt = start
+                model.slowSince = nil
+                model.slowHint = false
+            }
         }
-        trace("present \(content.phase.rawValue) as \(kind.rawValue)\(reuse ? " (morph)" : "")")
+        trace("present \(content.phase.rawValue) as \(kind.rawValue)\(reuse ? " (morph)" : "")\(continuing ? " (continuing)" : "")")
 
         if reuse {
             // still on screen: the surface morphs into the new take, glyphs swap
             quietly { model.contentSwap = true }
             animate(configure)
             host.fade(to: 1, duration: IslandTiming.fadeIn)
-            contentDidChange(from: previous)
+            contentDidChange(from: previous, newTake: !continuing, continuing: continuing)
             return
         }
 
@@ -147,8 +164,8 @@ final class Island {
             }
         }
         deps.scheduler.after(IslandTiming.verifyLate) { [weak self] in self?.verifyOnScreen() }
-        if content.isRunning { deps.playSound("Tink") }
-        contentDidChange(from: nil)
+        if content.isRunning && !continuing { deps.playSound("Tink") }
+        contentDidChange(from: nil, newTake: !continuing, continuing: continuing)
     }
 
     /// Changes what the island shows. On screen: in place (glyphs swap, the surface springs to
@@ -237,9 +254,11 @@ final class Island {
 
     /// Settings changed while a card is up (hover switch, confirmation time).
     func settingsDidChange() {
+        let prefs = deps.prefs()
         guard model.presented, model.phase == .done else { return }
+        if model.foldedActions == prefs.hoverExpand { animate { self.model.foldedActions = !prefs.hoverExpand } }
         refreshPointerTracking()
-        if !pointerTrackingWanted && model.hover == .expanded { animate { self.model.hover = .collapsed } }
+        if !prefs.hoverExpand && model.hover == .expanded { animate { self.model.hover = .collapsed } }
         if hideTask != nil || !hoverHolds { scheduleHide(deps.prefs().confirmDelay) }
     }
 
@@ -254,11 +273,15 @@ final class Island {
     /// The current content with its live bands.
     private var fullContent: IslandContent? {
         guard let c = model.content else { return nil }
-        if case .levels(_, let symbol, let tint) = c { return .levels(model.bands, symbol: symbol, tint: tint) }
+        if case .levels(_, let symbol, let tint, let recording) = c {
+            return .levels(model.bands, symbol: symbol, tint: tint, recording: recording)
+        }
         return c
     }
 
-    private func contentDidChange(from previous: IslandContent?) {
+    /// - newTake: `present` started the content as a new take (its slow timers start over).
+    /// - continuing: the same running content shown again (its slow timers kept running).
+    private func contentDidChange(from previous: IslandContent?, newTake: Bool = false, continuing: Bool = false) {
         guard let content = model.content else { return }
         switch content.phase {
         case .notice:
@@ -267,7 +290,7 @@ final class Island {
             if previous?.isRunning ?? false { deps.playSound("Pop") }
             scheduleHide(deps.prefs().confirmDelay)
         case .progress:
-            if previous?.phase != .progress { startSlowTimers() }
+            if !continuing && (newTake || previous?.phase != .progress) { startSlowTimers() }
         case .activity, .levels:
             break
         }
@@ -350,7 +373,7 @@ final class Island {
         }
     }
 
-    private func cancelTimers() {
+    private func cancelTimers(keepSlow: Bool = false) {
         for task in [hideTask, orderOutTask, fadeTask, presentTask, swapTask] { task?.cancel() }
         hideTask = nil
         hideDeadline = nil
@@ -359,7 +382,7 @@ final class Island {
         presentTask = nil
         swapTask = nil
         stopPointerTracking()
-        resetSlow()
+        if !keepSlow { resetSlow() }
     }
 
     // MARK: Progress that takes longer
@@ -395,11 +418,12 @@ final class Island {
     /// The pointer keeps the card up: inside it, or within the grace after it left.
     private var hoverHolds: Bool { pointerInside || collapseTask != nil }
 
-    /// A card the pointer can use: a done card that unfolds, or Cancel on a slow progress.
+    /// A card the pointer can use: a done card that unfolds (or, with "Expand on hover" off, one
+    /// whose actions show folded), or Cancel on a slow progress.
     private var pointerTrackingWanted: Bool {
         guard let content = model.content else { return false }
         switch content.phase {
-        case .done: return deps.prefs().hoverExpand && content.canExpand
+        case .done: return deps.prefs().hoverExpand ? content.canExpand : !content.actions.isEmpty
         case .progress: return model.slowHint && content.cancelAction != nil
         default: return false
         }
@@ -485,7 +509,7 @@ final class Island {
             suspendedHide = max(0, hideDeadline?.timeIntervalSince(deps.scheduler.now) ?? 0)
             hideDeadline = nil
         }
-        if model.phase == .done, model.hover != .expanded, model.content?.canExpand ?? false {
+        if model.phase == .done, model.hover != .expanded, deps.prefs().hoverExpand, model.content?.canExpand ?? false {
             deps.haptic()
             animate { self.model.hover = .expanded }
         }
@@ -543,7 +567,7 @@ final class Island {
         guard now.timeIntervalSince(since) > IslandTiming.healGap else { return }
         hiddenSince = nil
         if host.isVisible && !host.isReallyOnScreen { rebuild("\(content.phase.rawValue) ordered in but not on screen") }
-        present(content)
+        present(content, continuing: true)
     }
 
     /// Shortly after a card appears: really on screen? (Never right after ordering in: the
@@ -553,7 +577,7 @@ final class Island {
               let content = fullContent, !host.isReallyOnScreen,
               lastRebuild.map({ deps.scheduler.now.timeIntervalSince($0) > IslandTiming.rebuildCooldown }) ?? true else { return }
         rebuild("\(content.phase.rawValue) ordered in but not on screen")
-        present(content)
+        present(content, continuing: true)
     }
 
     private func rebuild(_ why: String) {
@@ -571,12 +595,12 @@ final class Island {
         guard model.presented, let content = fullContent else { return }
         let screens = deps.screens()
         guard let screen = screens.first(where: { $0.displayID == targetDisplay }) else {
-            content.isRunning ? present(content) : dismiss(quick: true)
+            content.isRunning ? present(content, continuing: true) : dismiss(quick: true)
             return
         }
         let geo = IslandScreenGeometry(screen)
         if geo.notch == nil && model.kind == .notch {
-            content.isRunning ? present(content) : dismiss(quick: true)
+            content.isRunning ? present(content, continuing: true) : dismiss(quick: true)
             return
         }
         let prefs = deps.prefs()

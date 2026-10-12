@@ -83,17 +83,17 @@ private struct IslandState {
                          badge: badge?.key ?? "")
     }
 
-    /// Title next to the badge (activity, progress).
+    /// Title next to the badge (activity, progress); an empty title shows the badge alone.
     var title: String? {
         switch content {
-        case .activity(_, let title, _, _), .progress(let title, _, _, _, _): title
+        case .activity(_, let title, _, _), .progress(let title, _, _, _, _): title.isEmpty ? nil : title
         default: nil
         }
     }
 
     var tint: IslandTint {
         switch content {
-        case .activity(_, _, _, let t), .progress(_, _, _, let t, _), .levels(_, _, let t), .done(_, _, _, _, let t): t
+        case .activity(_, _, _, let t), .progress(_, _, _, let t, _), .levels(_, _, let t, _), .done(_, _, _, _, let t): t
         default: .accent
         }
     }
@@ -216,7 +216,7 @@ struct NotchIslandView: View {
             if s.shown, let badge = s.badge {
                 IslandBadge(kind: badge).id(badge.key).transition(t)
             }
-            if s.shown && s.phase == .levels { IslandRecDot().transition(t) }
+            if s.shown && (s.content?.isRecording ?? false) { IslandRecDot().transition(t) }
             if s.shown, let title = s.title {
                 Text(title)
                     .font(TypeScale.secondarySemibold)
@@ -261,13 +261,13 @@ struct NotchIslandView: View {
         let swap = AnyTransition.islandEnter(toward: .top, reduce: s.reduce)
         ZStack(alignment: .topLeading) {
             if s.slowHint {
-                IslandSlowBody(cancel: s.content?.cancelAction, still: s.still != nil)
+                IslandSlowBody(cancel: s.content?.cancelAction, still: s.still != nil, dismiss: dismiss)
                     .transition(swap)
             } else if case .done(let title, let detail, let text, let actions, _) = s.content {
                 VStack(alignment: .leading, spacing: IslandLook.titleGap) {
                     IslandTitleLine(title: title, detail: detail)
-                    IslandDoneText(text: text, actions: actions, expanded: s.expanded, still: s.still != nil,
-                                   reduce: s.reduce, stillCopied: model.stillCopied, dismiss: dismiss)
+                    IslandDoneText(text: text, actions: actions, expanded: s.expanded, foldedActions: model.foldedActions,
+                                   still: s.still != nil, reduce: s.reduce, stillCopied: model.stillCopied, dismiss: dismiss)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .transition(swap)
@@ -409,14 +409,16 @@ struct CapsuleView: View {
                         .fixedSize()
                         .transition(t)
                     if let cancel {
-                        IslandButton(title: cancel.title, symbol: cancel.symbol, still: s.still != nil) { cancel.perform() }
+                        IslandButton(title: cancel.title, symbol: cancel.symbol, still: s.still != nil) { cancel.run(dismiss: dismiss) }
                             .transition(t)
                     }
                 }
             }
             if s.phase == .levels {
-                IslandRecDot().transition(t)
-                IslandTimerText(start: model.startedAt, still: s.elapsedStill)
+                if s.content?.isRecording ?? false {
+                    IslandRecDot().transition(t)
+                    IslandTimerText(start: model.startedAt, still: s.elapsedStill)
+                }
                 IslandMeter(tint: s.tint, bands: { [model] in model.bands }, still: s.still).transition(t)
             }
         }
@@ -434,8 +436,8 @@ struct CapsuleView: View {
                     Spacer(minLength: IslandLook.actionGap)
                 }
                 .frame(height: IslandLook.cardRow)
-                IslandDoneText(text: text, actions: actions, expanded: s.expanded, still: s.still != nil,
-                               reduce: s.reduce, stillCopied: model.stillCopied, dismiss: dismiss)
+                IslandDoneText(text: text, actions: actions, expanded: s.expanded, foldedActions: model.foldedActions,
+                               still: s.still != nil, reduce: s.reduce, stillCopied: model.stillCopied, dismiss: dismiss)
                     .padding(.leading, IslandLook.cardIndent)
             }
             .padding(.top, IslandLook.cardTop)

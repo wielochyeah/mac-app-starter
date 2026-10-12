@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Render scenes and gallery entries of the island module: every state as island and as
 /// capsule on a menu-bar backdrop (`island.<state>`, `capsule.<state>`), the capsule on a Mac
-/// without notch, the settings pane and the onboarding step.
+/// without notch, the settings pane (also at the settings window's minimum width) and the
+/// onboarding step.
 enum IslandScenes {
     struct Sample {
         let id: String
@@ -28,10 +29,16 @@ enum IslandScenes {
                 $0.slowSince = Date(timeIntervalSinceNow: -12)
                 $0.slowHint = true
             },
-            Sample(id: "levels") { .levels(IslandPreviewModel.speechBands, symbol: "mic.fill") },
+            Sample(id: "levels") { .levels(IslandPreviewModel.speechBands) },
+            Sample(id: "levels-recording") { .levels(IslandPreviewModel.speechBands, symbol: "mic.fill", recording: true) },
             Sample(id: "done") {
                 .done(title: IslandSampleText.saved, detail: IslandSampleText.savedDetail, body: IslandSampleText.savedBody)
             },
+            // "Expand on hover" off: the folded card shows its buttons
+            Sample(id: "done-actions", content: {
+                .done(title: IslandSampleText.saved, detail: IslandSampleText.savedDetail, body: IslandSampleText.savedBody,
+                      actions: [IslandAction(id: "reveal", title: IslandSampleText.showInFinder, symbol: "folder") {}])
+            }) { $0.foldedActions = true },
             Sample(id: "done-hover", crop: IslandLook.hoverCrop, content: {
                 .done(title: IslandSampleText.saved, detail: IslandSampleText.savedDetail, body: IslandSampleText.savedLong,
                       actions: [IslandAction(id: "reveal", title: IslandSampleText.showInFinder, symbol: "folder") {}])
@@ -60,13 +67,17 @@ enum IslandScenes {
             Registry.renderScenes.append(RenderScene(id: "island.\(sample.id)", size: sample.crop) { stage(sample, kind: .notch) })
             Registry.renderScenes.append(RenderScene(id: "capsule.\(sample.id)", size: sample.crop) { stage(sample, kind: .capsule) })
         }
-        if let levels = samples.first(where: { $0.id == "levels" }) {
+        if let levels = samples.first(where: { $0.id == "levels-recording" }) {
             Registry.renderScenes.append(RenderScene(id: "capsule.no-notch", size: levels.crop) {
                 stage(levels, kind: .capsule, notch: false)
             })
         }
         Registry.renderScenes.append(RenderScene(id: "island.pane", size: paneSize) {
             AnyView(IslandPane().frame(width: paneSize.width, height: paneSize.height))
+        })
+        // the settings window at its minimum width leaves this much for the pane
+        Registry.renderScenes.append(RenderScene(id: "island.pane-narrow", size: narrowPaneSize) {
+            AnyView(IslandPane().frame(width: narrowPaneSize.width, height: narrowPaneSize.height))
         })
         Registry.renderScenes.append(RenderScene(id: "island.onboarding", size: .zero) { AnyView(OnboardingSample()) })
         Registry.renderScenes.append(RenderScene(id: "island.tiles", size: .zero) { AnyView(TilesSample()) })
@@ -83,6 +94,9 @@ enum IslandScenes {
     }
 
     static let paneSize = CGSize(width: 680, height: 760)
+    static var narrowPaneSize: CGSize {
+        CGSize(width: Metrics.settingsWindowMin.width - Metrics.sidebarWidth, height: 900)
+    }
 }
 
 /// The onboarding step in the onboarding window on the render desk (like Patterns' samples).

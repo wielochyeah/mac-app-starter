@@ -34,6 +34,8 @@ final class IslandModel {
     /// stays and only its content changes (glyphs swap).
     var contentSwap = false
     var hover: Hover = .none
+    /// "Expand on hover" is off: a folded done card shows its actions, so they stay reachable.
+    var foldedActions = false
     /// The panel takes clicks (pointer on a hovered card or on Cancel).
     var acceptsClicks = false
     /// The visible surface's animated body rect (canvas points, top-left origin), reported by the

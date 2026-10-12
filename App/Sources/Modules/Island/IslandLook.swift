@@ -15,7 +15,8 @@ enum IslandLook {
     static let hoverCrop = CGSize(width: 600, height: 380)
 
     // Ears (the notch island's content left and right of the camera)
-    static let earPad: CGFloat = 14
+    /// The ears keep the bodies' inset (VoiceBud: both 14).
+    static let earPad = Metrics.Island.bodyPad
     static let earSpacing: CGFloat = 7
     /// A body (card) is never narrower than the notch plus this on each side.
     static let cardWing: CGFloat = 80
@@ -39,17 +40,17 @@ enum IslandLook {
     static let bodyTop: CGFloat = 2
     static let bodyBottom: CGFloat = 13
     static let titleGap: CGFloat = 2
-    static let fullTextMaxLines = 12
+    static let fullTextMaxLines = IslandCappedHeightLayout.maxLines
     static let paragraphGap: CGFloat = 6
     static let fadeTop: CGFloat = 16
     static let fadeBottom: CGFloat = 26
     static let actionTop: CGFloat = 10
-    static let actionGap: CGFloat = 8
+    static let actionGap = Space.xs
     static let noticeMaxLines = 2
 
     // Small buttons on black (Copy, actions, Cancel)
     static let buttonX: CGFloat = 9
-    static let buttonRadius: CGFloat = 7
+    static let buttonRadius = Radius.chip
     static let buttonLabelGap: CGFloat = 4
     static let buttonText: Double = 0.86
 
@@ -60,7 +61,7 @@ enum IslandLook {
     /// Longer titles in the pill are cut.
     static let pillTitleMax: CGFloat = 220
     static let cardTop: CGFloat = 9
-    static let cardLeading: CGFloat = 12
+    static let cardLeading = Space.s
     static let cardTrailing: CGFloat = 16
     static let cardBottom: CGFloat = 13
     static let cardRow: CGFloat = 24

@@ -32,10 +32,12 @@ struct IslandTitleLine: View {
 
 /// The text part of a done card: one preview line, or on hover the whole text with Copy and the
 /// card's actions. The incoming block enters, the outgoing one hands over with a quick fade.
+/// `foldedActions` ("Expand on hover" off): the folded card shows the actions under its line.
 struct IslandDoneText: View {
     let text: String?
     let actions: [IslandAction]
     var expanded = false
+    var foldedActions = false
     var still = false
     var reduce = false
     var stillCopied = false
@@ -55,13 +57,12 @@ struct IslandDoneText: View {
                     }
                 }
             }
-            if expanded && (!text.isEmpty || !actions.isEmpty) {
+            if (expanded && (!text.isEmpty || !actions.isEmpty)) || (foldedActions && !expanded && !actions.isEmpty) {
                 HStack(spacing: IslandLook.actionGap) {
-                    if !text.isEmpty { IslandCopyButton(text: text, still: still, stillCopied: stillCopied) }
+                    if expanded && !text.isEmpty { IslandCopyButton(text: text, still: still, stillCopied: stillCopied) }
                     ForEach(actions) { action in
                         IslandButton(title: action.title, symbol: action.symbol, still: still) {
-                            action.perform()
-                            if action.dismisses { dismiss() }
+                            action.run(dismiss: dismiss)
                         }
                     }
                 }
@@ -91,8 +92,10 @@ struct IslandPreviewText: View {
 /// line: when text continues, half a line peeks out under the fade, so the cut never reads as
 /// the end. Subviews: [0] content (hidden, measures), [1] reference (hidden), [2] what is shown.
 nonisolated struct IslandCappedHeightLayout: Layout {
-    /// The reference text's line count (`IslandLook.fullTextMaxLines`) and the unfolded width.
+    /// The reference text's line count (the one source; `IslandLook.fullTextMaxLines` reads it).
     static let maxLines = 12
+    /// The unfolded width when nothing is proposed: `Metrics.Island.liveWidth`, repeated because
+    /// the layout runs off the main actor (IslandLayoutTests keeps the two equal).
     static let defaultWidth: CGFloat = 470
 
     static func limit(reference: CGFloat) -> CGFloat {
@@ -217,6 +220,8 @@ struct IslandNoticeBody: View {
 struct IslandSlowBody: View {
     let cancel: IslandAction?
     var still = false
+    /// Runs after a Cancel that closes the island (`IslandAction.dismisses`).
+    var dismiss: () -> Void = {}
 
     var body: some View {
         HStack(alignment: .center, spacing: IslandLook.glyphGap) {
@@ -226,7 +231,7 @@ struct IslandSlowBody: View {
                 .lineLimit(1)
             Spacer(minLength: IslandLook.actionGap)
             if let cancel {
-                IslandButton(title: cancel.title, symbol: cancel.symbol, still: still) { cancel.perform() }
+                IslandButton(title: cancel.title, symbol: cancel.symbol, still: still) { cancel.run(dismiss: dismiss) }
             } else {
                 Text(IslandText.stillWorking)
                     .font(TypeScale.subtitle)

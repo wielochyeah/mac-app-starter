@@ -116,21 +116,26 @@ enum IslandLayout {
         ceil((text as NSString).size(withAttributes: [.font: font]).width)
     }
 
+    /// Badge plus title (an empty title: the badge alone).
+    private static func titled(_ title: String) -> CGFloat {
+        title.isEmpty ? IslandLook.badge : IslandLook.badge + IslandLook.earSpacing + width(title, font: IslandLook.titleFont)
+    }
+
     /// Width of the content in the left and right ear (without the 14 pt outer padding).
     static func ears(_ content: IslandContent, slowCounting: Bool = false) -> (left: CGFloat, right: CGFloat) {
-        let badge = IslandLook.badge, gap = IslandLook.earSpacing
+        let badge = IslandLook.badge
         switch content {
         case .activity(_, let title, let detail, _):
             let right = detail.map { width($0, font: IslandLook.detailFont) } ?? 0
-            return (badge + gap + width(title, font: IslandLook.titleFont), right)
+            return (titled(title), right)
         case .progress(let title, let fraction, _, _, _):
             var right = IslandLook.spinnerFrame
             if let fraction { right += IslandLook.glyphGap + width(IslandText.percent(fraction), font: IslandLook.counterFont) }
             // two digits: the ear is sized once when counting starts, not every second
             if slowCounting { right += IslandLook.glyphGap + width(IslandText.counter(88), font: IslandLook.counterFont) }
-            return (badge + gap + width(title, font: IslandLook.titleFont), right)
-        case .levels:
-            return (badge + gap + Metrics.Island.recDot, IslandLook.meterWidth)
+            return (titled(title), right)
+        case .levels(_, _, _, let recording):
+            return (recording ? badge + IslandLook.earSpacing + Metrics.Island.recDot : badge, IslandLook.meterWidth)
         case .done, .notice:
             return (badge, 0)
         }
