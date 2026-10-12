@@ -33,9 +33,22 @@ Gehört zum Modul `island`; `bin/starter remove island` entfernt diesen Skill mi
    Ein abgebrochener oder fehlgeschlagener Ablauf endet mit `.notice(text:kind: .error)` oder `dismiss()`, nie mit einer stehenbleibenden Insel.
 
    Pegel live: einmal `Island.shared.present(.levels([], symbol: "mic.fill", recording: true))`, danach je Messung `Island.shared.update(.levels(bands, symbol: "mic.fill", recording: true))` mit gleichem `symbol`, `tint` und `recording`; nur dann tauscht die Insel allein die Bänder ohne neues Zeichnen. Den Aufnahmepunkt setzt nur dieser Inhalt, nicht `Island` oder das Modell. Belegte Notch: Weiß das Projekt, wann eine andere App die Notch nutzt, setzt es beim Start (im `register()` oder in `Registry.launchHooks`, in `#if MODUL_ISLAND`) `Island.shared.notchBusy = { NotchWatcher.shared.isBusy }`; der Starter selbst erkennt keine anderen Notch-Apps.
-4. Titel höchstens drei Wörter, Detail eine kurze Zeile; beide Sprachen passen in die Breite der Insel (Deutsch zuerst prüfen).
+4. Titel höchstens drei Wörter, Detail eine kurze Zeile; beide Sprachen passen in die Breite der Insel (Deutsch zuerst prüfen). Eine Ergebniskarte `.done` mit `body` hat ihren Kopieren-Knopf schon (aufgeklappt beim Überfahren); eine eigene Aktion „Kopieren“ käme doppelt. Nur wenn „Beim Überfahren ausklappen“ aus ist (`Settings.shared[.islandHoverExpand] == false`), zeigt die Karte gefaltet allein ihre `actions`; dann gehört „Kopieren“ dazu.
 5. Töne sind standardmäßig aus; die Insel respektiert reduzierte Bewegung selbst.
-6. Render-Szenen für jeden neuen Zustand in beiden Formen: `<feature>.island-<zustand>` und `<feature>.capsule-<zustand>` auf der Menüleisten-Kulisse des Moduls.
+6. Render-Szenen für jeden neuen Zustand in beiden Formen: `<feature>.island-<zustand>` und `<feature>.capsule-<zustand>` auf der Menüleisten-Kulisse des Moduls. Die Kulisse baut `IslandScenes.stage(_:kind:)` aus einem `IslandScenes.Sample` (Inhalt, Bildausschnitt, Zustand des Modells):
+
+   ```swift
+   #if MODUL_ISLAND
+   let sample = IslandScenes.Sample(id: "", content: { .progress(title: ExportText.running) }) {
+       $0.slowSince = Date(timeIntervalSinceNow: -12)   // Sekundenzähler läuft
+       $0.slowHint = true                               // Karte „Dauert länger“ mit Abbrechen
+   }
+   Registry.renderScenes.append(RenderScene(id: "export.island-slow", size: sample.crop) { IslandScenes.stage(sample, kind: .notch) })
+   Registry.renderScenes.append(RenderScene(id: "export.capsule-slow", size: sample.crop) { IslandScenes.stage(sample, kind: .capsule) })
+   #endif
+   ```
+
+   Aufgeklappte Ergebniskarten brauchen den größeren Ausschnitt und `hover`: `IslandScenes.Sample(id: "", crop: IslandLook.hoverCrop, content: { … }) { $0.hover = .expanded }`. Den Inhalt im `content`-Block bauen, nicht vorher: so steht er in der Sprache des jeweiligen Renders.
 
 ## Prüfen
 

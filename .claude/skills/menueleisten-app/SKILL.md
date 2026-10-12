@@ -19,10 +19,24 @@ Gehört zum Modul `menubar`; `bin/starter remove menubar` entfernt diesen Skill 
 ## Schritte
 
 1. Reine Menüleisten-App: `bin/starter remove window`, danach `make build`. Hauptfenster-Aktionen (`AppActions.openMainWindow()`) öffnen dann die Einstellungen.
-2. Abschnitt im Panel: eine View aus Kit-Bausteinen (`Card`, `Row`, `StatusMark`, `Segmented`), so schmal wie das Panel (320 bis 360 pt), höchstens eine Hauptaktion je Abschnitt. Eintragen im `register()` des Features in `MenuBarPanel.sections`.
-3. Menüeintrag: `Registry.menuItems.append(MenuItemContribution(id: "export.run", order: 100, title: { ExportText.run }, symbol: "square.and.arrow.up", shortcut: "⇧⌘E", action: { Export.run() }))`. Titel als Verb im Infinitiv (`Exportieren`), Auslassungspunkte `…` nur, wenn danach eine Eingabe folgt.
+2. Abschnitt im Panel: eine View aus Kit-Bausteinen (`Card`, `Row`, `StatusMark`, `Segmented`) oder Zeilen aus `MenuBarActionRow`, so schmal wie das Panel (320 bis 360 pt), höchstens eine Hauptaktion je Abschnitt. Eintragen im `register()` des Features in `MenuBarPanel.sections`: `MenuBarPanel.sections.append(MenuBarSection(id: "export", order: 20, title: { ExportText.title }) { panel in AnyView(ExportSection(close: panel.close)) })`. Der Abschnitt liest seinen Speicher über einen Parameter, damit Szenen Beispieldaten hineinreichen können.
+3. Menüeintrag: `Registry.menuItems.append(MenuItemContribution(id: "export.run", order: 100, title: { ExportText.run }, symbol: "square.and.arrow.up", shortcut: "⇧⌘E", action: { Export.run() }))`. Titel als Verb im Infinitiv (`Exportieren`), Auslassungspunkte `…` nur, wenn danach eine Eingabe folgt. Jeder Eintrag aus `Registry.menuItems` steht schon im Panel unter „Aktionen“, im Rechtsklick-Menü und im App-Menü; ein Abschnitt wiederholt ihn nicht als eigenen Knopf.
 4. Zustand des Symbols: während einer Arbeit `MenuBarStatus.shared.state = .busy`, danach zurück auf `.idle`; `.attention` nur, solange die Nutzerin etwas tun muss, und mit einem Hinweis im Panel, der sagt, was.
-5. Render-Szenen: `<feature>.menubar` für den Abschnitt im Panel, je weiterem Zustand `<feature>.menubar-<zustand>`.
+5. Render-Szenen: `<feature>.menubar` für den Abschnitt im Panel, je weiterem Zustand `<feature>.menubar-<zustand>`. Die Kulisse mit Menüleiste, Schreibtisch und dem Panel darunter ist `MenuBarPanelStage`; sie bekommt den eigenen Abschnitt mit Beispieldaten und die Einträge, die unter „Aktionen“ stehen sollen:
+
+   ```swift
+   #if MODUL_MENUBAR
+   Registry.renderScenes.append(RenderScene(id: "export.menubar", size: .zero) {
+       let section = MenuBarSection(id: "export", order: 20, title: { ExportText.title }) { panel in
+           AnyView(ExportSection(store: ExportSamples.store(), close: panel.close))
+       }
+       let run = MenuItemContribution(id: "export.run", order: 100, title: { ExportText.run }, symbol: "square.and.arrow.up",
+                                      shortcut: nil) {}
+       return AnyView(MenuBarPanelStage(status: MenuBarStatus(), sections: [section], actions: [run],
+                                        showsWindowAction: AppInfo.isEnabled("window")))
+   })
+   #endif
+   ```
 
 ## Prüfen
 

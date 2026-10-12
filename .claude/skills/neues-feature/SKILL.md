@@ -59,6 +59,19 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
    - lokale KI: `ki-funktion` <!-- modul:ai -->
 5. In `register()` für jeden sichtbaren Zustand eine `RenderScene` mit Kennung `<feature>.<zustand>` und Beispieldaten anlegen, die echt wirken, aber erfunden sind. Neue allgemeine Bausteine zusätzlich als `GalleryEntry`.
 6. Was beim Start laufen muss, in `Registry.launchHooks`; was beim Beenden aufräumen muss, in `Registry.terminateHooks`; was nach „Fertig“ in der Einrichtung geschehen soll, in `Registry.onboardingFinishedHooks` (`{ firstTime in … }`). Nichts startet Fenster oder fragt Berechtigungen an, wenn `RenderMode.isHeadless` gilt.
+
+   Headless entsteht auch keine Datei: Tests, Renders und `--selftest` laufen mit `STARTER_HEADLESS=1`, und der Selbsttest `window.chrome` baut das echte Hauptfenster und zeichnet seine erste Seite. Ein geteilter Speicher, den eine Seite beim ersten Zeichnen öffnet, bleibt deshalb headless im Speicher:
+
+   ```swift
+   static var shared: TasksStore {
+       if let current { return current }
+       let store = TasksStore(url: RenderMode.isHeadless ? nil : Paths.database("tasks"))   // nil: nur im Speicher
+       current = store
+       return store
+   }
+   ```
+
+   Was beim Start eine Datei öffnet (Seiten aus der Datenbank, Anmelden einer Hintergrund-Aufgabe), steht in einem Start-Hook mit `guard !RenderMode.isHeadless, !RenderMode.isStatic else { return }`.
 7. Prüfbare Annahmen zur Laufzeit (Datei lesbar, Migration aktuell) als `SelfTestCheck` eintragen.
 8. Sobald das erste eigene Feature steht: `bin/starter strip-examples`. <!-- modul:examples -->
 

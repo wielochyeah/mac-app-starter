@@ -35,8 +35,21 @@ Technisch läuft das über Carbon `RegisterEventHotKey`; das braucht keine Berec
 
    Kennung mit Präfix des Features; Titel als Tätigkeit. Die Konstanten `kVK_*` brauchen `import Carbon` in der Datei. ⌃⌥Leertaste wäre kein guter Standard: macOS wählt damit die nächste Eingabequelle.
 4. Die Aktion kehrt schnell zurück und stößt die Arbeit nur an; sie öffnet kein Fenster, ohne die App zu aktivieren.
-5. Ein Kurzbefehl, der in Renders oder Tests gebraucht wird, wird nur dort angemeldet, nie im Produktionscode für die Vorschau.
-6. Render-Szenen: `hotkeys.pane` zeigt alle Kurzbefehle; ist der neue Befehl der wichtigste der App, `showInOnboarding: true` und `hotkeys.onboarding` ansehen.
+5. Ein Kurzbefehl, der in Renders oder Tests gebraucht wird, wird nur dort angemeldet, nie im Produktionscode für die Vorschau. Mit dem ersten echten Kurzbefehl im `register()` erscheinen der Bereich „Kurzbefehle“ und, mit `showInOnboarding: true`, der Schritt „Dein Kurzbefehl“. Tests, die Bereiche oder Schritte zählen, leiten ihre Erwartung aus `HotkeyCenter.shared` ab (`definitions`, `onboardingHotkey`), wie `HotkeysSceneTests` es tut, statt anzunehmen, dass die App keinen Kurzbefehl hat.
+6. Render-Szenen: `hotkeys.pane` zeigt die Beispiel-Kurzbefehle des Moduls; ist der neue Befehl der wichtigste der App, `showInOnboarding: true` und `hotkeys.onboarding` ansehen. Den eigenen Kurzbefehl zeigt eine eigene Szene mit einer eigenen `HotkeyCenter`, die nichts bei macOS anmeldet:
+
+   ```swift
+   #if MODUL_HOTKEYS
+   Registry.renderScenes.append(RenderScene(id: "capture.hotkey", size: .zero) {
+       let center = HotkeyCenter(backend: FakeHotkeyBackend(), store: MemoryHotkeyStore())
+       center.layout = TableKeyboardLayout.us   // gleiche Tastennamen auf jedem Mac
+       center.register(id: "capture.start", title: { CaptureText.hotkeyTitle }, default: CaptureHotkeys.standard) {}
+       return AnyView(HotkeysPane(center: center).frame(width: CaptureLook.pane.width, height: CaptureLook.pane.height))
+   })
+   #endif
+   ```
+
+   Die Größe der Szene steht als Maß des Features in `<Name>Look` (der Bereich in der Detailspalte des Einstellungsfensters ist 676 pt breit).
 
 ## Prüfen
 
