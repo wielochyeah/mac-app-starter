@@ -390,6 +390,39 @@ final class MLXTests: TestSuite {
             expect(AIWait.until(timeout: 5) { !downloads.isBusy })
         }
 
+        test("download: deleting the model while it downloads leaves nothing and no paused row") {
+            let (downloads, hub) = makeDownloads("slow")
+            let repo = ModelCatalog.builtIn.model("small")!.repo
+            var finished: [String] = []
+            downloads.onFinished = { finished.append($0) }
+            downloads.start("small")
+            downloads.start("quality")
+            expect(AIWait.until(timeout: 5) { if case .running(let d, _) = downloads.state("small") { return d > 0 }; return false })
+            downloads.remove("quality")
+            expectEqual(downloads.state("quality"), .notStarted, "a queued one just leaves the queue")
+            downloads.remove("small")
+            expectEqual(downloads.state("small"), .notStarted)
+            expect(AIWait.until(timeout: 5) { !downloads.isBusy }, "the process ended")
+            _ = AIWait.until(timeout: 0.3) { false }
+            expectEqual(downloads.state("small"), .notStarted, "the late cancelled line was ignored")
+            expectEqual(downloads.state("quality"), .notStarted, "the queued one did not start")
+            expectEqual(HubCache.blobBytes(hub: hub, repo: repo), 0)
+            expect(!FileManager.default.fileExists(atPath: HubCache.repoDir(hub: hub, repo: repo).path), "folder gone")
+            expect(finished.contains("small"))
+        }
+
+        test("Delete Models is off while a download runs") {
+            let catalog = ModelCatalog.builtIn
+            @MainActor func model(_ s: ModelDownloads.State) -> MLXSectionModel {
+                MLXSectionModel(rows: catalog.models.map { MLXSectionModel.row($0, $0.id == "quality" ? s : .done) }, selected: "small",
+                                options: [], memoryGB: nil, footnote: "", bytesOnDisk: 1, installed: true)
+            }
+            expect(model(.running(done: 1, total: 2)).isDownloading)
+            expect(model(.queued).isDownloading)
+            expect(!model(.paused(done: 1, total: 2, problem: "failed")).isDownloading)
+            expect(!model(.done).isDownloading)
+        }
+
         test("mlx scenes render and the module registered its provider and section") {
             expect(LocalAI.shared.provider(MLXProvider.providerID) != nil)
             expect(LocalAI.shared.sections.contains { $0.id == "mlx" })

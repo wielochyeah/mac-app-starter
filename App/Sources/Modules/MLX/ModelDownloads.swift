@@ -3,7 +3,7 @@ import Observation
 
 /// Model downloads for the MLX worker, one at a time (VoiceBud: "the progress stays honest"), each in
 /// ai-worker/download.py as a child process that reports JSON progress lines. Nothing is downloaded
-/// unless the user presses Download (BAUPLAN §2.13). A stopped or failed download keeps its bytes
+/// unless the user presses Download: the app makes no other network requests. A stopped or failed download keeps its bytes
 /// and resumes on retry.
 @Observable final class ModelDownloads {
     enum State: Equatable {
@@ -36,6 +36,8 @@ import Observation
     @ObservationIgnored private var active: (id: String, process: Process, gen: Int)?
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var terminal: [Int: Bool] = [:]
+    /// Downloads whose model was deleted while they ran: their last events are ignored.
+    @ObservationIgnored private var discarded: Set<Int> = []
 
     init(catalog: ModelCatalog, hub: URL, launch: @escaping (ModelSpec) -> Launch?) {
         self.catalog = catalog
@@ -108,10 +110,15 @@ import Observation
         active.process.terminate()
     }
 
-    /// Deletes a downloaded model.
+    /// Deletes a downloaded model; a running or queued download of it stops and leaves nothing behind.
     func remove(_ id: String) {
         guard let model = catalog.model(id) else { return }
-        if active?.id == id { pause(id) }
+        queue.removeAll { $0 == id }
+        if let active, active.id == id {
+            // its "cancelled" line and its end must not bring the row back as paused
+            discarded.insert(active.gen)
+            active.process.terminate()
+        }
         do {
             try HubCache.remove(hub: hub, repo: model.repo)
         } catch {
@@ -176,7 +183,7 @@ import Observation
     }
 
     private func received(_ line: String, gen: Int) {
-        guard let active, active.gen == gen else { return }
+        guard let active, active.gen == gen, !discarded.contains(gen) else { return }
         let id = active.id
         switch DownloadEvent.parse(line) {
         case .start(let total):
@@ -206,6 +213,14 @@ import Observation
         active.process.waitUntilExit()
         let id = active.id
         self.active = nil
+        if discarded.remove(gen) != nil {
+            // deleted while it ran: the process may have written until it exited
+            terminal.removeValue(forKey: gen)
+            if let model = catalog.model(id) { try? HubCache.remove(hub: hub, repo: model.repo) }
+            states[id] = .notStarted
+            onFinished?(id)
+            return pump()
+        }
         if terminal.removeValue(forKey: gen) == nil {
             // ended without a last word (killed, crashed): keep what arrived
             let model = catalog.model(id)

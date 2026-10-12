@@ -12,6 +12,16 @@ struct MLXSectionModel {
     var bytesOnDisk: Int64
     var installed: Bool
 
+    /// A download runs or waits; deleting is offered again when it is over.
+    var isDownloading: Bool {
+        rows.contains {
+            switch $0.phase {
+            case .queued, .running: true
+            case .notStarted, .paused, .done: false
+            }
+        }
+    }
+
     @MainActor static func live(_ provider: MLXProvider) -> MLXSectionModel {
         let d = provider.downloads
         let states = Dictionary(uniqueKeysWithValues: d.catalog.models.map { ($0.id, d.state($0.id)) })
@@ -65,6 +75,7 @@ struct MLXSectionContent: View {
                 if model.bytesOnDisk > 0 {
                     ButtonRow(MLXText.storage, subtitle: MLXText.storageDetail(ByteText.size(model.bytesOnDisk)),
                               button: MLXText.deleteModels, style: .secondary, action: delete)
+                        .disabled(model.isDownloading)   // never delete a model under a running download
                 }
             }
         }
