@@ -238,6 +238,34 @@ final class IslandLayoutTests: TestSuite {
     override class func register() {
         let notch = CGSize(width: 185, height: 32)
 
+        test("levels: the recording dot only when the content records") {
+            let plain = IslandLayout.ears(.levels([]))
+            let rec = IslandLayout.ears(.levels([], recording: true))
+            expectEqual(plain.left, IslandLook.badge)
+            expectEqual(rec.left, IslandLook.badge + IslandLook.earSpacing + Metrics.Island.recDot)
+            expect(!IslandContent.levels([0.3]).isRecording && IslandContent.levels([0.3], recording: true).isRecording)
+            expectEqual(IslandContent.levels([0.3], recording: true).withoutBands, .levels([], recording: true))
+        }
+
+        test("an empty title shows the badge alone: the style previews stay compact") {
+            expectEqual(IslandLayout.ears(.progress(title: "")).left, IslandLook.badge)
+            expectEqual(IslandLayout.notchWidth(IslandStyleTile.content, notch: notch, shown: true), 185 + 100)
+        }
+
+        test("the unfolded text's width and line cap have one value each") {
+            expectEqual(IslandCappedHeightLayout.defaultWidth, Metrics.Island.liveWidth)
+            expectEqual(IslandLook.fullTextMaxLines, IslandCappedHeightLayout.maxLines)
+        }
+
+        test("styles: Island at the Notch is offered only when the app reports a busy notch") {
+            expectEqual(IslandStyle.offered(dodges: false), [.auto, .capsule])
+            expectEqual(IslandStyle.offered(dodges: true), [.auto, .island, .capsule])
+            expectEqual(IslandStyle.island.shown(dodges: false), .auto)
+            expectEqual(IslandStyle.island.shown(dodges: true), .island)
+            expectEqual(IslandText.styleNote(.island, dodges: false), IslandText.styleNote(.auto, dodges: false))
+            expect(IslandText.styleNote(.auto, dodges: true) != IslandText.styleNote(.auto, dodges: false))
+        }
+
         test("collapsed: 8 pt narrower than the notch") {
             expectEqual(IslandLayout.notchWidth(.notice(text: "x"), notch: notch, shown: false), 177)
             expectEqual(IslandLayout.notchWidth(nil, notch: notch, shown: true), 177)
@@ -653,6 +681,96 @@ final class IslandControllerTests: TestSuite {
             expectEqual(island.model.hover, .collapsed)
             island.stop()
             expect(island.model.content == nil)
+        }
+
+        test("present over a running progress is a new take: counter and Cancel come again") {
+            let r = Rig()
+            r.show(.progress(title: "A"))
+            r.clock.advance(3)
+            r.island.present(.progress(title: "B", cancel: IslandAction(id: "c", title: "Cancel") {}))
+            r.clock.advance(4.9)
+            expect(r.model.slowSince == nil, "B counts from its own start")
+            r.clock.advance(0.2)
+            expect(r.model.slowSince != nil, "counter 5 s into B")
+            r.clock.advance(5)
+            expect(r.model.slowHint, "card 10 s into B")
+            expectEqual(r.clock.repeating, 2, "heal + pointer tracking for Cancel")
+        }
+
+        test("a display change keeps a running take: slow card, start time, no second start sound") {
+            let r = Rig()
+            r.show(.progress(title: "x", cancel: IslandAction(id: "c", title: "Cancel") {}))
+            let started = r.model.startedAt
+            r.clock.advance(12)
+            expect(r.model.slowHint)
+            r.screens = [Screens.external]
+            r.mouse = CGPoint(x: 2000, y: 100)
+            r.island.screensChanged()
+            r.clock.advance(0.1)
+            expectEqual(r.model.kind, .capsule)
+            expect(r.model.slowHint && r.model.slowSince != nil, "slow state kept")
+            expectEqual(r.model.startedAt, started, "elapsed time kept")
+            expectEqual(r.sounds, ["Tink"])
+        }
+
+        test("self-heal keeps the slow card and its timers") {
+            let r = Rig()
+            r.show(.progress(title: "x"))
+            r.clock.advance(7)
+            expect(r.model.slowSince != nil && !r.model.slowHint)
+            r.host.isReallyOnScreen = false
+            r.clock.advance(1)
+            expect(r.host.rebuilds >= 1)
+            r.host.isReallyOnScreen = true
+            expect(r.model.slowSince != nil, "counter kept")
+            r.clock.advance(2.5)
+            expect(r.model.slowHint, "the 10 s card still comes on time")
+        }
+
+        test("self-heal orders in a panel that was ordered out behind the island's back") {
+            let r = Rig()
+            r.show(.levels([]))
+            r.clock.advance(0.5)
+            let ins = r.host.orderIns.count
+            r.host.isVisible = false
+            r.clock.advance(1)
+            expect(r.host.orderIns.count > ins, "ordered in again")
+            expect(r.host.isVisible)
+        }
+
+        test("present without any screen leaves a running dismiss alone") {
+            let r = Rig()
+            r.show(.notice(text: "x"))
+            r.island.dismiss()
+            r.clock.advance(0.05)
+            r.screens = []
+            r.island.present(.notice(text: "y"))
+            r.clock.advance(1)
+            expectEqual(r.host.orderOuts, 1)
+            expect(r.model.content == nil)
+        }
+
+        test("Cancel and card actions close the island unless they say otherwise") {
+            var ran = 0, closed = 0
+            IslandAction(id: "c", title: "Cancel") { ran += 1 }.run { closed += 1 }
+            IslandAction(id: "k", title: "Keep", dismisses: false) { ran += 1 }.run { closed += 1 }
+            expectEqual(ran, 2)
+            expectEqual(closed, 1)
+        }
+
+        test("expand on hover off: a card with actions shows them folded and takes the pointer, never unfolds") {
+            let r = Rig()
+            r.prefs.hoverExpand = false
+            r.show(.done(title: "y", body: "text", actions: [IslandAction(id: "a", title: "Show") {}]))
+            expect(r.model.foldedActions)
+            expectEqual(r.clock.repeating, 1, "pointer tracking for the buttons")
+            r.pointerOnCard()
+            r.clock.advance(0.1)
+            expect(r.model.acceptsClicks)
+            expectEqual(r.model.hover, .none, "does not unfold")
+            r.prefs.hoverExpand = true
+            r.island.settingsDidChange()
+            expect(!r.model.foldedActions)
         }
     }
 }
