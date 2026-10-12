@@ -1,0 +1,249 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+# Read access to the code is all the checks need; a compromised step cannot push or change the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned Xcode on the macos-26 runner image; scripts/pick-sdk.sh picks the newest SDK this compiler can read.
+  # The build itself never uses xcodebuild or SwiftPM, only swiftc from this developer directory.
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+
+jobs:
+  # The Python checks need no Mac; they run on the cheaper Linux runner.
+  checks:
+    name: Regeln, Texte, Design, Kit, Commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The token stays out of .git/config; no step pushes. The whole history, so the commits of the branch can be
+          # checked against origin/main.
+          persist-credentials: false
+          fetch-depth: 0
+      - name: zsh for the Makefile
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
+      # The commit-msg hook runs only locally and can be skipped; CI repeats author and format for every new commit.
+      - name: Autor und Format aller Commits, die noch nicht auf main liegen
+        run: python3 scripts/check_commit_msg.py --bereich origin/main..HEAD
+      - name: Regeln aus rules/ und CLAUDE.md Teil A ohne Abweichung
+        run: make check-rules
+      - name: Texte in beiden Sprachen, keine Texte in Views
+        run: make check-texts
+      - name: Nur Design-Tokens außerhalb von Kit/Design
+        run: make check-design
+      - name: Kit-Pfade und Pflichtprüfungen unverändert
+        run: make check-kit
+
+  build:
+    name: Build (${{ matrix.modules || 'starter.json' }})
+    runs-on: macos-26
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        modules:
+          - ""
+          - window
+          - menubar
+          - window,menubar
+          - menubar,island
+          - menubar,background
+          - window,hotkeys
+          - window,ai
+          - window,ai,mlx
+          - window,menubar,island,background,hotkeys,ai,mlx,examples
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Werkzeuge
+        run: make doctor
+      - name: make build
+        env:
+          COMBO: ${{ matrix.modules }}
+        run: make build MODULES="$COMBO"
+      - name: Signatur und Selbsttest ohne Fenster
+        run: |
+          source build/gen/app.env
+          codesign --verify --strict "build/$APP_NAME.app"
+          STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
+
+  release-build:
+    name: Release-Build
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: make build CONFIG=release
+        run: make build CONFIG=release
+      - name: Selbsttest ohne Fenster
+        run: |
+          source build/gen/app.env
+          STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
+
+  test:
+    name: make test
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Swift- und Python-Tests
+        run: make test
+
+  shots:
+    name: Renders (en, de, hell, dunkel)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: make shots
+        run: make shots
+      - name: Renders als Artefakt
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: shots-${{ github.run_id }}
+          path: build/shots/
+          retention-days: 14
+          if-no-files-found: error
+
+  dmg:
+    name: DMG
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: make dmg (ad hoc signiert)
+        run: make dmg
+      - name: DMG prüfen, ohne Finder
+        run: |
+          dmg="$(ls build/dmg/*.dmg | head -1)"
+          mnt="$RUNNER_TEMP/dmg"
+          mkdir -p "$mnt"
+          hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$dmg"
+          ls -la "$mnt"
+          source build/gen/app.env
+          codesign --verify --deep --strict "$mnt/$APP_NAME.app"
+          hdiutil detach "$mnt"
+      - name: DMG als Artefakt
+        uses: actions/upload-artifact@v7
+        with:
+          name: dmg-${{ github.ref_name }}
+          path: build/dmg/*.dmg
+          retention-days: 30
+          if-no-files-found: error
+
+  # A new project the way "Use this template" makes one: a fresh copy without the starter's history, bin/starter init,
+  # then the checks of a project. It fails when the starter only works in its own repository.
+  template-probe:
+    name: Template-Probe
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Frische Kopie ohne Verlauf des Starters
+        run: |
+          mkdir -p "$RUNNER_TEMP/probe"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/probe"
+          cd "$RUNNER_TEMP/probe"
+          git init --quiet
+          git config user.name "Probe"
+          git config user.email "probe@example.org"
+          git add -A
+          git commit --quiet -m "chore: template copy"
+      - name: bin/starter init
+        working-directory: ${{ runner.temp }}/probe
+        run: bin/starter init --non-interactive --name Probe --bundle-id org.example.probe
+      # init empties the starter's commit identity; until the project enters its own, the hook refuses every commit.
+      - name: Ohne eigene Commit-Identität nimmt der Hook keinen Commit an
+        working-directory: ${{ runner.temp }}/probe
+        run: |
+          make hooks
+          git add -A
+          if git commit --quiet -m "chore(setup): set up the project"; then
+            echo "Commit ohne Commit-Identität in starter.json angenommen"
+            exit 1
+          fi
+      - name: make check
+        working-directory: ${{ runner.temp }}/probe
+        run: make check
+
+  # Removing a module must leave a project that builds and passes its tests. Each run removes one module from a fresh
+  # project; "alle" removes every removable module and checks that the last app form cannot go.
+  module-removal:
+    name: Modul entfernen (${{ matrix.modul }})
+    runs-on: macos-26
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        modul: [window, menubar, island, background, hotkeys, "mlx,ai", examples, alle]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Frische Kopie und bin/starter init
+        run: |
+          mkdir -p "$RUNNER_TEMP/probe"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/probe"
+          cd "$RUNNER_TEMP/probe"
+          git init --quiet
+          git config user.name "Probe"
+          git config user.email "probe@example.org"
+          git add -A
+          git commit --quiet -m "chore: template copy"
+          bin/starter init --non-interactive --name Probe --bundle-id org.example.probe
+      - name: Modul entfernen
+        working-directory: ${{ runner.temp }}/probe
+        env:
+          MODUL: ${{ matrix.modul }}
+        run: |
+          case "$MODUL" in
+            alle)
+              for name in island background hotkeys mlx ai; do bin/starter remove "$name" --ohne-build; done
+              bin/starter strip-examples
+              bin/starter remove window --ohne-build
+              if bin/starter remove menubar --ohne-build; then
+                echo "menubar ließ sich als letzte App-Form entfernen"
+                exit 1
+              fi
+              ;;
+            examples) bin/starter strip-examples ;;
+            *)
+              for name in ${MODUL//,/ }; do bin/starter remove "$name" --ohne-build; done
+              ;;
+          esac
+          git add -A
+      - name: Build, Selbsttest, Tests
+        working-directory: ${{ runner.temp }}/probe
+        run: |
+          make build
+          source build/gen/app.env
+          STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
+          make test
+      - name: Keine Reste des Moduls
+        working-directory: ${{ runner.temp }}/probe
+        run: make check-kit
