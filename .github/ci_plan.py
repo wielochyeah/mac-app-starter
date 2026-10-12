@@ -33,6 +33,8 @@ FALLBACK_MODULES = {
 FALLBACK_AT_LEAST_ONE = [["window", "menubar"]]
 
 # The app forms and the modules that build on them. Each combination must still compile without the others.
+# The examples combinations build each `#if MODUL_<NAME>` part of the notes example on its own; they drop out
+# once a project runs bin/starter strip-examples.
 COMBOS = [
     "window",
     "menubar",
@@ -42,6 +44,12 @@ COMBOS = [
     "window,hotkeys",
     "window,ai",
     "window,ai,mlx",
+    "window,examples",
+    "menubar,examples",
+    "menubar,island,examples",
+    "window,ai,examples",
+    "menubar,hotkeys,examples",
+    "window,background,examples",
 ]
 
 

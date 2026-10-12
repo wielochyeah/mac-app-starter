@@ -1,7 +1,7 @@
 name: CI
 
 # Every push gets the cheap jobs (checks on Linux, make check on one Mac). The module matrix, the release build, the
-# renders and the template probes cost about 20 macOS jobs; they run for pull requests, on the default branch and on
+# renders and the template probes cost about 27 macOS jobs; they run for pull requests, on the default branch and on
 # version tags only (condition "full" below), not for every hourly backup push of a working branch.
 on:
   push:

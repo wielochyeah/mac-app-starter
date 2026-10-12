@@ -105,7 +105,7 @@ Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. 
 | `Template-Probe`, `Modul entfernen (<modul>)` | dazu nur im Starter selbst |
 | `DMG` | Tags `v*` |
 
-Der Job `Plan` (`.github/ci_plan.py`) liest aus den Ordnern unter `App/Sources/Modules/`, welche Module es noch gibt: Kombinationen mit einem entfernten Modul fallen weg, und die Proben des Starters laufen in einem Projekt nicht. Die stündlichen Sicherungs-Pushes eines Arbeits-Branches kosten so einen Mac-Job statt rund zwanzig; Minuten auf macOS-Runnern zählen in privaten Repositorys mehrfach. Wer weiter sparen muss, kürzt `COMBOS` in `.github/ci_plan.py`, nie die Prüfungen.
+Der Job `Plan` (`.github/ci_plan.py`) liest aus den Ordnern unter `App/Sources/Modules/`, welche Module es noch gibt: Kombinationen mit einem entfernten Modul fallen weg, und die Proben des Starters laufen in einem Projekt nicht. Die stündlichen Sicherungs-Pushes eines Arbeits-Branches kosten so einen Mac-Job statt rund 27 (im Starter; ein Projekt ohne Beispiele und mit weniger Modulen hat weniger); Minuten auf macOS-Runnern zählen in privaten Repositorys mehrfach. Wer weiter sparen muss, kürzt `COMBOS` in `.github/ci_plan.py`, nie die Prüfungen.
 
 ## 6. Verteilen
 

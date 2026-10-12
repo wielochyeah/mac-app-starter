@@ -699,7 +699,8 @@ class CiPlanTests(unittest.TestCase):
     def test_project_without_menubar_and_island_drops_their_jobs(self):
         result = ci_plan.plan(self.make_tree(["Window", "AI", "MLX", "Examples"], "Notizen"))
         self.assertEqual(result["starter"], "false")
-        self.assertEqual(result["combos"], ["window", "window,ai", "window,ai,mlx", "window,ai,mlx,examples"])
+        self.assertEqual(result["combos"], ["window", "window,ai", "window,ai,mlx", "window,examples", "window,ai,examples",
+                                            "window,ai,mlx,examples"])
         removals = {entry["name"]: entry for entry in result["removals"]}
         self.assertNotIn("window", removals)  # the last app form: bin/starter refuses it
         self.assertEqual(removals["alle"], {"name": "alle", "remove": "mlx ai", "strip": True, "last": "window"})
