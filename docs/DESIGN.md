@@ -108,7 +108,7 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 ```
 
 - Kopfband 52 pt mit Squircle-Symbol und Titel, Spalte bis 640 pt links bündig, Gruppen 20 pt auseinander.
-- Zeilen: `ToggleRow`, `PickerRow` (Segmente oder Menü), `ValueRow` (mit `ValueCapsule`), `ButtonRow`, `LinkRow`, `NavigationRow`; Hover über `HoverButton`.
+- Zeilen: `ToggleRow`, `PickerRow` (Segmente oder Menü), `ValueRow` (mit `ValueCapsule`), `ButtonRow`, `ConfirmRow` (fragt an Ort und Stelle vor einer Aktion, die sich nicht rückgängig machen lässt: Abbrechen ist die Hauptaktion und liegt auf `Esc`, die Aktion steht rot auf einem ruhigen Knopf ohne Taste), `LinkRow`, `NavigationRow`; Hover über `HoverButton`.
 - Hinweise: `InlineNotice` mit `info`, `success`, `warning`, `error` und höchstens einer Aktion.
 - Downloads und lange Arbeiten: `ProgressRow` mit Rolle, Name, Phase (wartet, läuft, pausiert, fertig) und Bytes über `ByteText` („1,4 von 3,0 GB“).
 - Listen mit Suche: `ListCard` mit `ListSearch.matches` (Groß- und Kleinschreibung und Akzente egal), leer mit Titel und einem Satz; Zähler in der Seitenleiste mit `CountBadge`.

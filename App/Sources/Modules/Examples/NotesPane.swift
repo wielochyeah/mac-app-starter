@@ -46,7 +46,8 @@ struct NotesPane: View {
             }
             SettingsSection(NotesText.samplesSection) {
                 if confirming || confirmingReload {
-                    NotesReloadConfirmation(cancel: { setConfirming(false) }, confirm: reload)
+                    ConfirmRow(NotesText.reloadConfirmTitle, text: NotesText.reloadConfirmText, button: NotesText.reloadConfirmButton,
+                               cancel: { setConfirming(false) }, confirm: reload)
                 } else {
                     Row(NotesText.reloadSamples, subtitle: reloaded ? nil : NotesText.reloadSamplesDetail) {
                         if reloaded {
@@ -89,45 +90,5 @@ struct NotesPane: View {
     private static func reveal(_ url: URL) {
         guard !RenderMode.isStatic, !RenderMode.isHeadless else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
-    }
-}
-
-/// The reload row while asking: what happens, Reload, Cancel. Cancel is the prominent button and
-/// Esc presses it; Reload is red text on a quiet button without a key equivalent (the reset of
-/// the General pane does the same).
-private struct NotesReloadConfirmation: View {
-    let cancel: () -> Void
-    let confirm: () -> Void
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        let t = Theme(scheme)
-        VStack(alignment: .leading, spacing: Space.s) {
-            HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .symbolFont(Metrics.noticeIcon, weight: .semibold)
-                    .foregroundStyle(t.warn)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: Space.hair) {
-                    Text(NotesText.reloadConfirmTitle).font(TypeScale.bodySemibold).foregroundStyle(t.fg)
-                    Text(NotesText.reloadConfirmText)
-                        .font(TypeScale.subtitle)
-                        .foregroundStyle(t.fg2)
-                        .lineSpacing(TypeScale.footnoteLineSpacing)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            HStack(spacing: Space.xs) {
-                Spacer(minLength: 0)
-                Button(action: confirm) { Text(NotesText.reloadConfirmButton).foregroundStyle(t.destructive) }
-                    .buttonStyle(.secondary)
-                Button(CommonText.cancel, action: cancel)
-                    .buttonStyle(.primary)
-                    .keyboardShortcut(.cancelAction)
-            }
-        }
-        .padding(.horizontal, Space.rowX)
-        .padding(.vertical, Space.s)
-        .transition(.opacity)
     }
 }

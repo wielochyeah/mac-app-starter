@@ -110,7 +110,7 @@ final class PatternsTests: TestSuite {
             let gallery = Set(Registry.gallery.map(\.id))
             for name in ["onboarding-page", "onboarding-header", "onboarding-hero", "onboarding-footnote", "onboarding-hint",
                          "onboarding-status-slot", "onboarding-tile-picker", "onboarding-rich-text", "onboarding-footer",
-                         "pane-scaffold", "settings-section", "toggle-row", "picker-row", "value-row", "button-row", "link-row",
+                         "pane-scaffold", "settings-section", "toggle-row", "picker-row", "value-row", "button-row", "confirm-row", "link-row",
                          "navigation-row", "inline-notice", "progress-row", "list-card", "count-badge", "search-field",
                          "sample-pane", "sample-step", "sample-permission"] {
                 expect(scenes.contains("patterns.\(name)"), "scene patterns.\(name)")

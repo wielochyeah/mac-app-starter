@@ -113,7 +113,8 @@ struct GeneralPane: View {
                     }
                 }
                 if confirming || confirmingReset {
-                    ResetConfirmation(cancel: { setConfirming(false) }, confirm: reset)
+                    ConfirmRow(SettingsText.resetConfirmTitle, text: SettingsText.resetConfirmText, button: SettingsText.resetConfirmButton,
+                               cancel: { setConfirming(false) }, confirm: reset)
                 } else {
                     Row(SettingsText.reset, subtitle: didReset ? nil : SettingsText.resetDetail) {
                         if didReset {
@@ -136,45 +137,5 @@ struct GeneralPane: View {
         setConfirming(false)
         didReset = true
         DispatchQueue.main.asyncAfter(deadline: .now() + Motion.doneHold) { didReset = false }
-    }
-}
-
-/// The reset row while asking: what happens, Reset, Cancel. Cancel is the prominent button and Esc
-/// presses it; Reset is red text on a quiet button with no key equivalent, so Return never resets.
-private struct ResetConfirmation: View {
-    let cancel: () -> Void
-    let confirm: () -> Void
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        let t = Theme(scheme)
-        VStack(alignment: .leading, spacing: Space.s) {
-            HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .symbolFont(Metrics.noticeIcon, weight: .semibold)
-                    .foregroundStyle(t.warn)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: Space.hair) {
-                    Text(SettingsText.resetConfirmTitle).font(TypeScale.bodySemibold).foregroundStyle(t.fg)
-                    Text(SettingsText.resetConfirmText)
-                        .font(TypeScale.subtitle)
-                        .foregroundStyle(t.fg2)
-                        .lineSpacing(TypeScale.footnoteLineSpacing)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            HStack(spacing: Space.xs) {
-                Spacer(minLength: 0)
-                // the label carries its own colour: the button style sets the default text colour
-                Button(action: confirm) { Text(SettingsText.resetConfirmButton).foregroundStyle(t.destructive) }
-                    .buttonStyle(.secondary)
-                Button(CommonText.cancel, action: cancel)
-                    .buttonStyle(.primary)
-                    .keyboardShortcut(.cancelAction)
-            }
-        }
-        .padding(.horizontal, Space.rowX)
-        .padding(.vertical, Space.s)
-        .transition(.opacity)
     }
 }

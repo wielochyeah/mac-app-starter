@@ -184,6 +184,65 @@ struct ValueCapsule: View {
 /// full secondary / primary button for the one action that matters on the pane.
 enum ButtonRowStyle { case chip, secondary, primary }
 
+/// Asks in place before a destructive action, instead of the row that started it: what happens,
+/// the action as red text on a quiet button, Cancel as the prominent button that Esc presses.
+/// Return never confirms. Swap it in with `Motion.expand`:
+///
+///     if confirming {
+///         ConfirmRow(SettingsText.resetConfirmTitle, text: SettingsText.resetConfirmText,
+///                    button: SettingsText.resetConfirmButton, cancel: { confirming = false }, confirm: reset)
+///     } else {
+///         ButtonRow(SettingsText.reset, button: SettingsText.resetButton) { confirming = true }
+///     }
+struct ConfirmRow: View {
+    let title: String
+    let text: String
+    let button: String
+    let cancel: () -> Void
+    let confirm: () -> Void
+    @Environment(\.colorScheme) private var scheme
+
+    init(_ title: String, text: String, button: String, cancel: @escaping () -> Void, confirm: @escaping () -> Void) {
+        self.title = title
+        self.text = text
+        self.button = button
+        self.cancel = cancel
+        self.confirm = confirm
+    }
+
+    var body: some View {
+        let t = Theme(scheme)
+        VStack(alignment: .leading, spacing: Space.s) {
+            HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .symbolFont(Metrics.noticeIcon, weight: .semibold)
+                    .foregroundStyle(t.warn)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: Space.hair) {
+                    Text(title).font(TypeScale.bodySemibold).foregroundStyle(t.fg)
+                    Text(text)
+                        .font(TypeScale.subtitle)
+                        .foregroundStyle(t.fg2)
+                        .lineSpacing(TypeScale.footnoteLineSpacing)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            HStack(spacing: Space.xs) {
+                Spacer(minLength: 0)
+                // the label carries its own colour: the button style sets the default text colour
+                Button(action: confirm) { Text(button).foregroundStyle(t.destructive) }
+                    .buttonStyle(.secondary)
+                Button(CommonText.cancel, action: cancel)
+                    .buttonStyle(.primary)
+                    .keyboardShortcut(.cancelAction)
+            }
+        }
+        .padding(.horizontal, Space.rowX)
+        .padding(.vertical, Space.s)
+        .transition(.opacity)
+    }
+}
+
 /// A row with one action ("Show in Finder", "Reset…", "Add App…").
 struct ButtonRow: View {
     let title: String

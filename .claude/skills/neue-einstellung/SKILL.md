@@ -11,7 +11,7 @@ description: Legt eine Einstellung mit typisiertem Schlüssel an und zeigt sie i
 |---|---|---|
 | Schlüssel | `App/Sources/Kit/Core/Settings.swift` | `SettingKey<Value>(_ name:, default:)`, `Settings.shared[.key]`, `reset(_:)`, `hasValue(_:)` |
 | Bereich | `App/Sources/Kit/Core/Registry.swift` | `SettingsPane(id:group:order:title:symbol:tint:content:)`, Gruppen `.content` (oben) und `.settings` (unten) |
-| Muster | `App/Sources/Kit/Design/Patterns/PaneScaffold.swift`, `SettingsRows.swift`, `InlineNotice.swift`, `TilePicker.swift`, `ProgressRow.swift`, `ListCard.swift` | `PaneScaffold`, `SettingsSection`, `ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `LinkRow`, `NavigationRow`, `InlineNotice`, `TilePicker`, `ListCard` |
+| Muster | `App/Sources/Kit/Design/Patterns/PaneScaffold.swift`, `SettingsRows.swift`, `InlineNotice.swift`, `TilePicker.swift`, `ProgressRow.swift`, `ListCard.swift` | `PaneScaffold`, `SettingsSection`, `ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `ConfirmRow`, `LinkRow`, `NavigationRow`, `InlineNotice`, `TilePicker`, `ListCard` |
 | Deep Link | `App/Sources/Kit/Main/AppActions.swift` | `AppActions.openSettings(pane: "<id>")` |
 | Zurücksetzen | `App/Sources/Kit/Settings/GeneralPane.swift` | `SettingsReset.keep(_:)` für Zustände, `SettingsReset.didReset` für Werte im Speicher |
 
@@ -41,7 +41,7 @@ Einstellungen liegen als JSON in `~/Library/Application Support/<bundleId>/setti
    }
    ```
 
-   Gruppen sind `SettingsSection`, Zeilen die Muster; Haarlinien setzt `SettingsSection` selbst. Ein Suchfeld steht im Kopfband (`PaneScaffold(…) { SearchField(text: $query) } content: { … }`), Listen mit eigenem Scrollen nutzen `layout: .fill`.
+   Gruppen sind `SettingsSection`, Zeilen die Muster; Haarlinien setzt `SettingsSection` selbst. Eine Aktion, die sich nicht rückgängig machen lässt (zurücksetzen, löschen), fragt an Ort und Stelle: die Zeile mit dem Knopf weicht mit `Motion.expand` einer `ConfirmRow(titel, text:, button:, cancel:, confirm:)`, wie in „Allgemein“ bei „Einstellungen zurücksetzen“. Ein Suchfeld steht im Kopfband (`PaneScaffold(…) { SearchField(text: $query) } content: { … }`), Listen mit eigenem Scrollen nutzen `layout: .fill`.
 4. Registrieren: `Registry.settingsPanes.append(SettingsPane(id: "notes", group: .settings, order: 300, title: { NotesText.pane }, symbol: "note.text", tint: .yellow, content: { AnyView(NotesPane()) }))`. Kit-Bereiche: „Allgemein“ hat `order: 0`, „Über“ `order: 1000`.
 5. Texte in `<Name>Text.swift`, beide Sprachen; Fußnoten erklären Folgen in einem Satz.
 6. Render-Szene `<feature>.pane` mit Beispielwerten; bei Zuständen (Berechtigung fehlt, nichts eingerichtet) je eine Szene.

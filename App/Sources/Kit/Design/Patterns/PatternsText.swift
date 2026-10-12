@@ -50,6 +50,7 @@ enum PatternsText {
     static var pickerRow: String { tr(en: "Picker row", de: "Auswahlzeile") }
     static var valueRow: String { tr(en: "Value row", de: "Wertzeile") }
     static var buttonRow: String { tr(en: "Button row", de: "Tastenzeile") }
+    static var confirmRow: String { tr(en: "Confirmation row", de: "Rückfragezeile") }
     static var linkRow: String { tr(en: "Link row", de: "Linkzeile") }
     static var navigationRow: String { tr(en: "Navigation row", de: "Navigationszeile") }
     static var inlineNotice: String { tr(en: "Notice", de: "Hinweisfeld") }
@@ -110,6 +111,12 @@ enum PatternsSampleText {
     static var deleteHistory: String { tr(en: "Delete history", de: "Verlauf löschen") }
     static var deleteHistoryDetail: String { tr(en: "Removes every saved entry", de: "Entfernt alle gesicherten Einträge") }
     static var delete: String { tr(en: "Delete…", de: "Löschen …") }
+    static var deleteHistoryConfirm: String { tr(en: "Delete the whole history?", de: "Den ganzen Verlauf löschen?") }
+    static var deleteHistoryConfirmText: String {
+        tr(en: "Every saved entry is removed from this Mac. This cannot be undone.",
+           de: "Jeder gesicherte Eintrag wird von diesem Mac entfernt. Das lässt sich nicht rückgängig machen.")
+    }
+    static var deleteNow: String { tr(en: "Delete", de: "Löschen") }
     static var shortcuts: String { tr(en: "Keyboard shortcuts", de: "Kurzbefehle") }
     static var shortcutsDetail: String { tr(en: "4 shortcuts", de: "4 Kurzbefehle") }
     static var privacy: String { tr(en: "Privacy & Security", de: "Datenschutz & Sicherheit") }

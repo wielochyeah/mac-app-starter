@@ -42,6 +42,7 @@ enum PatternsKit {
             Item(id: "picker-row", title: { PatternsText.pickerRow }) { AnyView(PickerRowSample()) },
             Item(id: "value-row", title: { PatternsText.valueRow }) { AnyView(ValueRowSample()) },
             Item(id: "button-row", title: { PatternsText.buttonRow }) { AnyView(ButtonRowSample()) },
+            Item(id: "confirm-row", title: { PatternsText.confirmRow }) { AnyView(ConfirmRowSample()) },
             Item(id: "link-row", title: { PatternsText.linkRow }) { AnyView(LinkRowSample()) },
             Item(id: "navigation-row", title: { PatternsText.navigationRow }) { AnyView(NavigationRowSample()) },
             Item(id: "inline-notice", title: { PatternsText.inlineNotice }) { AnyView(NoticeSample()) },
@@ -352,6 +353,15 @@ private struct ButtonRowSample: View {
                       button: PatternsSampleText.showInFinder) {}
             ButtonRow(PatternsSampleText.deleteHistory, subtitle: PatternsSampleText.deleteHistoryDetail,
                       button: PatternsSampleText.delete, style: .secondary) {}
+        }
+    }
+}
+
+private struct ConfirmRowSample: View {
+    var body: some View {
+        SettingsSection {
+            ConfirmRow(PatternsSampleText.deleteHistoryConfirm, text: PatternsSampleText.deleteHistoryConfirmText,
+                       button: PatternsSampleText.deleteNow, cancel: {}, confirm: {})
         }
     }
 }
