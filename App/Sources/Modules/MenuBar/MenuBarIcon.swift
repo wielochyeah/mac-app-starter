@@ -21,9 +21,8 @@ enum MenuBarIconMetrics {
     static let ringSweep: CGFloat = 120
     static let ringTrackAlpha: CGFloat = 0.3
     /// One turn of the ring in `frames` steps, one step every `frameInterval` (12 fps while busy).
-    // design-ausnahme: frame rate of the drawn status item, no Motion token for AppKit timers (Kit candidate)
+    /// Kit candidate: Motion has no token for AppKit timers yet.
     static let frames = 12
-    // design-ausnahme: frame rate of the drawn status item, no Motion token for AppKit timers (Kit candidate)
     static let frameInterval: TimeInterval = 1.0 / 12
     /// Enlargement of the icons in the `menubar.icon-states` render.
     static let renderScale: CGFloat = 4

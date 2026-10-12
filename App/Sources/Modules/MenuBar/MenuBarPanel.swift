@@ -213,9 +213,7 @@ enum MenuBarPanelMetrics {
     static let toggleCircle: CGFloat = 28
     /// Fades of the AppKit panel. `Motion.fade` is a SwiftUI `Animation` and `NSAnimationContext`
     /// needs seconds; fade in matches its 0.12 s. Kit candidate: `Motion.panelFadeIn/Out`.
-    // design-ausnahme: AppKit fade durations, Motion has only SwiftUI animations (Kit candidate)
     static let fadeIn: TimeInterval = 0.12
-    // design-ausnahme: AppKit fade durations, Motion has only SwiftUI animations (Kit candidate)
     static let fadeOut: TimeInterval = 0.16
     /// A click on the item within this time after the panel closed does not reopen it.
     static let reopenGuard: TimeInterval = 0.3
