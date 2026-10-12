@@ -5,5 +5,5 @@
 de-light/window.main.png
 de-dark/settings.window.png
 de-light/onboarding.welcome.png
-en-dark/island.done-card.png
+en-dark/island.done.png
 en-light/menubar.panel.png

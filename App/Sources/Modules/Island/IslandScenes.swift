@@ -93,7 +93,8 @@ enum IslandScenes {
         })
     }
 
-    static let paneSize = CGSize(width: 680, height: 760)
+    /// Tall enough for the whole German pane with its bottom inset (it scrolls in the window).
+    static let paneSize = CGSize(width: 680, height: 800)
     static var narrowPaneSize: CGSize {
         CGSize(width: Metrics.settingsWindowMin.width - Metrics.sidebarWidth, height: 900)
     }
