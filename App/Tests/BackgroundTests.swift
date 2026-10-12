@@ -7,11 +7,13 @@ import SwiftUI
 /// Records schedule/cancel calls and fires on demand (no real scheduler, no waiting).
 final class FakeJobScheduler: JobScheduling {
     private(set) var scheduled: [String: JobSchedule] = [:]
+    private(set) var delays: [String: TimeInterval] = [:]
     private(set) var fires: [String: @MainActor () async -> Void] = [:]
     private(set) var cancels: [String] = []
 
-    func schedule(_ schedule: JobSchedule, fire: @escaping @MainActor () async -> Void) {
+    func schedule(_ schedule: JobSchedule, after delay: TimeInterval, fire: @escaping @MainActor () async -> Void) {
         scheduled[schedule.id] = schedule
+        delays[schedule.id] = delay
         fires[schedule.id] = fire
     }
 
@@ -169,6 +171,46 @@ final class BackgroundTests: TestSuite {
             jobs.stop()
             expectEqual(scheduler.scheduled.count, 0)
             expectEqual(Set(scheduler.cancels), ["on", "off", "late"])
+        }
+
+        test("exact jobs get at most a second of tolerance by default") {
+            expectEqual(JobSchedule.defaultTolerance(interval: 3600, exact: false), 900)
+            expectEqual(JobSchedule.defaultTolerance(interval: 60, exact: true), 1)
+            expectEqual(JobSchedule.defaultTolerance(interval: 5, exact: true), 0.5)
+            let jobs = make()
+            jobs.register(id: "tick", title: { "Tick" }, interval: 60, exact: true) { .done() }
+            expectEqual(jobs.job("tick")?.schedule.tolerance, 1)
+            jobs.register(id: "own", title: { "Own" }, interval: 60, tolerance: 5, exact: true) { .done() }
+            expectEqual(jobs.job("own")?.schedule.tolerance, 5, "an explicit tolerance stays")
+        }
+
+        test("first run: overdue or never run soon after launch, else the rest of the interval") {
+            let now = Date(timeIntervalSince1970: 1_800_000_000)
+            let grace = JobBook.launchGrace
+            expectEqual(JobBook.firstDelay(lastEnd: nil, interval: 86_400, now: now), grace)
+            expectEqual(JobBook.firstDelay(lastEnd: now.addingTimeInterval(-2 * 86_400), interval: 86_400, now: now), grace)
+            expectEqual(JobBook.firstDelay(lastEnd: now.addingTimeInterval(-20 * 60), interval: 3600, now: now), 40 * 60)
+            expectEqual(JobBook.firstDelay(lastEnd: now.addingTimeInterval(-3598), interval: 3600, now: now), grace, "not sooner than the grace")
+            expectEqual(JobBook.firstDelay(lastEnd: now.addingTimeInterval(600), interval: 3600, now: now), 3600, "clock went back")
+        }
+
+        test("start uses the stored last run: a weekly job overdue after restarts runs, a fresh one waits") {
+            let clock = TestClock()
+            let scheduler = FakeJobScheduler()
+            let store = MemoryJobStore([
+                "weekly": JobRecord(lastStart: clock.now.addingTimeInterval(-8 * 86_400), lastEnd: clock.now.addingTimeInterval(-8 * 86_400),
+                                    outcome: .done(), runs: 3),
+                "hourly": JobRecord(lastStart: clock.now.addingTimeInterval(-900), lastEnd: clock.now.addingTimeInterval(-900),
+                                    outcome: .done(), runs: 9),
+            ])
+            let jobs = make(store: store, scheduler: scheduler, clock: clock)
+            jobs.register(id: "weekly", title: { "W" }, interval: 7 * 86_400) { .done() }
+            jobs.register(id: "hourly", title: { "H" }, interval: 3600) { .done() }
+            jobs.register(id: "new", title: { "N" }, interval: 86_400) { .done() }
+            jobs.start()
+            expectEqual(scheduler.delays["weekly"], JobBook.launchGrace)
+            expectEqual(scheduler.delays["hourly"], 2700)
+            expectEqual(scheduler.delays["new"], JobBook.launchGrace)
         }
 
         test("switching a job off cancels it, on schedules it, and the choice is saved") {

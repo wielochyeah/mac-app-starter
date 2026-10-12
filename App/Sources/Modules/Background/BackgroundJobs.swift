@@ -51,6 +51,20 @@ nonisolated enum JobBook {
         if let described = (error as? LocalizedError)?.errorDescription, !described.isEmpty { return described }
         return error.localizedDescription
     }
+
+    /// Seconds after launch before an overdue or never-run job runs (lets the launch settle).
+    static let launchGrace: TimeInterval = 10
+
+    /// When a job's first run after scheduling is due (pure, tested). Schedulers start their clock
+    /// when a job is scheduled, so without this a daily job would only run after a full day of
+    /// uptime, and an app quit more often than that would never run it. Never run or overdue: after
+    /// `launchGrace`. Else the rest of the interval since the last run.
+    static func firstDelay(lastEnd: Date?, interval: TimeInterval, now: Date) -> TimeInterval {
+        guard let lastEnd else { return launchGrace }
+        let elapsed = now.timeIntervalSince(lastEnd)
+        if elapsed < 0 { return interval }   // the clock went back: wait one interval
+        return max(interval - elapsed, launchGrace)
+    }
 }
 
 /// When a job runs. `exact: false` (default) hands timing to macOS (`NSBackgroundActivityScheduler`:
@@ -62,6 +76,12 @@ nonisolated struct JobSchedule: Equatable, Sendable {
     let tolerance: TimeInterval
     let qos: QualityOfService
     let exact: Bool
+
+    /// Default tolerance (pure, tested): a quarter of the interval lets macOS batch regular jobs;
+    /// `exact` jobs get at most a second (a tenth of shorter intervals).
+    static func defaultTolerance(interval: TimeInterval, exact: Bool) -> TimeInterval {
+        exact ? min(1, interval / 10) : interval / 4
+    }
 }
 
 extension SettingKey {
@@ -73,13 +93,20 @@ extension SettingKey {
 ///
 ///     BackgroundJobs.shared.register(id: "cleanup", title: { MyText.cleanup }, interval: 6 * 3600) {
 ///         let removed = try await Cache.shared.removeExpired()        // runs off the main actor
-///         return removed > 0 ? .done(note: MyText.removed(removed)) : .nothingToDo
+///         guard removed > 0 else { return .nothingToDo }
+///         return .done(note: await MainActor.run { MyText.removed(removed) })   // texts live on the main actor
 ///     }
 ///
 /// Jobs are scheduled at launch (and at once when registered later), run at most once at a time,
 /// can be switched off per job, and record their last run, outcome and duration (SQLite in
-/// Application Support, opened only when a job exists). The Background settings pane lists them with a
-/// "Run Now" button. `@Observable`, so that list follows runs live.
+/// Application Support, opened only when a job exists). A job whose last run is longer ago than
+/// its interval (or that never ran) runs shortly after launch, then on its interval. The
+/// Background settings pane lists them with a "Run Now" button. `@Observable`, so that list
+/// follows runs live.
+///
+/// The note of `.done(note:)` and the message of `.failed` are stored and shown as given: they
+/// keep the language they were written in until the job runs again (a language switch does not
+/// translate them). Error messages from `localizedDescription` follow the system language.
 @Observable final class BackgroundJobs {
     static let shared = BackgroundJobs()
 
@@ -116,7 +143,8 @@ extension SettingKey {
 
     // MARK: Registration
 
-    /// Adds a job. `tolerance` defaults to a quarter of the interval (lets macOS batch work).
+    /// Adds a job. `tolerance` defaults to a quarter of the interval (lets macOS batch work), at
+    /// most a second for `exact` jobs.
     /// A second registration with the same id is ignored (logged).
     func register(id: String, title: @escaping () -> String, interval: TimeInterval, tolerance: TimeInterval? = nil,
                   qos: QualityOfService = .utility, exact: Bool = false,
@@ -125,7 +153,8 @@ extension SettingKey {
             Log.error("background: job \(id) registered twice, keeping the first", "background")
             return
         }
-        let spec = JobSchedule(id: id, interval: max(interval, 1), tolerance: tolerance ?? interval / 4, qos: qos, exact: exact)
+        let spec = JobSchedule(id: id, interval: max(interval, 1), tolerance: tolerance ?? JobSchedule.defaultTolerance(interval: max(interval, 1), exact: exact),
+                               qos: qos, exact: exact)
         let job = Job(id: id, title: title, schedule: spec, run: run)
         jobs.append(job)
         loadIfNeeded()
@@ -151,7 +180,8 @@ extension SettingKey {
 
     private func schedule(_ job: Job) {
         let id = job.id
-        scheduler.schedule(job.schedule) { [weak self] in
+        let delay = JobBook.firstDelay(lastEnd: record(id).lastEnd, interval: job.schedule.interval, now: now())
+        scheduler.schedule(job.schedule, after: delay) { [weak self] in
             guard let self, self.isEnabled(id) else { return }
             await self.perform(id)
         }
