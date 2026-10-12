@@ -19,6 +19,8 @@ enum Space {
     /// Row insets inside a card.
     static let rowX: CGFloat = 12
     static let rowY: CGFloat = 9
+    /// Between a squircle icon and its title (pane header, sidebar rows), VoiceBud hub.
+    static let iconGap: CGFloat = 9
 }
 
 /// Corner radii, always used with `style: .continuous`.

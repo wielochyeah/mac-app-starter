@@ -16,13 +16,6 @@ enum SettingsKit {
     }
 }
 
-enum SettingsText {
-    static var general: String { tr(en: "General", de: "Allgemein") }
-    static var about: String { tr(en: "About", de: "Über") }
-    static var language: String { tr(en: "Language", de: "Sprache") }
-    static var interface: String { tr(en: "Interface", de: "Oberfläche") }
-}
-
 @Observable final class SettingsSelection {
     static let shared = SettingsSelection()
     var pane: String = "general"
@@ -46,7 +39,7 @@ private struct SettingsRootStub: View {
             VStack(alignment: .leading, spacing: Space.hair) {
                 ForEach(panes) { pane in
                     Button { selection.pane = pane.id } label: {
-                        HStack(spacing: Space.s - 2) {
+                        HStack(spacing: Space.iconGap) {
                             SquircleIcon(symbol: pane.symbol, tint: pane.tint)
                             Text(pane.title()).font(TypeScale.body).foregroundStyle(t.fg)
                             Spacer(minLength: 0)

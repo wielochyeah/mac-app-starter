@@ -12,10 +12,6 @@ enum GalleryKit {
     }
 }
 
-enum GalleryText {
-    static var title: String { tr(en: "Components", de: "Bausteine") }
-}
-
 private struct GalleryPaneStub: View {
     var body: some View {
         ScrollView {
