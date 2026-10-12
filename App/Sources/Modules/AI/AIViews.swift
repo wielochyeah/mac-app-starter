@@ -153,13 +153,16 @@ struct ModelRowView: View {
 
 /// The pane's test prompt: a field, Send/Stop, the streamed answer and who answered how fast.
 @Observable final class AITrial {
-    var prompt = ""
+    /// Starts with an example question the user can send or replace.
+    var prompt = AIText.trySample
     private(set) var answer = ""
     private(set) var running = false
     private(set) var error: AIError?
     private(set) var latency: Double?
     private(set) var provider: String?
     @ObservationIgnored private var task: Task<Void, Never>?
+    /// Each send and stop starts a new run; a task from an older run writes nothing.
+    @ObservationIgnored private var run = 0
 
     init() {}
 
@@ -173,10 +176,13 @@ struct ModelRowView: View {
         self.error = error
     }
 
+    var question: String { prompt.trimmingCharacters(in: .whitespacesAndNewlines) }
+
     func send(_ ai: LocalAI = .shared) {
-        let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        let question = text.isEmpty ? AIText.trySample : text
+        let question = question
+        guard !question.isEmpty else { return }
         stop()
+        let run = run
         answer = ""
         error = nil
         latency = nil
@@ -184,20 +190,28 @@ struct ModelRowView: View {
         running = true
         let start = Date()
         task = Task { @MainActor [weak self] in
+            var failure: AIError?
             do {
                 for try await partial in ai.stream(prompt: question) {
-                    self?.answer = partial
+                    guard let self, self.run == run else { return }
+                    self.answer = partial
                 }
-                self?.latency = Date().timeIntervalSince(start)
             } catch {
-                let e = AIError.from(error)
-                if e != .cancelled { self?.error = e }
+                failure = AIError.from(error)
             }
-            self?.running = false
+            // stopped (the loop just ends) or replaced by a newer run: leave its state alone
+            guard let self, self.run == run, !Task.isCancelled else { return }
+            if let failure {
+                if failure != .cancelled { self.error = failure }
+            } else {
+                self.latency = Date().timeIntervalSince(start)
+            }
+            self.running = false
         }
     }
 
     func stop() {
+        run += 1
         task?.cancel()
         task = nil
         running = false
@@ -220,7 +234,7 @@ struct AITrialSection: View {
                 } else {
                     Button(AIText.send) { trial.send() }
                         .buttonStyle(.primary)
-                        .disabled(!canSend)
+                        .disabled(!canSend || trial.question.isEmpty)
                         .keyboardShortcut(.defaultAction)
                 }
             }
@@ -235,15 +249,15 @@ struct AITrialSection: View {
     @ViewBuilder private func field(_ t: Theme) -> some View {
         Group {
             if renderStatic {
-                Text(trial.prompt.isEmpty ? AIText.trySample : trial.prompt)
+                Text(trial.prompt.isEmpty ? AIText.tryPlaceholder : trial.prompt)
                     .foregroundStyle(trial.prompt.isEmpty ? t.fg3 : t.fg)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                TextField("", text: $trial.prompt, prompt: Text(AIText.trySample))
+                TextField("", text: $trial.prompt, prompt: Text(AIText.tryPlaceholder))
                     .textFieldStyle(.plain)
                     .foregroundStyle(t.fg)
-                    .onSubmit { if canSend && !trial.running { trial.send() } }
+                    .onSubmit { if canSend && !trial.running { trial.send() } }   // send() ignores an empty field
             }
         }
         .font(TypeScale.body)

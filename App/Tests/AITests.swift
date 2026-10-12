@@ -283,6 +283,31 @@ final class AITests: TestSuite {
             expectEqual(e as? AIError, .unsupported)
         }
 
+        test("try it: Stop shows no finished time, an old run never touches a new one") {
+            let p = FakeAIProvider("a")
+            p.wordDelay = .milliseconds(80)
+            let ai = makeAI([p])
+            let trial = AITrial()
+            trial.prompt = "a b c d e f g h i j"
+            trial.send(ai)
+            expect(AIWait.until(timeout: 5) { !trial.answer.isEmpty }, "first piece")
+            trial.stop()
+            _ = AIWait.until(timeout: 0.4) { false }
+            expect(!trial.running)
+            expect(trial.latency == nil, "a stopped answer has no answer time")
+            trial.send(ai)
+            expect(trial.running)
+            _ = AIWait.until(timeout: 0.3) { false }
+            expect(trial.running, "the replaced run did not end the new one")
+            expect(trial.latency == nil)
+            expect(AIWait.until(timeout: 5) { !trial.running }, "the new run finishes")
+            expectEqual(trial.answer, "echo: a b c d e f g h i j")
+            expect(trial.latency != nil)
+            trial.prompt = "   "
+            trial.send(ai)
+            expect(!trial.running, "an empty field sends nothing")
+        }
+
         test("usage keeps only counts and durations") {
             var u = AIUsage()
             u.record(provider: "apple", latency: 1.5, ok: true, at: Date(timeIntervalSince1970: 10))
