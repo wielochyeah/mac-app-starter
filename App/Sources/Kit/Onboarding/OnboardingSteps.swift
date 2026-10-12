@@ -89,7 +89,7 @@ struct LanguageStep: View {
         let system = previewFollowsMac == nil ? localizer.system : localizer.lang
         let offered = previewFollowsMac != nil || OnboardingKit.macLanguageOffered()
         OnboardingPage {
-            OnboardingHero(symbol: "globe", tint: .sky).padding(.bottom, Space.m)
+            OnboardingHero(symbol: DoneStep.languageSymbol, tint: .sky).padding(.bottom, Space.m)
             OnboardingHeader(title: OnboardingText.languageTitle, subtitle: OnboardingText.languageSubtitle)
                 .padding(.bottom, Space.xs)
             OnboardingNote(OnboardingText.languageCrossHint).padding(.bottom, Space.l)
@@ -239,6 +239,9 @@ struct DoneStep: View {
     @Environment(\.colorScheme) private var scheme
     private let localizer = Localizer.shared
 
+    /// Filled like the other row glyphs (the outline globe looked thin next to them).
+    static let languageSymbol = "globe.europe.africa.fill"
+
     /// More than this many permissions collapse into one "x of y allowed" row.
     static let permissionRowLimit = 3
 
@@ -254,7 +257,7 @@ struct DoneStep: View {
                 .padding(.bottom, Space.l)
             VStack(alignment: .leading, spacing: 0) {
                 SettingsSection(tone: .onboarding) {
-                    ValueRow(OnboardingText.doneLanguage, symbol: "globe", tint: .sky, value: languageValue)
+                    ValueRow(OnboardingText.doneLanguage, symbol: Self.languageSymbol, tint: .sky, value: languageValue)
                     if !collapsed {
                         ForEach(permissions, id: \.self) { kind in
                             let status = monitor.status(kind)
@@ -271,7 +274,7 @@ struct DoneStep: View {
                     if AppInfo.isEnabled("window") {
                         Row(OnboardingText.doneSettings, subtitle: OnboardingText.doneSettingsWindow, symbol: "gearshape.fill",
                             tint: .graphite, tone: .onboarding) {
-                            KeyCaps(["⌘", ","])
+                            KeyCaps(["⌘,"])   // one cap: a lone comma cap reads as a speck
                         }
                     } else {
                         Row(OnboardingText.doneSettings, subtitle: OnboardingText.doneSettingsMenuBar, symbol: "gearshape.fill",

@@ -20,8 +20,9 @@ extension Metrics {
     static let doneBadgeCut: CGFloat = 3
     static let doneBadgeInset: CGFloat = 4
     static let doneBadgeGlyph: CGFloat = 10.5
-    /// Cards on the language and done steps (VoiceBud: narrow column 400 + 60).
-    static let onboardingCard: CGFloat = 460
+    /// Cards on the language and done steps (VoiceBud: narrow column + 60). The S0b patterns
+    /// sample writes the same sum; one token in Kit/Design/Patterns at integration.
+    static let onboardingCard: CGFloat = onboardingNarrow + 60
     /// Feature rows: the squircle in front of each feature.
     static let featureIcon: CGFloat = 32
 }
@@ -37,6 +38,7 @@ extension Theme {
     var welcomeGround: Color { dark ? desk.opacity(0.6) : card.opacity(0.7) }
     /// Hairline rings around the icon.
     var welcomeRing: Color { accent.opacity(dark ? 0.28 : 0.22) }
-    /// Soft shadow under the welcome icon (the render desk's shadow strength).
-    var welcomeIconShadow: Color { deskShadow }
+    /// Soft shadow under the welcome icon: accent-tinted in light (a neutral one greys the glow
+    /// around the icon), the render desk's shadow in dark.
+    var welcomeIconShadow: Color { dark ? deskShadow : accent.opacity(0.28) }
 }
