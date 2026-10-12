@@ -7,7 +7,8 @@ import SwiftUI
 /// Public API for features and other modules:
 /// - `BackgroundJobs.shared.register(id:title:interval:tolerance:qos:exact:run:)`
 /// - `BackgroundJobs.shared.runNow(_:)`, `.perform(_:) async`, `.record(_:)`, `.isRunning(_:)`
-/// - `LoginItem.isAvailable`, `.status`, `.setEnabled(_:)`, `.launchedAtLogin`, `LoginItemModel.shared`
+/// - `LoginItem.isAvailable`, `.status`, `.setEnabled(_:)`, `LoginItemModel.shared`
+/// - a launch at login is `Launch.isBackground` (Kit/Main), like `--background`
 enum BackgroundModule {
     static func register() {
         // whether the login item was already set up is state: "Reset settings" must not ask again
@@ -20,7 +21,6 @@ enum BackgroundModule {
         // jobs and the login item change in the real app only: never in renders, self-tests or
         // headless test runs
         Registry.launchHooks.append {
-            _ = LoginItem.launchedAtLogin   // read while the launch event is current, kept for later readers
             guard !RenderMode.isHeadless, !RenderMode.isStatic else { return }
             LoginWish.watch()
             BackgroundJobs.shared.start()

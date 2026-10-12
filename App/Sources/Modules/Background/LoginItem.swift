@@ -82,23 +82,6 @@ enum LoginItem {
 
     /// Opens System Settings at General, Login Items & Extensions.
     static func openSystemSettings() { SMAppService.openSystemSettingsLoginItems() }
-
-    // MARK: Launched at login
-
-    /// Whether macOS opened this process as a login item, so a module can stay quiet (no main
-    /// window, no onboarding) at login. macOS starts login items without arguments; the sign is a
-    /// property of the launch Apple event (`keyAELaunchedAsLogInItem`). That event is only current
-    /// while the app finishes launching, so read this from a launch hook (the background module's
-    /// launch hook reads it first, which keeps the value). Not yet tried with a real login.
-    static let launchedAtLogin: Bool = isLoginLaunch(NSAppleEventManager.shared().currentAppleEvent)
-
-    /// The launch event says "opened as a login item" (pure, tested).
-    nonisolated static func isLoginLaunch(_ event: NSAppleEventDescriptor?) -> Bool {
-        guard let event, event.eventClass == AEEventClass(kCoreEventClass), event.eventID == AEEventID(kAEOpenApplication) else {
-            return false
-        }
-        return event.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == OSType(keyAELaunchedAsLogInItem)
-    }
 }
 
 /// The login item for SwiftUI: status, why it is unavailable, the last error. Re-read on
