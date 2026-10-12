@@ -201,6 +201,33 @@ class SessionStartTests(unittest.TestCase):
         line = session_start.doctor_line(str(self.tmp), platform="linux", runner=lambda *a, **k: self.fail("ran doctor"))
         self.assertIn("kein Mac", line)
 
+    def test_doctor_runs_without_what_the_python3_shim_injects(self):
+        (self.tmp / "scripts").mkdir()
+        (self.tmp / "scripts" / "doctor.sh").write_text("#!/bin/zsh\n", encoding="utf-8")
+        seen = {}
+
+        def runner(args, cwd, timeout=10, env=None):
+            seen["env"] = env
+            return 0, "  ok    SDK: /CLT/SDKs/MacOSX26.5.sdk\ndoctor: ready to build\n"
+
+        shim = {
+            "PATH": "/usr/bin:/bin",
+            "SDKROOT": "/CLT/SDKs/MacOSX27.0.sdk",
+            "MANPATH": "/CLT/SDKs/MacOSX27.0.sdk/usr/share/man:/CLT/usr/share/man:",
+            "CPATH": "/usr/local/include",
+            "LIBRARY_PATH": "/usr/local/lib",
+        }
+        line = session_start.doctor_line(str(self.tmp), platform="darwin", runner=runner, environ=shim,
+                                         default_sdk=lambda env: "/CLT/SDKs/MacOSX27.0.sdk")
+        self.assertIn("bereit", line)
+        self.assertEqual(seen["env"], {"PATH": "/usr/bin:/bin"})
+
+    def test_an_sdkroot_the_user_chose_stays(self):
+        env = session_start.doctor_env({"SDKROOT": "/Users/x/SDKs/MacOSX26.4.sdk", "CPATH": "/opt/include"},
+                                       default_sdk=lambda env: "/CLT/SDKs/MacOSX27.0.sdk")
+        self.assertEqual(env, {"SDKROOT": "/Users/x/SDKs/MacOSX26.4.sdk", "CPATH": "/opt/include"})
+        self.assertNotIn("SDKROOT", session_start.doctor_env({"SDKROOT": "/x.sdk"}, default_sdk=lambda env: "/x.sdk"))
+
     def test_context_names_rules_and_headless_checks(self):
         self.write_config({"name": "Ada", "email": "ada@example.org"})
         git, _ = fake_git({})
