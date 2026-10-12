@@ -94,7 +94,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 ### E-15 (12.10.2026): Ad hoc signiert, Developer ID als Schalter
 
-- **Entscheidung:** Standard ist die Ad-hoc-Signatur; mit `signing.identity` in `starter.json` signiert der Build mit Developer ID und Hardened Runtime, `make notarize` notarisiert.
+- **Entscheidung:** Standard ist die Ad-hoc-Signatur; mit `signing.identity` in `starter.json` signiert `make dmg` mit Developer ID und Hardened Runtime, mit `signing.notarize: true` und einem Profil aus dem Schlüsselbund (`signing.notaryProfile`) notarisiert es App und DMG.
 - **Grund:** Ohne Apple-Mitgliedschaft muss der Starter bauen und laufen; mit Mitgliedschaft genügt ein Wert.
 - **Folgen:** Ad hoc signierte Builds verlieren Berechtigungen bei jedem neuen Build und brauchen beim Empfänger „Dennoch öffnen“ (`docs/VERTEILUNG.md`).
 
