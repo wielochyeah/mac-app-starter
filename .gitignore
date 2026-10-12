@@ -1,0 +1,17 @@
+# Build output (app bundle, generated config, renders, test binaries, DMGs)
+/build/
+.build/
+.swiftpm/
+
+# Python
+.venv/
+ai-worker/.venv/
+__pycache__/
+*.pyc
+
+# DMGs belong in build/; only docs may carry one on purpose
+*.dmg
+!docs/**/*.dmg
+
+# macOS
+.DS_Store

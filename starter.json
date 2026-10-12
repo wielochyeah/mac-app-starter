@@ -1,0 +1,19 @@
+{
+  "starter": { "version": "1.0.0" },
+  "app": {
+    "name": "Starter",
+    "bundleId": "com.example.starter",
+    "displayName": { "en": "Starter", "de": "Starter" },
+    "version": "1.0.0",
+    "build": 1,
+    "minimumMacOS": "26.0",
+    "accent": "violett",
+    "symbol": "sparkles",
+    "copyright": "© 2026"
+  },
+  "modules": { "window": true, "menubar": true, "island": true, "background": true, "hotkeys": true, "ai": true, "mlx": false, "examples": true },
+  "permissions": ["notifications"],
+  "texts": { "languages": ["en", "de"], "anrede": "du" },
+  "commit": { "name": "nilswieloch", "email": "nils.wieloch@outlook.de" },
+  "signing": { "identity": "-", "teamId": "", "notarize": false }
+}
