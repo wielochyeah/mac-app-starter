@@ -339,12 +339,17 @@ class CommentAndGlyphTests(unittest.TestCase):
                   "let a = 1\n")
         self.assertEqual(self.check({VIEW_FILE: source}), [("DemoView.swift", "gedankenstrich", 4)])
 
+    def test_double_hyphen_in_a_folder_name_is_no_dash(self):
+        source = "/// Cache folder: models--org--name, path <hub>/models--<org>--<name>\nlet a = 1\n"
+        self.assertEqual(self.check({VIEW_FILE: source}), [])
+        self.assertEqual(self.check({VIEW_FILE: "/// before--after.\nlet a = 1\n"}), [("DemoView.swift", "gedankenstrich", 1)])
+
     def test_exception_comment_covers_a_comment(self):
-        source = ("// text-ausnahme: the cache folder is named like this on disk\n"
-                  "/// Cache layout: models--org--name\n"
+        source = ("// text-ausnahme: quotes the old label as it was shipped\n"
+                  "/// Old label: Start--Ende\n"
                   "let a = 1\n")
         self.assertEqual(self.check({VIEW_FILE: source}), [])
-        python = "# text-ausnahme: quotes the folder name\n# models--org--name\nx = 1\n# text-ausnahme: unused here\n"
+        python = "# text-ausnahme: quotes the old label\n# Start--Ende\nx = 1\n# text-ausnahme: unused here\n"
         self.assertEqual(self.check({"scripts/demo.py": python}), [("demo.py", "ausnahme-ungenutzt", 4)])
 
     def test_unused_verbatim_comment(self):
