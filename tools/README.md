@@ -4,7 +4,7 @@ Kleine Programme, die beim Bauen auf diesem Mac laufen. Sie landen nie in der Ap
 
 | Befehl | Was passiert | Ergebnis |
 |---|---|---|
-| `make icon` | `scripts/icon.sh` baut `tools/icon/Icon.swift` und rendert das Icon aus `app.accent` und `app.symbol` (starter.json) | `App/Resources/AppIcon.icns` (wird eingecheckt), Vorschauen in `build/icon/` |
+| `make icon` | `scripts/icon.sh` baut `tools/icon/Icon.swift` und rendert das Icon aus `app.accent` und `app.symbol` (starter.json); nur für die Entwicklung, weil Apple SF Symbols in App-Symbolen nicht erlaubt (`docs/VERTEILUNG.md`, Abschnitt 8) | `App/Resources/AppIcon.icns` (wird eingecheckt), Vorschauen in `build/icon/` |
 | `make dmg` | `scripts/dmg.sh`: Release-Build, Signatur, Fensterhintergrund, dmgbuild, Komprimierung, Prüfung | `build/dmg/<Name>-<Version>.dmg`, Fenstervorschau `build/dmg/preview.png` |
 | `make notarize` | `scripts/notarize.sh`: einreichen und heften (nur mit Developer ID). Für eine fertige DMG reicht `signing.notarize: true` und `make dmg`; eine DMG mit „Dennoch öffnen“-Hinweis im Fenster lehnt `make notarize` ab | notarisierte `.app` oder `.dmg`; `--dry-run` zeigt nur die Befehle |
 

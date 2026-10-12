@@ -122,7 +122,7 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 | `make check` | Regeln, Texte, Design, Kit, Build und Tests; vor jedem Push |
 | `make shots` | jede Szene in en und de, hell und dunkel nach `build/shots/` mit `index.html`; `ONLY=<präfix>` |
 | `make readme-shots` | Bilder aus `docs/screenshots/list.txt` nach `docs/screenshots/` kopieren |
-| `make icon` | App-Symbol aus Akzent und Symbol nach `App/Resources/AppIcon.icns` |
+| `make icon` | App-Symbol aus Akzent und SF Symbol nach `App/Resources/AppIcon.icns`, nur für die Entwicklung (vor der Weitergabe ein eigenes Motiv, `docs/VERTEILUNG.md`) |
 | `make dmg` | Release-Build und DMG nach `build/dmg/` |
 | `make notarize` | mit Developer ID signieren und notarisieren |
 | `make rules` | `CLAUDE.md` Teil A und Wortlisten aus `rules/` schreiben |

@@ -72,6 +72,10 @@ if [[ ! -f App/Resources/AppIcon.icns ]]; then
   step "App/Resources/AppIcon.icns is missing, rendering it (scripts/icon.sh)"
   scripts/icon.sh
 fi
+if grep -q 'systemSymbolName' tools/icon/Icon.swift 2>/dev/null; then
+  step "app icon: tools/icon/Icon.swift still draws an SF Symbol; Apple does not allow SF Symbols in app icons," \
+    "so replace the icon before handing this DMG out (docs/VERTEILUNG.md, section 8)"
+fi
 if [[ -z "${DMG_NO_BUILD:-}" ]]; then
   CONFIG=release scripts/build.sh
 fi

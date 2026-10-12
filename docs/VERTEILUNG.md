@@ -70,7 +70,7 @@ Verwaltete Macs (MDM) können nicht notarisierte Apps ganz sperren. Wer an solch
 
 ## 8. Vor der ersten Weitergabe
 
-- Eigenes App-Symbol: `make icon` setzt ein SF Symbol aus `app.symbol` auf eine Fläche im Akzent. Apple untersagt SF Symbols in App-Symbolen und Logos; das erzeugte Symbol ist daher nur für die Entwicklung. Vor der ersten Weitergabe bekommt die App ein eigenes Motiv (eigene Zeichnung in `tools/icon/Icon.swift` oder eine fertige `AppIcon.icns`), ebenso der DMG-Hintergrund, falls er das Symbol zeigt.
+- Eigenes App-Symbol: `make icon` setzt ein SF Symbol aus `app.symbol` auf eine Fläche im Akzent. Die Bedingungen für SF Symbols verbieten sie (und ähnlich aussehende Bilder) in App-Symbolen, Logos und jeder anderen Verwendung als Marke (Human Interface Guidelines, „SF Symbols“). Das erzeugte Symbol ist deshalb nur für die Entwicklung; `make icon` und `make dmg` sagen das bei jedem Lauf. Vor der ersten Weitergabe bekommt die App ein eigenes Motiv: eine eigene Zeichnung in `tools/icon/Icon.swift` (gemeinsamer Pfad, das Projekt darf ihn ändern) oder eine fertige `AppIcon.icns` mit Rechten des Projekts. Der DMG-Hintergrund zeigt das App-Symbol aus `App/Resources/AppIcon.icns` und ändert sich damit.
 - `app.bundleId` endgültig wählen: sie bestimmt den Ort der Daten (`~/Library/Application Support/<bundleId>/`), die Einstellungen und die Berechtigungen. Ein späterer Wechsel beginnt bei null.
 - `app.version` und `app.build` setzen, `CHANGELOG.md` ergänzen, `THIRD_PARTY_NOTICES.md` um mitgelieferten Fremdcode ergänzen.
 - Auf einem zweiten Mac oder Benutzer installieren und das Onboarding einmal ganz durchgehen (`docs/vorlagen/ABNAHME.md`, AK-60).
