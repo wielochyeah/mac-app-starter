@@ -49,6 +49,12 @@ final class WindowTests: TestSuite {
             expectEqual(MainWindowModel(settings: Settings(fileURL: settings.fileURL)).selection, "library")
         }
 
+        test("reset settings keeps the selected page and the sidebar state") {
+            expectEqual(SettingsReset.keys(in: [SettingKey<String>.windowPage.name, SettingKey<Bool>.windowSidebarHidden.name,
+                                                SettingKey<String>.appAppearance.name]),
+                        [SettingKey<String>.appAppearance.name])
+        }
+
         test("model: selecting nil or the same page changes nothing") {
             let settings = scratchSettings()
             let model = MainWindowModel(settings: settings)

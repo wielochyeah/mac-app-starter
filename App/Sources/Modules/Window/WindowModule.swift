@@ -9,6 +9,9 @@ import SwiftUI
 
 enum WindowModule {
     static func register() {
+        // the selected page and a hidden sidebar say where the person was, like the window frame:
+        // state, not a preference, so "Reset settings" keeps them
+        SettingsReset.keep("window.")
         Registry.pages.append(HomePage.page)
         AppActions.mainWindowHandler = { MainWindowController.show() }
         WindowMainMenu.install()
