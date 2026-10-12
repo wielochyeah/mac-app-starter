@@ -288,3 +288,115 @@ pgrep (Starter.app, run-tests, worker.py) -> nichts übrig
 - Die README-Bilder fehlen noch (`make readme-shots` in Welle 2); bis dahin zeigen die fünf Bildverweise in `README.md` ins Leere.
 - Im Bereich „Modelle“ mit `mlx` stehen die Texte von Anbieter- und Modellzeilen weiter 4 pt versetzt (Punkt 22, übersprungen).
 - `make dmg` und `make notarize` nicht ausgeführt (kein Developer-ID-Zertifikat, keine Notarisierung ohne Auftrag); geprüft sind die Skripte über `test_packaging.py` und `zsh -n`.
+
+## Welle 2: Beispiele, Querverbindungen, Fassung 1.0.0
+
+Stand: 2026-10-13, Branch `main`, Start `16e1db6`. Strang I ist zusammengeführt, die Befunde aus seinem Statusbericht sind in Skills, Doku und Kit eingearbeitet, Abschnitt X aus WAVE2.md (Begrüßung mit Insel, README-Rundgang, CHANGELOG 1.0.0) ist gebaut. Nichts gepusht.
+
+### Merge von Strang I
+
+- `86076b9` chore(merge): keine Konflikte. Strang I hatte `main` nach dem Abgleich schon hereingeholt (Merge-Basis `188a1a0`) und baut gegen `Metrics.Sidebar`, `Metrics.disabledOpacity`, `Launch` und `PatternTokens`; im Ordner `Modules/Examples` steht keiner der umbenannten oder entfernten Namen (`Metrics.Window.sidebar*`, `LoginItem.launchedAtLogin`, `isLoginLaunch`, `LoginWish.watch()`, `BackgroundMetrics`, `OnboardingTokens`). `Metrics.Window.tile` und `heroHeightCompact` gibt es weiter im Fenstermodul. Eine Anpassung war nicht nötig.
+- Drei Commits auf `strang/I` (`5288ec0`, `662f17f`, `4cb1eb1`) sind Kopien von Commits, die auf `main` danach umformuliert wurden. `5288ec0` hat 102 Zeichen im Betreff; `check_commit_msg.py --bereich 16e1db6..HEAD` meldet ihn. Nicht umgeschrieben (fremder Branch); die CI prüft auf `main` den Bereich `origin/main..HEAD` und sieht ihn nach dem Push nicht. Ab `86076b9` bestehen alle Commits die Prüfung.
+
+### Commits nach dem Merge
+
+| Commit | Inhalt |
+|---|---|
+| `fc607d4` test(packaging) | `test_packaging.py` las die echte `starter.json` und erwartete den Namen „Starter“: nach `bin/starter init` war `make check` in jedem Projekt rot (gefunden mit init und strip-examples in einer Kopie; der Job `Template-Probe` der CI wäre daran gescheitert). Jetzt mit fester Konfiguration; der Bundle-Test sucht `build/<Name>.app` |
+| `113468a` feat(design) | `Chip` liest `isEnabled` und dimmt auf `Metrics.disabledOpacity` wie Schalter, Knöpfe und `Row`; die KI-Knöpfe der Notizen setzen die Deckkraft nicht mehr selbst; `design.chip` zeigt einen gesperrten Chip |
+| `a4e3d52` feat(patterns) | `ConfirmRow`: Rückfrage an Ort und Stelle (Abbrechen ist Hauptaktion und liegt auf Esc, die Aktion rot auf ruhigem Knopf). Ersetzt die zwei Kopien in „Allgemein“ und im Bereich „Notizen“; Szene und Galerie `patterns.confirm-row`, DESIGN.md, `neue-einstellung` |
+| `2e1a412` feat(window) | `AppActions.openMainWindow(page:)`: der Handler bekommt die Seite, das Fenstermodul wählt sie (`WindowModule.open`) und zeigt das Fenster; ohne Modul `window` wie bisher die Einstellungen. `NotesNavigator.show` nutzt es; Test |
+| `623c15b` feat(menubar) | Die Bühne der Panel-Szenen heißt `MenuBarPanelStage` und ist für Features offen; `examples.menubar` steht jetzt mit Menüleiste wie `menubar.panel` |
+| `6cdbeb4` docs | die echte `#if`-Regel (siehe Punkt a) in `neues-feature`, ARCHITEKTUR, CONTRIBUTING, E-07, `pruefer-integration`, Kommentar in `Modules.swift` |
+| `058e3a2` docs(skills) | Punkte b bis h |
+| `2e8bcc6` docs(module) | Punkt i |
+| `89e3ba0` ci | sechs Kombinationen mit `examples` in `.github/ci_plan.py` (jeder `#if`-Teil des Beispiels mit nur seinem Modul); fallen nach `strip-examples` weg. Test in `test_claude_harness.py`, UEBERGABE und ci.yml nennen rund 27 Mac-Jobs |
+| `59f0ec7` feat(island) | Begrüßung mit der echten Insel (Abschnitt X) |
+| `8ba3b3b` feat(examples) | die Insel der Begrüßung sichert mit dem Beispiel eine Schnellnotiz |
+| `834f454` fix(dmg) | das DMG-Fenster trennte Version und Mindest-macOS und die zwei Sprachen der Gatekeeper-Frage mit Mittelpunkten (S-01), der Pfad nutzte `›`; jetzt Komma, Abstand im Layout und `>` |
+| `d785801` feat(shots) | `scripts/readme-shots.sh` statt der Schleife im Makefile: verkleinert mit `sips` auf höchstens 1200 px (`README_MAX_WIDTH`), zeichnet `tools/icon.png` und `tools/dmg.png` mit den Werkzeugen aus `tools/`; Skill `screenshots` |
+| `fbe9e6b` docs(readme) | Rundgang mit zwölf Bildern, Stand-Block 1.0.0 |
+| `8977841` docs(changelog) | Abschnitt 1.0.0 (12.10.2026) |
+
+### Befunde aus dem Statusbericht von Strang I
+
+| Punkt | Stand | Was |
+|---|---|---|
+| a) „nie verschachtelt“ | erledigt | Regel wie T-03: genau ein Flag je `#if`, ohne `\|\|`, `&&`, `!` und `#elseif`, ein `#else`-Zweig bleibt stehen, für zwei Module zwei einfache Blöcke ineinander; `bin/starter remove` und `make check-kit` lösen beide auf (`6cdbeb4`) |
+| b) `hintergrund-job` | erledigt | Anmelden im Start-Hook mit `guard !RenderMode.isHeadless, !RenderMode.isStatic` (sonst entsteht `background.sqlite` bei `--selftest`), Kit-`Database` nur auf dem MainActor über `await MainActor.run`, eigene `BackgroundJobs` mit `MemoryJobStore` und `NoJobScheduler` für Tests und Szenen |
+| c) `neues-feature` headless | erledigt | geteilte Speicher bleiben headless im Speicher (`window.chrome` zeichnet das echte Fenster), Beispiel `shared` mit `RenderMode.isHeadless ? nil : Paths.database(…)` |
+| d) `neue-ansicht` | erledigt | `WindowSearch.enable` stand schon da; neu: Renders über `RenderBoard { StaticMainWindow(…) }`, `ViewThatFits` braucht `idealWidth`, Detailseite über einer Liste mit Navigator und `AppActions.openMainWindow(page:)` (neu im Kit, `2e1a412`) |
+| e) `ki-funktion` | erledigt | `structured` nur über Apples Anbieter, Auslesen als eigene Funktion, Test über `GeneratedContent(json:)`, Testdouble für den Fehlerweg `.unsupported` |
+| f) `insel-zustand` | erledigt | Szenen über `IslandScenes.Sample` und `IslandScenes.stage(_:kind:)` (Zähler, „Dauert länger“, Aufklappen), Ergebniskarte hat Kopieren schon, nur ohne Ausklappen als Aktion; dazu `IslandWelcome.working`/`result` |
+| g) `menueleisten-app` | erledigt | `Registry.menuItems` stehen schon unter „Aktionen“, eigener Abschnitt über `MenuBarSection`, Szenen auf `MenuBarPanelStage` (Kit-Änderung `623c15b`) |
+| h) `kurzbefehl` | erledigt | Tests leiten Bereich und Schritt aus `HotkeyCenter.shared` ab (wie `HotkeysSceneTests` seit Strang I), eigene Szene mit `HotkeyCenter(backend: FakeHotkeyBackend(), store: MemoryHotkeyStore())` und `TableKeyboardLayout.us` |
+| i) `docs/MODULE.md` | erledigt | Abschnitt `examples` mit Dateien, Einstellungen (`notes.defaultCollection`, `notes.layout`), drei Karten im Schritt „Funktionen“ statt eigenem Schritt, Szenen, Selbsttests, Demo |
+| Kit-Kandidaten | zum Teil | übernommen: `Chip` dimmt gesperrt, `ConfirmRow` (zwei Bereiche), `openMainWindow(page:)`, `MenuBarPanelStage`. Offen: `ValueRow(capsule:)` bei zweistelligen Werten (von I nicht untersucht, hier auch nicht), Warten auf async in Tests ohne Modul `ai` (Harness) |
+
+Jedes neue Swift-Beispiel in Skills und Doku-Kommentaren ist mit `swiftc -typecheck` gegen alle Quellen geprüft (Stubs für die erfundenen Feature-Namen, außerhalb des Repos): keine Fehler, keine Warnungen.
+
+### Abschnitt X
+
+- **Begrüßung:** `Registry.welcomeArt` (Kit) lässt ein Modul das Bild des Begrüßungsschritts ersetzen; ohne Eintrag bleiben Akzentschein und App-Symbol. Das Insel-Modul setzt es in `IslandWelcome.register()`: Bildschirmrand mit Menüleiste (App-Name links, WLAN und 9:41 rechts, die Mitte für die ganze Karte frei) und gezeichneter Notch, darauf die echten Insel-Ansichten mit eigenem Modell. In der laufenden App wächst die Insel aus der Notch, arbeitet, wird zur Ergebniskarte und faltet sich zurück, solange der Schritt zu sehen ist (`.task`); Renders und reduzierte Bewegung zeigen die Karte still. Ohne Beispiel meldet die Karte „Fertig, <App>: Hier meldet <App>, was erledigt ist.“, mit Beispiel eine gesicherte Schnellnotiz. Statt `#if MODUL_ISLAND` im Onboarding-Code ein Hook: das Kit kennt kein Modul (ARCHITEKTUR), und der Code liegt im Ordner des Moduls, der nur mit `MODUL_ISLAND` gebaut wird.
+- **README:** `docs/screenshots/list.txt` mit zwölf Bildern (Übersicht, Notizseite mit KI, aufgeklappte Inselkarte, Menüleisten-Panel, Begrüßung, Sprache, Neustart-Schritt, Einstellungen „Allgemein“, „Insel und Kapsel“, „Modelle“, DMG-Fenster, App-Symbol), je höchstens 1200 px, zusammen 4,0 MB. Rundgang auf Deutsch, ein Satz je Bild.
+- **CHANGELOG:** Abschnitt 1.0.0 (12.10.2026) mit Inhalt, Migrationen (keine) und Hinweisen für Projekte; `starter.json` `starter.version` bleibt 1.0.0.
+- **Stand-Block:** Fassung 1.0.0 vom 12.10.2026, Bauunterlagen unter `docs/bau/`, `init` entfernt sie.
+
+### Prüfung (2026-10-13, auf `8977841`)
+
+```
+make check                       -> grün (1:20 min): rules_sync gültig; check_texts 307 Dateien, keine Befunde;
+                                    check_design 208 Dateien, keine Befunde; check-kit: alle Dateien klassifiziert
+                                    (Kit 295, gemeinsam 64, Projekt 28, nur im Starter 15), 8 von 8 Modulen entfernbar,
+                                    Hooks und CI erfüllt; Build; Swift "392 tests, 0 failures", scripts/tests 220 OK,
+                                    scripts/starter/tests 118 OK, ai-worker 23 OK
+check_texts/check_design --ci und --streng -> keine Befunde
+check_commit_msg.py --bereich 86076b9..HEAD -> alle passen (5288ec0 davor, siehe Merge)
+MODULES=<alle inkl. mlx> make test -> Swift "423 tests, 0 failures", Python OK
+STARTER_HEADLESS=1 STARTER_DATA_DIR=<tmp> …/Starter --selftest -> "30 checks, 0 failures", Datenordner leer
+python3 .github/ci_plan.py       -> 15 Kombinationen (9 bisherige, 6 mit examples)
+Build-Matrix in einer Kopie von HEAD (je make build, codesign --verify --strict, --selftest headless, eigener Datenordner):
+  starter.json                   -> 0 Warnungen, codesign ok, 30 checks, 0 failures, Datenordner leer
+  window                         -> 0 Warnungen, codesign ok, 20 checks, 0 failures, leer
+  menubar                        -> 0 Warnungen, codesign ok, 17 checks, 0 failures, leer
+  window,menubar                 -> 0 Warnungen, codesign ok, 21 checks, 0 failures, leer
+  menubar,island                 -> 0 Warnungen, codesign ok, 19 checks, 0 failures, leer
+  menubar,background             -> 0 Warnungen, codesign ok, 18 checks, 0 failures, leer
+  window,hotkeys                 -> 0 Warnungen, codesign ok, 23 checks, 0 failures, leer
+  window,ai                      -> 0 Warnungen, codesign ok, 21 checks, 0 failures, leer
+  window,ai,mlx                  -> 0 Warnungen, codesign ok, 22 checks, 0 failures, leer
+  window,examples                -> 0 Warnungen, codesign ok, 22 checks, 0 failures, leer
+  menubar,examples               -> 0 Warnungen, codesign ok, 19 checks, 0 failures, leer
+  menubar,island,examples        -> 0 Warnungen, codesign ok, 21 checks, 0 failures, leer
+  window,ai,examples             -> 0 Warnungen, codesign ok, 23 checks, 0 failures, leer
+  menubar,hotkeys,examples       -> 0 Warnungen, codesign ok, 22 checks, 0 failures, leer
+  window,background,examples     -> 0 Warnungen, codesign ok, 23 checks, 0 failures, leer
+  menubar,ai,examples            -> 0 Warnungen, codesign ok, 20 checks, 0 failures, leer
+  alle inkl. mlx und examples    -> 0 Warnungen, codesign ok, 31 checks, 0 failures, leer
+  CONFIG=release                 -> 0 Warnungen, codesign ok, 30 checks, 0 failures, leer
+make probe (2:47 min)            -> "Ran 6 tests … OK": init grün, remove je Modul grün, ai vor mlx abgelehnt,
+                                    menubar nach window abgelehnt, examples entfernt
+Kopie (git ls-files, git init, Commit), bin/starter init --non-interactive --name Probe --ohne-netz --ohne-build,
+dann bin/starter strip-examples -> 20 Dateien gelöscht, Blöcke in Modules.swift und Markierungen in neues-feature,
+                                    neue-ansicht, hintergrund-job und MODULE.md entfernt, ExamplesTests.swift gelöscht;
+                                    make build grün, --selftest 28 checks 0 failures (Datenordner leer), make check grün
+                                    (check-kit: 276 Kit-Dateien unverändert seit 1.0.0; Swift 357 tests, Python 220/118/23 OK);
+                                    git grep NotesStore|NoteItem|NotesText|Notizen|ExamplesModule|MODUL_EXAMPLES|Modules/Examples:
+                                    nur Doku-Beispiele, die es vor Strang I gab (neue-einstellung, Kommentare im Kit,
+                                    Wortlisten), sowie README-Rundgang und CHANGELOG (siehe Schwächen)
+make shots                       -> 744 PNGs + index.html (186 Szenen)
+make readme-shots                -> 12 Bilder, je höchstens 1200 px, zusammen 4,0 MB
+pgrep (Starter.app, Probe.app, run-tests, worker.py) -> nichts übrig
+```
+
+Angesehen (Read): jede Szene `examples.*` (25) und `onboarding.*` (14) in en-light und de-dark, als Kontaktbögen zu je vier Bildern; einzeln `onboarding.welcome` in allen vier Fassungen und zusätzlich mit `MODULES=window,island` (neutrale Karte, en-light, de-dark, de-light) und `MODULES=window` (Akzentschein, de-light), `patterns.confirm-row` de-dark, `settings.general-reset` en-light, `design.chip` de-light, `examples.menubar` de-dark, `examples.pane-confirm` de-dark, `examples.detail-unavailable` en-light, jedes der zwölf README-Bilder. Behoben nach dem Ansehen: Statussymbole der gezeichneten Menüleiste lagen unter der Karte (Mitte jetzt so breit wie die Karte, ohne Akku), deutscher Text der neutralen Karte und der Notiz-Text liefen in die Auslassung (kürzere Texte), Mittelpunkte und `›` im DMG-Fenster.
+
+### Bekannte Schwächen
+
+- Die Schleife der Begrüßungsinsel ist nie in der laufenden App gesehen worden (T-08): Zeiten und Federn sind nur im Code und im Modell geprüft (Test: Standbild, geschlossener Start, reduzierte Bewegung). Die Leitung sieht sie beim ersten `make run`.
+- Der README-Rundgang und die Bilder in `docs/screenshots/` zeigen das Beispiel; nach `init` und `strip-examples` bleiben sie im Projekt, bis es README und `list.txt` ersetzt (Hinweis im CHANGELOG). `make readme-shots` scheitert dort an den fehlenden Szenen `examples.*`, bis die Liste angepasst ist.
+- `make probe` führt nach `init` kein `make check` aus; deshalb blieb der Fehler in `test_packaging.py` bis jetzt unbemerkt. Die CI (`Template-Probe`) tut es.
+- Betreff von `5288ec0` mit 102 Zeichen in der Geschichte von `main` (siehe Merge).
+- Die CI baut jetzt rund 27 Mac-Jobs je Pull Request und auf `main` (sechs mehr für das Beispiel).
+- Offen aus Strang I und nur interaktiv prüfbar: Fenster mit echter Seitenleiste und Suche, Editor mit Autosave und Esc, ⌥-Klick im Panel, die echte Insel bei Schnellnotiz und KI, der Kurzbefehl aus anderen Apps, die Aufgabe im echten Planer, „Im Finder zeigen“, `--demo examples`.
+- Kit-Kandidaten `ValueRow(capsule:)` und das Warten auf async in Tests ohne Modul `ai` sind nicht bearbeitet.
