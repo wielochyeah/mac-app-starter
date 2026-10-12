@@ -113,6 +113,35 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
     return plan
 
 
+def read_texts(root: Path, files: List[str]) -> Dict[str, str]:
+    """Text files (by extension) that decode as UTF-8, path -> text."""
+    out = {}
+    for path in files:
+        if is_text_path(path):
+            try:
+                out[path] = (root / path).read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+    return out
+
+
+def simulate(manifest: Manifest, modules: List[str], files: List[str], texts: Dict[str, str]) -> List[str]:
+    """Uses of the modules' Swift types that would be left after removing all of them, without
+    touching any file. Raises StarterError for a module flag remove cannot resolve."""
+    gone = [p for m in modules for p in manifest.modules[m].all_paths]
+    deleted = {p: texts.get(p, "") for p in files if globs.matches(p, gone)}
+    remaining: Dict[str, str] = {}
+    for path, text in texts.items():
+        if path in deleted or path in ("starter.json", LOCK):
+            continue
+        new = transform(path, text, modules)
+        if new is None:
+            deleted[path] = text
+        else:
+            remaining[path] = new
+    return dangling_references({p: t for p, t in deleted.items() if p.endswith(".swift")}, remaining)
+
+
 def refuse_in_starter(root: Path, manifest: Manifest, command: str) -> None:
     if is_starter_origin(origin_url(root), manifest.repository):
         raise StarterError(f"Das Repository {manifest.repository} ist der Starter selbst; {command} läuft nur "

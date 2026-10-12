@@ -21,7 +21,8 @@ from . import config as cfg
 from . import globs
 from .common import StarterError, cut_blocks, is_text_path, working_files
 from .manifest import CLASS_NAMES, Manifest, is_project, kit_checksums, read_lock, read_manifest
-from .markers import dangling_references, swift_flag_problems, transform
+from .markers import swift_flag_problems, transform
+from .remove import read_texts, simulate
 
 SKIP_GUIDES = ["./CHANGELOG.md", "./THIRD_PARTY_NOTICES.md", "docs/DECISIONS.md", "docs/STARTER_DECISIONS.md"]
 
@@ -161,7 +162,7 @@ def check_starter(root: Path, manifest: Manifest, lock: dict, files: Sequence[st
             f.problems.append(f"{p} gehört einem Modul, ist aber {CLASS_NAMES[manifest.classify(p)]}; "
                               "remove würde Projektdateien löschen")
 
-    texts = {p: t for p in files if is_text_path(p) for t in [_read(root, p)] if t is not None}
+    texts = read_texts(root, list(files))
     swift_problems = []
     for p, t in texts.items():
         if p.endswith(".swift"):
@@ -183,22 +184,11 @@ def check_starter(root: Path, manifest: Manifest, lock: dict, files: Sequence[st
     removable = 0
     for name in manifest.modules:
         closure = removal_closure(manifest, name)
-        gone_paths = [p for m in closure for p in manifest.modules[m].all_paths]
-        deleted = {p: texts.get(p, "") for p in files if globs.matches(p, gone_paths)}
-        remaining: Dict[str, str] = {}
         try:
-            for p, t in texts.items():
-                if p in deleted:
-                    continue
-                new = transform(p, t, closure)
-                if new is None:
-                    deleted[p] = t
-                else:
-                    remaining[p] = new
+            dangling = simulate(manifest, closure, list(files), texts)
         except StarterError as e:
             f.problems.append(f"remove {name}: {e}")
             continue
-        dangling = dangling_references({p: t for p, t in deleted.items() if p.endswith(".swift")}, remaining)
         guides = guide_problems(root, manifest, closure, files, texts)
         for d in dangling:
             f.problems.append(f"remove {name}: {d}; mit #if MODUL_{name.upper()} umschließen")

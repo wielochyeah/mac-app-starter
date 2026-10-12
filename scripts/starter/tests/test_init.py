@@ -101,6 +101,14 @@ class InitTests(TempDirCase):
         init(root, options(remove=["ai", "mlx"]))
         self.assertEqual(read_lock(root)["removedModules"], ["ai", "mlx"])
 
+    def test_unguarded_module_type_stops_init_before_any_write(self):
+        root = self.repo({"App/Sources/Modules/Island/IslandView.swift": "struct IslandView {}\n",
+                          "App/Sources/Kit/Main/Use.swift": "let v = IslandView()\n"})
+        with self.assertRaises(StarterError) as e:
+            init(root, options(remove=["island"]))
+        self.assertIn("App/Sources/Kit/Main/Use.swift:1 nutzt IslandView", str(e.exception))
+        self.assertEqual(git(root, "status", "--porcelain"), "")
+
     def test_removal_order(self):
         m = manifest_obj()
         present = list(m.modules)

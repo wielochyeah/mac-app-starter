@@ -23,8 +23,8 @@ from . import globs
 from .common import (StarterError, cut_blocks, git, inside, is_text_path, remove_empty_dirs, working_files,
                      write_text)
 from .manifest import Manifest, is_project, kit_checksums, read_lock, read_manifest, write_lock
-from .remove import (apply_removal, dangling_report, plan_removal, present_modules, refuse_in_starter,
-                     run_make)
+from .remove import (apply_removal, dangling_report, plan_removal, present_modules, read_texts, refuse_in_starter,
+                     run_make, simulate)
 
 NEW_VERSION = "0.1.0"
 
@@ -157,6 +157,13 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
         if not enabled_after.intersection(group):
             raise StarterError(f"Mindestens eines der Module {', '.join(group)} muss bleiben, sonst sind die "
                                "Einstellungen nicht erreichbar.")
+
+    # Every removal is checked before anything is written, so a refusal never leaves half an init.
+    dangling = simulate(manifest, order, files, read_texts(root, files)) if order else []
+    if dangling:
+        raise StarterError("nichts geändert, andere Dateien nutzen noch Typen der Module "
+                           f"{', '.join(order)}:\n  " + "\n  ".join(dangling)
+                           + "\nDiese Stellen mit #if MODUL_<NAME> … #endif umschließen, dann erneut aufrufen.")
 
     result = InitResult(project=opts.name, version=lock["version"], modules_removed=order)
     result.identity_cleared = bool((config.get("commit") or {}).get("name") or (config.get("commit") or {}).get("email"))
