@@ -80,7 +80,7 @@ Für jedes wiederkehrende Problem gibt es genau einen Weg. Wer einen zweiten fin
 
 ## Tests
 
-- Swift-Tests liegen in `App/Tests/<Bereich>Tests.swift` innerhalb von `#if TESTING`, als Unterklasse von `TestSuite`; der Test-Runner findet sie selbst. XCTest und Swift Testing gibt es ohne Xcode nicht.
+- Swift-Tests liegen in `App/Tests/<Bereich>Tests.swift` (Tests eines Features in `App/Tests/Features/`, das dem Projekt gehört) innerhalb von `#if TESTING`, als Unterklasse von `TestSuite`; der Test-Runner findet sie selbst. XCTest und Swift Testing gibt es ohne Xcode nicht.
 - Python-Tests für Werkzeuge liegen in `scripts/tests/` (`unittest`, nur Standardbibliothek).
 - Tests rufen nie das Netz auf, fragen keine Berechtigung an und öffnen kein Fenster. Uhr, Bildschirme und Tastaturbelegung werden eingespeist. Erwartungswerte kommen aus der Anforderung oder einer Handrechnung.
 

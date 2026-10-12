@@ -21,12 +21,12 @@ description: Baut eine Funktion des Projekts unter App/Sources/Features nach den
 
 Ein Ordner `App/Sources/Features/<Name>/`, Namen auf Englisch in UpperCamelCase:
 
-- `<Name>Feature.swift`: `enum <Name>Feature { static func register() { … } }` hängt Seiten, Einstellungsbereiche, Onboarding-Schritte, Menüeinträge, Galerie-Einträge und Render-Szenen an `Registry` an. Der Einstieg für alle Features ist `App/Sources/Features/Features.swift` mit `enum Features { static func register() }`, das jedes `<Name>Feature.register()` aufruft; das Kit ruft `Features.register()` nach den Modulen auf.
+- `<Name>Feature.swift`: `enum <Name>Feature { static func register() { … } }` hängt Seiten, Einstellungsbereiche, Onboarding-Schritte, Menüeinträge, Galerie-Einträge und Render-Szenen an `Registry` an. Angemeldet wird es mit einer Zeile `<Name>Feature.register()` in `Features.register()` (`App/Sources/Features/Features.swift`); `Modules.registerAll()` ruft `Features.register()` einmal nach dem Kit und allen Modulen auf.
 - `<Name>Text.swift`: `enum <Name>Text` mit jedem sichtbaren Text als `static var x: String { tr(en: "…", de: "…") }`, Mehrzahl und Platzhalter als `static func`. Keine Texte in Views.
 - `<Name>Store.swift`: Zugriff auf Daten. Tabellen über `Database` mit nummerierten Migrationen (`Database.Migration(1, "CREATE TABLE …")`), Zeilen als `RowDecodable`. Kleine Vorlieben über `SettingKey`, Name mit Präfix des Features (`notes.sort`).
 - `<Name>Model.swift`: `@Observable final class`, reine Logik ohne Datei- und Netzzugriff dort, wo sie testbar sein soll.
 - `<Name>View.swift` und weitere Views: nur Tokens und Bausteine des Kits.
-- `App/Tests/<Name>Tests.swift`: Tests für jede Logik, in `#if TESTING`.
+- `App/Tests/Features/<Name>Tests.swift`: Tests für jede Logik, in `#if TESTING`.
 
 Features nutzen nur das Kit. Braucht ein Feature ein Modul (Insel, Statusmenü, Hintergrund, Kurzbefehle, KI), steht jeder Bezug in einem eigenen `#if MODUL_<NAME>` … `#endif`, ein Flag je Block, nie verschachtelt, nie mit `||` oder `&&`. So baut das Projekt auch nach `bin/starter remove <modul>`.
 
@@ -52,4 +52,4 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
 
 ## In einem Projekt
 
-`App/Sources/Features/**`, `App/Tests/<Name>Tests.swift` und `docs/PROJECT.md` gehören dem Projekt, `App/Sources/Kit/**` dem Starter (`starter.manifest.json`). Fehlt im Kit ein Baustein, steht der Bedarf in `docs/STARTER_FEEDBACK.md` (Skill `starter-rueckfluss`); bis dahin entsteht er im Feature-Ordner.
+`App/Sources/Features/**`, `App/Tests/Features/**` und `docs/PROJECT.md` gehören dem Projekt, `App/Sources/Kit/**` dem Starter (`starter.manifest.json`). Fehlt im Kit ein Baustein, steht der Bedarf in `docs/STARTER_FEEDBACK.md` (Skill `starter-rueckfluss`); bis dahin entsteht er im Feature-Ordner.
