@@ -25,13 +25,14 @@ Gehört zum Modul `background`; `bin/starter remove background` entfernt diesen 
    #if MODUL_BACKGROUND
    BackgroundJobs.shared.register(id: "cleanup.cache", title: { CleanupText.jobTitle }, interval: 6 * 3600,
                                   tolerance: 1800, qos: .utility) {
-       let removed = try await CacheCleaner.run()
-       return removed > 0 ? .done(note: CleanupText.removed(removed)) : .nothingToDo
+       let removed = try await CacheCleaner.run()                  // nonisolated: läuft nicht auf dem Hauptthread
+       guard removed > 0 else { return .nothingToDo }
+       return .done(note: await CleanupText.removed(removed))      // Texte gehören dem MainActor
    }
    #endif
    ```
 
-   Die Arbeit läuft außerhalb des MainActors, ist abbrechbar (`Task.checkCancellation()`) und schreibt Ergebnisse atomar. Kein Netz, außer die Nutzerin hat es für genau diese Aufgabe eingeschaltet.
+   Die Arbeit läuft außerhalb des MainActors: der Typ, der sie erledigt, ist `nonisolated` (sonst legt `-default-isolation MainActor` sie doch auf den Hauptthread), Texte holt `await` vom MainActor. Sie ist abbrechbar (`Task.checkCancellation()`) und schreibt Ergebnisse atomar. Kein Netz, außer die Nutzerin hat es für genau diese Aufgabe eingeschaltet.
 3. Ergebnis ehrlich melden: `.done(note:)` mit kurzem Detail, `.nothingToDo`, wenn es nichts zu tun gab, `.failed(_:)` (oder ein geworfener Fehler) mit Grund in Alltagssprache. Nutzerinhalte stehen nie im Protokoll.
 4. Kennung mit Präfix des Features, Titel als Tätigkeit (`Cache aufräumen`).
 5. Tests: die Logik der Aufgabe für sich, mit eingespeister Uhr und temporärem Ordner; nie auf den echten Planer warten.
