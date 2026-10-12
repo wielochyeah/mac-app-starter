@@ -78,15 +78,25 @@ enum RenderRunner {
         host.appearance = NSAppearance(named: appearance == .dark ? .darkAqua : .aqua)
         var target = size
         if target == .zero {
-            host.frame = NSRect(x: 0, y: 0, width: 10, height: 10)
-            target = host.fittingSize
+            // The SwiftUI size, not NSView.fittingSize: that one rounds 142.5 pt up to 143 and the
+            // content then sits half a point down, leaving a transparent pixel row at the top.
+            let measured = NSHostingController(rootView: AnyView(root)).sizeThatFits(in: CGSize(width: CGFloat.infinity, height: CGFloat.infinity))
+            if measured.width.isFinite, measured.height.isFinite, measured.width >= 1, measured.height >= 1 {
+                target = measured
+            } else {
+                host.frame = NSRect(x: 0, y: 0, width: 10, height: 10)
+                target = host.fittingSize
+            }
         }
-        guard target.width >= 1, target.height >= 1 else { return nil }
+        // Whole pixels, rounded down: never an empty edge row; a sliver of background is trimmed.
+        let pixels = (width: Int((target.width * scale + 0.001).rounded(.down)), height: Int((target.height * scale + 0.001).rounded(.down)))
+        guard pixels.width >= 1, pixels.height >= 1 else { return nil }
+        target = CGSize(width: CGFloat(pixels.width) / scale, height: CGFloat(pixels.height) / scale)
         host.frame = NSRect(origin: .zero, size: target)
         host.layoutSubtreeIfNeeded()
         guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil,
-                                         pixelsWide: Int((target.width * scale).rounded()),
-                                         pixelsHigh: Int((target.height * scale).rounded()),
+                                         pixelsWide: pixels.width,
+                                         pixelsHigh: pixels.height,
                                          bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
                                          colorSpaceName: .calibratedRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
         rep.size = target

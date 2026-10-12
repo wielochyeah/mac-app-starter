@@ -129,6 +129,20 @@ final class DesignTests: TestSuite {
             expect(darkest < 0.2, "hairline missing (darkest \(darkest))")
         }
 
+        test("design scenes have opaque edges (no empty pixel row from fractional sizes)") {
+            for scene in Registry.orderedRenderScenes where scene.id.hasPrefix("design.") {
+                for appearance in Appearance.allCases {
+                    guard let png = RenderRunner.png(scene.content(), size: scene.size, appearance: appearance, lang: .de),
+                          let rep = NSBitmapImageRep(data: png) else { fail("\(scene.id) \(appearance): no image"); continue }
+                    let (w, h) = (rep.pixelsWide, rep.pixelsHigh)
+                    for (x, y) in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1), (w / 2, 0), (w / 2, h - 1), (0, h / 2), (w - 1, h / 2)] {
+                        let alpha = rep.colorAt(x: x, y: y)?.alphaComponent ?? 0
+                        expect(alpha > 0.99, "\(scene.id) \(appearance) pixel (\(x), \(y)) alpha \(alpha)")
+                    }
+                }
+            }
+        }
+
         test("every design scene renders in both appearances") {
             for scene in Registry.orderedRenderScenes where scene.id.hasPrefix("design.") {
                 for appearance in Appearance.allCases {
