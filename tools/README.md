@@ -30,7 +30,7 @@ Kleine Programme, die beim Bauen auf diesem Mac laufen. Sie landen nie in der Ap
 - dmgbuild läuft in `build/tools-venv` (System-Python 3.9). Die Versionen stehen mit Hash in `tools/dmg/requirements.txt`; sie werden einmal von PyPI geladen. dmgbuild 1.6.6+ braucht Python 3.10, deshalb 1.6.5.
 - Kein `hide_extensions`: das setzt Finder-Infos an der App und bricht die strenge Signaturprüfung („beschädigt“ statt „Dennoch öffnen“).
 - Die App wird in `build/dmg/work.noindex` zusammengestellt (Spotlight und Launchpad zeigen sie dort nicht als zweite App) und danach gelöscht; `KEEP_WORK=1` behält sie.
-- Ist das Modul `mlx` an, ruft `make dmg` `ai-worker/package.sh <Pfad zur .app>` auf, sobald es das Skript gibt, und sagt es in der Ausgabe. <!-- modul:mlx -->
+- Ist das Modul `mlx` an, bündelt `make dmg` den MLX-Worker noch nicht: `ai-worker/package.sh` (eingebettetes Python mit `mlx-lm`) gibt es noch nicht, `make dmg` sagt das in der Ausgabe, und die App im DMG zeigt MLX als „Nicht enthalten“. Was das Skript tun muss, steht in `docs/KI.md`. <!-- modul:mlx -->
 
 ## Signieren und Notarisieren
 

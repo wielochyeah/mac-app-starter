@@ -106,7 +106,8 @@ if [[ " $MODULES_ENABLED " == *" mlx "* ]]; then
     step "mlx is enabled: ai-worker/package.sh adds the MLX worker to the app"
     ai-worker/package.sh "$APP"
   else
-    step "mlx is enabled, but ai-worker/package.sh does not exist: the DMG has no MLX worker"
+    step "mlx is enabled, but bundling the MLX worker is not built yet (ai-worker/package.sh is missing):" \
+      "the app in this DMG shows MLX as \"not included\", Apple Foundation Models work (docs/KI.md)"
   fi
 fi
 
