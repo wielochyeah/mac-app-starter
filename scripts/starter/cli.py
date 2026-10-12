@@ -289,6 +289,11 @@ def cmd_doctor(root: Path) -> int:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    # Line by line, also into a pipe (CI, the probe): report lines, make's output and errors stay in order.
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+    except AttributeError:
+        pass
     parser = build_parser()
     args = parser.parse_args(argv)
     if not args.command:
