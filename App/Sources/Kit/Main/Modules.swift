@@ -4,7 +4,8 @@
 enum Modules {
     private static var registered = false
 
-    /// Calls every module's `register()` once (kit first, then modules in starter.json order).
+    /// Calls every module's `register()` once (kit first, then modules in starter.json order), then the project's
+    /// `Features.register()` (App/Sources/Features/Features.swift).
     static func registerAll() {
         guard !registered else { return }
         registered = true
@@ -33,6 +34,7 @@ enum Modules {
         #if MODUL_EXAMPLES
         ExamplesModule.register()
         #endif
+        Features.register()
     }
 
     /// The modules compiled into this binary (from the `-D MODUL_*` flags).
