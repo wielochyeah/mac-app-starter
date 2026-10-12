@@ -11,8 +11,16 @@ private final class Flag {
 }
 
 final class ObservingTests: TestSuite {
-    /// Lets the main-actor tasks that Observation schedules run.
-    static func spin() { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+    /// Lets the main-actor tasks that Observation schedules run until `done` holds. Waits for the
+    /// condition (up to `timeout`) instead of a fixed time: under load (render tests, parallel
+    /// builds) the main actor can be busy for longer than any short fixed wait.
+    static func spin(until done: () -> Bool, timeout: TimeInterval = 5) {
+        let end = Date().addingTimeInterval(timeout)
+        while !done() && Date() < end { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+    }
+
+    /// For checks that nothing happens: gives pending main-actor tasks time to run.
+    static func settle() { RunLoop.main.run(until: Date().addingTimeInterval(0.2)) }
 
     override class func register() {
         test("track calls onChange on every change") {
@@ -20,9 +28,10 @@ final class ObservingTests: TestSuite {
             var calls = 0
             Observing.track { _ = counter.value } onChange: { calls += 1 }
             counter.value = 1
-            spin()
+            spin { calls == 1 }
             counter.value = 2
-            spin()
+            spin { calls == 2 }
+            settle()
             expectEqual(calls, 2)
         }
 
@@ -32,14 +41,14 @@ final class ObservingTests: TestSuite {
             var calls = 0
             Observing.track { _ = counter.value } while: { active.on } onChange: { calls += 1 }
             counter.value = 1
-            spin()
+            spin { calls == 1 }
             expectEqual(calls, 1)
             active.on = false
             counter.value = 2
-            spin()
+            settle()
             active.on = true   // a stopped tracker never resumes
             counter.value = 3
-            spin()
+            settle()
             expectEqual(calls, 1)
         }
     }

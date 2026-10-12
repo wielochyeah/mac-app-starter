@@ -13,11 +13,35 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import gen_config  # noqa: E402
 
 
+# A fixed starter.json: the repository's own file changes with `bin/starter init` (name, bundle id) and
+# `remove` (module keys), and these tests must stay green in every project made from the starter.
+FIXTURE = {
+    "starter": {"version": "1.0.0"},
+    "app": {
+        "name": "Starter",
+        "bundleId": "com.example.starter",
+        "displayName": {"en": "Starter", "de": "Starter"},
+        "version": "1.0.0",
+        "build": 1,
+        "minimumMacOS": "26.0",
+        "accent": "violett",
+        "symbol": "sparkles",
+        "copyright": "\u00a9 2026",
+    },
+    "modules": {"window": True, "menubar": True, "island": True, "background": True, "hotkeys": True, "ai": True,
+                "mlx": False, "examples": True},
+    "permissions": ["notifications"],
+    "texts": {"languages": ["en", "de"], "anrede": "du"},
+    "commit": {"name": "Test", "email": "test@example.com"},
+    "signing": {"identity": "-", "teamId": "", "notarize": False},
+}
+
+
 class GenConfigTests(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         (self.tmp / "App" / "Resources").mkdir(parents=True)
-        shutil.copy(ROOT / "starter.json", self.tmp / "starter.json")
+        self.write(json.loads(json.dumps(FIXTURE)))
         shutil.copy(ROOT / "App" / "Resources" / "InfoPlist.json", self.tmp / "App" / "Resources" / "InfoPlist.json")
         self.out = self.tmp / "gen"
 
@@ -120,7 +144,9 @@ class GenConfigTests(unittest.TestCase):
         self.assertIn("NSLocationWhenInUseUsageDescription", p)
         self.assertNotIn("NSCameraUsageDescription", p)
         de = (self.out / "Resources" / "de.lproj" / "InfoPlist.strings").read_text()
-        self.assertIn('"NSMicrophoneUsageDescription" = "Das Mikrofon', de)
+        # the texts are shared files a project may reword: compare with the copied file, not a fixed sentence
+        texts = json.loads((self.tmp / "App" / "Resources" / "InfoPlist.json").read_text())
+        self.assertIn('"NSMicrophoneUsageDescription" = "%s' % texts["NSMicrophoneUsageDescription"]["de"][:12], de)
         if shutil.which("plutil"):
             for lang in ("en", "de"):
                 subprocess.run(["plutil", "-lint", str(self.out / "Resources" / f"{lang}.lproj" / "InfoPlist.strings")],
