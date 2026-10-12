@@ -300,7 +300,7 @@ struct AIPaneContent: View {
                               selection: $choice)
                 }
                 ForEach(model.providers) { info in
-                    AIProviderRow(info: info, inUse: model.showsPicker && info.id == model.activeID)
+                    AIProviderRow(info: info, inUse: model.showsPicker && info.id == model.activeID && info.availability.isAvailable)
                 }
             }
             ForEach(sections.sorted { ($0.order, $0.id) < ($1.order, $1.id) }) { $0.pane() }
@@ -353,7 +353,7 @@ struct AIOnboardingContent: View {
             VStack(alignment: .leading, spacing: Space.s) {
                 SettingsSection(tone: .onboarding) {
                     ForEach(model.providers) { info in
-                        AIProviderRow(info: info, inUse: model.showsPicker && info.id == model.activeID)
+                        AIProviderRow(info: info, inUse: model.showsPicker && info.id == model.activeID && info.availability.isAvailable)
                     }
                 }
                 ForEach(sections.filter { $0.onboarding != nil }.sorted { ($0.order, $0.id) < ($1.order, $1.id) }) {
