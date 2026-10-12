@@ -8,10 +8,11 @@
 // pill with lock.open.fill, the soft light behind the icon row, the preview output.
 //
 //   dmg-background --out <dir> --layout <layout.json> --icon <AppIcon.icns> --name <Name> [--name-de <Name>]
-//                  --app-label <Finder label> --version <1.0.0> --min-macos <26.0>
+//                  --app-label <Finder label> [--app-label-de <Finder label>] --version <1.0.0> --min-macos <26.0>
 //                  [--accent violett] [--lang en|de|both] [--anrede du|sie] [--no-hint]
-// --name/--name-de: the display name for the header. --app-label: what Finder shows under the app
-// icon (the bundle's file name); the drag line names that, so it matches the screen.
+// --name/--name-de: the display name for the header. --app-label/--app-label-de: what Finder shows
+// under the app icon in that language (the app's localized display name, LSHasLocalizedDisplayName);
+// the drag line names that, so it matches the screen.
 // Writes <dir>/background.png, background@2x.png, preview.png (Finder's black labels) and
 // preview-dark.png (white labels, in case Finder draws them white in dark mode).
 
@@ -44,6 +45,8 @@ struct Options {
     /// German display name (app.displayName.de) when it differs.
     var nameDE = ""
     var appLabel = "App"
+    /// What a German Finder shows under the icon, when it differs.
+    var appLabelDE = ""
     var version = "1.0.0"
     var minimumMacOS = "26.0"
     var accent = AccentName.violett
@@ -53,6 +56,8 @@ struct Options {
 
     /// The header name: German display name when the window is German only.
     var title: String { lang == .de && !nameDE.isEmpty ? nameDE : name }
+    /// The Finder label in a language ("en" or "de").
+    func label(_ lang: String) -> String { lang == "de" && !appLabelDE.isEmpty ? appLabelDE : appLabel }
 }
 
 /// Fixed geometry of the artwork (points in the 640 x 400 background). Kept here, not in Kit
@@ -109,7 +114,7 @@ struct Hints: View {
         VStack(spacing: Space.xs) {
             VStack(spacing: Space.hair) {
                 ForEach(Array(langs.enumerated()), id: \.offset) { i, lang in
-                    Text(DMGText.drag(o.appLabel, to: folder, anrede: o.anrede).text(lang))
+                    Text(DMGText.drag(o.label(lang), to: folder, anrede: o.anrede).text(lang))
                         .font(i == 0 ? TypeScale.bodySemibold : TypeScale.secondary)
                         .foregroundStyle(i == 0 ? t.fg : t.prose)
                 }
@@ -180,7 +185,7 @@ struct Preview: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             Background(o: o, layout: layout)
-            item(appIcon, o.appLabel, at: layout.appCentre)
+            item(appIcon, o.label(o.lang.languages[0]), at: layout.appCentre)
             item(folder, layout.applicationsName, at: layout.applicationsCentre)
         }
         .frame(width: layout.size.width, height: layout.size.height)
@@ -238,6 +243,7 @@ enum BackgroundTool {
             case "--name": o.name = try value()
             case "--name-de": o.nameDE = try value()
             case "--app-label": o.appLabel = try value()
+            case "--app-label-de": o.appLabelDE = try value()
             case "--version": o.version = try value()
             case "--min-macos": o.minimumMacOS = try value()
             case "--accent":
