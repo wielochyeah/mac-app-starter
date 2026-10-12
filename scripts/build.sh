@@ -32,17 +32,26 @@ swiftc "${flags[@]}" \
 APP="$TMP/$APP_NAME.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 mv "$TMP/$APP_NAME" "$APP/Contents/MacOS/$APP_NAME"
-[[ -d "$TMP/$APP_NAME.dSYM" ]] && { rm -rf "build/$APP_NAME.app.dSYM"; mv "$TMP/$APP_NAME.dSYM" "build/$APP_NAME.app.dSYM"; }
+# Always drop the old dSYM: a release build makes none, and a stale debug one would not match.
+rm -rf "build/$APP_NAME.app.dSYM"
+if [[ -d "$TMP/$APP_NAME.dSYM" ]]; then mv "$TMP/$APP_NAME.dSYM" "build/$APP_NAME.app.dSYM"; fi
 cp build/gen/Info.plist "$APP/Contents/Info.plist"
 print -n "APPL????" > "$APP/Contents/PkgInfo"
 # Resources: everything in App/Resources except the text sources, then the generated .lproj files.
 rsync -a --exclude 'InfoPlist.json' --exclude '*.md' --exclude '.DS_Store' App/Resources/ "$APP/Contents/Resources/"
 rsync -a build/gen/Resources/ "$APP/Contents/Resources/"
 
+# Ad hoc by default. A Developer ID turns on the hardened runtime, which needs the entitlements
+# for every listed permission (build/gen/App.entitlements), or macOS denies them silently.
 if [[ "$SIGN_IDENTITY" == "-" ]]; then
-  codesign --force --sign - "$APP" >/dev/null 2>&1
+  sign_args=(--force --sign -)
 else
-  codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP"
+  sign_args=(--force --options runtime --timestamp --entitlements "$ROOT/build/gen/App.entitlements" --sign "$SIGN_IDENTITY")
+fi
+if ! sign_out="$(codesign "${sign_args[@]}" "$APP" 2>&1)"; then
+  print -u2 -- "$sign_out"
+  print -u2 "build.sh: codesign failed (identity: $SIGN_IDENTITY)"
+  exit 1
 fi
 
 # Replace the old bundle: move it aside first, never write into a bundle a running copy uses.

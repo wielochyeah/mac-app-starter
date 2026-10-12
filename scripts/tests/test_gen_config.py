@@ -50,6 +50,20 @@ class GenConfigTests(unittest.TestCase):
         env = (self.out / "app.env").read_text()
         self.assertIn("MODULE_FLAGS='-D MODUL_MENUBAR'", env.replace("MODULE_FLAGS=-D MODUL_MENUBAR", "MODULE_FLAGS='-D MODUL_MENUBAR'"))
 
+    def test_entitlements_follow_permissions(self):
+        gen_config.generate(self.tmp, self.out)
+        self.assertEqual(plistlib.loads((self.out / "App.entitlements").read_bytes()), {})
+        c = self.config()
+        c["permissions"] = ["notifications", "microphone", "automation", "location"]
+        self.write(c)
+        gen_config.generate(self.tmp, self.out)
+        ent = plistlib.loads((self.out / "App.entitlements").read_bytes())
+        self.assertEqual(ent, {
+            "com.apple.security.device.audio-input": True,
+            "com.apple.security.automation.apple-events": True,
+            "com.apple.security.personal-information.location": True,
+        })
+
     def test_bundle_keys(self):
         gen_config.generate(self.tmp, self.out)
         p = self.plist()

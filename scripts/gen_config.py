@@ -7,6 +7,8 @@ Writes into --out (default build/gen):
                                        LSMinimumSystemVersion, usage descriptions for listed permissions
   Resources/<lang>.lproj/InfoPlist.strings   localized display name + usage descriptions
                                        (texts from App/Resources/InfoPlist.json)
+  App.entitlements                     hardened-runtime entitlements for the listed permissions
+                                       (used by build.sh when signing.identity is a Developer ID)
   app.env                              shell variables for scripts/build.sh and scripts/test.sh
 
 The module list comes from starter.json "modules" unless --modules (or $MODULES) overrides it,
@@ -51,6 +53,18 @@ PERMISSION_KEYS = {
     "location": ["NSLocationUsageDescription", "NSLocationWhenInUseUsageDescription"],
     "bluetooth": ["NSBluetoothAlwaysUsageDescription"],
     "localNetwork": ["NSLocalNetworkUsageDescription"],
+}
+# permission -> hardened-runtime entitlements it needs. Without them macOS silently denies the
+# resource once the app is signed with --options runtime (Developer ID path in build.sh).
+PERMISSION_ENTITLEMENTS = {
+    "microphone": ["com.apple.security.device.audio-input"],
+    "camera": ["com.apple.security.device.camera"],
+    "automation": ["com.apple.security.automation.apple-events"],
+    "contacts": ["com.apple.security.personal-information.addressbook"],
+    "calendars": ["com.apple.security.personal-information.calendars"],
+    "reminders": ["com.apple.security.personal-information.calendars"],
+    "photos": ["com.apple.security.personal-information.photos-library"],
+    "location": ["com.apple.security.personal-information.location"],
 }
 ACCENTS = ["violett", "rot", "blau", "gruen", "orange", "graphit"]
 LANGS = ["en", "de"]
@@ -169,6 +183,14 @@ def usage_keys(config):
     return keys
 
 
+def entitlements(config):
+    out = {}
+    for p in config.get("permissions", []):
+        for key in PERMISSION_ENTITLEMENTS.get(p, []):
+            out[key] = True
+    return out
+
+
 def info_plist(config, modules, texts):
     app = config["app"]
     names = app.get("displayName", {})
@@ -238,6 +260,7 @@ def generate(root, out, override=None):
     texts = load_json(texts_path) if texts_path.exists() else {}
     write_if_changed(out / "AppConfig.swift", app_config_swift(config, modules))
     write_if_changed(out / "Info.plist", plistlib.dumps(info_plist(config, modules, texts), sort_keys=True))
+    write_if_changed(out / "App.entitlements", plistlib.dumps(entitlements(config), sort_keys=True))
     for lang in LANGS:
         write_if_changed(out / "Resources" / f"{lang}.lproj" / "InfoPlist.strings", infoplist_strings(config, texts, lang))
     app = config["app"]
