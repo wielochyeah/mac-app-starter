@@ -146,6 +146,26 @@ class ReferenceTests(unittest.TestCase):
         remaining = {"K/Fallback.swift": "enum IslandBridge {}\nlet b = IslandBridge.self\n"}
         self.assertEqual(dangling_references(deleted, remaining), [])
 
+    def test_nested_types_and_members_of_the_same_name_are_not_uses(self):
+        """Kit design tokens `Radius.Island`, `Metrics.Island` next to the module's top-level `class Island`."""
+        deleted = {"M/IslandController.swift": "final class Island {\n    static let shared = Island()\n}\n"}
+        remaining = {
+            "K/Tokens.swift": lines("extension Radius {", "    enum Island {", "        static let card = 12.0",
+                                    "    }", "}", "extension Radius {", "    static var x: Double { Island.card }", "}"),
+            "K/Catalog.swift": lines("let notch = Metrics.Island.renderNotch",
+                                     "let r = Radius", "    .Island.card", "struct Island2 {}"),
+            "K/Show.swift": lines("func show() {", "    Island.shared.present()", "}",
+                                  "extension Island {}", "let k = \\Metrics.Island.renderNotch"),
+        }
+        self.assertEqual(dangling_references(deleted, remaining), [
+            "K/Show.swift:2 nutzt Island (aus M/IslandController.swift)",
+            "K/Show.swift:4 nutzt Island (aus M/IslandController.swift)",
+        ])
+
+    def test_references_skip_members_and_declarations(self):
+        src = lines("a.Island", "enum Island {}", "struct Island<T> {}", "Island.shared", "x = [Island]()")
+        self.assertEqual(references(src, {"Island"}), [(4, "Island"), (5, "Island")])
+
 
 if __name__ == "__main__":
     unittest.main()

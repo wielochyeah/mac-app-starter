@@ -238,28 +238,47 @@ def top_level_decls(text: str) -> List[str]:
     return names
 
 
+_NESTED_DECL = re.compile(r"\b(?:class|struct|enum|protocol|actor|typealias)\s+([A-Za-z_]\w*)")
+
+
+def nested_type_decls(text: str) -> Set[str]:
+    """Type names a file declares at any indent (`extension Radius { enum Island {} }`)."""
+    body = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    return {m.group(1) for line in body.split("\n") for m in _NESTED_DECL.finditer(_code_only(line))}
+
+
 def _code_only(line: str) -> str:
     line = re.sub(r'"(?:\\.|[^"\\])*"', '""', line)
     return re.sub(r"//.*$", "", line)
 
 
+# A name right after a dot is a member (`Metrics.Island`), right after a declaration keyword it is a
+# declaration of its own (`enum Island {` nested in another type); neither uses the deleted type.
+_NOT_A_USE = re.compile(r"(?:\.\s*|\b(?:class|struct|enum|protocol|actor|typealias|func|let|var)\s+)$")
+
+
 def references(text: str, names: Set[str]) -> List[Tuple[int, str]]:
-    """(line, name) for every whole-word use of a name outside comments and string literals."""
+    """(line, name) for every use of a name as a whole word outside comments and string literals,
+    not counting member access (`Metrics.Island`) and declarations (`enum Island`)."""
     if not names:
         return []
     pattern = re.compile(r"\b(" + "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True)) + r")\b")
     body = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
     hits = []
     for no, line in enumerate(body.split("\n"), 1):
-        for m in pattern.finditer(_code_only(line)):
-            hits.append((no, m.group(1)))
+        code = _code_only(line)
+        for m in pattern.finditer(code):
+            if not _NOT_A_USE.search(code[:m.start()]):
+                hits.append((no, m.group(1)))
     return hits
 
 
 def dangling_references(deleted: Dict[str, str], remaining: Dict[str, str]) -> List[str]:
     """Uses of top-level declarations from deleted Swift files in the remaining Swift files (both
     given as path -> text, remaining already transformed). A name that a remaining file declares
-    as well (a fallback in an `#else` branch) does not count."""
+    at column 0 as well (a fallback in an `#else` branch) does not count anywhere; a name a remaining
+    file declares as a nested type does not count in that file (its own scope, e.g. `Radius.Island`
+    used as `Island` inside `extension Radius`)."""
     declared: Dict[str, str] = {}
     for path, text in deleted.items():
         if path.endswith(".swift"):
@@ -272,6 +291,7 @@ def dangling_references(deleted: Dict[str, str], remaining: Dict[str, str]) -> L
     for path in sorted(remaining):
         if not path.endswith(".swift"):
             continue
-        for no, n in references(remaining[path], set(declared)):
+        local = nested_type_decls(remaining[path])
+        for no, n in references(remaining[path], set(declared) - local):
             problems.append(f"{path}:{no} nutzt {n} (aus {declared[n]})")
     return problems
