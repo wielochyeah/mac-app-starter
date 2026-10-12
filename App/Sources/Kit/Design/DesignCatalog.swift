@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Registers every design component as a gallery entry and a `design.<name>` render scene.
+/// Registers every design component as a gallery entry and a `design.<name>` render scene, then the
+/// patterns (`patterns.<name>`).
 enum DesignKit {
     static func register() {
         for item in catalog {
@@ -9,6 +10,9 @@ enum DesignKit {
                 AnyView(item.specimen ? AnyView(Specimen(width: item.width) { item.view() }) : item.view())
             })
         }
+        // Composed building blocks (Kit/Design/Patterns) and the composed samples
+        // (patterns.sample-pane / patterns.sample-step replace the former design.sample-* scenes).
+        PatternsKit.register()
     }
 
     private struct Item {
@@ -45,8 +49,6 @@ enum DesignKit {
             Item(id: "section-header", title: { DesignText.sectionHeader }) { AnyView(SectionHeaderSample()) },
             Item(id: "glass", title: { DesignText.glass }) { AnyView(GlassSample()) },
             Item(id: "island", title: { DesignText.island }) { AnyView(IslandSample()) },
-            Item(id: "sample-settings", title: { DesignText.sampleSettings }, specimen: false) { AnyView(SampleSettingsPane()) },
-            Item(id: "sample-onboarding", title: { DesignText.sampleOnboarding }, specimen: false) { AnyView(SampleOnboardingStep()) },
         ]
     }
 }
@@ -405,96 +407,5 @@ private struct IslandSample: View {
         }
         .frame(height: 190)
         .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
-    }
-}
-
-/// A settings pane in VoiceBud's hub style, built only from kit components.
-private struct SampleSettingsPane: View {
-    @State private var lang = "system"
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        let t = Theme(scheme)
-        VStack(spacing: 0) {
-            SectionHeader(DesignText.general, symbol: "gearshape.fill", tint: .graphite)
-            VStack(alignment: .leading, spacing: 0) {
-                GroupLabel(DesignText.language)
-                Card {
-                    Row(DesignText.interface, subtitle: DesignText.interfaceDetail) {
-                        Segmented([("system", CommonText.systemLanguage), ("de", Lang.de.nativeName), ("en", Lang.en.nativeName)], selection: $lang)
-                    }
-                }
-                GroupLabel(DesignText.behavior, top: Space.pane)
-                Card {
-                    Row(DesignText.openAtLogin, subtitle: DesignText.openAtLoginDetail) { SwitchToggle(isOn: .constant(true)) }
-                    Separator()
-                    Row(DesignText.sounds, subtitle: DesignText.soundsDetail) { SwitchToggle(isOn: .constant(false)) }
-                    Separator()
-                    Row(DesignText.hideInFullScreen, subtitle: DesignText.hideInFullScreenDetail) { SwitchToggle(isOn: .constant(false)) }
-                }
-                Footnote(DesignText.footnoteSettings)
-            }
-            .frame(maxWidth: Metrics.settingsColumn, alignment: .leading)
-            .padding(.horizontal, Space.pane)
-            .padding(.top, Space.m)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Spacer(minLength: 0)
-        }
-        .frame(width: 640, height: 470)
-        .background(t.windowBg)
-    }
-}
-
-/// An onboarding step in VoiceBud's setup style (window chrome and desk drawn for the render).
-/// The language segment shows the current UI language and switches it, like the real step.
-private struct SampleOnboardingStep: View {
-    private let localizer = Localizer.shared
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        let t = Theme(scheme)
-        let lang = Binding(get: { localizer.lang.rawValue }, set: { localizer.choice = Lang(rawValue: $0) })
-        RenderBoard {
-            StaticWindow(size: Metrics.onboardingWindow, chrome: .onboarding) {
-                VStack(spacing: 0) {
-                    VStack(spacing: Space.m) {
-                        SquircleIcon(symbol: "globe", tint: .sky, size: Metrics.squircleLarge)
-                            .shadow(color: t.panelShadow, radius: 6, y: 2)
-                        VStack(spacing: Space.xs) {
-                            Text(DesignText.setupTitle).font(TypeScale.title).foregroundStyle(t.fg)
-                            Text(DesignText.setupSubtitle).font(TypeScale.body).foregroundStyle(t.prose)
-                            Text(DesignText.setupHint).font(TypeScale.secondary).foregroundStyle(t.prose)
-                        }
-                        .multilineTextAlignment(.center)
-                        VStack(alignment: .leading, spacing: 0) {
-                            Card {
-                                Row(DesignText.app, subtitle: DesignText.appDetail, tone: .onboarding) {
-                                    Segmented([("en", Lang.en.nativeName), ("de", Lang.de.nativeName)], selection: lang)
-                                }
-                                Separator()
-                                Row(DesignText.openAtLogin, subtitle: DesignText.openAtLoginDetail, tone: .onboarding) {
-                                    SwitchToggle(isOn: .constant(true))
-                                }
-                            }
-                            Footnote(DesignText.footnoteSample, tone: .onboarding)
-                        }
-                        .frame(width: Metrics.onboardingNarrow + 40)
-                        .padding(.top, Space.xs)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.top, Metrics.titlebar)
-                    ZStack {
-                        SegmentedProgress(count: 6, current: 1)
-                        HStack {
-                            Button(CommonText.back) {}.buttonStyle(.secondary)
-                            Spacer()
-                            Button(CommonText.continue) {}.buttonStyle(.primary(minWidth: Metrics.buttonWideMinWidth))
-                        }
-                    }
-                    .padding(.horizontal, Space.l)
-                    .frame(height: Metrics.onboardingFooter)
-                }
-            }
-        }
     }
 }
