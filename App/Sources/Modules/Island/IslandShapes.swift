@@ -64,18 +64,25 @@ struct NotchSurfaceMask: View {
 }
 
 /// Black capsule or card with a tight shadow under it (CSS 0 8px 24px -10px rgba(0,0,0,.5);
-/// the negative spread is the inset of the blurred copy).
+/// the negative spread is the inset of the blurred copy). Offscreen renders do not draw blur
+/// filters, so stills use a plain shadow of the same reach instead.
 struct CapsuleBackdrop: View {
     var radius: CGFloat
+    @Environment(\.renderStatic) private var renderStatic
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: max(0, radius), style: .continuous)
-        shape.fill(IslandPalette.surface)
-            .background(
-                shape.fill(IslandPalette.shadow)
-                    .padding(IslandLook.shadowInset)
-                    .offset(y: IslandLook.shadowOffset)
-                    .blur(radius: IslandLook.shadowBlur))
+        if renderStatic {
+            shape.fill(IslandPalette.surface)
+                .shadow(color: IslandPalette.shadow, radius: IslandLook.stillShadowRadius, y: IslandLook.shadowOffset)
+        } else {
+            shape.fill(IslandPalette.surface)
+                .background(
+                    shape.fill(IslandPalette.shadow)
+                        .padding(IslandLook.shadowInset)
+                        .offset(y: IslandLook.shadowOffset)
+                        .blur(radius: IslandLook.shadowBlur))
+        }
     }
 }
 

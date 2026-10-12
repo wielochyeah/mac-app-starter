@@ -74,6 +74,8 @@ enum IslandLook {
     static let shadowInset: CGFloat = 10
     static let shadowOffset: CGFloat = 8
     static let shadowBlur: CGFloat = 12
+    /// The same shadow in renders (no blur filter offscreen).
+    static let stillShadowRadius: CGFloat = 7
 
     // Level meter (VoiceBud "fein": 4 bars)
     static let meterBars = 4

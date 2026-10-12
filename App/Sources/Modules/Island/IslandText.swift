@@ -119,6 +119,8 @@ enum IslandSampleText {
             Two notes are still open: the source for the market figures on page 4, and whether the appendix should list every interview. Both are marked yellow in the slides.
 
             The export ran at full quality. The PDF is 4.2 MB, the slides 18 MB.
+
+            Next week the numbers for the third quarter come in. The report then gets a second chart sheet, and the slides move the outlook to the end.
             """,
            de: """
             Quartalsbericht.pdf, die Folien und das Diagrammblatt liegen in Dokumente › Berichte. Die Originale bleiben im Projektordner.
@@ -128,6 +130,8 @@ enum IslandSampleText {
             Zwei Punkte sind noch offen: die Quelle für die Marktzahlen auf Seite 4 und ob der Anhang jedes Interview aufführen soll. Beide sind in den Folien gelb markiert.
 
             Der Export lief in voller Qualität. Das PDF hat 4,2 MB, die Folien 18 MB.
+
+            Nächste Woche kommen die Zahlen für das dritte Quartal. Der Bericht bekommt dann ein zweites Diagrammblatt, und in den Folien rückt der Ausblick ans Ende.
             """)
     }
     static var showInFinder: String { tr(en: "Show in Finder", de: "Im Finder zeigen") }
