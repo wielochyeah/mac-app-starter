@@ -9,6 +9,7 @@
     "minimumMacOS": "26.0",
     "accent": "violett",
     "symbol": "sparkles",
+    "tagline": { "en": "The starting point for your next Mac app.", "de": "Der Anfang deiner nächsten Mac-App." },
     "copyright": "© 2026"
   },
   "modules": { "window": true, "menubar": true, "island": true, "background": true, "hotkeys": true, "ai": true, "mlx": false, "examples": true },

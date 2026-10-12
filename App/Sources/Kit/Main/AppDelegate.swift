@@ -2,6 +2,7 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Launch.noteLaunchEvent(NSAppleEventManager.shared().currentAppleEvent)
         AppForm.applyActivationPolicy()
         MainMenu.install()
         if !AppInfo.isAppBundle, let icon = AppInfo.icon() { NSApp.applicationIconImage = icon }
@@ -14,7 +15,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             for driver in Registry.demoDrivers { driver() }
             return
         }
-        if !Settings.shared[.onboardingDone] && !Registry.orderedOnboardingSteps.isEmpty {
+        if Launch.isBackground {
+            Log.info("background launch: no windows", "app")
+            return
+        }
+        if OnboardingKit.opensAtLaunch {
             AppActions.openOnboarding()
         } else if AppInfo.isEnabled("window") {
             AppActions.openMainWindow()

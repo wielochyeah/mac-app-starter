@@ -4,8 +4,12 @@ import AppKit
 ///
 ///     <App> --render <dir> [--only <prefix>] [--lang en|de] [--appearance light|dark]
 ///     <App> --selftest
+///     <App> --permission-probe <id>   prints the permission status a fresh process sees, then exits
+///                         (Kit/Permissions asks this for Screen Recording, see PermissionProbe)
 ///     <App> --demo        normal launch, no onboarding, runs every `Registry.demoDrivers` entry
 ///                         (scripted loops such as the island's); fails when no module adds one
+///     <App> --background  normal launch without onboarding or main window (`Launch.isBackground`;
+///                         a launch as a login item counts as one too)
 ///
 /// Unknown `--` flags are errors (exit 2), so a mistyped tool flag never starts the GUI app.
 /// Single-dash arguments are macOS's own (`-NSDocumentRevisionsDebugMode YES`, `-psn_…`) and pass.
@@ -19,9 +23,11 @@ struct LaunchFlags: Equatable {
     var appearance: Appearance?
     var selftest = false
     var demo = false
+    var background = false
+    var permissionProbe: String?
     var errors: [String] = []
 
-    var isTool: Bool { renderDir != nil || selftest }
+    var isTool: Bool { renderDir != nil || selftest || permissionProbe != nil }
 
     static func parse(_ arguments: [String]) -> LaunchFlags {
         var flags = LaunchFlags()
@@ -53,6 +59,10 @@ struct LaunchFlags: Equatable {
                 flags.selftest = true
             case "--demo":
                 flags.demo = true
+            case "--background":
+                flags.background = true
+            case "--permission-probe":
+                flags.permissionProbe = value(arg)
             default:
                 // macOS adds its own single-dash arguments (-NSDocumentRevisionsDebugMode, -AppleLanguages …)
                 if arg.hasPrefix("--") { flags.errors.append("unknown flag \(arg)") }
@@ -74,12 +84,29 @@ enum Launch {
     private static var delegate: AppDelegate?
     /// True for `--demo`: AppDelegate skips onboarding and runs `Registry.demoDrivers`.
     private(set) static var isDemo = false
+    /// True for `--background` and for a launch as a login item: AppDelegate opens no window
+    /// (no onboarding, no main window); menu bar, island and background jobs run as usual.
+    private(set) static var isBackground = false
+
+    /// Reads the launch Apple event (AppDelegate, `applicationDidFinishLaunching`): macOS marks a
+    /// login-item launch with `keyAELaunchedAsLogInItem`. SMAppService.mainApp cannot pass
+    /// arguments, so this is how a login launch is told apart.
+    static func noteLaunchEvent(_ event: NSAppleEventDescriptor?) {
+        if isLoginItemLaunch(event) { isBackground = true }
+    }
+
+    nonisolated static func isLoginItemLaunch(_ event: NSAppleEventDescriptor?) -> Bool {
+        guard let event, event.eventClass == AEEventClass(kCoreEventClass),
+              event.eventID == AEEventID(kAEOpenApplication) else { return false }
+        return event.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == OSType(keyAELaunchedAsLogInItem)
+    }
 
     static func run(_ flags: LaunchFlags) -> Never {
         if !flags.errors.isEmpty {
             for e in flags.errors { FileHandle.standardError.write(Data("\(AppConfig.name): \(e)\n".utf8)) }
             exit(2)
         }
+        if let probe = flags.permissionProbe { exit(PermissionProbe.answer(probe)) }
         let app = NSApplication.shared
         if flags.isTool || RenderMode.isHeadless {
             // no Dock icon, no menu bar, never activates; windows are never ordered front
@@ -105,6 +132,7 @@ enum Launch {
             }
             isDemo = true
         }
+        isBackground = flags.background
         let delegate = AppDelegate()
         Launch.delegate = delegate
         app.delegate = delegate

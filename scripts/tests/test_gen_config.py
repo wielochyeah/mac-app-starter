@@ -54,7 +54,7 @@ class GenConfigTests(unittest.TestCase):
         gen_config.generate(self.tmp, self.out)
         self.assertEqual(plistlib.loads((self.out / "App.entitlements").read_bytes()), {})
         c = self.config()
-        c["permissions"] = ["notifications", "microphone", "automation", "location"]
+        c["permissions"] = ["notifications", "microphone", "automation:com.apple.mail", "location"]
         self.write(c)
         gen_config.generate(self.tmp, self.out)
         ent = plistlib.loads((self.out / "App.entitlements").read_bytes())
@@ -63,6 +63,42 @@ class GenConfigTests(unittest.TestCase):
             "com.apple.security.automation.apple-events": True,
             "com.apple.security.personal-information.location": True,
         })
+
+    def test_automation_with_target(self):
+        c = self.config()
+        c["permissions"] = ["automation:com.apple.mail"]
+        self.write(c)
+        gen_config.generate(self.tmp, self.out)
+        self.assertIn("NSAppleEventsUsageDescription", self.plist())
+        ent = plistlib.loads((self.out / "App.entitlements").read_bytes())
+        self.assertTrue(ent.get("com.apple.security.automation.apple-events"))
+        self.assertIn('"automation:com.apple.mail"', (self.out / "AppConfig.swift").read_text())
+        for bad in ["automation", "automation:", "automation:mail", "microphone:x"]:
+            c["permissions"] = [bad]
+            self.write(c)
+            with self.assertRaises(gen_config.ConfigError):
+                gen_config.generate(self.tmp, self.out)
+
+    def test_tagline(self):
+        c = self.config()
+        c["app"]["tagline"] = {"en": "Notes that \"stay\" short.", "de": "Kurze Notizen."}
+        self.write(c)
+        gen_config.generate(self.tmp, self.out)
+        swift = (self.out / "AppConfig.swift").read_text()
+        self.assertIn('static let tagline: (en: String, de: String) = (en: "Notes that \\"stay\\" short.", de: "Kurze Notizen.")', swift)
+        c["app"]["tagline"] = {"en": "Only English."}
+        self.write(c)
+        gen_config.generate(self.tmp, self.out)
+        self.assertIn('(en: "Only English.", de: "Only English.")', (self.out / "AppConfig.swift").read_text())
+        del c["app"]["tagline"]
+        self.write(c)
+        gen_config.generate(self.tmp, self.out)
+        self.assertIn('static let tagline: (en: String, de: String) = (en: "", de: "")', (self.out / "AppConfig.swift").read_text())
+        for bad in ["One line", {"en": 3}]:
+            c["app"]["tagline"] = bad
+            self.write(c)
+            with self.assertRaises(gen_config.ConfigError):
+                gen_config.generate(self.tmp, self.out)
 
     def test_bundle_keys(self):
         gen_config.generate(self.tmp, self.out)
