@@ -2,6 +2,7 @@
 #if MODUL_AI
 import AppKit
 import FoundationModels
+import Observation
 import SwiftUI
 
 /// A provider without a model: answers "echo: <prompt>" word by word, records what it got.
@@ -18,6 +19,9 @@ final class FakeAIProvider: LocalModelProvider {
     var failWith: AIError?
     var wordDelay: Duration = .zero
     var sawCancel = false
+    /// What the next `refreshAvailability()` reads (the system changed behind the app's back).
+    var live: AIAvailability?
+    var refreshes = 0
 
     init(_ id: String, priority: Int = 0, availability: AIAvailability = .available) {
         self.id = id
@@ -25,7 +29,10 @@ final class FakeAIProvider: LocalModelProvider {
         self.availability = availability
     }
 
-    func refreshAvailability() {}
+    func refreshAvailability() {
+        refreshes += 1
+        if let live { availability = live }
+    }
 
     func respond(_ request: AIRequest) async throws -> String {
         requests.append(request)
@@ -54,6 +61,14 @@ final class FakeAIProvider: LocalModelProvider {
             continuation.onTermination = { _ in task.cancel() }
         }
     }
+}
+
+/// A count that observation callbacks may bump from any thread.
+nonisolated final class AINotifyCount: @unchecked Sendable {
+    private let lock = NSLock()
+    private var n = 0
+    var value: Int { lock.withLock { n } }
+    func add() { lock.withLock { n += 1 } }
 }
 
 final class AITests: TestSuite {
@@ -177,6 +192,45 @@ final class AITests: TestSuite {
             ai.choice = "apple"
             expectEqual(ai.active?.id, "apple")
             expectEqual(ai.availability, .unavailable(.deviceNotEligible))
+        }
+
+        test("a request re-reads availability: switched on after launch, no pane opened") {
+            let apple = FakeAIProvider("apple", availability: .unavailable(.appleIntelligenceOff))
+            let ai = makeAI([apple])
+            apple.live = .available
+            let out = AIWait.run(timeout: 5) { try await ai.respond(prompt: "x") }
+            guard case .value(let text) = out else { return fail("no answer: \(out)") }
+            expectEqual(text, "echo: x")
+            let streamed = AIWait.run(timeout: 5) { () async throws -> String in
+                var last = ""
+                for try await s in ai.stream(prompt: "y") { last = s }
+                return last
+            }
+            guard case .value("echo: y") = streamed else { return fail("stream: \(streamed)") }
+        }
+
+        test("automatic falls back as soon as the first provider is switched off") {
+            let apple = FakeAIProvider("apple")
+            let mlx = FakeAIProvider("mlx", priority: 10)
+            let ai = makeAI([apple, mlx])
+            apple.live = .unavailable(.appleIntelligenceOff)
+            _ = AIWait.run(timeout: 5) { try await ai.respond(prompt: "x") }
+            expectEqual(apple.requests.count, 0)
+            expectEqual(mlx.requests.count, 1)
+        }
+
+        test("refresh notifies observers only when availability changed") {
+            let apple = FakeAIProvider("apple")
+            let ai = makeAI([apple])
+            let notified = AINotifyCount()
+            withObservationTracking { _ = ai.availability } onChange: { notified.add() }
+            ai.refresh()
+            expectEqual(notified.value, 0, "nothing changed")
+            expectEqual(apple.refreshes, 1)
+            apple.live = .unavailable(.modelNotReady)
+            ai.refresh()
+            expectEqual(notified.value, 1)
+            expectEqual(ai.availability, .unavailable(.modelNotReady))
         }
 
         test("failures are counted, cancellations are not") {

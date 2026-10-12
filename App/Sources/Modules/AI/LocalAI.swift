@@ -106,7 +106,8 @@ protocol LocalModelProvider: AnyObject {
     var symbol: String { get }
     var tint: TintName { get }
     var availability: AIAvailability { get }
-    /// Re-reads availability (cheap; called when the pane opens and while it shows a problem).
+    /// Re-reads availability (cheap: a system flag and a few file checks). `LocalAI` calls it before
+    /// every request and every 2 s while the Models pane or the Local AI step is open.
     func refreshAvailability()
     func respond(_ request: AIRequest) async throws -> String
     /// Each element is the whole answer so far (not a delta).
@@ -185,7 +186,7 @@ nonisolated struct AIUsage: Codable, Equatable, Sendable {
     private(set) var providers: [any LocalModelProvider] = []
     /// Sections other modules add to the pane and step (MLX: its models).
     var sections: [AIPaneSection] = []
-    /// Bumped by `refresh()` so views that show availability redraw.
+    /// Bumped by `refresh()` when a provider's availability changed, so views that show it redraw.
     private(set) var revision = 0
     @ObservationIgnored var settings: Settings = .shared
     @ObservationIgnored var clock: () -> Date = Date.init
@@ -218,9 +219,12 @@ nonisolated struct AIUsage: Codable, Equatable, Sendable {
     /// Whether `respond`/`stream` can answer now, and if not, why.
     var availability: AIAvailability { resolved.availability }
 
+    /// Re-reads every provider's availability (Apple Intelligence switched on, a model downloaded,
+    /// ai-worker/setup.sh run). Observers are only notified when something changed.
     func refresh() {
+        let before = providers.map(\.availability)
         for p in providers { p.refreshAvailability() }
-        revision += 1
+        if providers.map(\.availability) != before { revision += 1 }
     }
 
     // MARK: Requests
@@ -279,6 +283,7 @@ nonisolated struct AIUsage: Codable, Equatable, Sendable {
     func structured(prompt: String, schema: DynamicGenerationSchema, dependencies: [DynamicGenerationSchema] = [],
                     instructions: String? = nil) async throws -> GeneratedContent {
         guard let apple = provider(AppleOnDeviceProvider.providerID) as? AppleOnDeviceProvider else { throw AIError.unsupported }
+        refresh()
         guard apple.availability.isAvailable else {
             throw (active?.id == apple.id || active == nil) ? AIError.unavailable(apple.availability.reason ?? .unknown) : AIError.unsupported
         }
@@ -296,6 +301,8 @@ nonisolated struct AIUsage: Codable, Equatable, Sendable {
     }
 
     private func prepare(_ prompt: String, _ instructions: String?, _ maxTokens: Int?, _ temperature: Double?) throws -> (any LocalModelProvider, AIRequest) {
+        // availability changes outside the app; a request must not wait for the pane to look again
+        refresh()
         let (id, availability) = resolved
         guard let id, let provider = provider(id) else { throw AIError.unavailable(.unknown) }
         if case .unavailable(let reason) = availability { throw AIError.unavailable(reason) }

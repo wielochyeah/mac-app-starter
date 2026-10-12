@@ -24,7 +24,7 @@ import Observation
         if now != availability { availability = now }
     }
 
-    /// FoundationModels availability → ours (pure, tested).
+    /// Maps FoundationModels availability to ours (pure, tested).
     nonisolated static func map(_ availability: SystemLanguageModel.Availability) -> AIAvailability {
         switch availability {
         case .available: .available
@@ -35,7 +35,7 @@ import Observation
         }
     }
 
-    /// FoundationModels errors → ours (pure, tested).
+    /// Maps FoundationModels errors to ours (pure, tested).
     nonisolated static func map(_ error: Error) -> AIError {
         if let e = error as? AIError { return e }
         if error is CancellationError { return .cancelled }
