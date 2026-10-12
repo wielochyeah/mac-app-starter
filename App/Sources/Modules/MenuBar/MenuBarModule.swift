@@ -5,7 +5,7 @@ import SwiftUI
 /// click, a menu on right click, and the settings pane "Menu Bar". Without the window module the
 /// app is an accessory app (no Dock icon, `LSUIElement`); AppForm handles that.
 ///
-/// Public API for features and other modules (wave 2):
+/// Public API for features and other modules:
 /// - `MenuBarStatus.shared.state = .busy | .attention | .idle`, `.message` for the status line
 /// - `MenuBarPanel.sections.append(MenuBarSection(…))` for a tile in the panel
 /// - `Registry.menuItems` items appear in the panel (Actions) and in the right-click menu

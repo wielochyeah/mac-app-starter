@@ -121,8 +121,10 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
     /// Label ink of the menu bar's current appearance, the accent and the alert red.
     private func inks(for button: NSStatusBarButton) -> MenuBarIcon.Inks {
+        // design-ausnahme: the status item's ink follows the real menu bar (wallpaper decides), no Theme token knows it
         var label = NSColor.labelColor
         button.effectiveAppearance.performAsCurrentDrawingAppearance {
+            // design-ausnahme: resolved for the menu bar's own appearance (VoiceBud MenuBarIcon)
             label = NSColor.labelColor.usingColorSpace(.sRGB) ?? .labelColor
         }
         let dark = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua

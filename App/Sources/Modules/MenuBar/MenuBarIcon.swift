@@ -119,10 +119,12 @@ enum MenuBarIcon {
             let line = MenuBarIconMetrics.ringLine
             let center = NSPoint(x: ring.midX, y: ring.midY)
             let radius = (ring.width - line) / 2
+            // design-ausnahme: template image, macOS uses only the alpha and tints it itself
             NSColor.black.withAlphaComponent(MenuBarIconMetrics.ringTrackAlpha).setStroke()
             let track = NSBezierPath(ovalIn: ring.insetBy(dx: line / 2, dy: line / 2))
             track.lineWidth = line
             track.stroke()
+            // design-ausnahme: template image, macOS uses only the alpha and tints it itself
             NSColor.black.setStroke()
             let arc = NSBezierPath()
             arc.appendArc(withCenter: center, radius: radius, startAngle: angles.start, endAngle: angles.end, clockwise: true)

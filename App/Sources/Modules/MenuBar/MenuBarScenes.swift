@@ -38,7 +38,7 @@ enum MenuBarScenes {
 }
 
 enum MenuBarSamples {
-    /// The settings pane in the settings window's detail column (900 - sidebar 224).
+    /// The settings pane in the settings window's detail column (900 wide minus the 224 sidebar).
     static let paneSize = CGSize(width: 676, height: 470)
     /// The stage around the panel: a piece of desktop with the menu bar on top.
     static let stageWidth: CGFloat = 560

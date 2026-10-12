@@ -44,5 +44,6 @@ struct LoginItemStep: View {
 
 enum BackgroundMetrics {
     /// The switch card on the step: as wide as the language step's card (VoiceBud 460).
+    // design-ausnahme: VoiceBud's 460 pt step card has no token yet (S0b's language sample uses the same sum)
     static let stepCard: CGFloat = Metrics.onboardingNarrow + 60
 }

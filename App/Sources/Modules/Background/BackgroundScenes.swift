@@ -31,7 +31,7 @@ enum BackgroundScenes {
 }
 
 enum BackgroundSamples {
-    /// The settings window's detail column (900 - sidebar 224).
+    /// The settings window's detail column (900 wide minus the 224 sidebar).
     static let paneSize = CGSize(width: 676, height: 620)
     static let emptyPaneHeight: CGFloat = 470
     static let hoveredJob = "sample.inbox"

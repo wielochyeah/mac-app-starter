@@ -4,7 +4,7 @@ import SwiftUI
 /// (`LoginItem`, only for the installed app), the settings pane "Background" and the onboarding
 /// step "Open at Login".
 ///
-/// Public API for features and other modules (wave 2):
+/// Public API for features and other modules:
 /// - `BackgroundJobs.shared.register(id:title:interval:tolerance:qos:exact:run:)`
 /// - `BackgroundJobs.shared.runNow(_:)`, `.perform(_:) async`, `.record(_:)`, `.isRunning(_:)`
 /// - `LoginItem.isAvailable`, `.status`, `.setEnabled(_:)`, `LoginItemModel.shared`

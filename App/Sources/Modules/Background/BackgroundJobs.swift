@@ -65,7 +65,7 @@ nonisolated struct JobSchedule: Equatable, Sendable {
 }
 
 extension SettingKey {
-    /// Ids of jobs the person switched off in Settings → Background.
+    /// Ids of jobs the person switched off in the Background settings pane.
     static var backgroundDisabledJobs: SettingKey<[String]> { .init("background.disabledJobs", default: []) }
 }
 
@@ -78,7 +78,7 @@ extension SettingKey {
 ///
 /// Jobs are scheduled at launch (and at once when registered later), run at most once at a time,
 /// can be switched off per job, and record their last run, outcome and duration (SQLite in
-/// Application Support, opened only when a job exists). Settings → Background lists them with a
+/// Application Support, opened only when a job exists). The Background settings pane lists them with a
 /// "Run Now" button. `@Observable`, so that list follows runs live.
 @Observable final class BackgroundJobs {
     static let shared = BackgroundJobs()

@@ -12,7 +12,7 @@ enum LoginItem {
     enum Status: Equatable {
         case enabled
         case disabled
-        /// Registered, but the person still has to allow it in System Settings → Login Items.
+        /// Registered, but the person still has to allow it in System Settings, Login Items.
         case requiresApproval
         /// This copy of the app cannot be a login item (`unavailableReason`).
         case unavailable
@@ -79,7 +79,7 @@ enum LoginItem {
         if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
     }
 
-    /// System Settings → General → Login Items.
+    /// Opens System Settings at General, Login Items.
     static func openSystemSettings() { SMAppService.openSystemSettingsLoginItems() }
 }
 
