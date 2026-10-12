@@ -220,7 +220,7 @@ struct ButtonRow: View {
 }
 
 /// A row that opens something outside the pane (a web page, System Settings, a file): the whole
-/// row is the button, with an ↗ mark and a hover highlight.
+/// row is the button, with an `arrow.up.right` mark and a hover highlight.
 struct LinkRow: View {
     let title: String
     var subtitle: String?

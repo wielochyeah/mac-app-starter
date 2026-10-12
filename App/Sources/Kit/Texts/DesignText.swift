@@ -51,7 +51,7 @@ enum DesignText {
     static var glassSample: String { tr(en: "Floats above the content", de: "Schwebt über dem Inhalt") }
     static var typeSample: String { tr(en: "Calm, precise, local", de: "Ruhig, genau, lokal") }
     static var islandDone: String { tr(en: "Copied", de: "Kopiert") }
-    static var islandMeta: String { tr(en: "Notes · 0.7 s", de: "Notizen · 0,7 s") }
+    static var islandMeta: String { tr(en: "Notes\u{2002}\u{2009}0.7\u{202F}s", de: "Notizen\u{2002}\u{2009}0,7\u{202F}s") }
     static var islandPreview: String {
         tr(en: "Pick up the printed plans before Friday and bring them to the site meeting.",
            de: "Hol die gedruckten Pläne vor Freitag ab und bring sie zur Baubesprechung mit.")

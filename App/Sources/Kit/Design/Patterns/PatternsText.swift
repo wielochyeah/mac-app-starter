@@ -153,6 +153,7 @@ enum PatternsSampleText {
     }
     /// In the other language on purpose: the way to the switch for whoever needs it (VoiceBud).
     static var languageCrossHint: String {
+        // text-ausnahme: the hint is written in the other language so whoever needs it can read it
         tr(en: "Lieber auf Deutsch? Unten bei App „Deutsch“ wählen.", de: "Prefer English? Choose English next to App below.")
     }
     static var app: String { tr(en: "App", de: "App") }
@@ -163,6 +164,7 @@ enum PatternsSampleText {
     }
     static var accessibility: String { tr(en: "Accessibility", de: "Bedienungshilfen") }
     static var accessibilitySubtitle: String {
+        // umbruch: a balanced two-line subtitle under the step title (VoiceBud)
         tr(en: "\(AppInfo.displayName) needs your permission to insert text at the cursor\nand to see which app you are writing in.",
            de: "\(AppInfo.displayName) braucht deine Erlaubnis, um Text am Cursor einzufügen\nund zu sehen, in welcher App du schreibst.")
     }

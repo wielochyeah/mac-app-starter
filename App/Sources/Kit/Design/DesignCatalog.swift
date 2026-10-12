@@ -56,8 +56,8 @@ enum DesignKit {
 // MARK: - Specimens (sample state is fixed so renders are deterministic)
 
 // Token and type-scale labels below are code identifiers ("fg2", "paneTitle 15.5"), shown
-// verbatim in monospace on purpose: they name the API, they are not UI copy (S0.md, exception
-// for scripts/check_texts.py). Everything a person reads goes through DesignText.
+// verbatim in monospace on purpose: they name the API, they are not UI copy, so they stay out of
+// the language rules. Everything a person reads goes through DesignText.
 
 private struct TokenSwatches: View {
     @Environment(\.colorScheme) private var scheme

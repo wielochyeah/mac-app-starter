@@ -89,7 +89,7 @@ struct OnboardingStatusSlot: View {
                 StatusMark(.warn, state.text, large: true)
                 secondary
                 if let link = state.helpLink {
-                    OnboardingRichText("[\(link.title)](\(RichTextLinks.scheme)://help)") { _ in link.action() }
+                    OnboardingRichText(RichTextLinks.markdown(title: link.title, action: "help")) { _ in link.action() }
                         .font(TypeScale.bodyMedium)
                 }
             case .granted:

@@ -1,6 +1,6 @@
 import AppKit
 
-/// The app's form decides its activation policy (BAUPLAN §1):
+/// The app's form decides its activation policy:
 /// - `window` module enabled: `.regular` (Dock icon, app menu).
 /// - otherwise `.accessory` (menu bar / island / background app, `LSUIElement`), switching to
 ///   `.regular` while any kit window (settings, onboarding, …) is open, and back only when the

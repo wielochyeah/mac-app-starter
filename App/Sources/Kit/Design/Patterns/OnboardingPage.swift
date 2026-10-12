@@ -62,7 +62,7 @@ struct OnboardingPage<Content: View>: View {
 
 /// The whole 720 x 560 onboarding surface: the page area (clipped, where pages slide) above the
 /// 68 pt footer, on `windowBg`. The window's titlebar is transparent, so the frame owns the full
-/// height (`.ignoresSafeArea()`, VoiceBud OnboardingRootView). Strand D's root view puts its
+/// height (`.ignoresSafeArea()`, VoiceBud OnboardingRootView). The onboarding root view puts its
 /// transitions inside `page`; renders wrap it in `StaticWindow(chrome: .onboarding)`.
 struct OnboardingFrame<Page: View, Footer: View>: View {
     let page: Page

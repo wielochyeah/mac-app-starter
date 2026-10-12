@@ -59,7 +59,8 @@ struct IslandAccent {
 
 /// The desktop picture behind island renders, the onboarding hero and settings tiles.
 enum Wallpaper {
-    /// Dark: violet night (#5A4BB0 → #2C2470 → #130F33), light: peach dusk (#FBE3D2 → #EFBFAE → #C497B6).
+    /// Dark: violet night (#5A4BB0, #2C2470, #130F33 from the centre out), light: peach dusk (#FBE3D2,
+    /// #EFBFAE, #C497B6).
     static func gradient(dark: Bool) -> EllipticalGradient {
         let stops: [Gradient.Stop] = dark
             ? [.init(color: Color(hex: 0x5A4BB0), location: 0), .init(color: Color(hex: 0x2C2470), location: 0.42),

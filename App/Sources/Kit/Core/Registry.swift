@@ -84,7 +84,7 @@ struct RenderScene: Identifiable {
     let content: () -> AnyView
 }
 
-/// A component shown in the gallery (Settings → Components in debug builds).
+/// A component shown in the gallery (the Components pane of Settings in debug builds).
 struct GalleryEntry: Identifiable {
     let id: String
     let area: String

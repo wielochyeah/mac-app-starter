@@ -69,6 +69,11 @@ enum RichTextLinks {
         return parts
     }
 
+    /// `[title](app://action)`: the link syntax `parse` reads, for a translated title.
+    static func markdown(title: String, action: String) -> String {
+        "[\(title)](\(scheme)://\(action))"
+    }
+
     /// The action of an `app://action` URL, nil for anything else.
     static func action(of url: URL) -> String? {
         guard url.scheme == scheme, let host = url.host(), !host.isEmpty else { return nil }

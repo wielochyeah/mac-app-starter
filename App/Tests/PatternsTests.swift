@@ -34,6 +34,8 @@ final class PatternsTests: TestSuite {
                         [.link(title: "A", action: "one"), .link(title: "B", action: "two-2")])
             expectEqual(RichTextLinks.parse("No links here."), [.text("No links here.")])
             expectEqual(RichTextLinks.parse(""), [])
+            expectEqual(RichTextLinks.parse(RichTextLinks.markdown(title: "Hilfe öffnen", action: "help")),
+                        [.link(title: "Hilfe öffnen", action: "help")])
         }
 
         test("rich text: malformed or foreign links are plain text") {

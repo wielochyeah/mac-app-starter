@@ -125,7 +125,7 @@ enum Motion {
         static let widthCollapse = Animation.interpolatingSpring(mass: 1, stiffness: 200, damping: 20)
         static let heightGrow = Animation.interpolatingSpring(mass: 1, stiffness: 250, damping: 21)
         static let heightCollapse = Animation.interpolatingSpring(mass: 1, stiffness: 250, damping: 25)
-        /// Content swaps while the surface stays (waveform → spinner → check).
+        /// Content swaps while the surface stays (waveform, then spinner, then check).
         static let swap = Animation.interpolatingSpring(mass: 1, stiffness: 150, damping: 14)
         static let enter = Animation.easeOut(duration: 0.30)
         static let exit = Animation.easeIn(duration: 0.25)

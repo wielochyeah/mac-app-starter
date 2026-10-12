@@ -36,7 +36,7 @@ final class DesignTests: TestSuite {
         }
 
         // Deliberate exception, matching VoiceBud: white on violet is 3.75:1. 13 pt semibold is not
-        // WCAG "large text" (that starts at 14 pt bold), so this is below AA; see S0.md.
+        // WCAG "large text" (that starts at 14 pt bold), so this is below AA on purpose.
         test("text on the accent fill >= 3:1, both schemes") {
             for accent in AccentName.allCases {
                 let p = AccentPalette.of(accent)
