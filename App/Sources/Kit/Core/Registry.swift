@@ -93,9 +93,18 @@ struct GalleryEntry: Identifiable {
 }
 
 /// A check run by `--selftest`. Returns nil when fine, else what is wrong.
+/// `onDemand` checks (slow, or needing a real model or the network) run only when named:
+/// `--selftest <prefix>` runs the checks whose id starts with the prefix, on-demand ones included.
 struct SelfTestCheck: Identifiable {
     let id: String
+    var onDemand = false
     let run: () -> String?
+
+    init(id: String, onDemand: Bool = false, run: @escaping () -> String?) {
+        self.id = id
+        self.onDemand = onDemand
+        self.run = run
+    }
 }
 
 @MainActor enum Registry {

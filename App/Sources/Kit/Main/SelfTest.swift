@@ -4,9 +4,16 @@ import SwiftUI
 /// `--selftest`: quick in-process checks of the kit and every module's `Registry.selfTests`.
 /// Prints one line per failure and a summary; exit code 0 when all pass. Shows no window.
 enum SelfTestRunner {
-    static func run() -> Int32 {
+    /// `only` nil: every check that is not on demand. A prefix: the checks whose id starts with it.
+    static func run(only: String? = nil) -> Int32 {
         var failures: [String] = []
-        let checks = Registry.selfTests.sorted { $0.id < $1.id }
+        let checks = Registry.selfTests.sorted { $0.id < $1.id }.filter { check in
+            guard let only else { return !check.onDemand }
+            return check.id.hasPrefix(only)
+        }
+        if checks.isEmpty, let only {
+            failures.append("no self-test id starts with \"\(only)\"")
+        }
         for check in checks {
             if let problem = check.run() { failures.append("\(check.id): \(problem)") }
         }
