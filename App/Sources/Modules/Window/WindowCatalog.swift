@@ -187,10 +187,7 @@ enum WindowCatalog {
         if window.toolbarStyle != .unified { problems.append("toolbar style is not unified") }
         if window.titleVisibility != .hidden { problems.append("title is visible") }
         let min = window.minSize
-        if min.width != Metrics.Window.minSize.width || min.height < Metrics.Window.minSize.height
-            || min.height > Metrics.Window.minSize.height + Metrics.Window.toolbarBand {
-            problems.append("minimum size \(min)")
-        }
+        if min != Metrics.Window.minSize { problems.append("minimum size \(min), expected \(Metrics.Window.minSize)") }
         if window.frame.size != Metrics.Window.size { problems.append("size \(window.frame.size) after layout") }
         if !window.styleMask.contains(.fullSizeContentView) { problems.append("no full-size content view") }
         if let toolbar = window.toolbar {
