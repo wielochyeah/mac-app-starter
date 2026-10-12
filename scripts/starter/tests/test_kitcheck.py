@@ -72,6 +72,40 @@ class StarterFixtureTests(TempDirCase):
         self.assertIn("remove würde Projektdateien löschen", problems_text(kitcheck.run(root)))
 
 
+class StateTests(TempDirCase):
+    def repo(self, origin=None):
+        return make_repo(self.tmp / "repo", base_files(), origin)
+
+    def test_states(self):
+        from starter.manifest import read_manifest, repo_state
+        cases = [
+            (None, {}, "unknown"),
+            ("https://github.com/wielochyeah/mac-app-starter.git", {}, "starter"),
+            ("git@github.com:beispiel/notizen.git", {}, "needs-init"),
+            (None, {"GITHUB_REPOSITORY": "wielochyeah/mac-app-starter"}, "starter"),
+            ("https://github.com/wielochyeah/mac-app-starter.git", {"GITHUB_REPOSITORY": "beispiel/notizen"},
+             "needs-init"),
+        ]
+        for i, (origin, env, state) in enumerate(cases):
+            root = make_repo(self.tmp / f"r{i}", base_files(), origin)
+            self.assertEqual(repo_state(root, read_manifest(root), read_lock(root), env), state, (origin, env))
+
+    def test_copy_without_init_fails_check_kit(self):
+        root = self.repo("https://github.com/beispiel/notizen.git")
+        text = problems_text(kitcheck.run(root, env={}))
+        self.assertIn("bin/starter init", text)
+        init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
+        f = kitcheck.run(root, env={})
+        self.assertEqual(f.problems, [], problems_text(f))
+
+    def test_project_ci_without_init_fails(self):
+        root = self.repo()
+        self.assertIn("bin/starter init", problems_text(kitcheck.run(root, env={"GITHUB_REPOSITORY": "a/b"})))
+        f = kitcheck.run(root, env={})
+        self.assertEqual(f.problems, [], problems_text(f))
+        self.assertTrue(any("ohne origin" in w for w in f.warnings))
+
+
 class ProjectTests(TempDirCase):
     def project(self, extra=None):
         files = base_files()

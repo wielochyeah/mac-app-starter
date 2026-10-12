@@ -3,6 +3,7 @@ starter.json, one stub per module and a few files of every path class."""
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -12,6 +13,8 @@ from pathlib import Path
 from typing import Dict, Optional
 
 ROOT = Path(__file__).resolve().parents[3]
+# In a project's CI GITHUB_REPOSITORY names the project; the fixtures are starters and copies of their own.
+os.environ.pop("GITHUB_REPOSITORY", None)
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))

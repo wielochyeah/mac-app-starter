@@ -78,6 +78,16 @@ class CliTests(TempDirCase):
         code, out, _ = run(["init", "--non-interactive", "--name", "X"], root)
         self.assertIn("nichts zu tun", out)
 
+    def test_doctor_names_a_copy_that_needs_init(self):
+        root = make_repo(self.tmp / "r", base_files(), "https://github.com/beispiel/notizen.git")
+        code, out, _ = run(["doctor"], root)
+        self.assertEqual(code, 1)
+        self.assertIn("noch nicht eingerichtet", out)
+        self.assertNotIn("Starter selbst", out)
+        code, _, err = run(["check-kit"], root)
+        self.assertEqual(code, 1)
+        self.assertIn("bin/starter init", err)
+
     def test_init_refuses_in_this_repository(self):
         if "wielochyeah/mac-app-starter" not in subprocess.run(
                 ["git", "remote", "get-url", "origin"], cwd=str(ROOT), stdout=subprocess.PIPE).stdout.decode():

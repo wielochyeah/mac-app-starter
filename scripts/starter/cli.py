@@ -11,7 +11,7 @@ from typing import List, Optional
 from . import config as cfg
 from . import kitcheck, project, remove, sync
 from .common import StarterError, build_env, repo_root, working_files
-from .manifest import PENDING, is_project, read_lock, read_manifest, set_pending_build
+from .manifest import NEEDS_INIT, PENDING, is_project, read_lock, read_manifest, repo_state, set_pending_build
 
 DESCRIPTION = """Werkzeuge des mac-app-starter: aus der Vorlage ein Projekt machen, Module entfernen,
 neue Starter-Stände übernehmen und prüfen, dass Kit-Dateien unverändert sind.
@@ -260,12 +260,19 @@ def cmd_doctor(root: Path) -> int:
     lock = read_lock(root)
     config = cfg.read_config(root)
     commit = config.get("commit") or {}
-    if is_project(lock):
+    state = repo_state(root, read_manifest(root), lock)
+    if state == "project":
         print(f"starter: Projekt {lock['project']}, Starter {lock['version']}"
               f"{', Commit ' + lock['commit'][:12] if lock.get('commit') else ''}, "
               f"zuletzt abgeglichen {lock.get('lastSyncedOn') or 'nie'}")
-    else:
+    elif state == "needs-init":
+        print(f"starter: {NEEDS_INIT}")
+        return 1
+    elif state == "starter":
         print(f"starter: das ist der Starter selbst (Version {lock['version']}); bin/starter init in einer Kopie")
+    else:
+        print(f"starter: Starter {lock['version']} ohne Projekt und ohne origin: der Starter selbst oder eine "
+              "Kopie, die bin/starter init noch braucht")
     if commit.get("name") and commit.get("email"):
         print(f"starter: Commit-Identität {commit['name']} <{commit['email']}>")
     else:

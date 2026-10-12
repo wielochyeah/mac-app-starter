@@ -2,12 +2,13 @@
 starter.lock.json (starter version of a repository plus checksums of its kit files)."""
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Mapping, Optional, Sequence
 
 from . import globs
-from .common import StarterError, checksums, is_safe_repo_path, read_json, write_json
+from .common import StarterError, checksums, is_safe_repo_path, is_starter_origin, origin_url, read_json, write_json
 
 MANIFEST = "starter.manifest.json"
 LOCK = "starter.lock.json"
@@ -211,6 +212,27 @@ def set_pending_build(root: Path, command: Optional[str]) -> None:
 def is_project(lock: dict) -> bool:
     """project == null is the signal "this is the starter itself"."""
     return lock.get("project") is not None
+
+
+def repo_state(root: Path, manifest: Manifest, lock: dict, env: Optional[Mapping[str, str]] = None) -> str:
+    """"project" (the lock names one), "starter" (origin, or GITHUB_REPOSITORY in CI, is the starter's
+    repository), "needs-init" (a copy with another origin or repository that has not run init) or
+    "unknown" (no origin: a copy and the starter look the same, port of app-starter's project-state)."""
+    if is_project(lock):
+        return "project"
+    env = os.environ if env is None else env
+    github = (env.get("GITHUB_REPOSITORY") or "").strip()
+    if github:
+        return "starter" if github.lower() == manifest.repository.lower() else "needs-init"
+    url = origin_url(root)
+    if not url:
+        return "unknown"
+    return "starter" if is_starter_origin(url, manifest.repository) else "needs-init"
+
+
+NEEDS_INIT = ("Kopie des Starters, noch nicht eingerichtet (starter.lock.json nennt kein Projekt, origin ist ein "
+              "anderes Repository): zuerst bin/starter init. Bis dahin trägt starter.json die Commit-Identität des "
+              "Starters, und jeder Commit liefe unter seinem Namen.")
 
 
 def kit_checksums(root: Path, manifest: Manifest, files: Sequence[str]) -> Dict[str, str]:

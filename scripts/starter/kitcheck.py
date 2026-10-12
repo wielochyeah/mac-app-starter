@@ -15,12 +15,13 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Mapping, Optional, Sequence
 
 from . import config as cfg
 from . import globs
 from .common import StarterError, cut_blocks, has_block, is_text_file, working_files
-from .manifest import CLASS_NAMES, PENDING, Manifest, is_project, kit_checksums, read_lock, read_manifest
+from .manifest import (CLASS_NAMES, NEEDS_INIT, PENDING, Manifest, is_project, kit_checksums, read_lock, read_manifest,
+                       repo_state)
 from .markers import swift_flag_problems, transform
 from .remove import read_texts, simulate
 
@@ -351,15 +352,23 @@ def check_switches(root: Path, manifest: Manifest, in_project: bool, f: Findings
         f.ok.append("Makefile, Git-Hooks und CI erfüllen die Soll-Liste der Prüfungen")
 
 
-def run(root: Path) -> Findings:
+def run(root: Path, env: Optional[Mapping[str, str]] = None) -> Findings:
     f = Findings()
     manifest = read_manifest(root)
     lock = read_lock(root)
     files = working_files(root)
-    if is_project(lock):
+    state = repo_state(root, manifest, lock, env)
+    if state == "project":
         check_project(root, manifest, lock, files, f)
+    elif state == "needs-init":
+        f.problems.append(NEEDS_INIT)
     else:
-        f.ok.append("starter.lock.json nennt kein Projekt: das ist der Starter selbst")
+        if state == "starter":
+            f.ok.append(f"das ist der Starter selbst ({manifest.repository})")
+        else:
+            f.ok.append("starter.lock.json nennt kein Projekt, kein origin: geprüft wie der Starter selbst")
+            f.warnings.append("ohne origin sehen eine Kopie und der Starter gleich aus; in einer Kopie zuerst "
+                              "bin/starter init")
         check_starter(root, manifest, lock, files, f)
     if lock.get(PENDING):
         f.warnings.append(f"nach „{lock[PENDING]}“ war make build rot; nach der Korrektur {lock[PENDING]} erneut "
