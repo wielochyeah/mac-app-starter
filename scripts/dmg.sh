@@ -5,7 +5,7 @@
 #   DMG_LANG=en|de|both   language of the window texts (default: both when the project has both)
 #   DMG_FORMAT=ULMO|UDZO  compression (default ULMO = lzma, smallest; falls back to UDZO)
 #   DMG_NO_BUILD=1        package the existing build/<Name>.app; refused when it is a debug build
-#                         (NO_BUILD, which make exports for shots and tests, is ignored here)
+#                         (NO_BUILD, which make exports for make shots, is ignored here)
 #   KEEP_WORK=1           keep build/dmg/work.noindex (staged app, background, writable image)
 # Signing follows starter.json: ad hoc by default; with signing.identity a Developer ID signature
 # with hardened runtime, and with signing.notarize also scripts/notarize.sh for app and DMG.

@@ -2,7 +2,7 @@
 # Builds build/<Name>.app with one plain swiftc call (no Xcode, no SwiftPM).
 #   CONFIG=debug|release (default debug)   MODULES=window,menubar (overrides starter.json)
 # Steps: gen_config -> swiftc (Info.plist embedded via -sectcreate) -> .app bundle in a temp dir
-# -> codesign (ad hoc unless signing.identity is set) -> mv into place.
+# -> codesign (ad hoc unless signing.identity or SIGN_IDENTITY names a certificate) -> mv into place.
 set -euo pipefail
 ROOT="${0:A:h:h}"
 cd "$ROOT"
@@ -13,7 +13,10 @@ fi
 command -v swiftc >/dev/null || { print -u2 "build.sh: swiftc missing (xcode-select --install, then make doctor)"; exit 1; }
 
 python3 scripts/gen_config.py --out build/gen >/dev/null
+# SIGN_IDENTITY from the environment wins over signing.identity, as in make dmg and make notarize
+sign_override="${SIGN_IDENTITY:-}"
 source build/gen/app.env
+[[ -n "$sign_override" ]] && SIGN_IDENTITY="$sign_override"
 source scripts/lib/swift.sh
 use_sdk
 

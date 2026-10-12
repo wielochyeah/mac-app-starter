@@ -33,5 +33,7 @@ mv -f "$work/AppIcon.icns" "$out"
 build/tools/icon dock "$work/dock.png" self "$out" "${opts[@]}"
 print "icon: $out ($accent, $symbol, $(( $(stat -f %z "$out") / 1024 )) KB); previews in $work/"
 # Apple's terms for SF Symbols prohibit them in app icons, logos and any other trademarked use.
-print "icon: for development only: the glyph is the SF Symbol $symbol, which Apple does not allow in app icons;" \
-  "draw an own motif in tools/icon/Icon.swift or ship an own AppIcon.icns before handing the app out (docs/VERTEILUNG.md, section 8)"
+if grep -q 'systemSymbolName' tools/icon/Icon.swift; then
+  print "icon: for development only: the glyph is the SF Symbol $symbol, which Apple does not allow in app icons;" \
+    "draw an own motif in tools/icon/Icon.swift or ship an own AppIcon.icns before handing the app out (docs/VERTEILUNG.md, section 8)"
+fi
