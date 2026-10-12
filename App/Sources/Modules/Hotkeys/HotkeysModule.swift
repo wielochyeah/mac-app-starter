@@ -2,7 +2,7 @@ import SwiftUI
 
 // Module `hotkeys`: global keyboard shortcuts (Carbon `RegisterEventHotKey`, no permission needed),
 // a settings pane "Keyboard Shortcuts" with a recorder per hotkey, and the onboarding step
-// "Your shortcut". Code adds hotkeys with `HotkeyCenter.shared.register(…)`; see README.md here.
+// "Your shortcut". Code adds hotkeys with `HotkeyCenter.shared.register(…)` (example in HotkeyCenter.swift).
 
 enum HotkeysModule {
     static let symbol = "command"
