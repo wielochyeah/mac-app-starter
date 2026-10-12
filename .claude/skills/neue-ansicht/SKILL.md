@@ -6,6 +6,7 @@ description: Legt eine Seite im Hauptfenster an (Eintrag in der Seitenleiste üb
 # Neue Ansicht im Hauptfenster
 
 Gehört zum Modul `window`; `bin/starter remove window` entfernt diesen Skill mit dem Modul.
+
 Ohne Hauptfenster zeigt eine Menüleisten-App ihre Inhalte im Statusmenü (Skill `menueleisten-app`) oder in den Einstellungen (Skill `neue-einstellung`). <!-- modul:menubar -->
 
 ## Verträge und Dateien

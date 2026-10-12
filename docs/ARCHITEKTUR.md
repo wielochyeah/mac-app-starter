@@ -5,6 +5,7 @@ Wie die App aufgebaut ist: ein Prozess, ein Kit, Module als Compiler-Flags, eine
 ## 1. Prozessmodell
 
 Die App ist ein einziger AppKit-Prozess mit SwiftUI-Ansichten, gebaut aus allen Swift-Dateien in einem Aufruf von `swiftc`.
+
 Einzige Ausnahme ist das Modul `mlx`: es startet einen Python-Worker (`docs/KI.md`). <!-- modul:mlx -->
 
 Ablauf eines Starts:
@@ -98,7 +99,7 @@ Binary + Info.plist + Resources ──> build/<Name>.app ──codesign──> f
 - `Info.plist` wird zusätzlich ins Binary eingebettet (`-sectcreate __TEXT __info_plist`).
 - Gebaut wird in einen temporären Ordner, danach ersetzt das neue Bundle das alte.
 - `make test` baut dieselben Quellen mit `App/Tests/**` und `-D TESTING` zu `build/tests/run-tests` und führt es mit `STARTER_HEADLESS=1` aus; danach laufen die Python-Tests in `scripts/tests/`.
-  Mit dem Modul `mlx` laufen auch die in `ai-worker/tests/`. <!-- modul:mlx -->
+- Mit dem Modul `mlx` laufen in `make test` auch die Python-Tests in `ai-worker/tests/`. <!-- modul:mlx -->
 
 ## 9. Package.swift
 
