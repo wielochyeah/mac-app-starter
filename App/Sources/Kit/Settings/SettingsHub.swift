@@ -39,7 +39,7 @@ extension SettingKey {
         if persists && !RenderMode.isStatic { Settings.shared[.settingsPane] = next }
     }
 
-    /// ↑ / ↓ in the sidebar.
+    /// Arrow up or down in the sidebar.
     func step(_ offset: Int) {
         select(Self.step(from: pane, by: offset, in: panes.map(\.id)))
     }
@@ -86,9 +86,11 @@ enum SettingsHubExtras {
     /// zero shows nothing.
     static var counts: [String: () -> Int?] = [:]
 
-    /// The sidebar footer (VoiceBud: "All local and offline"). Nil hides it. Projects that send
-    /// data anywhere must replace or remove the default.
-    static var sidebarFooter: (() -> AnyView)? = { AnyView(LocalOnlyFooter()) }
+    /// The sidebar footer, off by default. VoiceBud shows "All local and offline" there; a project
+    /// that really keeps everything on the Mac (no downloads, no sync, no API calls) can opt in:
+    ///
+    ///     SettingsHubExtras.sidebarFooter = { AnyView(LocalOnlyFooter()) }
+    static var sidebarFooter: (() -> AnyView)?
 
     static func count(for pane: String) -> Int? {
         guard let n = counts[pane]?(), n > 0 else { return nil }
@@ -96,7 +98,8 @@ enum SettingsHubExtras {
     }
 }
 
-/// Green dot, "All local and offline", "Nothing leaves your Mac" (VoiceBud's sidebar footer).
+/// Green dot, "All local and offline", "Nothing leaves your Mac" (VoiceBud's sidebar footer). Only
+/// true for an app without any network use; see `SettingsHubExtras.sidebarFooter`.
 struct LocalOnlyFooter: View {
     @Environment(\.colorScheme) private var scheme
 

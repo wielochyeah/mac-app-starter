@@ -104,9 +104,17 @@ final class SettingsHubTests: TestSuite {
             expectEqual(SettingKey<String>.appAppearance.defaultValue, "system")
         }
 
-        test("reset removes every key except the setup state") {
+        test("reset removes every key except the setup state and kept keys") {
             expectEqual(SettingsReset.keys(in: ["onboarding.done", "app.language", "island.style", "onboarding.step", "x"]),
                         ["app.language", "island.style", "x"])
+            expectEqual(SettingsReset.keys(in: ["kit.showGallery", "kit.settingsPane"]), ["kit.settingsPane"],
+                        "the developer switch for the gallery survives")
+            expectEqual(SettingsReset.keys(in: ["ai.usage", "ai.model", "hotkeys.main"], keeping: ["ai.usage", "onboarding."]),
+                        ["ai.model", "hotkeys.main"])
+            SettingsReset.keep("test.state.")
+            SettingsReset.keep("test.state.")
+            expectEqual(SettingsReset.keptPrefixes.filter { $0 == "test.state." }.count, 1, "keep() adds a prefix once")
+            expectEqual(SettingsReset.keys(in: ["test.state.count", "test.pref"]), ["test.pref"])
             let store = Settings(fileURL: tempDir().appendingPathComponent("settings.json"))
             store[.onboardingDone] = true
             store[.appAppearance] = "dark"
@@ -117,6 +125,14 @@ final class SettingsHubTests: TestSuite {
             expectEqual(reread.hasValue(.appAppearance), false)
             expectEqual(reread[SettingKey<Int>("island.width", default: 0)], 0)
             expectEqual(Array(reread.values.keys), ["onboarding.done"])
+        }
+
+        test("destructive text is readable on the quiet button in both schemes") {
+            // the reset confirmation sits on a card; the button is white (dark: white 12 %) on it
+            let light = Contrast.ratio(DestructiveHex.light, 0xFFFFFF)
+            let dark = Contrast.ratio(DestructiveHex.dark, Contrast.over(0xFFFFFF, 0.12, ThemeHex.cardDark))
+            expect(light >= 4.5, "light \(light)")
+            expect(dark >= 4.5, "dark \(dark)")
         }
 
         test("notices: blocks and body without the leading title") {
@@ -138,6 +154,68 @@ final class SettingsHubTests: TestSuite {
             expectEqual(NoticesText.body(text).first, .paragraph("Intro line one continues here."))
             expectEqual(NoticesText.body("Plain").first, .paragraph("Plain"))
             expectEqual(NoticesText.blocks(""), [])
+        }
+
+        test("notices: fenced licence text stays verbatim, comments are left out") {
+            let text = """
+            <!--
+            For developers: keep in step with THIRD_PARTY_NOTICES.md (``` blocks).
+            -->
+            <!-- one-line note -->
+            Licence text:
+
+            ```
+            MIT License
+
+              Indented line\u{20}\u{20}
+            Permission is hereby granted, "AS IS".
+            ```
+            After the fence.
+
+            ```
+            unclosed
+            """
+            expectEqual(NoticesText.blocks(text), [
+                .paragraph("Licence text:"),
+                .code("MIT License\n\n  Indented line\nPermission is hereby granted, \"AS IS\"."),
+                .paragraph("After the fence."),
+                .code("unclosed"),
+            ])
+        }
+
+        test("notices: inline code spans") {
+            typealias S = NoticesText.Span
+            expectEqual(NoticesText.spans("Tokens (`Theme`) and `Motion`."),
+                        [S(text: "Tokens ("), S(text: "Theme", code: true), S(text: ") and "), S(text: "Motion", code: true), S(text: ".")])
+            expectEqual(NoticesText.spans("no code"), [S(text: "no code")])
+            expectEqual(NoticesText.spans("odd ` tick"), [S(text: "odd ` tick")], "an unpaired backtick stays")
+            expectEqual(NoticesText.spans("empty `` pair"), [S(text: "empty `` pair")])
+            expectEqual(String(NoticesText.styled("a `b` c").characters), "a b c")
+        }
+
+        test("notices: app files exist in both languages and carry every licence text") {
+            let folder = repoRoot.appendingPathComponent("App/Resources/Notices")
+            @MainActor func codeBlocks(_ text: String) -> [String] {
+                NoticesText.blocks(text).compactMap { if case .code(let s) = $0 { s } else { nil } }
+            }
+            var files: [Lang: String] = [:]
+            for lang in Lang.allCases {
+                guard let text = try? String(contentsOf: folder.appendingPathComponent("\(lang.rawValue).md"), encoding: .utf8) else {
+                    fail("App/Resources/Notices/\(lang.rawValue).md missing"); continue
+                }
+                files[lang] = text
+                expect(!codeBlocks(text).isEmpty, "\(lang.rawValue).md has no licence text")
+                if case .title = NoticesText.blocks(text).first {} else { fail("\(lang.rawValue).md does not start with a # title") }
+            }
+            expectEqual(files[.en].map(codeBlocks), files[.de].map(codeBlocks), "both languages carry the same licence texts")
+            // the developers' list at the root (strand G) may not exist on every branch
+            if let root = try? String(contentsOf: repoRoot.appendingPathComponent("THIRD_PARTY_NOTICES.md"), encoding: .utf8) {
+                for block in codeBlocks(root) {
+                    for (lang, text) in files {
+                        expect(codeBlocks(text).contains(block), "\(lang.rawValue).md lacks a licence text of THIRD_PARTY_NOTICES.md")
+                    }
+                }
+            }
         }
 
         test("about: version line, data path, link details") {

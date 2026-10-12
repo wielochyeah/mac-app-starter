@@ -1,10 +1,11 @@
-// Texts of the component gallery (Settings → Gallery).
+// Texts of the component gallery (the Gallery pane in Settings).
 
 enum GalleryText {
     static var title: String { tr(en: "Gallery", de: "Galerie") }
     static var searchPrompt: String { tr(en: "Search components", de: "Bausteine suchen") }
     static var allAreas: String { tr(en: "All areas", de: "Alle Bereiche") }
-    static var schemeWindow: String { tr(en: "Window", de: "Fenster") }
+    /// The stage follows the window's appearance.
+    static var schemeWindow: String { tr(en: "Auto", de: "Automatisch") }
     static var schemeLight: String { tr(en: "Light", de: "Hell") }
     static var schemeDark: String { tr(en: "Dark", de: "Dunkel") }
     static var previewLabel: String { tr(en: "Preview appearance", de: "Erscheinungsbild der Vorschau") }

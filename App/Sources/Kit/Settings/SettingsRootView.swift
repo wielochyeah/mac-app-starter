@@ -12,8 +12,8 @@ struct SettingsRootView: View {
     var body: some View {
         NavigationSplitView {
             SettingsSidebar(hub: hub)
-                .navigationSplitViewColumnWidth(min: Metrics.sidebarMinWidth, ideal: Metrics.sidebarWidth,
-                                                max: Metrics.sidebarMaxWidth)
+                .navigationSplitViewColumnWidth(min: Metrics.Sidebar.minWidth, ideal: Metrics.sidebarWidth,
+                                                max: Metrics.Sidebar.maxWidth)
         } detail: {
             SettingsDetail(hub: hub)
                 .ignoresSafeArea(.container, edges: .top)
@@ -30,6 +30,7 @@ struct SettingsRootView: View {
 struct SettingsStaticWindow: View {
     let hub: SettingsHub
     var size: CGSize = Metrics.settingsWindow
+    var footer: (() -> AnyView)? = SettingsHubExtras.sidebarFooter
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -37,12 +38,12 @@ struct SettingsStaticWindow: View {
         let panel = RoundedRectangle(cornerRadius: Radius.panel, style: .continuous)
         StaticWindow(size: size, chrome: .settings) {
             HStack(spacing: 0) {
-                SettingsSidebar(hub: hub)
+                SettingsSidebar(hub: hub, footer: footer)
                     .frame(width: Metrics.sidebarWidth)
                     .background(panel.fill(t.sidebarPanel))
                     .overlay(panel.strokeBorder(t.sidebarPanelStroke, lineWidth: Metrics.hairline))
-                    .shadow(color: t.panelShadow, radius: Metrics.sidebarPanelShadowRadius, y: Metrics.sidebarPanelShadowY)
-                    .padding([.leading, .top, .bottom], Metrics.sidebarPanelInset)
+                    .shadow(color: t.panelShadow, radius: Metrics.Sidebar.panelShadowRadius, y: Metrics.Sidebar.panelShadowY)
+                    .padding([.leading, .top, .bottom], Metrics.Sidebar.panelInset)
                 SettingsDetail(hub: hub)
             }
         }
@@ -69,9 +70,14 @@ struct SettingsDetail: View {
 }
 
 /// Sidebar: one 34 pt item per pane (squircle 22, title 13, count), the selection background
-/// springs between items, ↑/↓ move it, footer at the bottom.
+/// springs between items, ↑/↓ move it, footer pinned at the bottom. The items scroll when a
+/// project has more panes than the window is tall (the footer stays put).
 struct SettingsSidebar: View {
     let hub: SettingsHub
+    /// Inset of the first item: below the traffic lights in the window, less when drawn alone.
+    var top: CGFloat = Metrics.Sidebar.top
+    /// Renders and the gallery pass their own; the window uses the project's.
+    var footer: (() -> AnyView)? = SettingsHubExtras.sidebarFooter
     @Environment(\.renderStatic) private var renderStatic
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -81,34 +87,46 @@ struct SettingsSidebar: View {
         let t = Theme(scheme)
         let groups = SettingsHub.groups(hub.panes)
         let order = groups.map(\.group)
-        VStack(alignment: .leading, spacing: Space.hair) {
-            ForEach(groups, id: \.group) { entry in
-                if SettingsHub.showsLabel(for: entry.group, in: order) {
-                    Text(entry.group.title)
-                        .font(TypeScale.secondarySemibold)
-                        .foregroundStyle(t.sideGroup)
-                        .padding(.leading, Space.sidebarX)
-                        .padding(.top, Space.sidebarGroupTop)
-                        .padding(.bottom, Space.sidebarGroupBottom)
-                        .accessibilityAddTraits(.isHeader)
+        VStack(alignment: .leading, spacing: 0) {
+            ScrollViewReader { proxy in
+                ScrollView(.vertical) {
+                    VStack(alignment: .leading, spacing: Space.hair) {
+                        ForEach(groups, id: \.group) { entry in
+                            if SettingsHub.showsLabel(for: entry.group, in: order) {
+                                Text(entry.group.title)
+                                    .font(TypeScale.secondarySemibold)
+                                    .foregroundStyle(t.sideGroup)
+                                    .padding(.leading, Space.sidebarX)
+                                    .padding(.top, Space.sidebarGroupTop)
+                                    .padding(.bottom, Space.sidebarGroupBottom)
+                                    .accessibilityAddTraits(.isHeader)
+                            }
+                            ForEach(entry.panes) { pane in item(pane, t).id(pane.id) }
+                        }
+                    }
+                    .padding(.horizontal, Space.sidebarX)
+                    .padding(.bottom, Space.s)
+                    .animation(Motion.adaptive(Motion.selection, reduce: reduceMotion), value: hub.pane)
                 }
-                ForEach(entry.panes) { pane in item(pane, t) }
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
+                .onChange(of: hub.pane) { _, id in
+                    withAnimation(Motion.adaptive(Motion.selection, reduce: reduceMotion)) { proxy.scrollTo(id) }
+                }
             }
-            Spacer(minLength: Space.s)
-            if let footer = SettingsHubExtras.sidebarFooter {
+            if let footer {
                 footer()
                     .padding(.horizontal, Space.sidebarX)
                     .padding(.top, Space.s)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .overlay(alignment: .top) { Rectangle().fill(t.separator).frame(height: Metrics.hairline) }
+                    .padding(.horizontal, Space.sidebarX)
             }
         }
-        .padding(.horizontal, Space.sidebarX)
-        .padding(.top, Metrics.sidebarTop)
+        .padding(.top, top)
         .padding(.bottom, Space.s)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .ignoresSafeArea(.container, edges: .top)
-        .animation(Motion.adaptive(Motion.selection, reduce: reduceMotion), value: hub.pane)
         .focusable(!renderStatic)
         .focusEffectDisabled()
         .onKeyPress(.downArrow) { hub.step(1); return .handled }

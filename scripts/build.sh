@@ -40,8 +40,12 @@ print -n "APPL????" > "$APP/Contents/PkgInfo"
 # Resources: everything in App/Resources except the text sources, then the generated .lproj files.
 rsync -a --exclude 'InfoPlist.json' --exclude '*.md' --exclude '.DS_Store' App/Resources/ "$APP/Contents/Resources/"
 rsync -a build/gen/Resources/ "$APP/Contents/Resources/"
-# MIT and similar licences travel with the app: Settings → About shows this file when bundled.
-if [[ -f THIRD_PARTY_NOTICES.md ]]; then cp THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"; fi
+# MIT and similar licences travel with the app: Settings → About shows Notices/<lang>.md (written
+# for the people using the app; THIRD_PARTY_NOTICES.md at the root is the developers' list).
+if [[ -d App/Resources/Notices ]]; then
+  mkdir -p "$APP/Contents/Resources/Notices"
+  cp App/Resources/Notices/*.md "$APP/Contents/Resources/Notices/"
+fi
 
 # Ad hoc by default. A Developer ID turns on the hardened runtime, which needs the entitlements
 # for every listed permission (build/gen/App.entitlements), or macOS denies them silently.

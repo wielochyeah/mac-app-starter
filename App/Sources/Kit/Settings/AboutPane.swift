@@ -21,8 +21,10 @@ struct AboutInfo {
     var build = AppInfo.build
     var copyright = AppInfo.copyright
     var links: [Link] = AboutInfo.configuredLinks
-    /// The bundled THIRD_PARTY_NOTICES.md, nil when the build did not include it.
-    var notices: String? = AboutInfo.bundledNotices
+    /// Third-party notices in the UI language; nil when the build bundled none. Read when shown,
+    /// so a language switch takes effect. Renders and tests can set fixed text.
+    var fixedNotices: String?
+    var notices: String? { fixedNotices ?? AboutInfo.bundledNotices(Localizer.shared.lang) }
     var dataFolder: URL = AboutInfo.dataFolder
     var icon: NSImage? = AppInfo.icon()
 
@@ -41,9 +43,15 @@ struct AboutInfo {
             .appendingPathComponent("Library/Application Support/\(AppConfig.bundleId)", isDirectory: true)
     }
 
-    static var bundledNotices: String? {
-        guard let url = Bundle.main.url(forResource: "THIRD_PARTY_NOTICES", withExtension: "md") else { return nil }
-        return try? String(contentsOf: url, encoding: .utf8)
+    /// `Contents/Resources/Notices/<lang>.md`, copied by build.sh from `App/Resources/Notices/`
+    /// (written for the people using the app; THIRD_PARTY_NOTICES.md at the repository root is the
+    /// developers' list). Falls back to English.
+    static func bundledNotices(_ lang: Lang, bundle: Bundle = .main) -> String? {
+        for code in [lang.rawValue, Lang.en.rawValue] {
+            if let url = bundle.url(forResource: code, withExtension: "md", subdirectory: "Notices"),
+               let text = try? String(contentsOf: url, encoding: .utf8) { return text }
+        }
+        return nil
     }
 
     /// One line for bug reports: "Starter 1.0.0 (1), macOS 26.0.1, arm64".
@@ -105,7 +113,7 @@ struct AboutPane: View {
                          symbol: copied || didCopy ? "checkmark" : "doc.on.doc", active: copied || didCopy) { copyVersion() }
                 }
                 ButtonRow(SettingsText.dataFolder, subtitle: AboutInfo.displayPath(info.dataFolder),
-                          button: SettingsText.showInFinder) { revealDataFolder() }
+                          button: SettingsText.showInFinder, buttonSymbol: "folder") { revealDataFolder() }
             }
             if !info.links.isEmpty {
                 SettingsSection(SettingsText.links) {
@@ -116,7 +124,7 @@ struct AboutPane: View {
             }
             if info.notices != nil {
                 SettingsSection(SettingsText.legal) {
-                    NavigationRow(SettingsText.notices, subtitle: SettingsText.noticesDetail) { showsNotices = true }
+                    NavigationRow(SettingsText.noticesRow, subtitle: SettingsText.noticesDetail) { showsNotices = true }
                 }
             }
         }
@@ -142,7 +150,7 @@ struct AboutPane: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(line, forType: .string)
         didCopy = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { didCopy = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + Motion.copiedHold) { didCopy = false }
     }
 
     private func revealDataFolder() {
@@ -153,7 +161,8 @@ struct AboutPane: View {
 
 // MARK: - Third-party notices
 
-/// The notices file in a sheet: a header band with Done, the text below (a small Markdown subset).
+/// The notices file in a sheet: a header band with Done (Return and Esc close it), the text below
+/// (a small Markdown subset, see `NoticesText`).
 struct NoticesSheet: View {
     let text: String
     let done: () -> Void
@@ -180,16 +189,17 @@ struct NoticesSheet: View {
         }
         .frame(width: Metrics.noticesSheet.width, height: Metrics.noticesSheet.height)
         .background(t.windowBg)
+        .onExitCommand(perform: done)
     }
 
     @ViewBuilder private func blockView(_ block: NoticesText.Block, _ t: Theme) -> some View {
         switch block {
         case .title(let s):
-            Text(s).font(TypeScale.headline).foregroundStyle(t.fg)
+            Text(NoticesText.styled(s)).font(TypeScale.headline).foregroundStyle(t.fg)
         case .heading(let s):
-            Text(s).font(TypeScale.bodySemibold).foregroundStyle(t.fg).padding(.top, Space.xs)
+            Text(NoticesText.styled(s)).font(TypeScale.bodySemibold).foregroundStyle(t.fg).padding(.top, Space.xs)
         case .paragraph(let s):
-            Text(s)
+            Text(NoticesText.styled(s))
                 .font(TypeScale.secondary)
                 .foregroundStyle(t.prose)
                 .lineSpacing(TypeScale.footnoteLineSpacing)
@@ -198,8 +208,19 @@ struct NoticesSheet: View {
             HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
                 Circle().fill(t.fg3).frame(width: Space.xxs, height: Space.xxs)
                     .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + Space.bulletLift }
-                Text(s).font(TypeScale.secondary).foregroundStyle(t.prose).fixedSize(horizontal: false, vertical: true)
+                Text(NoticesText.styled(s)).font(TypeScale.secondary).foregroundStyle(t.prose)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+        case .code(let s):
+            // verbatim: licence texts are shown exactly as written, line breaks kept
+            Text(verbatim: s)
+                .font(TypeScale.code)
+                .foregroundStyle(t.prose)
+                .lineSpacing(TypeScale.footnoteLineSpacing)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(Space.s)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: Radius.field, style: .continuous).fill(t.chip))
         case .rule:
             Separator().padding(.vertical, Space.xxs)
         }
@@ -207,11 +228,17 @@ struct NoticesSheet: View {
 }
 
 /// Splits a notices file into blocks (pure, tested): `# ` title, `##`+ heading, `- `/`* ` item,
-/// `---` rule, other lines joined into paragraphs (a blank line ends one). Inline Markdown stays as
-/// text: licence texts must read exactly as written.
+/// `---` rule, fenced code (```) as one verbatim block with its line breaks, `<!-- … -->` comments
+/// left out (notes for developers), other lines joined into paragraphs (a blank line ends one).
+/// Inline `code` is the only inline Markdown (see `spans`); everything else stays as written.
 enum NoticesText {
     enum Block: Equatable {
-        case title(String), heading(String), paragraph(String), item(String), rule
+        case title(String), heading(String), paragraph(String), item(String), code(String), rule
+    }
+
+    struct Span: Equatable {
+        let text: String
+        var code = false
     }
 
     /// The blocks without a leading title (the sheet's header already names the file).
@@ -224,14 +251,37 @@ enum NoticesText {
     static func blocks(_ text: String) -> [Block] {
         var out: [Block] = []
         var paragraph: [String] = []
+        var code: [String]?
+        var inComment = false
         func flush() {
             if !paragraph.isEmpty { out.append(.paragraph(paragraph.joined(separator: " "))) }
             paragraph = []
         }
         for raw in text.components(separatedBy: .newlines) {
             let line = raw.trimmingCharacters(in: .whitespaces)
+            if var lines = code {
+                if line.hasPrefix("```") {
+                    out.append(.code(lines.joined(separator: "\n")))
+                    code = nil
+                } else {
+                    lines.append(String(raw.reversed().drop { $0 == " " || $0 == "\t" }.reversed()))
+                    code = lines
+                }
+                continue
+            }
+            if inComment {
+                if line.contains("-->") { inComment = false }
+                continue
+            }
+            if line.hasPrefix("<!--") {
+                flush()
+                inComment = !line.contains("-->")
+                continue
+            }
             if line.isEmpty { flush(); continue }
-            if line.hasPrefix("# ") {
+            if line.hasPrefix("```") {
+                flush(); code = []
+            } else if line.hasPrefix("# ") {
                 flush(); out.append(.title(String(line.dropFirst(2))))
             } else if line.hasPrefix("#") {
                 flush(); out.append(.heading(line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)))
@@ -244,6 +294,32 @@ enum NoticesText {
             }
         }
         flush()
+        if let code { out.append(.code(code.joined(separator: "\n"))) }
         return out
+    }
+
+    /// Inline code spans: text between a pair of backticks, without the backticks. An unpaired
+    /// backtick stays as it is.
+    static func spans(_ text: String) -> [Span] {
+        var out: [Span] = []
+        var rest = Substring(text)
+        while let open = rest.firstIndex(of: "`") {
+            let after = rest.index(after: open)
+            guard let close = rest[after...].firstIndex(of: "`"), close > after else { break }
+            if open > rest.startIndex { out.append(Span(text: String(rest[..<open]))) }
+            out.append(Span(text: String(rest[after..<close]), code: true))
+            rest = rest[rest.index(after: close)...]
+        }
+        if !rest.isEmpty { out.append(Span(text: String(rest))) }
+        return out
+    }
+
+    /// `spans` as styled text: code in `TypeScale.codeInline`.
+    static func styled(_ text: String) -> AttributedString {
+        spans(text).reduce(into: AttributedString()) { result, span in
+            var part = AttributedString(span.text)
+            if span.code { part.font = TypeScale.codeInline }
+            result += part
+        }
     }
 }

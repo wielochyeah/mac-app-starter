@@ -32,9 +32,9 @@ enum SettingsKit {
 /// Render scenes and gallery entries of the settings window. Each scene builds its own hub
 /// (`persists: false`), so renders never change the real selection.
 enum SettingsScenes {
-    /// Width of the detail column in the default window (900 - sidebar 224 - panel inset 8).
+    /// Width of the detail column in the default window (900 minus sidebar 224 minus panel inset 8).
     static var paneSize: CGSize {
-        CGSize(width: Metrics.settingsWindow.width - Metrics.sidebarWidth - Metrics.sidebarPanelInset,
+        CGSize(width: Metrics.settingsWindow.width - Metrics.sidebarWidth - Metrics.Sidebar.panelInset,
                height: Metrics.settingsWindow.height)
     }
 
@@ -42,12 +42,14 @@ enum SettingsScenes {
         Registry.renderScenes += [
             RenderScene(id: "settings.window", size: .zero) { AnyView(window(pane: "general")) },
             RenderScene(id: "settings.window-about", size: .zero) { AnyView(window(pane: "about")) },
+            RenderScene(id: "settings.window-many", size: .zero) { AnyView(manyPanesWindow) },
             RenderScene(id: "settings.general", size: paneSize) { AnyView(GeneralPane()) },
             RenderScene(id: "settings.general-reset", size: paneSize) { AnyView(GeneralPane(confirmingReset: true)) },
             RenderScene(id: "settings.about", size: paneSize) { AnyView(AboutPane()) },
             RenderScene(id: "settings.about-full", size: CGSize(width: paneSize.width, height: Metrics.aboutFullRender)) { AnyView(AboutPane(info: sampleAbout, copied: true)) },
+            // the bundled file of the render language; the sample only when the build has none
             RenderScene(id: "settings.notices", size: .zero) {
-                AnyView(RenderBoard { NoticesSheet(text: AboutInfo.bundledNotices ?? SettingsSampleText.notices) {} })
+                AnyView(RenderBoard { NoticesSheet(text: AboutInfo.bundledNotices(Localizer.shared.lang) ?? SettingsSampleText.notices) {} })
             },
         ]
         Registry.gallery += [
@@ -65,19 +67,33 @@ enum SettingsScenes {
         var info = AboutInfo()
         info.links = [(SettingsSampleText.website, "https://example.com"), (SettingsSampleText.feedback, "mailto:feedback@example.com")]
             .compactMap { title, link in URL(string: link).map { AboutInfo.Link(title: title, url: $0) } }
-        info.notices = info.notices ?? SettingsSampleText.notices
+        if info.notices == nil { info.fixedNotices = SettingsSampleText.notices }
         return info
+    }
+
+    /// A project with many panes at the minimum window size: the list scrolls, the footer stays.
+    static var manyPanesWindow: some View {
+        let samples = SettingsSampleText.panes.enumerated().map { index, sample in
+            SettingsPane(id: "sample.\(index)", group: sample.group, order: 100 + index, title: sample.title,
+                         symbol: sample.symbol, tint: sample.tint) { AnyView(EmptyView()) }
+        }
+        let panes = (Registry.orderedSettingsPanes + samples).sorted { ($0.group, $0.order, $0.id) < ($1.group, $1.order, $1.id) }
+        let hub = SettingsHub(pane: "general", persists: false) { panes }
+        return RenderBoard {
+            SettingsStaticWindow(hub: hub, size: Metrics.settingsWindowMin, footer: { AnyView(LocalOnlyFooter()) })
+        }
     }
 }
 
-/// The sidebar on its own, as macOS 26 draws it (floating panel), for the gallery.
+/// The sidebar on its own, as macOS 26 draws it (floating panel, no traffic lights), for the gallery.
 private struct SidebarSample: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let t = Theme(scheme)
         let panel = RoundedRectangle(cornerRadius: Radius.panel, style: .continuous)
-        SettingsSidebar(hub: SettingsHub(pane: "general", persists: false))
+        SettingsSidebar(hub: SettingsHub(pane: "general", persists: false), top: Metrics.Sidebar.topAlone,
+                        footer: { AnyView(LocalOnlyFooter()) })
             .frame(width: Metrics.sidebarWidth, height: Metrics.sidebarSample)
             .background(panel.fill(t.sidebarPanel))
             .overlay(panel.strokeBorder(t.sidebarPanelStroke, lineWidth: Metrics.hairline))

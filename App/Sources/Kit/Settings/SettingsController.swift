@@ -4,8 +4,8 @@ import SwiftUI
 /// Opens and closes the settings window (VoiceBud HubController, notes vb-onboarding-hub §3.1).
 ///
 /// `WindowHost` builds the window (900 x 620, min 760 x 500, empty unified toolbar for the 52 pt
-/// band, frame autosave that gives up its name on close, views released on close, accessory ↔
-/// regular through `AppForm`). On top of that this controller
+/// band, frame autosave that gives up its name on close, views released on close, switching between
+/// accessory and regular through `AppForm`). On top of that this controller
 /// - selects the requested pane (`AppActions.openSettings(pane:)`),
 /// - routes ⌘W / ⌘F / ⌘, and the editing keys while the window is key (an accessory app may run
 ///   without a main menu; with one, the menu handles everything except ⌘F),
@@ -13,6 +13,8 @@ import SwiftUI
 /// - returns freed memory to the system half a second after closing.
 enum SettingsController {
     static let windowID = "settings"
+    /// Wait after closing before handing freed memory back (the views are released by then).
+    private static let memoryReliefDelay: TimeInterval = 0.5
 
     private static var keyMonitor: Any?
     private static var closeObserver: NSObjectProtocol?
@@ -50,7 +52,7 @@ enum SettingsController {
         closeObserver = nil
         handBackActivation()
         // hand the released views' memory back (VoiceBud: the idle app stayed ~20 MB higher without)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { malloc_zone_pressure_relief(nil, 0) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + memoryReliefDelay) { malloc_zone_pressure_relief(nil, 0) }
     }
 
     /// An accessory app without windows must not stay the active app: the person's next keystroke

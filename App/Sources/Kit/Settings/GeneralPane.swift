@@ -40,23 +40,40 @@ enum AppAppearance: String, CaseIterable {
     }
 }
 
-/// Resetting all settings: every key goes back to its default except the setup state
-/// (`onboarding.*`), so a reset never throws the person back into the setup.
+/// Resetting all settings: every key goes back to its default, except keys that hold state rather
+/// than a preference. The kit keeps the setup state (`onboarding.*`, a reset never throws the person
+/// back into the setup) and the developer switch `kit.showGallery`.
+///
+/// Modules extend it in `register()`:
+///
+///     SettingsReset.keep("ai.usage")                  // state (a prefix), not a preference
+///     SettingsReset.didReset.append { HotkeyCenter.shared.reload() }   // re-read cached values
 enum SettingsReset {
-    static let keptPrefixes = ["onboarding."]
+    /// Key prefixes a reset leaves alone. Exact keys work too (a key is its own prefix).
+    private(set) static var keptPrefixes = ["onboarding.", "kit.showGallery"]
+    /// Run after a reset, so modules re-read the values they hold in memory and apply them now
+    /// (hotkeys re-register, a window re-reads its layout) instead of at the next launch.
+    static var didReset: [() -> Void] = []
 
-    /// The keys a reset removes (pure, tested).
-    static func keys(in names: some Sequence<String>) -> [String] {
-        names.filter { name in !keptPrefixes.contains { name.hasPrefix($0) } }.sorted()
+    static func keep(_ prefix: String) {
+        if !keptPrefixes.contains(prefix) { keptPrefixes.append(prefix) }
     }
 
-    /// Removes those keys from `settings`, then re-applies language and appearance.
+    /// The keys a reset removes (pure, tested).
+    static func keys(in names: some Sequence<String>, keeping kept: [String] = keptPrefixes) -> [String] {
+        names.filter { name in !kept.contains { name.hasPrefix($0) } }.sorted()
+    }
+
+    /// Removes those keys from `settings`, re-applies language and appearance, then runs `didReset`.
     static func perform(on settings: Settings = .shared, applyToApp: Bool = true) {
         if applyToApp { Localizer.shared.choice = nil }
         for name in keys(in: settings.values.keys) {
             settings.reset(SettingKey<JSONValue>(name, default: .null))
         }
-        if applyToApp { AppAppearance.apply() }
+        if applyToApp {
+            AppAppearance.apply()
+            for hook in didReset { hook() }
+        }
         Log.info("settings: reset to defaults", "settings")
     }
 }
@@ -85,8 +102,8 @@ struct GeneralPane: View {
                           options: [("system", SettingsText.followMac), ("de", Lang.de.nativeName), ("en", Lang.en.nativeName)],
                           selection: language)
             }
-            SettingsSection {
-                PickerRow(SettingsText.appearance, subtitle: SettingsText.appearanceDetail,
+            SettingsSection(SettingsText.appearance) {
+                PickerRow(SettingsText.lightOrDark, subtitle: SettingsText.appearanceDetail,
                           options: AppAppearance.allCases.map { ($0.rawValue, $0.title) }, selection: appearance)
             }
             SettingsSection(SettingsText.setupSection) {
@@ -118,11 +135,12 @@ struct GeneralPane: View {
         SettingsReset.perform()
         setConfirming(false)
         didReset = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) { didReset = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + Motion.doneHold) { didReset = false }
     }
 }
 
-/// The reset row while asking: what happens, Cancel, Reset. Reset is the one primary button.
+/// The reset row while asking: what happens, Reset, Cancel. Cancel is the prominent button and Esc
+/// presses it; Reset is red text on a quiet button with no key equivalent, so Return never resets.
 private struct ResetConfirmation: View {
     let cancel: () -> Void
     let confirm: () -> Void
@@ -147,12 +165,12 @@ private struct ResetConfirmation: View {
             }
             HStack(spacing: Space.xs) {
                 Spacer(minLength: 0)
-                Button(CommonText.cancel, action: cancel)
+                // the label carries its own colour: the button style sets the default text colour
+                Button(action: confirm) { Text(SettingsText.resetConfirmButton).foregroundStyle(t.destructive) }
                     .buttonStyle(.secondary)
-                    .keyboardShortcut(.cancelAction)
-                Button(SettingsText.resetConfirmButton, action: confirm)
+                Button(CommonText.cancel, action: cancel)
                     .buttonStyle(.primary)
-                    .keyboardShortcut(.defaultAction)
+                    .keyboardShortcut(.cancelAction)
             }
         }
         .padding(.horizontal, Space.rowX)
