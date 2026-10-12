@@ -2,11 +2,13 @@ import Foundation
 
 /// Where the MLX worker, its Python and the models are.
 ///
-/// Worker folder (first that has worker.py): `$STARTER_AI_WORKER`, `<App>.app/Contents/Resources/ai-worker`
-/// (a packaged build), `$STARTER_ROOT/ai-worker`, then `ai-worker/` next to the app's folders upwards
-/// (a dev build in `build/<Name>.app` finds the repo's folder).
-/// Python: `$STARTER_AI_PYTHON`, `<worker>/.venv/bin/python` (ai-worker/setup.sh), or a bundled
-/// `Contents/Resources/python/bin/python3` (packaging).
+/// Worker folder (first that has worker.py): `<App>.app/Contents/Resources/ai-worker` (a packaged
+/// build); debug builds also try `$STARTER_AI_WORKER`, `$STARTER_ROOT/ai-worker` and `ai-worker/`
+/// next to the app's folders upwards (a dev build in `build/<Name>.app` finds the repo's folder).
+/// Python: `<worker>/.venv/bin/python` (ai-worker/setup.sh) or a bundled
+/// `Contents/Resources/python/bin/python3` (packaging); debug builds also honour `$STARTER_AI_PYTHON`.
+/// A release build runs only Python from inside its own bundle, never one found in the folders
+/// around it or named by the environment.
 /// Models: `<Application Support>/<bundleId>/Models/huggingface` (app-private, removed with the
 /// app's data; `STARTER_DATA_DIR` moves it for tests).
 nonisolated enum MLXPaths {
@@ -15,8 +17,11 @@ nonisolated enum MLXPaths {
     static var workerDir: URL? {
         let fm = FileManager.default
         var candidates: [URL] = []
+        #if DEBUG
         if let custom = env["STARTER_AI_WORKER"], !custom.isEmpty { candidates.append(URL(fileURLWithPath: custom, isDirectory: true)) }
+        #endif
         if let resources = Bundle.main.resourceURL { candidates.append(resources.appendingPathComponent("ai-worker", isDirectory: true)) }
+        #if DEBUG
         if let root = env["STARTER_ROOT"], !root.isEmpty {
             candidates.append(URL(fileURLWithPath: root, isDirectory: true).appendingPathComponent("ai-worker", isDirectory: true))
         }
@@ -25,13 +30,16 @@ nonisolated enum MLXPaths {
             candidates.append(dir.appendingPathComponent("ai-worker", isDirectory: true))
             dir = dir.deletingLastPathComponent()
         }
+        #endif
         return candidates.first { fm.fileExists(atPath: $0.appendingPathComponent("worker.py").path) }
     }
 
     static func python(workerDir: URL?) -> URL? {
         let fm = FileManager.default
         var candidates: [URL] = []
+        #if DEBUG
         if let custom = env["STARTER_AI_PYTHON"], !custom.isEmpty { candidates.append(URL(fileURLWithPath: custom)) }
+        #endif
         if let workerDir { candidates.append(workerDir.appendingPathComponent(".venv/bin/python")) }
         if let resources = Bundle.main.resourceURL { candidates.append(resources.appendingPathComponent("python/bin/python3")) }
         return candidates.first { fm.isExecutableFile(atPath: $0.path) }
