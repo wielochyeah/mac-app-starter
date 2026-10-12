@@ -44,7 +44,8 @@ func mix(_ a: UInt32, into b: UInt32, _ t: Double) -> UInt32 { Contrast.over(a, 
 /// The colours of one icon, all derived from the accent palette in Kit/Design/Theme.swift.
 struct IconColors {
     let brand: UInt32
-    let top: UInt32       // light end of the glyph gradient
+    let ink: UInt32       // the glyph's body: brand, darkened until it stands 3:1 off the darkest surface
+    let top: UInt32       // light end of the glyph gradient (large sizes only: a highlight, not ink)
     let deep: UInt32      // dark end of the glyph gradient
     let surfaceTop: UInt32
     let surfaceMid: UInt32
@@ -54,15 +55,20 @@ struct IconColors {
     init(_ accent: AccentName) {
         let p = AccentPalette.of(accent)
         brand = p.brand
-        top = mix(p.gradientTop, into: p.brand, 0.55)
         surfaceTop = 0xFFFFFF
         surfaceMid = mix(p.brand, into: 0xF5F5F8, 0.035)
         surfaceBottom = mix(p.brand, into: 0xDFE0E6, 0.10)
-        // the glyph's dark end: the brand a quarter darker, more for light accents (orange) until
-        // it stands 3:1 off the surface
-        var shade = 0.26
-        while Contrast.ratio(mix(0x000000, into: p.brand, shade), surfaceBottom) < 3.1 && shade < 0.6 { shade += 0.02 }
-        deep = mix(0x000000, into: p.brand, shade)
+        // surfaceBottom is the darkest point of the body, so 3:1 there holds everywhere on it
+        let surface = surfaceBottom
+        func darkened(_ from: Double) -> UInt32 {
+            var shade = from
+            while Contrast.ratio(mix(0x000000, into: p.brand, shade), surface) < 3.05 && shade < 0.6 { shade += 0.02 }
+            return mix(0x000000, into: p.brand, shade)
+        }
+        ink = darkened(0)
+        top = mix(p.gradientTop, into: ink, 0.55)
+        // the dark end: the brand a quarter darker, more for light accents (orange)
+        deep = darkened(0.26)
         sheen = p.gradientTop
     }
 }
@@ -84,13 +90,18 @@ struct Params {
     var pool: CGFloat = 0.20         // accent light spilling below the glyph
     var sheen: CGFloat = 0.6         // faint accent reflection in the lower left
     var gloss: CGFloat = 0.30        // white gloss on the glyph's upper half
+    /// Light highlight at the top of the glyph gradient. Off for the small masters: there every
+    /// pixel of the glyph is ink (3:1 on the surface), or the small parts of a symbol wash out.
+    var highlight = true
     var glass: CGFloat = 1           // light rim along the top of the body
     var hairline: CGFloat = 2        // outer edge, in units
     var hairlineAlpha: CGFloat = 0.10
 
-    /// Small masters: body and glyph on whole pixels, heavier glyph, no glow (a downscale smears).
+    /// Small masters: body and glyph on whole pixels, heavier glyph, no glow (a downscale smears),
+    /// glyph only in ink colours (no highlight, no gloss).
     static func small(_ px: Int) -> Params {
         var p = Params()
+        p.highlight = false
         let u = 1024 / CGFloat(px)
         let inset = (CGFloat(px) * 100 / 1024).rounded()          // 16 -> 2, 32 -> 3, 64 -> 6
         let side = CGFloat(px) - 2 * inset
@@ -103,11 +114,11 @@ struct Params {
             p.glass = 1.2; p.hairline = 0.8 * u; p.hairlineAlpha = 0.16
         } else if px <= 32 {
             p.glyph = 16 * u; p.snapPixels = 16; p.weight = .semibold
-            p.shadow = 0.8; p.lift = 0.12; p.glow = 0.12; p.pool = 0.14; p.sheen = 0.3; p.gloss = 0.18
+            p.shadow = 0.8; p.lift = 0.12; p.glow = 0.12; p.pool = 0.14; p.sheen = 0.3; p.gloss = 0
             p.glass = 1.1; p.hairline = 0.7 * u; p.hairlineAlpha = 0.14
         } else {
             p.glyph = 33 * u; p.snapPixels = 33; p.weight = .semibold
-            p.lift = 0.22; p.glow = 0.22; p.gloss = 0.24; p.hairline = 0.6 * u; p.hairlineAlpha = 0.12
+            p.lift = 0.22; p.glow = 0.22; p.gloss = 0; p.hairline = 0.6 * u; p.hairlineAlpha = 0.12
         }
         return p
     }
@@ -305,7 +316,9 @@ func drawIcon(_ ctx: CGContext, _ p: Params, _ c: IconColors, symbol: String, px
         }
         ctx.saveGState()
         ctx.clip(to: full, mask: mask)
-        ctx.drawLinearGradient(gradient([(0, rgb(c.top)), (0.55, rgb(c.brand)), (1, rgb(c.deep))]),
+        let stops: [(CGFloat, CGColor)] = p.highlight ? [(0, rgb(c.top)), (0.55, rgb(c.ink)), (1, rgb(c.deep))]
+                                                      : [(0, rgb(c.ink)), (1, rgb(c.deep))]
+        ctx.drawLinearGradient(gradient(stops),
                                start: CGPoint(x: ink.midX, y: ink.maxY), end: CGPoint(x: ink.midX, y: ink.minY),
                                options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
         if p.gloss > 0 {
@@ -513,11 +526,21 @@ func selfTest(symbol: String) throws {
     let master = Params(), r = glyphInkRect(master, ink: ink, img: img, px: 1024)
     check(master.body.insetBy(dx: master.radius * 0.3, dy: master.radius * 0.3).contains(r), "master glyph \(r) too large")
 
-    // the glyph's dark end must stand out from the surface for every accent (>= 3:1)
+    // small masters draw the glyph in ink colours only (no highlight, no white gloss) ...
+    for px in [16, 32, 64] {
+        let p = Params.small(px)
+        check(!p.highlight && p.gloss == 0, "\(px) px: glyph has a highlight or gloss (light parts fall below 3:1)")
+    }
+    // ... and both ink colours stand 3:1 off the darkest surface for every accent. The large
+    // sizes add the light highlight at the top of the glyph on top of that.
     for accent in AccentName.allCases {
         let c = IconColors(accent)
-        let ratio = Contrast.ratio(c.deep, c.surfaceBottom)
-        check(ratio >= 3, "\(accent.rawValue): glyph \(String(format: "%.2f", ratio)):1 on the surface")
+        for (name, colour) in [("ink", c.ink), ("dark end", c.deep)] {
+            for (where_, surface) in [("top", c.surfaceTop), ("middle", c.surfaceMid), ("bottom", c.surfaceBottom)] {
+                let ratio = Contrast.ratio(colour, surface)
+                check(ratio >= 3, "\(accent.rawValue): glyph \(name) \(String(format: "%.2f", ratio)):1 on the \(where_) of the surface")
+            }
+        }
         check(Contrast.luminance(c.surfaceTop) > Contrast.luminance(c.surfaceBottom), "\(accent.rawValue): surface not lighter at the top")
     }
     do { _ = try symbolImage("no.such.symbol.x", weight: .regular); failures.append("unknown symbol accepted") } catch {}
