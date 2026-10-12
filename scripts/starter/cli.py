@@ -161,6 +161,7 @@ def cmd_init(root: Path, a) -> int:
         opts.remove += _split_modules(a.module_aus)
         if a.bundle_id:
             opts.bundle_id = a.bundle_id
+        print(project.summary(opts), end="")
         confirm = _ask("Fortfahren? j/n", "n")
         if not confirm.lower().startswith("j"):
             print("Abgebrochen, nichts geändert.")

@@ -169,8 +169,38 @@ class InitTests(TempDirCase):
         opts = interactive_values(m, {"app": {"accent": "violett", "symbol": "sparkles"}}, ask, list(m.modules))
         self.assertEqual((opts.name, opts.bundle_id, opts.accent, opts.symbol),
                          ("Mein Tool", "com.example.meintool", "rot", "hammer"))
-        self.assertEqual(opts.remove, ["island", "examples"])
+        self.assertEqual(opts.remove, ["island", "mlx", "examples"], "mlx is off in starter.json: default n")
         self.assertEqual(sum(1 for p in asked if p.startswith("Name")), 2)
+
+    def scripted(self, answers, config=None):
+        answers = iter(answers)
+        asked, said = [], []
+
+        def ask(prompt, default, check):
+            while True:
+                answer = next(answers) or (default or "")
+                asked.append(prompt)
+                if check(answer) is None:
+                    return answer
+                said.append(check(answer))
+
+        m = manifest_obj()
+        config = config or {"app": {}, "modules": {n: n != "mlx" for n in m.modules}}
+        opts = interactive_values(m, config, ask, list(m.modules), say=said.append)
+        return opts, asked, said
+
+    def test_interactive_drops_a_dependent_with_its_dependency(self):
+        config = {"app": {}, "modules": {n: True for n in manifest_obj().modules}}
+        opts, asked, said = self.scripted(["App", "", "", "", "j", "j", "j", "j", "j", "n", "j"], config)
+        self.assertEqual(opts.remove, ["ai", "mlx"])
+        self.assertFalse(any(p.startswith("Modul mlx") for p in asked), "mlx is not asked once ai goes")
+        self.assertTrue(any("mlx" in s and "mit entfernt" in s for s in said))
+
+    def test_interactive_keeps_the_last_app_form(self):
+        opts, asked, said = self.scripted(["App", "", "", "", "n", "n", "j", "j", "j", "j", "j", "", "j"])
+        self.assertEqual(opts.remove, ["window", "mlx"])
+        self.assertEqual(sum(1 for p in asked if p.startswith("Modul menubar")), 2)
+        self.assertTrue(any("window, menubar" in s for s in said))
 
     def test_default_bundle_id(self):
         self.assertEqual(default_bundle_id("Meine App 2"), "com.example.meineapp2")

@@ -286,23 +286,51 @@ def check_symbol(value: str) -> Optional[str]:
 
 
 def interactive_values(manifest: Manifest, config: dict, ask, present: List[str],
-                       name: Optional[str] = None) -> InitOptions:
+                       name: Optional[str] = None, say=print) -> InitOptions:
     """Asks for name (unless given), bundle id, accent, symbol and the modules to keep;
     `ask(prompt, default, check)` returns the answer (default on empty input) and asks again while
-    `check(answer)` returns a reason."""
+    `check(answer)` returns a reason. The module rules are checked with each answer: a module whose
+    dependency goes is removed with it (no question), and the last module of an atLeastOne group
+    cannot be answered away. A module that is off in starter.json defaults to "n"."""
     accents = cfg.gen_config().ACCENTS
     app = config.get("app") or {}
-    name = name or ask("Name der App (Buchstaben, Ziffern, Leerzeichen)", None, check_name)
+    switches = config.get("modules") or {}
+    name = name or ask("Name der App (A–Z, a–z, Ziffern, Leerzeichen)", None, check_name)
     bundle = ask("Bundle-ID", default_bundle_id(name), check_bundle_id)
     accent = ask(f"Akzentfarbe ({', '.join(accents)})", app.get("accent", "violett"),
                  lambda v: None if v in accents else "eine der genannten Farben")
     symbol = ask("SF Symbol für das App-Icon", app.get("symbol", "sparkles"), check_symbol)
-    remove = []
+    remove: List[str] = []
     for m in manifest.modules.values():
         if m.name not in present:
             continue
-        keep = ask(f"Modul {m.name} ({m.title}) behalten? j/n", "j",
-                   lambda v: None if v[:1].lower() in ("j", "n") else "j oder n")
+        gone = [n for n in m.needs if n in remove]
+        if gone:
+            say(f"  Modul {m.name} ({m.title}) braucht {', '.join(gone)} und wird mit entfernt.")
+            remove.append(m.name)
+            continue
+
+        def check(answer: str, module: str = m.name) -> Optional[str]:
+            if answer[:1].lower() not in ("j", "n"):
+                return "j oder n"
+            if answer[:1].lower() == "n":
+                for group in manifest.at_least_one:
+                    if module in group and not [g for g in group if g != module and g in present
+                                                and g not in remove and switches.get(g) is True]:
+                        return (f"eines der Module {', '.join(group)} bleibt, sonst sind die Einstellungen "
+                                "nicht erreichbar; hier j antworten")
+            return None
+
+        on = switches.get(m.name) is True
+        keep = ask(f"Modul {m.name} ({m.title}, in starter.json {'an' if on else 'aus'}) behalten? j/n",
+                   "j" if on else "n", check)
         if keep.lower().startswith("n"):
             remove.append(m.name)
     return InitOptions(name=name, bundle_id=bundle, accent=accent, symbol=symbol, remove=remove)
+
+
+def summary(opts: InitOptions) -> str:
+    """What init will do with the interactive answers, shown before "Fortfahren?"."""
+    return (f"Zusammenfassung: App {opts.name}, Bundle-ID {opts.bundle_id}, Akzent {opts.accent}, Symbol {opts.symbol}\n"
+            f"  Module entfernen: {', '.join(opts.remove) if opts.remove else 'keine'}\n"
+            "  Außerdem: Bauunterlagen des Starters löschen, Commit-Identität leeren, starter.lock.json schreiben\n")
