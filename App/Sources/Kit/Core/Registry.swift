@@ -108,6 +108,9 @@ struct SelfTestCheck: Identifiable {
     static var launchHooks: [() -> Void] = []
     static var terminateHooks: [() -> Void] = []
     static var selfTests: [SelfTestCheck] = []
+    /// Scripted loops for `--demo` (e.g. the island cycling through its states). Each runs once
+    /// after launch hooks in a normal (non-tool) launch and drives itself from there.
+    static var demoDrivers: [() -> Void] = []
 
     // MARK: Ordered views of the contributions
 
@@ -157,10 +160,12 @@ struct SelfTestCheck: Identifiable {
     /// Runs `body` with empty contributions and restores them afterwards (tests).
     static func withScratch<T>(_ body: () throws -> T) rethrows -> T {
         let saved = (pages, settingsPanes, onboardingSteps, menuItems, renderScenes, gallery, launchHooks, terminateHooks, selfTests)
+        let savedDemo = demoDrivers
         pages = []; settingsPanes = []; onboardingSteps = []; menuItems = []; renderScenes = []
-        gallery = []; launchHooks = []; terminateHooks = []; selfTests = []
+        gallery = []; launchHooks = []; terminateHooks = []; selfTests = []; demoDrivers = []
         defer {
             (pages, settingsPanes, onboardingSteps, menuItems, renderScenes, gallery, launchHooks, terminateHooks, selfTests) = saved
+            demoDrivers = savedDemo
         }
         return try body()
     }

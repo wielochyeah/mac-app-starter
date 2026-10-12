@@ -10,6 +10,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Log.info("headless launch: no windows", "app")
             return
         }
+        if Launch.isDemo {
+            for driver in Registry.demoDrivers { driver() }
+            return
+        }
         if !Settings.shared[.onboardingDone] && !Registry.orderedOnboardingSteps.isEmpty {
             AppActions.openOnboarding()
         } else if AppInfo.isEnabled("window") {

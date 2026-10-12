@@ -103,6 +103,15 @@ final class AppFormTests: TestSuite {
             expect(!LaunchFlags.parse(["app", "--only", "x"]).errors.isEmpty)
             expect(!LaunchFlags.parse(["app", "--render"]).errors.isEmpty)
             expectEqual(LaunchFlags.parse(["app", "-NSDocumentRevisionsDebugMode", "YES"]).errors, [])
+            expectEqual(LaunchFlags.parse(["app", "-psn_0_12345", "-AppleLanguages", "(de)"]).errors, [])
+        }
+
+        test("launch flags: unknown double-dash flags are errors, --demo parses") {
+            expectEqual(LaunchFlags.parse(["app", "--selftst"]).errors, ["unknown flag --selftst"])
+            expect(!LaunchFlags.parse(["app", "--rendr", "build/shots"]).errors.isEmpty)
+            let demo = LaunchFlags.parse(["app", "--demo"])
+            expect(demo.demo && demo.errors.isEmpty && !demo.isTool)
+            expect(!LaunchFlags.parse(["app", "--demo", "--selftest"]).errors.isEmpty)
         }
     }
 }

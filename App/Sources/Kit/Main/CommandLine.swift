@@ -4,6 +4,11 @@ import AppKit
 ///
 ///     <App> --render <dir> [--only <prefix>] [--lang en|de] [--appearance light|dark]
 ///     <App> --selftest
+///     <App> --demo        normal launch, no onboarding, runs every `Registry.demoDrivers` entry
+///                         (scripted loops such as the island's); fails when no module adds one
+///
+/// Unknown `--` flags are errors (exit 2), so a mistyped tool flag never starts the GUI app.
+/// Single-dash arguments are macOS's own (`-NSDocumentRevisionsDebugMode YES`, `-psn_…`) and pass.
 ///
 /// Environment: `STARTER_HEADLESS=1` (no windows, activation policy `.prohibited`),
 /// `STARTER_LANG=en|de`, `STARTER_DATA_DIR=<dir>`, `STARTER_LOG=stderr`.
@@ -13,6 +18,7 @@ struct LaunchFlags: Equatable {
     var lang: Lang?
     var appearance: Appearance?
     var selftest = false
+    var demo = false
     var errors: [String] = []
 
     var isTool: Bool { renderDir != nil || selftest }
@@ -45,13 +51,19 @@ struct LaunchFlags: Equatable {
                 }
             case "--selftest":
                 flags.selftest = true
+            case "--demo":
+                flags.demo = true
             default:
-                break   // macOS adds its own arguments (-NSDocumentRevisionsDebugMode, -AppleLanguages …)
+                // macOS adds its own single-dash arguments (-NSDocumentRevisionsDebugMode, -AppleLanguages …)
+                if arg.hasPrefix("--") { flags.errors.append("unknown flag \(arg)") }
             }
             i += 1
         }
         if flags.renderDir == nil && (flags.only != nil || flags.lang != nil || flags.appearance != nil) {
             flags.errors.append("--only, --lang and --appearance need --render <dir>")
+        }
+        if flags.demo && flags.isTool {
+            flags.errors.append("--demo cannot be combined with --render or --selftest")
         }
         return flags
     }
@@ -60,6 +72,8 @@ struct LaunchFlags: Equatable {
 enum Launch {
     /// Kept alive for the app's lifetime (NSApplication.delegate is weak).
     private static var delegate: AppDelegate?
+    /// True for `--demo`: AppDelegate skips onboarding and runs `Registry.demoDrivers`.
+    private(set) static var isDemo = false
 
     static func run(_ flags: LaunchFlags) -> Never {
         if !flags.errors.isEmpty {
@@ -84,6 +98,13 @@ enum Launch {
             exit(SelfTestRunner.run())
         }
 
+        if flags.demo {
+            guard !Registry.demoDrivers.isEmpty else {
+                FileHandle.standardError.write(Data("\(AppConfig.name): --demo: no enabled module provides a demo (Registry.demoDrivers is empty)\n".utf8))
+                exit(2)
+            }
+            isDemo = true
+        }
         let delegate = AppDelegate()
         Launch.delegate = delegate
         app.delegate = delegate
