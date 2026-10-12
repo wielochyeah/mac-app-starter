@@ -252,6 +252,19 @@ final class BackgroundTests: TestSuite {
             expect(!jobs.isRunning("a"))
         }
 
+        test("the documented example compiles: a note from a main-actor text") {
+            let jobs = make()
+            jobs.register(id: "cleanup", title: { BackgroundSampleText.cleanup }, interval: 6 * 3600) {
+                let removed = await Task.detached { 12 }.value      // work off the main actor
+                guard removed > 0 else { return .nothingToDo }
+                return .done(note: await MainActor.run { BackgroundText.every(TimeInterval(removed)) })
+            }
+            run {
+                let outcome = await jobs.perform("cleanup")
+                expectEqual(outcome, .done(note: BackgroundText.every(12)))
+            }
+        }
+
         test("a thrown error is recorded as a failure with its message") {
             let jobs = make()
             jobs.register(id: "a", title: { "A" }, interval: 600) { throw Broken() }
