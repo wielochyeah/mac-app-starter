@@ -9,7 +9,7 @@ description: Baut eine Funktion des Projekts unter App/Sources/Features nach den
 
 | Vertrag | Datei | Rolle im Feature |
 |---|---|---|
-| Registry | `App/Sources/Kit/Core/Registry.swift` | `AppPage`, `SettingsPane`, `OnboardingStep`, `MenuItemContribution`, `RenderScene`, `GalleryEntry`, `SelfTestCheck`, `launchHooks`, `terminateHooks`, `onboardingFinishedHooks` |
+| Registry | `App/Sources/Kit/Core/Registry.swift` | `AppPage`, `SettingsPane`, `OnboardingStep`, `MenuItemContribution`, `RenderScene`, `GalleryEntry`, `SelfTestCheck`, `launchHooks`, `terminateHooks`, `onboardingFinishedHooks`, `welcomeArt` |
 | Texte | `App/Sources/Kit/Core/Lang.swift` | `tr(en:de:)`, `Localizer.shared`, `Format` für Zahlen, Dauer und Datum |
 | Einstellungen | `App/Sources/Kit/Core/Settings.swift` | `SettingKey`, `Settings.shared[.schluessel]` |
 | Speicher | `App/Sources/Kit/Core/Database.swift`, `Paths.swift` | `Database(url:migrations:)`, `Paths.database(_:)` |

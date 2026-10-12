@@ -63,8 +63,13 @@ final class RegistryTests: TestSuite {
 
         test("withScratch restores contributions") {
             let before = Registry.renderScenes.count
-            Registry.withScratch { Registry.renderScenes = [] }
+            let art = Registry.welcomeArt != nil
+            Registry.withScratch {
+                Registry.renderScenes = []
+                Registry.welcomeArt = art ? nil : { AnyView(EmptyView()) }
+            }
             expectEqual(Registry.renderScenes.count, before)
+            expectEqual(Registry.welcomeArt != nil, art)
             expect(before > 0)
         }
 

@@ -350,6 +350,23 @@ final class IslandLayoutTests: TestSuite {
 
 final class IslandModelTests: TestSuite {
     override class func register() {
+        test("welcome art: the module offers it, a still shows the card, the live take starts in the notch") {
+            Registry.withScratch {
+                expect(Registry.welcomeArt == nil)
+                IslandWelcome.register()
+                expect(Registry.welcomeArt != nil)
+            }
+            let still = IslandWelcomeDriver(still: true)
+            expect(still.model.presented)
+            expectEqual(still.model.content?.phase, .done)
+            expectEqual(still.model.canvas, Metrics.heroArt)
+            let live = IslandWelcomeDriver(still: false)
+            expect(!live.model.presented && live.model.content == nil, "closed in the notch")
+            live.showStill()
+            expect(live.model.presented && live.model.reduceMotion, "Reduce Motion: the card, no growing")
+            expectEqual(live.model.content?.phase, .done)
+        }
+
         test("confirmation: at least 0.3 s, 60 s or more stays") {
             expectEqual(IslandPrefs(confirmSeconds: 3).confirmDelay, 3)
             expectEqual(IslandPrefs(confirmSeconds: 0.1).confirmDelay, 0.3)

@@ -124,6 +124,10 @@ struct SelfTestCheck: Identifiable {
     /// Scripted loops for `--demo` (e.g. the island cycling through its states). Each runs once
     /// after launch hooks in a normal (non-tool) launch and drives itself from there.
     static var demoDrivers: [() -> Void] = []
+    /// Art for the welcome step of the setup (672 x 200, `Metrics.heroArt`) instead of the kit's
+    /// accent glow with the app icon. One module sets it (the island module shows the real island
+    /// growing out of a drawn notch); nil keeps the kit's art.
+    static var welcomeArt: (() -> AnyView)?
 
     // MARK: Ordered views of the contributions
 
@@ -173,12 +177,13 @@ struct SelfTestCheck: Identifiable {
     /// Runs `body` with empty contributions and restores them afterwards (tests).
     static func withScratch<T>(_ body: () throws -> T) rethrows -> T {
         let saved = (pages, settingsPanes, onboardingSteps, menuItems, renderScenes, gallery, launchHooks, terminateHooks, selfTests)
-        let (savedDemo, savedFinished) = (demoDrivers, onboardingFinishedHooks)
+        let (savedDemo, savedFinished, savedWelcome) = (demoDrivers, onboardingFinishedHooks, welcomeArt)
         pages = []; settingsPanes = []; onboardingSteps = []; menuItems = []; renderScenes = []
         gallery = []; launchHooks = []; terminateHooks = []; selfTests = []; demoDrivers = []; onboardingFinishedHooks = []
+        welcomeArt = nil
         defer {
             (pages, settingsPanes, onboardingSteps, menuItems, renderScenes, gallery, launchHooks, terminateHooks, selfTests) = saved
-            (demoDrivers, onboardingFinishedHooks) = (savedDemo, savedFinished)
+            (demoDrivers, onboardingFinishedHooks, welcomeArt) = (savedDemo, savedFinished, savedWelcome)
         }
         return try body()
     }

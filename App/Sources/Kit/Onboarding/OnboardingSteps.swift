@@ -7,7 +7,8 @@ import SwiftUI
 
 // MARK: - Welcome
 
-/// The app icon on an accent glow with hairline rings, then the app's name and what it is for.
+/// The app icon on an accent glow with hairline rings (or a module's art from
+/// `Registry.welcomeArt`), then the app's name and what it is for.
 struct WelcomeStep: View {
     let stepCount: Int
     @Environment(\.colorScheme) private var scheme
@@ -15,8 +16,10 @@ struct WelcomeStep: View {
     var body: some View {
         let t = Theme(scheme)
         VStack(spacing: 0) {
-            OnboardingHero { WelcomeArt() }
-                .padding(.top, Metrics.welcomeArtTop)
+            OnboardingHero {
+                if let art = Registry.welcomeArt { art() } else { WelcomeArt() }
+            }
+            .padding(.top, Metrics.welcomeArtTop)
             Spacer(minLength: 0)
             OnboardingHeader(title: AppInfo.displayName, subtitle: OnboardingText.welcomeLede, large: true)
             Spacer(minLength: 0)

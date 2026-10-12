@@ -49,7 +49,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Zweck:** Rückmeldung, die aus der Notch wächst (Insel), auf Macs ohne Notch eine Kapsel unter der Menüleiste. Zustände: Tätigkeit, Fortschritt (Sekundenzähler ab 5 s, Hinweis mit Abbruch ab 10 s), Pegel (mit `recording: true` roter Aufnahmepunkt, in der Kapsel mit Laufzeit), Ergebniskarte mit Aufklappen beim Überfahren und Kopieren, Hinweis (Info, Erfolg, Warnung, Fehler, verschwindet nach 2,5 s). Mehrere Bildschirme, Selbstheilung nach Bildschirmwechseln, Töne standardmäßig aus, reduzierte Bewegung blendet über.
 - **Dateien:** `IslandScreenGeometry` (Notch je Bildschirm, Höhe der Menüleiste), `IslandPanel` (randloses, nicht aktivierendes Panel, durchklickbar, im Leerlauf ausgeblendet), `NotchShape`, `IslandView`, `CapsuleView`, `IslandContent`, `Island.shared` mit `present(_:)`, `update(_:)`, `dismiss()`, `isPresenting` und `notchBusy` (vom Projekt gesetzt: belegt eine andere App die Notch, erscheint `auto` als Kapsel unter der Notch).
 - **Einstellungen:** Bereich „Insel und Kapsel“ mit Darstellung (`island.style`: `auto`, `capsule`, dazu `island` nur, wenn `Island.shared.notchBusy` gesetzt ist; mit Vorschau), Dauer der Bestätigung, „Beim Überfahren ausklappen“, Töne, Trackpad-Rückmeldung, „Im Vollbild ausblenden“ und „Vorschau zeigen“.
-- **Onboarding:** „Insel und Kapsel“ (order 500, nur auf Macs mit Notch), Kachelwahl Insel oder Kapsel mit den echten Ansichten.
+- **Onboarding:** „Insel und Kapsel“ (order 500, nur auf Macs mit Notch), Kachelwahl Insel oder Kapsel mit den echten Ansichten. Dazu das Bild im Begrüßungsschritt (`Registry.welcomeArt`): die echte Insel wächst aus einer gezeichneten Notch, arbeitet, wird zur Ergebniskarte und faltet sich zurück; in Renders und mit reduzierter Bewegung steht die Karte still. Was sie zeigt, wählt ein Feature über `IslandWelcome.working` und `IslandWelcome.result`.
 - **Szenen:** jeder Zustand als `island.<zustand>` und `capsule.<zustand>`, dazu `island.pane`, `island.onboarding`.
 - **Skill:** `insel-zustand`. `--demo` durchläuft alle Zustände in der laufenden App (nur für die Person am Mac).
 <!-- modul:island:ende -->
@@ -133,7 +133,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 | Core | `Kit/Core/` | Sprache, Einstellungen, Datenbank, Registry, Render-Modus, Pfade, Protokoll |
 | Design | `Kit/Design/` | Tokens, Komponenten, Muster (`docs/DESIGN.md`) |
 | Texte | `Kit/Texts/` | gemeinsame Wörter (`CommonText`, `KitText`) |
-| Onboarding | `Kit/Onboarding/` | Fenster 720 x 560, Ablauf, Schritte Begrüßung (0), Sprache (10), Funktionen (20), Berechtigungen (300 und folgende), Fertig (1000) |
+| Onboarding | `Kit/Onboarding/` | Fenster 720 x 560, Ablauf, Schritte Begrüßung (0, Bild über `Registry.welcomeArt` ersetzbar), Sprache (10), Funktionen (20), Berechtigungen (300 und folgende), Fertig (1000) |
 | Berechtigungen | `Kit/Permissions/` | Arten, Status, Anfrage, Links in die Systemeinstellungen, Abfrage während jemand hinsieht, Neustart |
 | Einstellungen | `Kit/Settings/` | Fenster 900 x 620 mit Seitenleiste (Gruppen Inhalt und Einstellungen), Bereiche „Allgemein“ (Sprache, Erscheinungsbild, Einrichtung erneut zeigen, zurücksetzen) und „Über“ |
 | Galerie | `Kit/Gallery/` | jeder Baustein aus `Registry.gallery`, in Debug-Builds oder mit `kit.showGallery` |

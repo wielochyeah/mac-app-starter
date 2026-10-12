@@ -21,6 +21,7 @@ enum IslandModule {
         Registry.demoDrivers.append {
             if IslandDemo.wanted() { IslandDemo.play(loop: true) }
         }
+        IslandWelcome.register()
         IslandScenes.register()
         registerSelfTests()
     }

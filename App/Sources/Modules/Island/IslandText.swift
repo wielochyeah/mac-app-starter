@@ -99,6 +99,17 @@ enum IslandText {
                   de: "Bildschirme ohne Notch zeigen immer die Kapsel. Du kannst das später unter Einstellungen > \(place) ändern.")
     }
 
+    // MARK: Welcome art
+
+    static var welcomeTitle: String { CommonText.done }
+    static var welcomeBody: String {
+        tr(en: "Here \(AppInfo.displayName) reports what it has done.", de: "Hier meldet \(AppInfo.displayName), was erledigt ist.")
+    }
+    static var welcomeArtLabel: String {
+        tr(en: "The island grows out of the notch and shows what the app did",
+           de: "Die Insel wächst aus der Notch und zeigt, was die App getan hat")
+    }
+
     // MARK: Gallery
 
     static var galleryStates: String { tr(en: "Island and capsule states", de: "Zustände von Insel und Kapsel") }
