@@ -3,7 +3,8 @@ import SwiftUI
 /// Module `mlx` (needs `ai`, off by default): an MLX provider for `LocalAI` backed by the Python
 /// worker in ai-worker/, model downloads with progress, the MLX section in the Models pane and on
 /// the Local AI step, render scenes `ai.pane-mlx*`/`ai.onboarding-mlx`, and self-tests
-/// (`--selftest mlx` runs a real model: ai-worker/setup.sh and a downloaded model first).
+/// (`--selftest mlx` runs a real model: ai-worker/setup.sh and a downloaded model first;
+/// `--selftest download.mlx` downloads it, the only self-test that uses the network).
 enum MLXModule {
     static func register() {
         let provider = MLXProvider.standard()
@@ -25,7 +26,8 @@ enum MLXModule {
                     return "ai-worker/models.json: \(error)"
                 }
             },
-            SelfTestCheck(id: "mlx.download", onDemand: true) { MLXLiveCheck.download(provider) },
+            // outside the "mlx" prefix on purpose: `--selftest mlx` must never start a 1 GB download
+            SelfTestCheck(id: "download.mlx", onDemand: true) { MLXLiveCheck.download(provider) },
             SelfTestCheck(id: "mlx.live", onDemand: true) { MLXLiveCheck.run(provider) },
         ]
     }
@@ -34,13 +36,13 @@ enum MLXModule {
 /// `--selftest mlx`: the real worker with the chosen model answers a German prompt (cold, then
 /// warm), streams, pings while busy, cancels and shuts down. Prints timings.
 enum MLXLiveCheck {
-    /// `--selftest mlx.download`: downloads the chosen model through `ModelDownloads` (the network,
+    /// `--selftest download.mlx`: downloads the chosen model through `ModelDownloads` (the network,
     /// as the user's Download button does; a no-op when it is there). Prints progress in 10 % steps.
     static func download(_ provider: MLXProvider) -> String? {
         guard let model = provider.selected else { return "no model in the catalog" }
         let downloads = provider.downloads
         if downloads.isPresent(model) {
-            print("mlx.download \(model.repo) is already on disk")
+            print("download.mlx \(model.repo) is already on disk")
             return nil
         }
         let start = Date()
@@ -52,7 +54,7 @@ enum MLXLiveCheck {
                 let step = total > 0 ? Int(Double(done) / Double(total) * 10) : 0
                 if step != lastStep {
                     lastStep = step
-                    print("mlx.download \(step * 10) % (\(done) of \(total) bytes, \(Int(Date().timeIntervalSince(start))) s)")
+                    print("download.mlx \(step * 10) % (\(done) of \(total) bytes, \(Int(Date().timeIntervalSince(start))) s)")
                 }
                 return false
             case .queued: return false
@@ -61,7 +63,7 @@ enum MLXLiveCheck {
         }
         switch downloads.state(model.id) {
         case .done:
-            print("mlx.download done in \(Int(Date().timeIntervalSince(start))) s, \(HubCache.blobBytes(hub: downloads.hub, repo: model.repo)) bytes")
+            print("download.mlx done in \(Int(Date().timeIntervalSince(start))) s, \(HubCache.blobBytes(hub: downloads.hub, repo: model.repo)) bytes")
             provider.refreshAvailability()
             return provider.availability.isAvailable ? nil : "downloaded, but MLX is \(provider.availability)"
         case .paused(let done, let total, let problem):
