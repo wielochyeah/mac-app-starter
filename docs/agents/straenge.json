@@ -1,0 +1,55 @@
+{
+  "$beschreibung": "Maschinenlesbarer Plan der Stränge dieses Projekts. Format in docs/agents/status/README.md. Pfade in dateien sind Globs relativ zum Repository (** beliebig viele Ordner, * innerhalb eines Ordners). Jede Datei gehört genau einem Strang oder der Integration.",
+  "version": 1,
+  "stand": null,
+  "branchMuster": "claude/<projekt>-<kennung>",
+  "statusdatei": "docs/agents/status/<kennung>.md",
+  "regeln": [
+    "Jeder Strang arbeitet auf seinem Branch, ändert nur Dateien aus seinem Feld dateien und schreibt Bedarf an fremden Dateien als Anfrage in seine Statusdatei.",
+    "Vor dem ersten Commit make hooks ausführen und die Git-Identität aus starter.json (commit) mit git config user.name und git config user.email setzen, solange der Hook session-start sie nicht setzt.",
+    "Die App wird beim Bauen und Prüfen nie normal gestartet: Prüfungen laufen über make test, make shots und --selftest mit STARTER_HEADLESS=1. Kein Prozess bleibt laufen."
+  ],
+  "wellen": [],
+  "checkpoints": [],
+  "vertraege": [],
+  "einstellungen": [],
+  "renderSzenen": [],
+  "gemeinsameAbnahme": [
+    "make check ist grün.",
+    "make build MODULES=<jede Kombination, die der Strang berührt> ist grün.",
+    "Die Szenen des Strangs sind in en und de, hell und dunkel gerendert und mit dem Werkzeug Read angesehen.",
+    "git diff --name-only gegen den Startpunkt enthält nur Dateien aus dem Feld dateien des Strangs und seine Statusdatei."
+  ],
+  "integration": {
+    "id": "I",
+    "name": "Integration",
+    "branch": "main",
+    "ziel": "Stränge zusammenführen, gemeinsame Dateien pflegen, Checkpoints prüfen.",
+    "dateien": [
+      "CLAUDE.md",
+      "AGENTS.md",
+      "CONTRIBUTING.md",
+      "README.md",
+      "CHANGELOG.md",
+      "rules/projekt/**",
+      "starter.json",
+      "starter.manifest.json",
+      "starter.lock.json",
+      "Makefile",
+      "Package.swift",
+      ".gitignore",
+      ".editorconfig",
+      "App/Resources/InfoPlist.json",
+      "App/Resources/AppIcon.icns",
+      "docs/PROJECT.md",
+      "docs/DECISIONS.md",
+      "docs/STARTER_FEEDBACK.md",
+      "docs/screenshots/**",
+      "docs/agents/*.md",
+      "docs/agents/*.json",
+      "docs/agents/status/integration.md"
+    ]
+  },
+  "straenge": [],
+  "nichtUebernommen": []
+}
