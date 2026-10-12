@@ -29,6 +29,23 @@ extension ButtonStyle where Self == SecondaryButtonStyle {
     static func secondary(minWidth: CGFloat) -> SecondaryButtonStyle { SecondaryButtonStyle(minWidth: minWidth) }
 }
 
+/// A button that switches between primary and secondary in place, animating the change on the page
+/// spring (VoiceBud's footer "Continue" while a step's own slot holds the primary action).
+struct SwitchingButtonStyle: ButtonStyle {
+    var primary: Bool
+    var minWidth: CGFloat = Metrics.buttonMinWidth
+
+    func makeBody(configuration: Configuration) -> some View {
+        KitButtonBody(label: configuration.label, primary: primary, pressed: configuration.isPressed, minWidth: minWidth)
+    }
+}
+
+extension ButtonStyle where Self == SwitchingButtonStyle {
+    static func primary(_ primary: Bool, minWidth: CGFloat = Metrics.buttonMinWidth) -> SwitchingButtonStyle {
+        SwitchingButtonStyle(primary: primary, minWidth: minWidth)
+    }
+}
+
 /// Scales the label a little while pressed; no chrome (chips, tiles, icon buttons).
 struct PressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

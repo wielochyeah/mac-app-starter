@@ -174,31 +174,40 @@ struct StatusMark: View {
     enum Kind { case ok, warn, idle, busy, error }
     let kind: Kind
     let text: String
+    /// The onboarding status slot's size (VoiceBud `large`): 15 pt check, 13 pt text, 7 pt gap.
+    var large = false
     @Environment(\.colorScheme) private var scheme
 
-    init(_ kind: Kind, _ text: String) {
+    init(_ kind: Kind, _ text: String, large: Bool = false) {
         self.kind = kind
         self.text = text
+        self.large = large
     }
 
     var body: some View {
         let t = Theme(scheme)
-        HStack(spacing: 6) {
-            // fixed slot, so texts line up whatever the mark
+        HStack(spacing: large ? 7 : 6) {
             Group {
                 switch kind {
-                case .ok: Image(systemName: "checkmark.circle.fill").font(TypeScale.bodySemibold).foregroundStyle(t.ok)
+                case .ok:
+                    Image(systemName: "checkmark.circle.fill")
+                        .symbolFont(large ? Metrics.statusMarkLarge : 13, weight: .semibold)
+                        .foregroundStyle(t.ok)
                 case .warn: Circle().fill(t.warn).frame(width: 8, height: 8)
                 case .idle: Circle().fill(t.idle).frame(width: Metrics.dot, height: Metrics.dot)
                 case .busy: Spinner(size: 12)
-                case .error: Image(systemName: "exclamationmark.circle.fill").font(TypeScale.bodySemibold).foregroundStyle(t.strike)
+                case .error:
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .symbolFont(large ? Metrics.statusMarkLarge : 13, weight: .semibold)
+                        .foregroundStyle(t.strike)
                 }
             }
-            .frame(width: Metrics.spinner, height: Metrics.spinner)
+            // a fixed slot lines texts up in lists; the large (slot) form sits inline like VoiceBud's
+            .frame(width: large ? nil : Metrics.spinner, height: Metrics.spinner)
             // VoiceBud: settled states (ok, warn) medium in fg, waiting states regular in prose
             let quiet = kind == .idle || kind == .busy
             Text(text)
-                .font(quiet ? TypeScale.secondary : TypeScale.secondaryMedium)
+                .font(large ? (quiet ? TypeScale.body : TypeScale.bodyMedium) : (quiet ? TypeScale.secondary : TypeScale.secondaryMedium))
                 .foregroundStyle(kind == .error ? t.strike : quiet ? t.prose : t.fg)
         }
     }
