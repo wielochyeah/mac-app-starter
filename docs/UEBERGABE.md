@@ -78,7 +78,7 @@ git add -A && git commit -m "chore(setup): remove the island module"
 Bauen, Testen und Rendern brauchen macOS; ein Linux-Container in der Cloud kann nur die Prüfskripte in Python ausführen. Deshalb:
 
 - **Claude Code auf dem Mac** (Terminal oder Desktop-App) für die Arbeit an der App. Der Hook `session-start` prüft die Werkzeuge, setzt `core.hooksPath` und die Git-Identität aus `starter.json`.
-- **Claude Code in der Cloud** für Dokumente, Regeln und Werkzeuge; die CI auf `macos-26` baut, testet und rendert jeden Push. Unter „Network access“ der Umgebung genügt `github.com`.
+- **Claude Code in der Cloud** für Dokumente, Regeln und Werkzeuge; die CI auf `macos-26` führt bei jedem Push `make check` aus und baut, rendert und probt alle Module bei Pull Requests, auf `main` und bei Tags. Unter „Network access“ der Umgebung genügt `github.com`.
 
 Den Bootstrap-Prompt aus dem `README.md` mit Name, Zweck, Zielgruppe, App-Formen und Hauptansichten füllen und senden. Neue Wünsche während der Arbeit kommen in `docs/agents/VORGABEN.md`; der Agent arbeitet sie als Regel in `rules/projekt/` ein.
 
@@ -92,12 +92,20 @@ Agenten starten die App beim Bauen nie selbst, fragen keine Berechtigung an und 
 gh api -X PUT repos/<owner>/<repo>/branches/main/protection \
   -f "required_status_checks[strict]=true" \
   -f "required_status_checks[contexts][]=Regeln, Texte, Design, Kit, Commits" \
-  -f "required_status_checks[contexts][]=make test" \
-  -f "required_status_checks[contexts][]=Build (starter.json)" \
+  -f "required_status_checks[contexts][]=make check (starter.json)" \
   -F "enforce_admins=true" -F "required_pull_request_reviews=null" -F "restrictions=null"
 ```
 
-Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. Auf macOS-Runnern kosten Minuten in privaten Repositorys mehr; wer sparen muss, verkleinert die Build-Matrix, nie die Prüfungen.
+Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. Was wann läuft:
+
+| Jobs | wann |
+|---|---|
+| `Regeln, Texte, Design, Kit, Commits` (Linux), `make check (starter.json)` (Mac, mit Selbsttest und den Python-Werkzeugen unter `/usr/bin/python3` 3.9) | jeder Push |
+| `Build (<module>)` je Kombination, `Release-Build`, `Renders` | Pull Requests, Standard-Branch, Tags `v*` |
+| `Template-Probe`, `Modul entfernen (<modul>)` | dazu nur im Starter selbst |
+| `DMG` | Tags `v*` |
+
+Der Job `Plan` (`.github/ci_plan.py`) liest aus den Ordnern unter `App/Sources/Modules/`, welche Module es noch gibt: Kombinationen mit einem entfernten Modul fallen weg, und die Proben des Starters laufen in einem Projekt nicht. Die stündlichen Sicherungs-Pushes eines Arbeits-Branches kosten so einen Mac-Job statt rund zwanzig; Minuten auf macOS-Runnern zählen in privaten Repositorys mehrfach. Wer weiter sparen muss, kürzt `COMBOS` in `.github/ci_plan.py`, nie die Prüfungen.
 
 ## 6. Verteilen
 

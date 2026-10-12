@@ -1,5 +1,8 @@
 name: CI
 
+# Every push gets the cheap jobs (checks on Linux, make check on one Mac). The module matrix, the release build, the
+# renders and the template probes cost about 20 macOS jobs; they run for pull requests, on the default branch and on
+# version tags only (condition "full" below), not for every hourly backup push of a working branch.
 on:
   push:
     branches: ["**"]
@@ -20,6 +23,25 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
 
 jobs:
+  # Which module combinations and removals exist here. A project that removed modules keeps this file unchanged, so the
+  # matrices come from the module folders that are still there (.github/ci_plan.py), and the starter-only probes are
+  # skipped in projects.
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      starter: ${{ steps.plan.outputs.starter }}
+      combos: ${{ steps.plan.outputs.combos }}
+      removals: ${{ steps.plan.outputs.removals }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Module, Kombinationen, Entfernungen
+        id: plan
+        run: python3 .github/ci_plan.py
+
   # The Python checks need no Mac; they run on the cheaper Linux runner.
   checks:
     name: Regeln, Texte, Design, Kit, Commits
@@ -46,30 +68,49 @@ jobs:
       - name: Kit-Pfade und Pflichtprüfungen unverändert
         run: make check-kit
 
+  # The modules from starter.json, on every push: everything make check does, then the bundle itself.
   build:
-    name: Build (${{ matrix.modules || 'starter.json' }})
+    name: make check (starter.json)
     runs-on: macos-26
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        modules:
-          - ""
-          - window
-          - menubar
-          - window,menubar
-          - menubar,island
-          - menubar,background
-          - window,hotkeys
-          - window,ai
-          - window,ai,mlx
-          - window,menubar,island,background,hotkeys,ai,mlx,examples
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Werkzeuge
         run: make doctor
+      - name: make check
+        run: make check
+      - name: Signatur und Selbsttest ohne Fenster
+        run: |
+          source build/gen/app.env
+          codesign --verify --strict "build/$APP_NAME.app"
+          STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
+      # The tooling must run with the python3 of the Command Line Tools (3.9) on the developer's Mac; python3 on the
+      # runner's PATH is a newer Homebrew Python, /usr/bin/python3 is Apple's 3.9.
+      - name: Python-Werkzeuge mit /usr/bin/python3 (3.9)
+        run: |
+          /usr/bin/python3 --version
+          /usr/bin/python3 -m py_compile bin/starter .claude/hooks/*.py .github/ci_plan.py
+          /usr/bin/python3 -m unittest discover -s scripts/tests -t . -p 'test_*.py'
+          if [[ -d scripts/starter/tests ]]; then
+            /usr/bin/python3 -m unittest discover -s scripts/starter/tests -t scripts -p 'test_*.py'
+          fi
+
+  build-matrix:
+    name: Build (${{ matrix.modules }})
+    needs: plan
+    if: ${{ (github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v')) && needs.plan.outputs.combos != '[]' }}
+    runs-on: macos-26
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        modules: ${{ fromJSON(needs.plan.outputs.combos) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: make build
         env:
           COMBO: ${{ matrix.modules }}
@@ -82,6 +123,7 @@ jobs:
 
   release-build:
     name: Release-Build
+    if: ${{ github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v') }}
     runs-on: macos-26
     timeout-minutes: 25
     steps:
@@ -95,19 +137,9 @@ jobs:
           source build/gen/app.env
           STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
 
-  test:
-    name: make test
-    runs-on: macos-26
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Swift- und Python-Tests
-        run: make test
-
   shots:
     name: Renders (en, de, hell, dunkel)
+    if: ${{ github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v') }}
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -158,6 +190,8 @@ jobs:
   # then the checks of a project. It fails when the starter only works in its own repository.
   template-probe:
     name: Template-Probe
+    needs: plan
+    if: ${{ needs.plan.outputs.starter == 'true' && (github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: macos-26
     timeout-minutes: 40
     steps:
@@ -176,7 +210,7 @@ jobs:
           git commit --quiet -m "chore: template copy"
       - name: bin/starter init
         working-directory: ${{ runner.temp }}/probe
-        run: bin/starter init --non-interactive --name Probe --bundle-id org.example.probe
+        run: bin/starter init --non-interactive --name Probe --bundle-id org.example.probe --ohne-netz
       # init empties the starter's commit identity; until the project enters its own, the hook refuses every commit.
       - name: Ohne eigene Commit-Identität nimmt der Hook keinen Commit an
         working-directory: ${{ runner.temp }}/probe
@@ -191,16 +225,19 @@ jobs:
         working-directory: ${{ runner.temp }}/probe
         run: make check
 
-  # Removing a module must leave a project that builds and passes its tests. Each run removes one module from a fresh
-  # project; "alle" removes every removable module and checks that the last app form cannot go.
+  # Removing a module must leave a project that builds and passes its tests. Each run removes one module (with the
+  # modules that need it) from a fresh project; "alle" removes every removable module and checks that the last app
+  # form cannot go. Only in the starter, and only for modules that are still there (.github/ci_plan.py).
   module-removal:
-    name: Modul entfernen (${{ matrix.modul }})
+    name: Modul entfernen (${{ matrix.name }})
+    needs: plan
+    if: ${{ needs.plan.outputs.starter == 'true' && (github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: macos-26
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        modul: [window, menubar, island, background, hotkeys, "mlx,ai", examples, alle]
+        include: ${{ fromJSON(needs.plan.outputs.removals) }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -215,27 +252,20 @@ jobs:
           git config user.email "probe@example.org"
           git add -A
           git commit --quiet -m "chore: template copy"
-          bin/starter init --non-interactive --name Probe --bundle-id org.example.probe
+          bin/starter init --non-interactive --name Probe --bundle-id org.example.probe --ohne-build --ohne-netz
       - name: Modul entfernen
         working-directory: ${{ runner.temp }}/probe
         env:
-          MODUL: ${{ matrix.modul }}
+          REMOVE: ${{ matrix.remove }}
+          STRIP: ${{ matrix.strip }}
+          LAST: ${{ matrix.last }}
         run: |
-          case "$MODUL" in
-            alle)
-              for name in island background hotkeys mlx ai; do bin/starter remove "$name" --ohne-build; done
-              bin/starter strip-examples
-              bin/starter remove window --ohne-build
-              if bin/starter remove menubar --ohne-build; then
-                echo "menubar ließ sich als letzte App-Form entfernen"
-                exit 1
-              fi
-              ;;
-            examples) bin/starter strip-examples ;;
-            *)
-              for name in ${MODUL//,/ }; do bin/starter remove "$name" --ohne-build; done
-              ;;
-          esac
+          for name in $REMOVE; do bin/starter remove "$name" --ohne-build; done
+          if [[ "$STRIP" == true ]]; then bin/starter strip-examples --ohne-build; fi
+          if [[ -n "$LAST" ]] && bin/starter remove "$LAST" --ohne-build; then
+            echo "$LAST ließ sich als letzte App-Form entfernen"
+            exit 1
+          fi
           git add -A
       - name: Build, Selbsttest, Tests
         working-directory: ${{ runner.temp }}/probe

@@ -27,6 +27,7 @@ def load(name, path):
 session_start = load("session_start", CLAUDE / "hooks" / "session-start.py")
 announce = load("announce_directives", CLAUDE / "hooks" / "announce-directives.py")
 guard = load("guard_git", CLAUDE / "hooks" / "guard-git.py")
+ci_plan = load("ci_plan", ROOT / ".github" / "ci_plan.py")
 
 
 # Permission matching as Claude Code does it for Bash rules: "*" is any text, a trailing " *" or ":*" also matches the
@@ -624,14 +625,92 @@ class RedTeamWorkflowTests(unittest.TestCase):
         self.assertIn("make shots ONLY=hotkeys.", data["calls"][0]["prompt"])
 
 
+def ci_jobs(text):
+    """{job: block of text} from the jobs: section of a workflow (two-space job keys)."""
+    body = text.split("\njobs:\n", 1)[1]
+    parts = re.split(r"^  ([a-z][a-z0-9-]*):\n", body, flags=re.M)
+    return dict(zip(parts[1::2], parts[2::2]))
+
+
+FULL_RUN = "github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
+
+
 class CiTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        cls.jobs = ci_jobs(cls.ci)
+
     def test_ci_runs_every_gate(self):
-        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        for needle in ["make check-rules", "make check-texts", "make check-design", "make check-kit", "make build", "make test",
-                       "make shots", "--selftest", "check_commit_msg.py", "bin/starter init", "bin/starter remove", "persist-credentials: false"]:
-            self.assertIn(needle, ci)
-        self.assertNotIn("continue-on-error: true", ci)
-        self.assertNotRegex(ci, r"if:\s*false")
+        for needle in ["make check-rules", "make check-texts", "make check-design", "make check-kit", "make check", "make build",
+                       "make test", "make shots", "--selftest", "check_commit_msg.py", "bin/starter init", "bin/starter remove",
+                       "persist-credentials: false"]:
+            self.assertIn(needle, self.ci)
+        self.assertNotIn("continue-on-error: true", self.ci)
+        self.assertNotRegex(self.ci, r"if:\s*false")
+
+    def test_every_push_runs_make_check_and_the_expensive_jobs_wait_for_a_pull_request(self):
+        for job in ("plan", "checks", "build"):
+            self.assertNotIn("\n    if:", self.jobs[job], job)
+        self.assertIn("run: make check\n", self.jobs["build"])
+        for job in ("build-matrix", "release-build", "shots", "template-probe", "module-removal"):
+            self.assertIn(FULL_RUN, self.jobs[job], job)
+        self.assertIn("startsWith(github.ref, 'refs/tags/v')", self.jobs["dmg"])
+
+    def test_module_jobs_follow_the_plan(self):
+        self.assertIn("fromJSON(needs.plan.outputs.combos)", self.jobs["build-matrix"])
+        self.assertIn("fromJSON(needs.plan.outputs.removals)", self.jobs["module-removal"])
+        for job in ("template-probe", "module-removal"):
+            self.assertIn("needs.plan.outputs.starter == 'true'", self.jobs[job], job)
+        self.assertIn("python3 .github/ci_plan.py", self.jobs["plan"])
+
+    def test_tooling_runs_under_the_system_python(self):
+        self.assertIn("/usr/bin/python3 -m unittest discover -s scripts/tests", self.jobs["build"])
+
+
+class CiPlanTests(unittest.TestCase):
+    def make_tree(self, folders, project):
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root)
+        for folder in folders:
+            (root / "App" / "Sources" / "Modules" / folder).mkdir(parents=True)
+        (root / "starter.lock.json").write_text(json.dumps({"project": project}), encoding="utf-8")
+        manifest = ROOT / "starter.manifest.json"
+        if manifest.is_file():
+            shutil.copy(manifest, root / "starter.manifest.json")
+        return root
+
+    def test_starter_builds_every_combination_and_tries_every_removal(self):
+        result = ci_plan.plan(self.make_tree(["Window", "MenuBar", "Island", "Background", "Hotkeys", "AI", "MLX", "Examples"], None))
+        self.assertEqual(result["starter"], "true")
+        self.assertEqual(result["combos"], ci_plan.COMBOS + ["window,menubar,island,background,hotkeys,ai,mlx,examples"])
+        removals = {entry["name"]: entry for entry in result["removals"]}
+        self.assertEqual(sorted(removals), ["ai", "alle", "background", "examples", "hotkeys", "island", "menubar", "window"])
+        self.assertEqual(removals["ai"]["remove"], "mlx ai")
+        self.assertEqual(removals["examples"], {"name": "examples", "remove": "", "strip": True, "last": ""})
+        alle = removals["alle"]
+        self.assertTrue(alle["strip"])
+        self.assertEqual(alle["last"], "menubar")
+        order = alle["remove"].split()
+        self.assertEqual(sorted(order), ["ai", "background", "hotkeys", "island", "mlx", "window"])
+        self.assertLess(order.index("mlx"), order.index("ai"))
+
+    def test_project_without_menubar_and_island_drops_their_jobs(self):
+        result = ci_plan.plan(self.make_tree(["Window", "AI", "MLX", "Examples"], "Notizen"))
+        self.assertEqual(result["starter"], "false")
+        self.assertEqual(result["combos"], ["window", "window,ai", "window,ai,mlx", "window,ai,mlx,examples"])
+        removals = {entry["name"]: entry for entry in result["removals"]}
+        self.assertNotIn("window", removals)  # the last app form: bin/starter refuses it
+        self.assertEqual(removals["alle"], {"name": "alle", "remove": "mlx ai", "strip": True, "last": "window"})
+
+    def test_output_lines_for_github(self):
+        root = self.make_tree(["MenuBar"], None)
+        target = root / "out.txt"
+        env = dict(os.environ, GITHUB_OUTPUT=str(target))
+        subprocess.run([sys.executable, str(ROOT / ".github" / "ci_plan.py"), str(root)], env=env, check=True, capture_output=True)
+        lines = dict(line.split("=", 1) for line in target.read_text(encoding="utf-8").splitlines())
+        self.assertEqual(json.loads(lines["combos"]), ["menubar"])
+        self.assertEqual(json.loads(lines["removals"]), [{"name": "alle", "remove": "", "strip": False, "last": "menubar"}])
 
 
 if __name__ == "__main__":

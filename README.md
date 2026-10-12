@@ -60,7 +60,7 @@ Berechtigungen: <keine, Mitteilungen, Mikrofon …>. Lokale KI: <nein oder wofü
 
 ### Wann ein Projekt fertig ist
 
-- `make check` ist grün, die CI ebenso (Build-Matrix der genutzten Module, Tests, Renders).
+- `make check` ist grün, die CI auf dem letzten Pull Request ebenso (Build-Matrix der genutzten Module, Tests, Renders).
 - Jede genutzte App-Form ist in Renders angesehen: jede Szene in en und de, hell und dunkel.
 - Das Onboarding ist einmal auf einem frischen Benutzer durchgegangen (`tccutil reset All <bundleId>` setzt nur diese App zurück).
 - Jede Berechtigung ist mit der installierten App aus dem DMG erteilt, abgelehnt und nach einem Neustart erkannt worden.
