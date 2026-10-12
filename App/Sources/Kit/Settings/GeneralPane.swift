@@ -47,7 +47,7 @@ enum AppAppearance: String, CaseIterable {
 /// Modules extend it in `register()`:
 ///
 ///     SettingsReset.keep("ai.usage")                  // state (a prefix), not a preference
-///     SettingsReset.didReset.append { HotkeyCenter.shared.reload() }   // re-read cached values
+///     SettingsReset.didReset.append { MyCache.shared.reload() }   // re-read cached values
 enum SettingsReset {
     /// Key prefixes a reset leaves alone. Exact keys work too (a key is its own prefix).
     private(set) static var keptPrefixes = ["onboarding.", "kit.showGallery"]

@@ -8,6 +8,8 @@ import SwiftUI
 enum AIModule {
     static func register() {
         LocalAI.shared.register(AppleOnDeviceProvider())
+        // usage counts are state, not a preference: "Reset settings" keeps them
+        SettingsReset.keep(SettingKey<AIUsage>.aiUsage.name)
 
         Registry.settingsPanes.append(SettingsPane(id: "ai", group: .settings, order: 300, title: { AIText.pane },
                                                    symbol: "cpu", tint: .indigo) { AnyView(AISettingsPane()) })

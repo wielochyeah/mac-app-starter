@@ -10,6 +10,8 @@ import SwiftUI
 /// - `LoginItem.isAvailable`, `.status`, `.setEnabled(_:)`, `.launchedAtLogin`, `LoginItemModel.shared`
 enum BackgroundModule {
     static func register() {
+        // whether the login item was already set up is state: "Reset settings" must not ask again
+        SettingsReset.keep(SettingKey<Bool>.backgroundLoginAsked.name)
         Registry.settingsPanes.append(SettingsPane(id: "background", group: .settings, order: 310, title: { BackgroundText.paneTitle },
                                                    symbol: "clock.arrow.circlepath", tint: .teal) { AnyView(BackgroundPane()) })
         Registry.onboardingSteps.append(OnboardingStep(id: "background.login", order: 900, isIncluded: { LoginItem.isAvailable }) { _ in
