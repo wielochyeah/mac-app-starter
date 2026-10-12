@@ -117,6 +117,11 @@ final class DesignTests: TestSuite {
             expectEqual(hex, Int(ThemeHex.windowBgDark))
         }
 
+        test("measured scenes are laid out a little wider than their ideal width") {
+            expectEqual(RenderRunner.layoutWidth(measured: 142.3), 144)
+            expectEqual(RenderRunner.layoutWidth(measured: 320), 321)
+        }
+
         test("half-point hairlines survive the render") {
             let view = AnyView(VStack(spacing: 0) {
                 Color.white.frame(height: 10.5)
