@@ -132,7 +132,7 @@ class _Lexer:
             else:
                 pos += 1
         if in_interpolation:
-            raise LexError("interpolation not closed")
+            raise LexError("Einsetzung \\(…) nicht geschlossen")
         return pos
 
     def _raw_string_ahead(self, pos: int) -> bool:
@@ -159,7 +159,7 @@ class _Lexer:
                     return pos
             else:
                 pos += 1
-        raise LexError("block comment not closed")
+        raise LexError("Blockkommentar nicht geschlossen")
 
     def string(self, start: int) -> int:
         text = self.text
@@ -177,12 +177,12 @@ class _Lexer:
         n = len(text)
         while True:
             if pos >= n:
-                raise LexError(f"string literal not closed (line {literal.line})")
+                raise LexError(f"Literal nicht geschlossen (Zeile {literal.line})")
             if text.startswith(close, pos):
                 pos += len(close)
                 break
             if not multiline and text[pos] == "\n":
-                raise LexError(f"line break in a single-line literal (line {literal.line})")
+                raise LexError(f"Zeilenumbruch in einem einzeiligen Literal (Zeile {literal.line})")
             if text.startswith(escape, pos):
                 after = pos + len(escape)
                 nxt = text[after] if after < n else ""

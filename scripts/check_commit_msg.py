@@ -17,7 +17,6 @@ Python 3.9 standard library only.
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import subprocess
 import sys
@@ -45,10 +44,11 @@ MISSING_IDENTITY = (
 
 
 def read_identity(root: Path = ROOT) -> Dict[str, str]:
-    try:
-        commit = json.loads((root / "starter.json").read_text(encoding="utf-8")).get("commit", {})
-    except (OSError, ValueError):
-        commit = {}
+    """commit.name and commit.email of starter.json; a missing or broken file stops the check with its reason."""
+    data = rules_lib.read_json_file(root / "starter.json", "starter.json")
+    commit = data.get("commit", {}) if isinstance(data, dict) else {}
+    if not isinstance(commit, dict):
+        raise rules_lib.CheckError("starter.json: commit muss ein Objekt mit name und email sein")
     return {"name": str(commit.get("name", "") or ""), "email": str(commit.get("email", "") or "")}
 
 
@@ -63,8 +63,10 @@ def check_author(ident: str, expected: Dict[str, str]) -> List[str]:
     if author and author.group(1) == expected["name"] and author.group(2) == expected["email"]:
         return []
     found = f"{author.group(1)} <{author.group(2)}>" if author else ident
-    return [f"Autor ist „{found}“, erwartet „{expected['name']} <{expected['email']}>“ aus starter.json. Setzen: "
-            f"git config user.name \"{expected['name']}\" und git config user.email \"{expected['email']}\"."]
+    return [f"Autor ist „{found}“, erwartet „{expected['name']} <{expected['email']}>“ aus starter.json. Wenn das deine "
+            f"Identität ist: git config user.name \"{expected['name']}\" und git config user.email \"{expected['email']}\". "
+            "Ist es ein neues Projekt aus dem Starter, zuerst bin/starter init ausführen oder die eigene Identität in "
+            "starter.json (commit) eintragen; nie die Identität einer anderen Person übernehmen (A-04)."]
 
 
 def message_lines(text: str) -> List[str]:
@@ -105,8 +107,11 @@ def commit_terms(root: Path = ROOT) -> List[Term]:
 def check_range(spec: str, expected: Dict[str, str], cwd: Path = ROOT) -> List[str]:
     if not has_identity(expected):
         return [MISSING_IDENTITY]
-    log = subprocess.run(["git", "log", "--no-merges", "--format=%H%x00%an <%ae>%x00%B%x1e", spec],
-                         cwd=cwd, capture_output=True, text=True, check=True).stdout
+    result = subprocess.run(["git", "log", "--no-merges", "--format=%H%x00%an <%ae>%x00%B%x1e", spec],
+                            cwd=cwd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise rules_lib.CheckError(f"git log {spec} schlägt fehl: {result.stderr.strip() or result.returncode}")
+    log = result.stdout
     errors = []
     for entry in log.split("\x1e"):
         entry = entry.lstrip("\n")
@@ -124,6 +129,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("datei", nargs="?", help="Datei mit der Nachricht (vom Hook commit-msg)")
     parser.add_argument("--bereich", help="alle Commits eines Bereichs prüfen, etwa origin/main..HEAD (CI)")
     args = parser.parse_args(argv)
+    try:
+        return run(args, parser)
+    except rules_lib.CheckError as error:
+        print(f"commit-msg: {error}", file=sys.stderr)
+        return 1
+
+
+def run(args, parser) -> int:
     expected = read_identity()
     if args.bereich:
         errors = check_range(args.bereich, expected)
@@ -134,9 +147,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
     if not args.datei:
         parser.error("Datei mit der Nachricht oder --bereich angeben")
-    ident = subprocess.run(["git", "var", "GIT_AUTHOR_IDENT"], capture_output=True, text=True, check=True).stdout.strip()
-    errors = check_author(ident, expected)
-    errors += check_message(Path(args.datei).read_text(encoding="utf-8"), commit_terms())
+    ident = subprocess.run(["git", "var", "GIT_AUTHOR_IDENT"], capture_output=True, text=True)
+    if ident.returncode != 0:
+        raise rules_lib.CheckError(f"git var GIT_AUTHOR_IDENT schlägt fehl: {ident.stderr.strip()}")
+    message, error = rules_lib.read_text_file(Path(args.datei))
+    if message is None:
+        raise rules_lib.CheckError(f"{args.datei}: nicht lesbar ({error})")
+    errors = check_author(ident.stdout.strip(), expected)
+    errors += check_message(message, commit_terms())
     if errors:
         print("commit-msg: Commit abgelehnt.\n  " + "\n  ".join(errors), file=sys.stderr)
         return 1

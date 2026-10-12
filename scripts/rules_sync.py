@@ -175,8 +175,13 @@ class Rules:
 
 # Checks ---------------------------------------------------------------------------------------------
 
+_ESCAPED_APOSTROPHE = re.compile(r"\\(?:'|x27|u0027|U00000027|N\{APOSTROPHE\}|0?47)")
+
+
 def _apostrophe_ok(pattern: str) -> bool:
-    """Every ASCII apostrophe stands in a character class that also holds the typographic one (’)."""
+    """Every ASCII apostrophe stands in a character class that also holds the typographic one (’). Escaped forms
+    (\\', \\x27, \\u0027, \\N{APOSTROPHE}, \\047) count as the apostrophe itself."""
+    pattern = _ESCAPED_APOSTROPHE.sub("'", pattern)
     index = 0
     while index < len(pattern):
         char = pattern[index]
@@ -423,10 +428,10 @@ def sync(root: Path = ROOT) -> Tuple[List[str], List[Tuple[str, str, Optional[st
     code = rules.read_json(f"rules/{rules.index.get('code', 'code.json')}")
     if code is not None:
         ui = code.get("uiTexte", {})
-        for key in ("aufrufe", "modifikatoren", "textLabels", "zuweisungen"):
+        for key in ("aufrufe", "modifikatoren", "textLabels", "zuweisungen", "formatLabels"):
             if not isinstance(ui.get(key), list) or not all(isinstance(v, str) and v for v in ui[key]):
                 report("rules/code.json", f"uiTexte.{key} muss eine Liste von Namen sein")
-        for key in ("verbatimKommentar", "ausnahmeKommentar", "textDateien"):
+        for key in ("verbatimKommentar", "ausnahmeKommentar", "umbruchKommentar", "textDateien"):
             if not isinstance(ui.get(key), str) or not ui[key]:
                 report("rules/code.json", f"uiTexte.{key} fehlt")
 

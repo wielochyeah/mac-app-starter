@@ -140,7 +140,9 @@ class Finding:
     context: str
 
     def fingerprint(self) -> str:
-        return f"{self.term_id} | {' '.join(self.match.split())} | {self.context}"
+        """Term and match, without line or surrounding text: editing near a known finding keeps it known. The baseline
+        keeps one entry per finding, so a second identical finding in the same file is new."""
+        return f"{self.term_id} | {' '.join(self.match.split())}"
 
     def format(self) -> str:
         rules = f" ({', '.join(self.rules)})" if self.rules else ""
@@ -148,12 +150,54 @@ class Finding:
         return f"{self.path}:{self.line}:{self.column}: {self.label}{rules}: „{shown}“. Stattdessen: {self.hint}"
 
 
+class CheckError(Exception):
+    """A problem with the input of a check (missing path, unreadable file); the check prints it and fails."""
+
+
+def read_json_file(path: Path, shown: Optional[str] = None):
+    """JSON of a file; a missing or broken file stops the check with its name instead of a traceback."""
+    shown = shown or str(path)
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise CheckError(f"{shown} fehlt")
+    except (OSError, UnicodeDecodeError, ValueError) as error:
+        raise CheckError(f"{shown}: nicht lesbar ({error})")
+
+
+def read_text_file(path: Path) -> Tuple[Optional[str], Optional[str]]:
+    """(text, None) or (None, reason) for a source file that is not UTF-8 or cannot be read."""
+    try:
+        return path.read_text(encoding="utf-8"), None
+    except UnicodeDecodeError as error:
+        return None, f"kein UTF-8 ({error.reason} an Byte {error.start})"
+    except OSError as error:
+        return None, error.strerror or str(error)
+
+
+def select_paths(root: Path, only: Sequence[str], files: Sequence[str]) -> List[str]:
+    """Files of the scope under the given paths. A path that does not exist or holds no file of the scope fails, so a
+    typo never reports a green check."""
+    if not only:
+        return list(files)
+
+    def under(rel: str, given: str) -> bool:
+        given = given.rstrip("/")
+        return given in ("", ".") or rel == given or rel.startswith(given + "/")
+
+    for given in only:
+        if not (root / given).exists():
+            raise CheckError(f"{given}: Pfad fehlt")
+        if not any(under(rel, given) for rel in files):
+            raise CheckError(f"{given}: keine Datei im Prüfumfang (rules/index.json, pruefumfang)")
+    return [rel for rel in files if any(under(rel, given) for given in only)]
+
+
 def load_terms(root: Path = ROOT) -> List[Term]:
     path = root / TERMS_FILE
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        raise SystemExit(f"{TERMS_FILE} fehlt. Ausführen: make rules")
+    if not path.exists():
+        raise CheckError(f"{TERMS_FILE} fehlt. Ausführen: make rules")
+    data = read_json_file(path, TERMS_FILE)
     return [Term.from_json(raw) for raw in data["begriffe"]]
 
 
@@ -279,9 +323,9 @@ def markdown_paragraph_breaks(text: str) -> List[Tuple[int, int]]:
 def load_baseline(path: Path) -> Dict[str, List[str]]:
     if not path.exists():
         return {}
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = read_json_file(path)
     if not isinstance(data, dict) or not all(isinstance(v, list) and all(isinstance(e, str) for e in v) for v in data.values()):
-        raise SystemExit(f"{path}: Format {{datei: [fingerabdruck, …]}} erwartet")
+        raise CheckError(f"{path}: Format {{datei: [fingerabdruck, …]}} erwartet")
     return data
 
 
@@ -321,6 +365,11 @@ def grown_entries(previous: Dict[str, List[str]], nxt: Dict[str, List[str]]) -> 
     return grown
 
 
+def counted(number: int, one: str, many: str) -> str:
+    """„1 Befund“, „2 Befunde“."""
+    return f"{number} {one if number == 1 else many}"
+
+
 def write_json(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -340,7 +389,7 @@ def run_baseline(name: str, findings: List[Finding], baseline_path: Path, args, 
             print(f"{name}: die Baseline darf nur schrumpfen. Neue Befunde zuerst beheben:\n  " + "\n  ".join(grown))
             return 1
         write_json(baseline_path, nxt)
-        print(f"{name}: Baseline aktualisiert, {sum(len(v) for v in nxt.values())} bekannte Befunde.")
+        print(f"{name}: Baseline aktualisiert, {counted(sum(len(v) for v in nxt.values()), 'bekannter Befund', 'bekannte Befunde')}.")
         return 0
     baseline = {} if args.streng else load_baseline(baseline_path)
     new, known, stale = apply_baseline(findings, baseline)
@@ -353,16 +402,20 @@ def run_baseline(name: str, findings: List[Finding], baseline_path: Path, args, 
         })
     code = 0
     if known:
-        print(f"{name}: {len(known)} bekannte Befunde aus {rel} (alle zeigen: --streng).")
+        print(f"{name}: {counted(len(known), 'bekannter Befund', 'bekannte Befunde')} aus {rel} (alle zeigen: --streng).")
     if stale and not scoped:
+        # Locally only a hint, so a strand that fixes a known finding stays green; CI (--ci) insists on the shrink.
         print(f"{name}: behoben, aber noch in {rel} ({len(stale)}): "
-              + ", ".join(sorted({p for p, _ in stale})) + ". Verkleinern: --baseline-aktualisieren")
-        code = 1
+              + ", ".join(sorted({p for p, _ in stale})) + ". Verkleinern: --baseline-aktualisieren"
+              + (" (in CI ein Fehler)" if not getattr(args, "ci", False) else ""))
+        if getattr(args, "ci", False):
+            code = 1
     if new:
         for finding in new:
             print(finding.format())
-        print(f"{name}: {len(new)} Befunde in {file_count} Dateien. Regeln und erlaubte Wendungen: rules/pakete/.")
+        print(f"{name}: {counted(len(new), 'Befund', 'Befunde')} in {counted(file_count, 'Datei', 'Dateien')}. "
+              "Regeln und erlaubte Wendungen: rules/pakete/.")
         code = 1
     elif code == 0:
-        print(f"{name}: {file_count} Dateien geprüft, keine neuen Befunde.")
+        print(f"{name}: {counted(file_count, 'Datei', 'Dateien')} geprüft, keine neuen Befunde.")
     return code
