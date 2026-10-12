@@ -11,6 +11,13 @@ final class BackgroundLaunchTests: TestSuite {
             expect(!LaunchFlags.parse(["app"]).background)
         }
 
+        test("launch and Dock click resume unfinished setup before the main window") {
+            expectEqual(AppDelegate.primaryWindow(setupDone: false, hasSetupSteps: true, mainWindow: true), .onboarding)
+            expectEqual(AppDelegate.primaryWindow(setupDone: false, hasSetupSteps: false, mainWindow: true), .main)
+            expectEqual(AppDelegate.primaryWindow(setupDone: true, hasSetupSteps: true, mainWindow: true), .main)
+            expectEqual(AppDelegate.primaryWindow(setupDone: true, hasSetupSteps: true, mainWindow: false), AppDelegate.PrimaryWindow.none)
+        }
+
         test("menu decorators run on every rebuild") {
             var calls = 0
             MainMenu.decorators.append { _ in calls += 1 }
