@@ -73,10 +73,10 @@ check-rules:
 	$(call run_script,scripts/rules_sync.py,--check)
 
 check-texts:
-	$(call run_script,scripts/check_texts.py)
+	$(call run_script,scripts/check_texts.py,$(CHECK_FLAGS))
 
 check-design:
-	$(call run_script,scripts/check_design.py)
+	$(call run_script,scripts/check_design.py,$(CHECK_FLAGS))
 
 check-kit:
 	$(call run_script,scripts/check_kit.py)

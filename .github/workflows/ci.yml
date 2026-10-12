@@ -61,10 +61,11 @@ jobs:
         run: python3 scripts/check_commit_msg.py --bereich origin/main..HEAD
       - name: Regeln aus rules/ und CLAUDE.md Teil A ohne Abweichung
         run: make check-rules
+      # --ci: a finding that was fixed but still sits in rules/baseline/ is an error here (locally only a hint)
       - name: Texte in beiden Sprachen, keine Texte in Views
-        run: make check-texts
+        run: make check-texts CHECK_FLAGS=--ci
       - name: Nur Design-Tokens außerhalb von Kit/Design
-        run: make check-design
+        run: make check-design CHECK_FLAGS=--ci
       - name: Kit-Pfade und Pflichtprüfungen unverändert
         run: make check-kit
 
