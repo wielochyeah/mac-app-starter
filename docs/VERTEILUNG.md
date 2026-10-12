@@ -66,7 +66,7 @@ Verwaltete Macs (MDM) können nicht notarisierte Apps ganz sperren. Wer an solch
 
 ## 7. Anmeldeobjekt (Modul `background`)
 
-`SMAppService.mainApp` registriert die App als Anmeldeobjekt. Das geht nur aus einem installierten Ort (`/Programme` oder `~/Programme`), nicht aus `build/`; die App zeigt den Schalter sonst nicht und sagt, warum. Beim Bauen und Testen wird nie ein Anmeldeobjekt registriert. Die Nutzerin sieht und entfernt es in den Systemeinstellungen unter „Allgemein“, „Anmeldeobjekte“.
+`SMAppService.mainApp` registriert die App als Anmeldeobjekt. Das geht nur aus einem installierten Ort (`/Applications` oder `~/Applications`, im Finder „Programme“), nicht aus `build/`; die App zeigt den Schalter sonst nicht und sagt, warum. Beim Bauen und Testen wird nie ein Anmeldeobjekt registriert. Die Nutzerin sieht und entfernt es in den Systemeinstellungen unter „Allgemein“, „Anmeldeobjekte“.
 
 ## 8. Vor der ersten Weitergabe
 

@@ -43,11 +43,11 @@ Einstellungen liegen als JSON in `~/Library/Application Support/<bundleId>/setti
    Gruppen sind `SettingsSection`, Zeilen die Muster; Haarlinien setzt `SettingsSection` selbst. Ein Suchfeld steht im Kopfband (`PaneScaffold(…) { SearchField(text: $query) } content: { … }`), Listen mit eigenem Scrollen nutzen `layout: .fill`.
 4. Registrieren: `Registry.settingsPanes.append(SettingsPane(id: "notes", group: .settings, order: 300, title: { NotesText.pane }, symbol: "note.text", tint: .yellow, content: { AnyView(NotesPane()) }))`. Kit-Bereiche: „Allgemein“ hat `order: 0`, „Über“ `order: 1000`.
 5. Texte in `<Name>Text.swift`, beide Sprachen; Fußnoten erklären Folgen in einem Satz.
-6. Render-Szene `settings.<id>` (oder `<feature>.pane`) mit Beispielwerten; bei Zuständen (Berechtigung fehlt, nichts eingerichtet) je eine Szene.
+6. Render-Szene `<feature>.pane` mit Beispielwerten; bei Zuständen (Berechtigung fehlt, nichts eingerichtet) je eine Szene.
 7. Test: Standardwert, Schreiben und Lesen über `Settings(fileURL:)` in einem `tempDir()`, kaputter Wert fällt auf den Standard.
 
 ## Prüfen
 
 - `make check`.
-- `make shots ONLY=settings.` und die eigenen Szenen in allen vier Fassungen mit dem Werkzeug Read ansehen; mit `patterns.sample-pane` vergleichen.
+- `make shots ONLY=<feature>.` und `make shots ONLY=settings.`, alle Szenen in allen vier Fassungen mit dem Werkzeug Read ansehen; mit `patterns.sample-pane` vergleichen.
 - Gegenprüfung mit dem Skill `red-team`.

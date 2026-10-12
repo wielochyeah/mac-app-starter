@@ -28,10 +28,10 @@ Vorlage. Der Agent füllt sie beim Start eines Projekts (Bootstrap-Schritt 3) un
 
 | Ansicht | Ort | Frage der Nutzerin | Hauptaktion | Render-Szene |
 |---|---|---|---|---|
-| `<Übersicht>` | Hauptfenster, Seitenleiste „<Gruppe>“ | `<Was ist neu?>` | `<Eintrag anlegen>` | `window.<id>` |
-| `<Bereich>` | Einstellungen | `<Wie stelle ich X ein?>` | | `settings.<id>` |
+| `<Übersicht>` | Hauptfenster, Seitenleiste „<Gruppe>“ | `<Was ist neu?>` | `<Eintrag anlegen>` | `<feature>.page` |
+| `<Bereich>` | Einstellungen | `<Wie stelle ich X ein?>` | | `<feature>.pane` |
 
-Jede Ansicht ist über `Registry` eingetragen (Seite, Einstellungsbereich, Onboarding-Schritt) und hat eine Render-Szene.
+Jede Ansicht ist über `Registry` eingetragen (Seite, Einstellungsbereich, Onboarding-Schritt) und hat eine Render-Szene. Szenen eines Features heißen `<feature>.<zustand>` (etwa `notes.page`, `notes.pane`, `notes.empty`), damit `make shots ONLY=<feature>.` alle trifft; die Präfixe `window.`, `settings.`, `island.` und die anderen Modul- und Kit-Präfixe gehören dem Starter.
 
 ## 4. Datenobjekte und Speicher
 

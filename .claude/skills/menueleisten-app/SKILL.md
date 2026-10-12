@@ -22,10 +22,10 @@ Gehört zum Modul `menubar`; `bin/starter remove menubar` entfernt diesen Skill 
 2. Abschnitt im Panel: eine View aus Kit-Bausteinen (`Card`, `Row`, `StatusMark`, `Segmented`), so schmal wie das Panel (320 bis 360 pt), höchstens eine Hauptaktion je Abschnitt. Eintragen im `register()` des Features in `MenuBarPanel.sections`.
 3. Menüeintrag: `Registry.menuItems.append(MenuItemContribution(id: "export.run", order: 100, title: { ExportText.run }, symbol: "square.and.arrow.up", shortcut: "⇧⌘E", action: { Export.run() }))`. Titel als Verb im Infinitiv (`Exportieren`), Auslassungspunkte `…` nur, wenn danach eine Eingabe folgt.
 4. Zustand des Symbols: während einer Arbeit `MenuBarStatus.shared.state = .busy`, danach zurück auf `.idle`; `.attention` nur, solange die Nutzerin etwas tun muss, und mit einem Hinweis im Panel, der sagt, was.
-5. Render-Szenen: `menubar.<feature>` für den Abschnitt im Panel, in allen Zuständen, die er hat.
+5. Render-Szenen: `<feature>.menubar` für den Abschnitt im Panel, je weiterem Zustand `<feature>.menubar-<zustand>`.
 
 ## Prüfen
 
 - `make check`, `make build MODULES=menubar` und `make build MODULES=menubar,window`.
-- `make shots ONLY=menubar.` und alle vier Fassungen jeder Szene mit dem Werkzeug Read ansehen; das Symbol in den Zuständen zeigt `menubar.icon-states`.
+- `make shots ONLY=<feature>.` und `make shots ONLY=menubar.`, alle vier Fassungen jeder Szene mit dem Werkzeug Read ansehen; das Symbol in den Zuständen zeigt `menubar.icon-states`.
 - Klickverhalten, Panel an der echten Menüleiste und der Wechsel zwischen Accessory und Regular sind nur in der laufenden App prüfbar.

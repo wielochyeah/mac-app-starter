@@ -30,5 +30,5 @@ Einzelheiten zu Signatur, Gatekeeper und Berechtigungen stehen in `docs/VERTEILU
 
 ## Prüfen
 
-- Installieren auf einem zweiten Mac oder einem zweiten Benutzer: DMG öffnen, App nach „Programme“ ziehen, starten, Onboarding und Berechtigungen durchgehen (`docs/vorlagen/ABNAHME.md`, AK-60).
+- Installieren auf einem zweiten Mac oder einem zweiten Benutzer: DMG öffnen, App auf den Ordner „Applications“ ziehen (das ist `/Applications`, im Finder „Programme“), starten, Onboarding und Berechtigungen durchgehen (`docs/vorlagen/ABNAHME.md`, AK-60).
 - Ein ad hoc signierter neuer Build verliert erteilte Berechtigungen; das ist erwartet und steht in `docs/VERTEILUNG.md`.

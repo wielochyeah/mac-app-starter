@@ -1,6 +1,6 @@
 # Entscheidungen
 
-Jede Entscheidung mit Datum, Wortlaut, Grund und Folgen. Neue Einträge kommen ans Ende; eine überholte Entscheidung bleibt stehen und bekommt einen Verweis auf die neue. In einem neuen Projekt legt `bin/starter init` diese Einträge als `docs/STARTER_DECISIONS.md` ab, das `bin/starter sync` nachzieht, und beginnt `docs/DECISIONS.md` mit der leeren Vorlage aus `docs/vorlagen/DECISIONS.md`; das Projekt zählt seine eigenen Einträge als P-01, P-02 und so weiter.
+Jede Entscheidung mit Datum, Wortlaut, Grund und Folgen. Neue Einträge kommen ans Ende; eine überholte Entscheidung bleibt stehen und bekommt einen Verweis auf die neue. In einem neuen Projekt legt `bin/starter init` diese Einträge als `docs/STARTER_DECISIONS.md` ab, das `bin/starter sync` nachzieht, und beginnt `docs/DECISIONS.md` mit der leeren Vorlage aus `docs/vorlagen/DECISIONS.md`; das Projekt zählt seine eigenen Einträge als PE-01, PE-02 und so weiter (P-NN sind die Regeln des Projekts in `rules/projekt/`).
 
 Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in `CLAUDE.md` Teil A kennzeichnet.
 

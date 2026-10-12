@@ -7,7 +7,7 @@ Stand: `<TT.MM.JJJJ>`, geprüft auf Commit `<Hash>`
 ## Gebrauch
 
 - **Priorität:** `MUSS` (vor der Abnahme erfüllt, sonst ausblenden oder ausdrücklich als offen nennen), `SOLL` (angestrebt; Offenes steht unter „Bekannte Schwächen“ der Statusdatei), `KANN` (nur bei Zeit).
-- **Prüfung:** `[Gates]` für `make check`; `[Test]` für einen Test mit Namen (`make test ONLY=<Name>`); `[Render]` für eine Szene aus `make shots`, angesehen in en und de, hell und dunkel; `[Klick]` für einen Weg in der laufenden App (`make run`), auf einem Mac mit und einem ohne Notch, wo die Insel betroffen ist; `[Installiert]` für einen Weg mit der App aus dem DMG unter `/Programme` (Berechtigungen, Anmeldeobjekt).
+- **Prüfung:** `[Gates]` für `make check`; `[Test]` für einen Test mit Namen (`make test ONLY=<Name>`); `[Render]` für eine Szene aus `make shots`, angesehen in en und de, hell und dunkel; `[Klick]` für einen Weg in der laufenden App (`make run`), auf einem Mac mit und einem ohne Notch, wo die Insel betroffen ist; `[Installiert]` für einen Weg mit der App aus dem DMG unter `/Applications` (Finder: „Programme“) (Berechtigungen, Anmeldeobjekt).
 - **Ergebnis:** `ok`, `offen` oder `nicht gebaut`, bei Bedarf mit Commit oder Test. Alles außer `ok` bei `MUSS` geht an den zuständigen Strang.
 
 ## 1. Erster Start
@@ -21,7 +21,7 @@ Stand: `<TT.MM.JJJJ>`, geprüft auf Commit `<Hash>`
 
 | Kennung | Priorität | Kriterium | Prüfung | Strang | Ergebnis |
 |---|---|---|---|---|---|
-| AK-10 | MUSS | `<Ansicht: in fünf Sekunden klar, was sie zeigt, eine Hauptaktion>` | `<[Render] window.<id>>` | | |
+| AK-10 | MUSS | `<Ansicht: in fünf Sekunden klar, was sie zeigt, eine Hauptaktion>` | `<[Render] <feature>.page>` | | |
 
 ## 3. Menüleiste, Insel, Hintergrund
 

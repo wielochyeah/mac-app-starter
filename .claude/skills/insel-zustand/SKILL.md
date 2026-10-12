@@ -33,10 +33,10 @@ Gehört zum Modul `island`; `bin/starter remove island` entfernt diesen Skill mi
    Ein abgebrochener oder fehlgeschlagener Ablauf endet mit `.notice(text:kind: .error)` oder `dismiss()`, nie mit einer stehenbleibenden Insel.
 4. Titel höchstens drei Wörter, Detail eine kurze Zeile; beide Sprachen passen in die Breite der Insel (Deutsch zuerst prüfen).
 5. Töne sind standardmäßig aus; die Insel respektiert reduzierte Bewegung selbst.
-6. Render-Szenen für jeden neuen Zustand in beiden Formen: `island.<feature>-<zustand>` und `capsule.<feature>-<zustand>` auf der Menüleisten-Kulisse des Moduls.
+6. Render-Szenen für jeden neuen Zustand in beiden Formen: `<feature>.island-<zustand>` und `<feature>.capsule-<zustand>` auf der Menüleisten-Kulisse des Moduls.
 
 ## Prüfen
 
 - `make check`, `make build MODULES=window,island` und `make build MODULES=window` (ohne Insel muss der Code weiter bauen).
-- `make shots ONLY=island.` und `make shots ONLY=capsule.`, alle vier Fassungen jeder Szene mit dem Werkzeug Read ansehen.
+- `make shots ONLY=<feature>.` (eigene Zustände) und `make shots ONLY=island.` (Zustände des Moduls), alle vier Fassungen jeder Szene mit dem Werkzeug Read ansehen.
 - Die echte Insel an einer Notch und die Kapsel auf einem Bildschirm ohne Notch sind nur in der laufenden App prüfbar (`--demo island` durchläuft alle Zustände); das bleibt eine Abnahme der Integration und steht bis dahin unter „Bekannte Schwächen“.

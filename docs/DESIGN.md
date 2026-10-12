@@ -161,7 +161,7 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 
 ## 12. Renders ansehen
 
-Jede sichtbare Änderung bringt Render-Szenen mit (`RenderScene`, Kennung `<bereich>.<name>`), für jeden Zustand eine. Vor „fertig“:
+Jede sichtbare Änderung bringt Render-Szenen mit (`RenderScene`, Kennung `<bereich>.<name>`), für jeden Zustand eine. Im Kit und in Modulen ist der Bereich das Kit-Gebiet oder Modul (`settings.`, `island.`), in einem Projekt das Feature (`notes.page`, `notes.pane`, `notes.island-saving`), damit `make shots ONLY=<feature>.` alle Szenen eines Features trifft. Vor „fertig“:
 
 1. `make shots ONLY=<bereich>.` rendert in `build/shots/{en,de}-{light,dark}/<szene>.png`.
 2. Jede Szene in allen vier Fassungen mit dem Werkzeug Read öffnen. Code lesen ersetzt kein Bild.

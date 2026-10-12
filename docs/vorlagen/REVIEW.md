@@ -18,7 +18,7 @@ Letzter geprüfter Commit je Branch. Die nächste Runde prüft nur Commits danac
 2. Je Strang die Blickwinkel Korrektheit, Anforderungen, Laie und UX, Design, Sicherheit und Integration (Subagenten `pruefer-*`), höchstens zwei gleichzeitig. Ab der zweiten Runde reicht meist `umfang: "sparsam"`.
 3. Jeder Befund geht an den `widerleger`; nur bestätigte Befunde kommen in `<strang>.md`, widerlegte mit Grund in den Abschnitt „Widerlegt“.
 4. Was ein Blickwinkel nicht prüfen konnte, steht als „nicht geprüft“ in der Datei, nie als „ohne Befund“.
-5. Zum Schluss sucht ein Vollständigkeits-Kritiker über alle Stränge nach Lücken und schreibt sie nach `gesamt.md`.
+5. Zum Schluss prüft `pruefer-integration` mit dem Auftrag Vollständigkeit über alle Stränge: jede Zeile aus `docs/agents/PLAN.md`, `docs/agents/straenge.json` und der Abnahmeliste der Ausbaustufe (nach `docs/vorlagen/ABNAHME.md`) gegen das, was gebaut und geprüft ist. Lücken gehen an den `widerleger` und dann nach `gesamt.md`.
 6. `_stand.md` bekommt die neuen Commits.
 
 ## <strang>.md

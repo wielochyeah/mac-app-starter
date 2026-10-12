@@ -32,5 +32,6 @@ Gültige Namen: `notifications`, `accessibility`, `inputMonitoring`, `screenReco
 
 - `make check` und `make shots ONLY=onboarding.`, Bilder ansehen.
 - Nie während des Bauens eine Berechtigung anfragen oder `tccutil` ausführen.
-- Echte Dialoge und der Weg in die Systemeinstellungen sind nur mit der installierten App prüfbar: `make dmg`, App nach `/Programme` kopieren, starten, Dialog bestätigen und ablehnen. Zurücksetzen nur für diese App: `tccutil reset All <bundleId>`. Ad hoc signierte Builds verlieren Berechtigungen bei jedem neuen Build (`docs/VERTEILUNG.md`).
+- Echte Dialoge und der Weg in die Systemeinstellungen sind nur mit der installierten App prüfbar. Der Agent startet die App dafür nie und führt `tccutil` nicht aus; er führt diesen Punkt im Statusbericht unter „Bekannte Schwächen“ als „nur interaktiv prüfbar“ und beschreibt die Schritte für die Person am Mac.
+- Nur die Person am Mac: `make dmg`, die App aus dem DMG nach `/Applications` (Finder: „Programme“) kopieren, starten, Dialog bestätigen und ablehnen. Zurücksetzen nur für diese App: `tccutil reset All <bundleId>`. Ad hoc signierte Builds verlieren Berechtigungen bei jedem neuen Build (`docs/VERTEILUNG.md`).
 - Gegenprüfung mit dem Skill `red-team`, Blickwinkel Sicherheit.

@@ -6,6 +6,4 @@ de-light/window.main.png
 de-dark/settings.window.png
 de-light/onboarding.welcome.png
 en-dark/island.done-card.png
-de-light/capsule.progress.png
 en-light/menubar.panel.png
-de-dark/patterns.sample-permission.png
