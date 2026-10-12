@@ -24,7 +24,7 @@ Einzelheiten zu Signatur, Gatekeeper und Berechtigungen stehen in `docs/VERTEILU
 2. `make check` grün, Renders der Fassung angesehen.
 3. `make dmg`. Beim ersten Lauf richtet das Skript dmgbuild in `build/tools-venv` ein (Netz für pip, nur im Werkzeugordner) und sagt, was es installiert.
 4. Prüfen ohne Finder-Fenster: `hdiutil attach -nobrowse -readonly -mountpoint <ordner> build/dmg/<Name>-<version>.dmg`, Inhalt ansehen (App, Verknüpfung „Applications“, verborgener Hintergrund), `codesign --verify --deep --strict <ordner>/<Name>.app`, danach `hdiutil detach <ordner>`.
-5. Ad hoc signiert (Standard): Empfänger öffnen die App beim ersten Mal über Rechtsklick und „Öffnen“ oder „Trotzdem öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“; das DMG-Fenster sagt das.
+5. Ad hoc signiert (Standard): Empfänger starten die App einmal, macOS blockiert sie; danach in den Systemeinstellungen unter „Datenschutz & Sicherheit“ auf „Trotzdem öffnen“ klicken. Das DMG-Fenster sagt das; den früheren Weg über Rechtsklick und „Öffnen“ gibt es auf aktuellem macOS nicht mehr.
 6. Mit Developer ID: Signatur und Notarisierung nur auf ausdrücklichen Wunsch des Auftraggebers und nur mit Zugangsdaten aus dem Schlüsselbund (`notarytool store-credentials`), nie aus Dateien oder Argumenten im Repository. Danach `spctl -a -vv <app>` und `xcrun stapler validate <dmg>`.
 7. Tag `v<version>` setzen und mit dem DMG weitergeben; das DMG selbst kommt nie ins Repository.
 

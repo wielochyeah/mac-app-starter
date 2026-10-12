@@ -24,13 +24,13 @@ Gehört zum Modul `ai`; `bin/starter remove ai` entfernt diesen Skill mit dem Mo
 4. Lange Antworten streamen und abbrechbar machen; Abbruch beendet die Erzeugung, nicht nur die Anzeige.
 5. Weder Prompt noch Antwort landen in `Log`, in Dateien oder in Fehlermeldungen. Gespeichert wird nur, was die Funktion ausdrücklich als Ergebnis speichert.
 6. Texte, die die App in eigener Stimme zeigt, folgen den Schreibregeln; umgeschriebener Text der Nutzerin bleibt ihr Text.
-7. Tests: Logik um das Modell herum mit einem eingespeisten Anbieter (`LocalModelProvider`-Testdouble), nie mit dem echten Modell im Test. Ein Selbsttest `--selftest ai` darf das echte Modell ohne Fenster fragen.
+7. Tests: Logik um das Modell herum mit einem eingespeisten Anbieter (`LocalModelProvider`-Testdouble), nie mit dem echten Modell im Test. Ein Eintrag in `Registry.selfTests` darf das echte Modell ohne Fenster fragen (`--selftest`).
 8. Render-Szenen für die Zustände der Funktion: verfügbar, nicht verfügbar mit Grund, Antwort läuft, Fehler.
 9. Eigenes Modell über MLX: Modul `mlx` in `starter.json` einschalten, Modell in `ai-worker/models.json` eintragen (Name, Hugging-Face-Adresse, Größe), `ai-worker/setup.sh` richtet die Umgebung ein. <!-- modul:mlx -->
 
 ## Prüfen
 
 - `make check`, `make build MODULES=window,ai` und `make build MODULES=window` (ohne KI muss alles bauen).
-- `STARTER_HEADLESS=1 build/<Name>.app/Contents/MacOS/<Name> --selftest ai` fragt das Apple-Modell ohne Fenster.
+- `STARTER_HEADLESS=1 build/<Name>.app/Contents/MacOS/<Name> --selftest` fragt mit dem Modul `ai` das Apple-Modell ohne Fenster.
 - `make shots ONLY=ai.` und die eigenen Szenen in allen vier Fassungen ansehen.
 - Gegenprüfung mit dem Skill `red-team`, Blickwinkel Sicherheit (Netz, Protokoll, Downloads).
