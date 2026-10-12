@@ -13,15 +13,24 @@ if str(SCRIPTS) not in sys.path:
 import rules_lib  # noqa: E402
 
 
-class Repo:
-    """A temp folder with rules/, starter.json and CLAUDE.md copied from this repository, plus stand-ins for every
-    tool path named in rules/index.json, so rules_sync, check_texts and check_design run against it."""
+FIXTURE_TEXTS = {"languages": ["en", "de"], "anrede": "du"}
+FIXTURE_INFOPLIST = {"_comment": "Testdatei", "NSMicrophoneUsageDescription": {
+    "en": "Used only while you dictate.", "de": "Nur während du diktierst."}}
 
-    def __init__(self):
+
+class Repo:
+    """A temp folder with rules/ and CLAUDE.md copied from this repository, plus stand-ins for every tool path named in
+    rules/index.json, so rules_sync, check_texts and check_design run against it. Project settings are pinned (address
+    form du, no extra packs, no names, a fixed InfoPlist.json), so the tests pass in every project made from the starter;
+    the derived files are rewritten for these settings."""
+
+    def __init__(self, texts=None):
         self.root = Path(tempfile.mkdtemp(prefix="rules-test-"))
         shutil.copytree(ROOT / "rules", self.root / "rules")
-        for name in ("starter.json", "CLAUDE.md"):
-            shutil.copy(ROOT / name, self.root / name)
+        shutil.copy(ROOT / "CLAUDE.md", self.root / "CLAUDE.md")
+        starter = json.loads((ROOT / "starter.json").read_text(encoding="utf-8"))
+        starter["texts"] = dict(texts or FIXTURE_TEXTS)
+        self.write_json("starter.json", starter)
         for baseline in (self.root / "rules" / "baseline").glob("*.json"):
             baseline.write_text("{}\n", encoding="utf-8")
         index = json.loads((self.root / "rules/index.json").read_text(encoding="utf-8"))
@@ -31,10 +40,18 @@ class Repo:
                 target.mkdir(parents=True, exist_ok=True)
             elif not target.exists():
                 target.parent.mkdir(parents=True, exist_ok=True)
-                if target.suffix == ".json":
-                    shutil.copy(ROOT / tool["pfad"], target)
-                else:
-                    target.write_text("stand-in\n", encoding="utf-8")
+                target.write_text("stand-in\n", encoding="utf-8")
+        self.write_json("App/Resources/InfoPlist.json", FIXTURE_INFOPLIST)
+        self.sync()
+
+    def sync(self):
+        import rules_sync  # noqa: E402 (scripts/ is on the path from above)
+        errors, outputs, _ = rules_sync.sync(self.root)
+        if errors:
+            raise AssertionError("rules_sync im Test-Repository: " + "; ".join(errors))
+        for rel, expected, current in outputs:
+            if expected != current:
+                (self.root / rel).write_text(expected, encoding="utf-8")
 
     def close(self):
         shutil.rmtree(self.root, ignore_errors=True)
@@ -64,7 +81,10 @@ class Repo:
 
 
 def repo_terms():
-    return rules_lib.load_terms(ROOT)
+    """The compiled terms of this repository, limited to the starter's own packs (a project's packs stay out)."""
+    index = json.loads((ROOT / "rules/index.json").read_text(encoding="utf-8"))
+    kit = {Path(rel).stem for rel in index["pakete"]}
+    return [t for t in rules_lib.load_terms(ROOT) if t.paket in kit]
 
 
 def pack_files():

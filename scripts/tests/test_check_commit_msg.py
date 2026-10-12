@@ -70,6 +70,7 @@ class AuthorTests(unittest.TestCase):
     def test_other_author(self):
         found = ccm.check_author("Bob <bob@example.com> 1700000000 +0200", IDENTITY)
         self.assertIn('git config user.name "Ada Example"', found[0])
+        self.assertIn("bin/starter init", found[0], "a new project is told not to take over someone else's identity")
 
     def test_missing_identity_refuses_every_commit(self):
         self.assertEqual(ccm.check_author("Ada Example <ada@example.com> 1 +0", {"name": "", "email": ""}), [ccm.MISSING_IDENTITY])
@@ -129,6 +130,21 @@ class GitTests(unittest.TestCase):
         refused = self.commit("feat: add the first file")
         self.assertNotEqual(refused.returncode, 0)
         self.assertIn("keine Commit-Identität", refused.stderr)
+
+    def test_broken_starter_json_is_named_as_broken(self):
+        (self.dir / "starter.json").write_text("{", encoding="utf-8")
+        refused = self.commit("feat: add the first file")
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn("starter.json: nicht lesbar", refused.stderr)
+        self.assertNotIn("Traceback", refused.stderr)
+
+    def test_range_without_the_ref_reports_git(self):
+        self.assertEqual(self.commit("feat: add the first file").returncode, 0)
+        result = subprocess.run([sys.executable, str(self.dir / "scripts/check_commit_msg.py"), "--bereich", "origin/main..HEAD"],
+                                cwd=self.dir, env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("git log origin/main..HEAD schlägt fehl", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
     def test_range_mode(self):
         self.assertEqual(self.commit("feat: add the first file").returncode, 0)

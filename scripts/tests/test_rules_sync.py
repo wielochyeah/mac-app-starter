@@ -27,7 +27,8 @@ class RepositoryRulesTests(unittest.TestCase):
         self.assertEqual(errors, [])
         stale = [file for file, expected, current in outputs if expected != current]
         self.assertEqual(stale, [], "make rules ausführen")
-        self.assertIn("Anrede du", summary)
+        anrede = json.loads((ROOT / "starter.json").read_text(encoding="utf-8")).get("texts", {}).get("anrede", "du")
+        self.assertIn(f"Anrede {anrede}", summary)
 
     def test_generated_terms_compile_with_python_re(self):
         for term in rules_lib.load_terms(ROOT):
@@ -84,7 +85,10 @@ class SyncTests(unittest.TestCase):
         self.assertTrue(ok(r"[)\]“”\"'’.]"))
         self.assertFalse(ok(r"let's"))
         self.assertFalse(ok(r"[a']"))
-        self.assertTrue(ok(r"\'"))
+        for escaped in (r"klappt\'s", r"geht\x27s", r"geht\u0027s", r"geht\N{APOSTROPHE}s", r"geht\047s"):
+            self.assertFalse(ok(escaped), escaped)
+        self.assertTrue(ok(r"geht[\x27’]s"))
+        self.assertTrue(ok(r"\\s"))
 
     def test_schema_reports_unknown_and_missing_fields(self):
         def change(p):
@@ -114,6 +118,7 @@ class SyncTests(unittest.TestCase):
     def test_pack_without_rule_fails(self):
         self.repo.edit_json("rules/gruppen/schreiben.json",
                             lambda g: [r.update(pakete=[p for p in r["pakete"] if p != "platzhalter"]) for r in g["regeln"]])
+        self.edit_pack("platzhalter", lambda p: [t.pop("regeln", None) for t in p["begriffe"]])
         self.assertTrue(any("platzhalter" in e and "keiner Regel" in e for e in self.sync_errors()))
 
     def test_rule_id_must_match_prefix(self):
@@ -139,7 +144,7 @@ class SyncTests(unittest.TestCase):
     def test_writes_part_a_and_keeps_part_b(self):
         claude = self.repo.path("CLAUDE.md").read_text(encoding="utf-8")
         start, end = claude.index(rules_sync.START_MARKER), claude.index(rules_sync.END_MARKER)
-        stale = claude[:start] + rules_sync.START_MARKER + "\nveraltet\n" + claude[end:]
+        stale = claude[:start] + rules_sync.START_MARKER + "\nALTER-STAND-XYZ\n" + claude[end:]
         stale = stale.replace("## Teil B: Projekt", "## Teil B: Projekt\n\nEigener Satz des Projekts.")
         self.repo.write("CLAUDE.md", stale)
         code, output = run_main(["--pruefen", "--wurzel", str(self.repo.root)])
@@ -148,7 +153,7 @@ class SyncTests(unittest.TestCase):
         code, _ = run_main(["--wurzel", str(self.repo.root)])
         self.assertEqual(code, 0)
         written = self.repo.path("CLAUDE.md").read_text(encoding="utf-8")
-        self.assertNotIn("veraltet", written)
+        self.assertNotIn("ALTER-STAND-XYZ", written)
         self.assertIn("Eigener Satz des Projekts.", written)
         self.assertIn("- **S-01**", written)
         code, output = run_main(["--check", "--wurzel", str(self.repo.root)])

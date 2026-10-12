@@ -4,7 +4,10 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from rules_testlib import pack_files, repo_terms  # noqa: E402
+from rules_testlib import Repo, pack_files, repo_terms  # noqa: E402
+
+import io  # noqa: E402
+from contextlib import redirect_stderr, redirect_stdout  # noqa: E402
 
 import check_design  # noqa: E402
 import rules_lib  # noqa: E402
@@ -101,6 +104,84 @@ class DesignCheckTests(unittest.TestCase):
 
     def test_unreadable_file(self):
         self.assertEqual(ids(check('let a = "open\n')), ["nicht-lesbar"])
+
+
+class LiteralFormTests(unittest.TestCase):
+    """Forms that bypass the tokens and that the first version let through."""
+
+    def test_negative_and_grid_spacings(self):
+        for line in (".padding(.horizontal, -4)", ".padding(-4)", "VStack(spacing: -2) {}", "Grid(horizontalSpacing: 10) {}",
+                     "Grid(verticalSpacing: 8) {}", "LazyVGrid(columns: c, spacing: 6) {}"):
+            self.assertEqual(ids(check(line + "\n")), ["abstand"], line)
+
+    def test_token_arithmetic_with_a_factor_passes(self):
+        self.assertEqual(check("let w = Metrics.settingsColumn + 2 * Space.pane\n"), [])
+        self.assertEqual(ids(check(".padding(.bottom, Space.s - 2)\n")), ["abstand"])
+
+    def test_dynamic_and_system_colours(self):
+        for line in ("Color(.systemBlue)", "Color(.labelColor)", "Color(.windowBackgroundColor)", "Color.init(red: 1, green: 0, blue: 0)",
+                     'Color(hexString: "#FF0000")', ".foregroundColor(.accentColor)", ".foregroundStyle(HierarchicalShapeStyle.secondary)"):
+            self.assertTrue(set(ids(check(line + "\n"))) & {"farbe-literal", "systemfarbe"}, line)
+
+    def test_text_styles_and_wrapped_sizes(self):
+        for line in (".font(.system(size: CGFloat(14)))", ".font(.headline)", ".font(.system(.body))", ".font(.title2.bold())"):
+            self.assertEqual(ids(check(line + "\n")), ["schriftgroesse"], line)
+        finding = check(".font(.system(size: 14))\n")[0]
+        self.assertEqual(finding.match, ".system(size: 14", "the whole number is shown")
+
+    def test_assets_and_settings(self):
+        self.assertEqual(ids(check('Image("logo")\n')), ["bild-asset"])
+        self.assertEqual(check('Image(systemName: "gear")\n'), [])
+        self.assertEqual(ids(check('UserDefaults.standard.set(true, forKey: "x")\n')), ["einstellungen-direkt"])
+        self.assertEqual(check("let d = UserDefaults.standard\n", "App/Sources/Kit/Core/Settings.swift"), [])
+
+    def test_each_finding_cites_its_own_rule(self):
+        cited = {f.term_id: f.rules for f in check("let s = URLSession.shared\n.padding(12)\nlet x = try! load()\n#if MODUL_A || MODUL_B\n#endif\n")}
+        self.assertEqual(cited, {"netzwerk": ["T-05"], "abstand": ["D-02"], "erzwungen": ["T-02"], "modul-bedingung": ["T-03"]})
+
+
+class ScopeTests(unittest.TestCase):
+    def setUp(self):
+        self.repo = Repo()
+
+    def tearDown(self):
+        self.repo.close()
+
+    def main(self, *args):
+        out = io.StringIO()
+        with redirect_stdout(out), redirect_stderr(out):
+            code = check_design.main(list(args) + ["--wurzel", str(self.repo.root)])
+        return code, out.getvalue()
+
+    def test_tests_and_tools_get_the_technik_terms(self):
+        self.repo.write("App/Tests/ProbeTests.swift", "import XCTest\n#if MODUL_WINDOW || MODUL_MENUBAR\n#endif\nlet a = try! load()\nlet c = Color(red: 1, green: 0, blue: 0)\n")
+        self.repo.write("tools/icon/Icon.swift", "#if MODUL_AI && MODUL_MLX\n#endif\nlet c = Color(red: 1, green: 0, blue: 0)\nlet d = try! data()\n")
+        findings, _ = check_design.collect(self.repo.root, self.repo.terms(), ["App/Tests/ProbeTests.swift", "tools"])
+        self.assertEqual([(f.path, f.term_id) for f in findings],
+                         [("App/Tests/ProbeTests.swift", "xcode-makro"), ("App/Tests/ProbeTests.swift", "modul-bedingung"),
+                          ("tools/icon/Icon.swift", "modul-bedingung")])
+
+    def test_paths_outside_the_scope_fail(self):
+        self.repo.write("App/Sources/Modules/Demo/A.swift", "let a = 1\n")
+        self.assertEqual(self.main("App/Sources/Modules/Demo")[0], 0)
+        code, output = self.main("App/Sources/Modules/Dem")
+        self.assertEqual(code, 1)
+        self.assertIn("Pfad fehlt", output)
+        self.repo.write("docs/X.md", "Text\n")
+        code, output = self.main("docs")
+        self.assertEqual(code, 1)
+        self.assertIn("keine Datei im Prüfumfang", output)
+
+    def test_unreadable_inputs_name_the_file(self):
+        self.repo.path("App/Sources/Modules/Demo").mkdir(parents=True)
+        self.repo.path("App/Sources/Modules/Demo/Latin1.swift").write_bytes("let s = \"Grüße\"\n".encode("latin-1"))
+        findings, _ = check_design.collect(self.repo.root, self.repo.terms(), ["App/Sources/Modules/Demo"])
+        self.assertEqual([(f.path, f.term_id) for f in findings], [("App/Sources/Modules/Demo/Latin1.swift", "nicht-lesbar")])
+        self.repo.write(check_design.BASELINE, "{kaputt")
+        code, output = self.main()
+        self.assertEqual(code, 1)
+        self.assertIn("rules/baseline/design.json: nicht lesbar", output)
+        self.assertNotIn("Traceback", output)
 
 
 class RepositoryTests(unittest.TestCase):
