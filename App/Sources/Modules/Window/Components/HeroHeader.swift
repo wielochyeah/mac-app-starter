@@ -74,7 +74,7 @@ private struct OnArtworkButtonBody<Label: View>: View {
             .background(shape.fill(t.artworkButton))
             .overlay(shape.strokeBorder(t.artworkButtonEdge, lineWidth: Metrics.hairline))
             .contentShape(shape)
-            .opacity(enabled ? 1 : Metrics.Window.disabledOpacity)
+            .opacity(enabled ? 1 : Metrics.disabledOpacity)
             .scaleEffect(pressed ? Motion.pressScale : 1)
             .animation(Motion.press, value: pressed)
     }

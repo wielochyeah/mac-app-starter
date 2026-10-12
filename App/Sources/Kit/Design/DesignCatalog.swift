@@ -163,7 +163,7 @@ private struct RowSamples: View {
             Separator()
             Row(DesignText.ready, dot: t.ok) { Badge(DesignText.new) }
             Separator()
-            Row(DesignText.failed, subtitle: DesignText.notAllowed, subtitleColor: t.strike) { Chip(CommonText.retry, symbol: "arrow.clockwise") {} }
+            Row(DesignText.failed, subtitle: DesignText.notAllowed, subtitleColor: t.strikeText) { Chip(CommonText.retry, symbol: "arrow.clockwise") {} }
         }
     }
 }

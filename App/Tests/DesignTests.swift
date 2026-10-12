@@ -87,6 +87,17 @@ final class DesignTests: TestSuite {
                   tint: { ($0 ? 0xFFFFFF : 0x000000, $0 ? ThemeHex.chipDark : ThemeHex.chipLight) })
         }
 
+        test("red text >= 4.5:1 and the red mark >= 3:1 on window and card, both schemes") {
+            for dark in [false, true] {
+                for bg in dark ? [ThemeHex.windowBgDark, ThemeHex.cardDark] : [ThemeHex.windowBgLight, ThemeHex.cardLight] {
+                    let text = Contrast.ratio(dark ? ThemeHex.strikeDark : ThemeHex.strikeTextLight, bg)
+                    expect(text >= 4.5, "strikeText \(dark ? "dark" : "light") on \(String(bg, radix: 16)) is \(text)")
+                    let mark = Contrast.ratio(dark ? ThemeHex.strikeDark : ThemeHex.strikeLight, bg)
+                    expect(mark >= 3, "strike \(dark ? "dark" : "light") on \(String(bg, radix: 16)) is \(mark)")
+                }
+            }
+        }
+
         test("body text >= 7:1 on window and card") {
             expect(Contrast.ratio(ThemeHex.fgLight, ThemeHex.windowBgLight) >= 7)
             expect(Contrast.ratio(ThemeHex.fgLight, ThemeHex.cardLight) >= 7)

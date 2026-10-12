@@ -24,7 +24,7 @@ struct SwitchToggle: View {
                         .padding(Space.hair)
                 }
                 .contentShape(Capsule())
-                .opacity(enabled ? 1 : 0.45)
+                .opacity(enabled ? 1 : Metrics.disabledOpacity)
         }
         .buttonStyle(PlainStyle())
         .accessibilityAddTraits(.isToggle)
@@ -208,7 +208,7 @@ struct StatusMark: View {
             let quiet = kind == .idle || kind == .busy
             Text(text)
                 .font(large ? (quiet ? TypeScale.body : TypeScale.bodyMedium) : (quiet ? TypeScale.secondary : TypeScale.secondaryMedium))
-                .foregroundStyle(kind == .error ? t.strike : quiet ? t.prose : t.fg)
+                .foregroundStyle(kind == .error ? t.strikeText : quiet ? t.prose : t.fg)
         }
     }
 }

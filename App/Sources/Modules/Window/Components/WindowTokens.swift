@@ -40,8 +40,6 @@ extension Metrics {
         static let artworkGlyphShadow: CGFloat = 0.05
         static let artworkGlyphShadowY: CGFloat = 0.015
         static let artworkGlyphTrailing: CGFloat = 0.3
-        /// Disabled buttons on artwork (the kit buttons use the same 45 %).
-        static let disabledOpacity: Double = 0.45
         /// Opacity of the shade spot at its centre.
         static let artworkShadeStrength: Double = 0.75
         /// Below this side length artwork uses the small radius.

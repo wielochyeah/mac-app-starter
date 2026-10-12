@@ -138,6 +138,8 @@ enum Motion {
 /// Fixed sizes of kit surfaces and controls.
 enum Metrics {
     static let hairline: CGFloat = 0.5
+    /// A disabled control or row is drawn at this opacity (buttons, switches, rows, artwork buttons).
+    static let disabledOpacity: Double = 0.45
     static let rowMinHeight: CGFloat = 44
     static let buttonMinWidth: CGFloat = 92
     static let buttonWideMinWidth: CGFloat = 104

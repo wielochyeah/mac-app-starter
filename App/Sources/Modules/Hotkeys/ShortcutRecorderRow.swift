@@ -65,19 +65,19 @@ struct ShortcutRecorderRow: View {
     /// shortcut, a registration problem, or what the hotkey does.
     private func subtitle(_ definition: HotkeyDefinition, _ t: Theme) -> (String?, Color?) {
         if recording {
-            if let problem { return (problem.text + " " + HotkeysText.escToCancel, t.strike) }
+            if let problem { return (problem.text + " " + HotkeysText.escToCancel, t.strikeText) }
             if !recorder.live.isEmpty { return (HotkeysText.recordHolding, nil) }
             return (HotkeysText.recordPrompt, nil)
         }
-        if let problem { return (problem.text, t.strike) }
+        if let problem { return (problem.text, t.strikeText) }
         if let note = recorder.note, note.target == id { return (note.text, nil) }
         if let keys = center.display(id) {
             switch center.status[id] {
-            case .heldElsewhere?: return (HotkeysText.heldElsewhereStatus(keys), t.strike)
-            case .failed(let code)?: return (HotkeysText.failedStatus(keys, Int(code)), t.strike)
+            case .heldElsewhere?: return (HotkeysText.heldElsewhereStatus(keys), t.strikeText)
+            case .failed(let code)?: return (HotkeysText.failedStatus(keys, Int(code)), t.strikeText)
             case .duplicate(let other)?:
                 let title = center.definition(other)?.title() ?? other
-                return (HotkeysText.duplicateStatus(keys, of: title), t.strike)
+                return (HotkeysText.duplicateStatus(keys, of: title), t.strikeText)
             default: break
             }
         }
