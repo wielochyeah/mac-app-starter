@@ -133,6 +133,7 @@ enum RenderRunner {
         @media (prefers-color-scheme: dark) { :root { --bg: #111113; --fg: #f5f5f7; --muted: #98989d; --cell: #1e1e20; } }
         body { margin: 0; padding: 24px 16px; background: var(--bg); color: var(--fg); font: 13px -apple-system, system-ui, sans-serif; }
         h1 { font-size: 22px; margin: 0 0 4px; } p { color: var(--muted); margin: 0 0 24px; }
+        h1.group { font-size: 18px; margin-top: 32px; }
         section { margin: 0 0 32px; } h2 { font-size: 15px; margin: 0 0 10px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
         figure { margin: 0; background: var(--cell); border-radius: 10px; padding: 8px; }
@@ -143,6 +144,30 @@ enum RenderRunner {
         <p>en and de, light and dark. Rendered by <code>make shots</code>.</p>
 
         """
+        let samples = scenes.filter(isStarterSample)
+        let own = scenes.filter { !isStarterSample($0) }
+        for (title, note, group) in [("This project", "Scenes of the project's features and of its own configuration (*.project).", own),
+                                     ("Starter samples", "Kit and module scenes with sample content: they show what a building block can do, not this project's setup.", samples)]
+            where !group.isEmpty {
+            html += "<h1 class=\"group\">\(title) (\(group.count))</h1><p>\(note)</p>\n"
+            html += sections(group)
+        }
+        html += "</body></html>\n"
+        try? html.write(to: dir.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+    }
+
+    /// Areas of the kit; together with the module names they mark a scene as a sample of the starter.
+    static let kitAreas: Set<String> = ["design", "gallery", "onboarding", "patterns", "permissions", "settings"]
+
+    /// A scene of the kit or a module with sample content. Scenes ending in ".project" show the project's own
+    /// configuration (onboarding.project, menubar.project) and count as the project's.
+    static func isStarterSample(_ scene: RenderScene) -> Bool {
+        let area = String(scene.id.split(separator: ".").first ?? "")
+        return !scene.id.hasSuffix(".project") && (kitAreas.contains(area) || Modules.compiled.contains(area))
+    }
+
+    private static func sections(_ scenes: [RenderScene]) -> String {
+        var html = ""
         for scene in scenes {
             html += "<section><h2>\(scene.id)</h2><div class=\"grid\">\n"
             for lang in Lang.allCases {
@@ -153,7 +178,6 @@ enum RenderRunner {
             }
             html += "</div></section>\n"
         }
-        html += "</body></html>\n"
-        try? html.write(to: dir.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+        return html
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 /// Render scenes (`onboarding.*`) and gallery entries. Every scene is the real
 /// `OnboardingRootView` on a flow with fixed sample steps and a preview permission monitor, in
 /// the onboarding window chrome on the render desk; nothing is read from or written to settings.
+/// `onboarding.project` instead shows the project's own flow, every step on one sheet.
 enum OnboardingScenes {
     /// The sample setup: three features and three permissions (the starter's own config lists
     /// only notifications), so every step and footer state shows up.
@@ -34,6 +35,8 @@ enum OnboardingScenes {
         for (name, view) in scenes {
             Registry.renderScenes.append(RenderScene(id: "onboarding.\(name)", size: .zero, content: view))
         }
+        // The project's own onboarding (the scenes above show a sample setup).
+        Registry.renderScenes.append(RenderScene(id: "onboarding.project", size: .zero) { projectFlow() })
 
         Registry.gallery += [
             GalleryEntry(id: "onboarding.welcome-art", area: "onboarding", title: { OnboardingText.galleryWelcomeArt }) {
@@ -57,6 +60,27 @@ enum OnboardingScenes {
                            title: { OnboardingSampleText.localTitle }, detail: { OnboardingSampleText.localDetail }),
          OnboardingFeature(id: "sample.quick", order: 2, symbol: "command", tint: .graphite,
                            title: { OnboardingSampleText.quickTitle }, detail: { OnboardingSampleText.quickDetail })]
+    }
+
+    /// Every step of the onboarding as this project has it, in order, three windows to a row: the kit steps for the
+    /// permissions in starter.json, the project's feature cards, every step that modules and features register.
+    static func projectFlow() -> AnyView {
+        let steps = Registry.orderedOnboardingSteps.filter { $0.isIncluded() }
+        let rows = stride(from: 0, to: steps.count, by: 3).map { Array($0..<min($0 + 3, steps.count)) }
+        return AnyView(RenderBoard {
+            VStack(alignment: .leading, spacing: Metrics.deskPadding) {
+                ForEach(rows, id: \.self) { row in
+                    HStack(alignment: .top, spacing: Metrics.deskPadding) {
+                        ForEach(row, id: \.self) { index in
+                            StaticWindow(size: Metrics.onboardingWindow, chrome: .onboarding) {
+                                OnboardingRootView(flow: OnboardingFlow(steps: steps, monitor: .preview([:]), settings: nil,
+                                                                        rules: OnboardingKit.advanceRules, startAt: index))
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
 
     /// The sample flow at `stepId`, as a window on the render desk.

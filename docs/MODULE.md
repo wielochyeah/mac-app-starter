@@ -56,7 +56,7 @@ Die Gruppe `.content` steht oben; dort beginnen Bereiche der Funktionen bei 100 
 - **Dateien:** `MenuBarController`, `MenuBarStatus.shared.state`, `MenuBarPanel.sections` (Abschnitte mit Kennung, Reihenfolge und View).
 - **Einstellungen:** Bereich „Menüleiste“ mit Statustext und Stil des Symbols (Präfix `menubar.`).
 - **Onboarding:** keiner.
-- **Szenen:** `menubar.panel`, `menubar.icon-states`. Eigene Abschnitte rendern Features auf `MenuBarPanelStage` (Menüleiste, Schreibtisch, Panel).
+- **Szenen:** `menubar.panel`, `menubar.icon-states` mit Beispieldaten; `menubar.project` zeigt das Panel des Projekts mit seinen eigenen Abschnitten und Menüeinträgen. Eigene Abschnitte rendern Features auf `MenuBarPanelStage` (Menüleiste, Schreibtisch, Panel).
 - **Skill:** `menueleisten-app`.
 <!-- modul:menubar:ende -->
 
@@ -150,7 +150,7 @@ Die Gruppe `.content` steht oben; dort beginnen Bereiche der Funktionen bei 100 
 | Core | `Kit/Core/` | Sprache, Einstellungen, Datenbank, Registry, Render-Modus, Pfade, Protokoll |
 | Design | `Kit/Design/` | Tokens, Komponenten, Muster (`docs/DESIGN.md`) |
 | Texte | `Kit/Texts/` | gemeinsame Wörter (`CommonText`, `KitText`) |
-| Onboarding | `Kit/Onboarding/` | Fenster 720 x 560, Ablauf, Schritte Begrüßung (0, Bild über `Registry.welcomeArt` ersetzbar), Sprache (10), Funktionen (20), Berechtigungen (300 und folgende), Fertig (1000) |
+| Onboarding | `Kit/Onboarding/` | Fenster 720 x 560, Ablauf, Schritte Begrüßung (0, Bild über `Registry.welcomeArt` ersetzbar), Sprache (10), Funktionen (20), Berechtigungen (300 und folgende), Fertig (1000); Szenen `onboarding.*` mit Beispieldaten, `onboarding.project` mit jedem Schritt des Projekts |
 | Berechtigungen | `Kit/Permissions/` | Arten, Status, Anfrage, Links in die Systemeinstellungen, Abfrage während jemand hinsieht, Neustart |
 | Einstellungen | `Kit/Settings/` | Fenster 900 x 620 mit Seitenleiste (Gruppen Inhalt und Einstellungen), Bereiche „Allgemein“ (Sprache, Erscheinungsbild, Einrichtung erneut zeigen, zurücksetzen) und „Über“ |
 | Galerie | `Kit/Gallery/` | jeder Baustein aus `Registry.gallery`, in Debug-Builds oder mit `kit.showGallery` |

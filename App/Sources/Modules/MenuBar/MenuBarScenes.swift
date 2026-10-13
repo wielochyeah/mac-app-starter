@@ -2,11 +2,11 @@ import AppKit
 import SwiftUI
 
 // Render scenes and gallery entries of the menu bar module, with fixed sample content (renders
-// are deterministic; nothing here runs in the app).
+// are deterministic; nothing here runs in the app). menubar.project shows the project's own panel.
 
 enum MenuBarScenes {
     static let ids = ["menubar.icon-states", "menubar.status-text", "menubar.panel", "menubar.panel-busy", "menubar.panel-empty",
-                      "menubar.panel-nowindow", "menubar.pane", "menubar.pane-nowindow"]
+                      "menubar.panel-nowindow", "menubar.pane", "menubar.pane-nowindow", "menubar.project"]
 
     static func register() {
         Registry.renderScenes.append(RenderScene(id: "menubar.icon-states", size: .zero) { AnyView(IconStatesBoard()) })
@@ -26,6 +26,12 @@ enum MenuBarScenes {
                                showsWindowAction: false))
         })
         Registry.renderScenes.append(RenderScene(id: "menubar.status-text", size: .zero) { AnyView(StatusTextBoard()) })
+        // The panel as this project has it: its own sections and menu items, "Open Window" only with the window
+        // module (the scenes above show samples).
+        Registry.renderScenes.append(RenderScene(id: "menubar.project", size: .zero) {
+            AnyView(MenuBarPanelStage(status: MenuBarStatus(), sections: MenuBarPanel.orderedSections,
+                                      actions: Registry.orderedMenuItems, showsWindowAction: AppInfo.isEnabled("window")))
+        })
         Registry.renderScenes.append(RenderScene(id: "menubar.pane", size: .zero) {
             AnyView(MenuBarPane(settings: MenuBarSamples.settings(), windowModule: true)
                 .frame(width: MenuBarSamples.paneSize.width, height: MenuBarSamples.paneSize.height))
