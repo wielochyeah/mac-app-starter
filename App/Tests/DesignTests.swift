@@ -83,6 +83,8 @@ final class DesignTests: TestSuite {
                   tint: { (ThemeHex.ok, $0 ? ThemeHex.okSoftDark : ThemeHex.okSoftLight) })
             check("warn", text: { $0 ? ThemeHex.warn : ThemeHex.warnTextLight },
                   tint: { (ThemeHex.warn, $0 ? ThemeHex.warnSoftDark : ThemeHex.warnSoftLight) })
+            check("error", text: { $0 ? ThemeHex.strikeTextDark : ThemeHex.strikeTextLight },
+                  tint: { ($0 ? ThemeHex.strikeDark : ThemeHex.strikeLight, $0 ? ThemeHex.strikeSoftDark : ThemeHex.strikeSoftLight) })
             check("neutral", text: { $0 ? ThemeHex.fgDark : ThemeHex.fgLight },
                   tint: { ($0 ? 0xFFFFFF : 0x000000, $0 ? ThemeHex.chipDark : ThemeHex.chipLight) })
         }
@@ -90,7 +92,7 @@ final class DesignTests: TestSuite {
         test("red text >= 4.5:1 and the red mark >= 3:1 on window and card, both schemes") {
             for dark in [false, true] {
                 for bg in dark ? [ThemeHex.windowBgDark, ThemeHex.cardDark] : [ThemeHex.windowBgLight, ThemeHex.cardLight] {
-                    let text = Contrast.ratio(dark ? ThemeHex.strikeDark : ThemeHex.strikeTextLight, bg)
+                    let text = Contrast.ratio(dark ? ThemeHex.strikeTextDark : ThemeHex.strikeTextLight, bg)
                     expect(text >= 4.5, "strikeText \(dark ? "dark" : "light") on \(String(bg, radix: 16)) is \(text)")
                     let mark = Contrast.ratio(dark ? ThemeHex.strikeDark : ThemeHex.strikeLight, bg)
                     expect(mark >= 3, "strike \(dark ? "dark" : "light") on \(String(bg, radix: 16)) is \(mark)")

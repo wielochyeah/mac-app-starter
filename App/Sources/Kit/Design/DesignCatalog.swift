@@ -239,6 +239,7 @@ private struct BadgeSamples: View {
             Badge(DesignText.recommended)
             Badge(DesignText.ready, tone: .ok)
             Badge(DesignText.waiting, tone: .warn)
+            Badge(DesignText.failedBadge, tone: .error)
             Badge(DesignText.new, tone: .neutral)
         }
     }

@@ -110,7 +110,11 @@ nonisolated enum ThemeHex {
     /// Errors: the mark (symbols, dots, rings; >= 3:1) and the text-grade red (>= 4.5:1).
     static let strikeLight: UInt32 = 0xD9363E
     static let strikeDark: UInt32 = 0xFF6B6B
-    static let strikeTextLight: UInt32 = 0xC4162E
+    static let strikeTextLight: UInt32 = 0xB5122A
+    static let strikeTextDark: UInt32 = 0xFF8A8A
+    /// Error badge tint: the mark at these opacities.
+    static let strikeSoftLight = 0.10
+    static let strikeSoftDark = 0.14
     static let warnSoftLight = 0.16
     static let warnSoftDark = 0.2
     /// Chip and neutral badge: black (light) / white (dark) at these opacities.
@@ -234,10 +238,11 @@ struct Theme {
     /// Status colours as text on window/card backgrounds and on their badge tints (>= 4.5:1).
     var okText: Color { dark ? ok : Color(hex: ThemeHex.okTextLight) }
     var warnText: Color { dark ? warn : Color(hex: ThemeHex.warnTextLight) }
-    var strikeText: Color { dark ? strike : Color(hex: ThemeHex.strikeTextLight) }
+    var strikeText: Color { Color(hex: dark ? ThemeHex.strikeTextDark : ThemeHex.strikeTextLight) }
     /// Badge tints (`Badge`): the tone's colour at a low opacity.
     var okSoft: Color { ok.opacity(dark ? ThemeHex.okSoftDark : ThemeHex.okSoftLight) }
     var warnSoft: Color { warn.opacity(dark ? ThemeHex.warnSoftDark : ThemeHex.warnSoftLight) }
+    var strikeSoft: Color { strike.opacity(dark ? ThemeHex.strikeSoftDark : ThemeHex.strikeSoftLight) }
 
     // MARK: Window chrome in renders
     var trafficRed: Color { Color(hex: 0xFF5F57) }

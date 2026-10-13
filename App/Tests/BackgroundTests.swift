@@ -400,7 +400,7 @@ final class BackgroundTests: TestSuite {
                 expectEqual(BackgroundText.outcome(.failed("x")), "Fehlgeschlagen")
             }
             expectEqual(JobRow.tone(.done()), .ok)
-            expectEqual(JobRow.tone(.failed("x")), .warn)
+            expectEqual(JobRow.tone(.failed("x")), .error)
             expectEqual(JobRow.tone(.nothingToDo), .neutral)
             expectEqual(JobRow.tone(nil), .neutral)
             expectEqual(JobRow.tone(.done(), enabled: false), .neutral, "a switched-off job's badge is grey")
