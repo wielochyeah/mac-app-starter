@@ -216,7 +216,7 @@
     },
     {
       "id": "modul-bedingung",
-      "label": "Modul-Bedingung außerhalb von T-03",
+      "label": "Modul-Bedingung, die T-03 nicht erlaubt",
       "hinweis": "genau ein Flag je #if, ohne ||, &&, ! und #elseif; braucht Code zwei Module, zwei einfache Blöcke ineinander; der Code ohne das Modul steht im #else-Zweig",
       "regeln": [
         "T-03"
