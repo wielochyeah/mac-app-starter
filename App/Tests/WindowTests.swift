@@ -157,10 +157,10 @@ final class WindowTests: TestSuite {
         test("artwork: recipe values stay in their ranges") {
             for i in 0..<500 {
                 let r = ArtworkRecipe(seed: "s\(i)")
-                expect((-25...25).contains(r.hueShift), "hue \(r.hueShift)")
+                expect((-90...90).contains(r.hueShift), "hue \(r.hueShift)")
                 expect((10...30).contains(abs(r.lightShift)), "light shift \(r.lightShift)")
-                expect((-35...35).contains(r.lightHue), "light hue \(r.lightHue)")
-                expect((0.9...1.15).contains(r.saturation))
+                expect((-120...120).contains(r.lightHue), "light hue \(r.lightHue)")
+                expect((0.72...0.95).contains(r.saturation))
                 expect((0...1).contains(r.light.x) && (0...1).contains(r.light.y))
                 expect((0...1).contains(r.start.x) && (0...1).contains(r.end.y))
             }
@@ -192,6 +192,14 @@ final class WindowTests: TestSuite {
             }
         }
 
+        test("artwork: a shelf is varied, not one colour (hues spread over the quarter turns either side)") {
+            let shifts = (0..<60).map { ArtworkRecipe(seed: "note-\($0)").hueShift }
+            let sixths = Set(shifts.map { Int(($0 + 90) / 30) })
+            expectEqual(sixths.count, 6, "every 30 degree band of the family is used: \(sixths.sorted())")
+            let far = shifts.filter { abs($0) > 45 }.count
+            expect(far >= 15 && far <= 45, "about half the pictures leave the accent's own neighbourhood (\(far) of 60)")
+        }
+
         test("artwork: every accent keeps its hue family and white glyphs at 3:1 or more") {
             func hueDistance(_ a: ArtworkRGB, _ b: ArtworkRGB) -> Double {
                 let d = abs(a.hsb.h - b.hsb.h) * 360
@@ -207,9 +215,10 @@ final class WindowTests: TestSuite {
                         expect(white.contrast(rgb) >= 3, "\(accent) seed \(i): white on \(rgb) is \(white.contrast(rgb))")
                     }
                     guard accent != .graphit else { continue }   // grey has no hue to keep
-                    expect(hueDistance(c.bottom, brand) <= 25.01, "\(accent) bottom hue")
-                    expect(hueDistance(c.top, top) <= 25.01, "\(accent) top hue")
-                    expect(hueDistance(c.light, top) <= 35.01, "\(accent) light hue")
+                    expect(hueDistance(c.bottom, brand) <= 90.01, "\(accent) bottom hue")
+                    expect(hueDistance(c.top, top) <= 90.01, "\(accent) top hue")
+                    expect(hueDistance(c.light, top) <= 120.01, "\(accent) light hue")
+                    expect(c.bottom.hsb.s <= brand.hsb.s * 0.95 + 1e-6, "\(accent) calmer than the accent")
                 }
             }
         }

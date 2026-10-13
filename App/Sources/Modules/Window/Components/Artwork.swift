@@ -1,22 +1,30 @@
 import SwiftUI
 
-/// What a seed string turns into: a hue shift away from the accent, the gradient direction, where
+/// What a seed string turns into: a hue turned away from the accent, the gradient direction, where
 /// the light falls and how big it is. Same seed, same picture, on every Mac and every launch
 /// (FNV-1a + SplitMix64, not `hashValue`, which changes per process).
+///
+/// The hue family is wide on purpose: a shelf of covers in one accent colour reads as a coloured
+/// wash, not as different things (Music shows each album in its own colours). Every picture stays
+/// within a quarter turn of the accent on either side, a little calmer than the accent itself, and
+/// dark enough for white glyphs.
 nonisolated struct ArtworkRecipe: Equatable, Sendable {
-    /// How far the base gradient may turn away from the accent on the colour wheel (degrees).
-    static let maxHueShift = 25.0
-    /// How far the light spot may sit from the accent (degrees), so every picture stays in the
-    /// accent's family (a red app gets reds and pinks, not yellows).
-    static let maxLightHue = 35.0
+    /// How far the base gradient may turn away from the accent on the colour wheel (degrees):
+    /// a violet app gets teal, blue, indigo, violet, magenta and rose.
+    static let maxHueShift = 90.0
+    /// How far the light spot may turn further from the base (degrees).
+    static let maxLightTurn = 30.0
+    /// The light spot's widest turn from the accent.
+    static let maxLightHue = maxHueShift + maxLightTurn
     /// Brightest relative luminance any colour of the picture may have: white glyphs keep at least
     /// 3:1 against it ((1 + 0.05) / (0.28 + 0.05) = 3.18).
     static let maxLuminance = 0.28
+    /// Saturation against the accent's own (calmer than the controls, never louder).
+    static let saturationRange = 0.72...0.95
 
-    /// Degrees the accent gradient is turned on the colour wheel (-25 … 25).
+    /// Degrees the accent gradient is turned on the colour wheel (-90 … 90).
     let hueShift: Double
-    /// Extra turn of the light spot against the base (10 … 30 degrees, either way); the sum with
-    /// `hueShift` is held within ±35 in `colors`.
+    /// Extra turn of the light spot against the base (10 … 30 degrees, either way).
     let lightShift: Double
     /// Gradient from `start` to `end` (unit points, opposite corners or edges).
     let start: UnitPoint
@@ -27,13 +35,13 @@ nonisolated struct ArtworkRecipe: Equatable, Sendable {
     /// Darker spot on the opposite side.
     let shade: UnitPoint
     let shadeSize: Double
-    /// 0.9 … 1.15
+    /// Scales the accent's saturation (`saturationRange`).
     let saturation: Double
 
     init(seed: String) {
         var rng = SplitMix64(seed: Self.hash(seed))
         hueShift = rng.next(in: -Self.maxHueShift...Self.maxHueShift)
-        let lightTurn = rng.next(in: 10...30)
+        let lightTurn = rng.next(in: 10...Self.maxLightTurn)
         lightShift = rng.nextBool() ? lightTurn : -lightTurn
         let angle = rng.next(in: 0..<360) * .pi / 180
         start = UnitPoint(x: 0.5 - cos(angle) / 2, y: 0.5 - sin(angle) / 2)
@@ -42,7 +50,7 @@ nonisolated struct ArtworkRecipe: Equatable, Sendable {
         lightSize = rng.next(in: 0.7...1.2)
         shade = UnitPoint(x: 1 - light.x, y: rng.next(in: 0.65...1.0))
         shadeSize = rng.next(in: 0.6...1.0)
-        saturation = rng.next(in: 0.9...1.15)
+        saturation = rng.next(in: Self.saturationRange)
     }
 
     /// 64-bit FNV-1a over the UTF-8 bytes.
@@ -55,17 +63,17 @@ nonisolated struct ArtworkRecipe: Equatable, Sendable {
         return h
     }
 
-    /// The light spot's turn away from the accent: `hueShift + lightShift`, held within ±35.
-    var lightHue: Double { min(Self.maxLightHue, max(-Self.maxLightHue, hueShift + lightShift)) }
+    /// The light spot's turn away from the accent: `hueShift + lightShift` (within ±120).
+    var lightHue: Double { hueShift + lightShift }
 
     /// The four colours of the picture: the accent's gradient turned by `hueShift`, the light spot
     /// turned further, the shade a darker bottom colour. Top, bottom and light are held at or below
     /// `maxLuminance`, so white glyphs stay readable for every accent (orange and green included).
     /// Computed here, not with SwiftUI's `hueRotation`, because offscreen renders drop that filter
-    /// and would not match the window.
+    /// and would not match the window. A grey accent (graphit) stays grey: it has no hue to turn.
     func colors(_ palette: AccentPalette) -> (top: ArtworkRGB, bottom: ArtworkRGB, light: ArtworkRGB, shade: ArtworkRGB) {
         let cap = Self.maxLuminance
-        let top = ArtworkRGB(hex: palette.gradientTop).rotated(hueShift, saturation: saturation * 1.2).capped(luminance: cap)
+        let top = ArtworkRGB(hex: palette.gradientTop).rotated(hueShift, saturation: saturation * 1.15).capped(luminance: cap)
         let bottom = ArtworkRGB(hex: palette.brand).rotated(hueShift, saturation: saturation).capped(luminance: cap)
         let light = ArtworkRGB(hex: palette.gradientTop).rotated(lightHue, saturation: saturation).capped(luminance: cap)
         let shade = bottom.rotated(-lightShift / 2, brightness: 0.62)
@@ -178,8 +186,9 @@ extension EnvironmentValues {
 }
 
 /// Generated art for tiles, lists and headers: the accent gradient turned on the colour wheel by a
-/// seed, a light and a shade spot, and an SF Symbol. No image files; the same seed always draws the
-/// same picture, and every picture belongs to the app's accent family. Fills its frame.
+/// seed (up to a quarter turn either way), a light and a shade spot, and an SF Symbol. No image
+/// files; the same seed always draws the same picture. Fills its frame. The only gradient surface
+/// inside page content (DESIGN §8): covers, list artwork and the hero, nowhere else.
 ///
 ///     Artwork(seed: item.id, symbol: "leaf.fill").frame(width: 168, height: 168)
 struct Artwork: View {
