@@ -75,6 +75,47 @@ GUARD_DENIES = [
     "env GIT_CONFIG_PARAMETERS=\"'core.hooksPath'='/x'\" git commit -m y",
     "bash -c 'git commit -n -m x'",
     "zsh -lc \"git -C . commit --no-verify\"",
+    # options and variables that run another program
+    "git fetch --upload-pack='touch /tmp/x' origin",
+    "git fetch -u origin",
+    "git pull --upload-pack=x origin main",
+    "git clone -u 'sh -c x' repo /tmp/r",
+    "git clone --config core.fsmonitor=x repo /tmp/r",
+    "git clone -c core.fsmonitor=x repo /tmp/r",
+    "git clone --template=/tmp/t repo /tmp/r",
+    "git push --receive-pack='sh -c x' /tmp/r feature",
+    "git diff --no-index ~/.ssh/id_ed25519 /dev/null",
+    "git log -p --ext-diff",
+    "git difftool -x 'sh -c x' HEAD",
+    "git -c alias.x='!sh -c x' x",
+    "git -c core.pager='sh -c x' log",
+    "git -c core.fsmonitor=x status",
+    "git --config-env=core.pager=EVIL log",
+    "git --exec-path=/tmp/x status",
+    "GIT_SSH_COMMAND='sh -c x' git fetch origin",
+    "GIT_EXTERNAL_DIFF=/tmp/x git diff",
+    "GIT_PAGER='sh -c x' git log",
+    "GIT_DIR=/tmp/evil/.git git status",
+    "export GIT_CONFIG_COUNT=1; git status",
+    "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.fsmonitor GIT_CONFIG_VALUE_0=x make check-kit",
+    # make: one goal, known variables in their form, no options
+    "make build run",
+    "make check-rules check-texts",
+    "make check CHECK_FLAGS='x; touch /tmp/y'",
+    "make check-texts CHECK_FLAGS=--fix",
+    "make build MODULES='$(shell touch /tmp/x)'",
+    "make build MODULES=window SHELL=/tmp/x",
+    "make build MODULES=window --eval='x:'",
+    "make -f /tmp/evil.mk build",
+    "make -C /tmp/evil build",
+    "MAKEFLAGS=--eval=x make build",
+    "MODULES='window;x' make build",
+    "make shots ONLY=island. SHOTS_LANG=fr",
+    "make test ONLY='$(touch /tmp/x)'",
+    # the self-test only from build/<Name>.app/Contents/MacOS/<Name>
+    "STARTER_HEADLESS=1 build/../../tmp/evil.app/Contents/MacOS/evil --selftest",
+    "STARTER_HEADLESS=1 build/x/../../../tmp/e/Contents/MacOS/e --selftest",
+    "STARTER_HEADLESS=1 build/Starter.app/Contents/MacOS/Starter --selftest x --render /tmp/out",
 ]
 GUARD_ALLOWS = [
     "git commit -m 'fix(island): keep -n out of the capsule'",
@@ -91,6 +132,31 @@ GUARD_ALLOWS = [
     "grep -rn hooksPath scripts",
     "echo 'git commit -n'",
     "make check && git push origin feature",
+    "git fetch origin",
+    "git fetch --prune origin",
+    "git diff origin/main...HEAD",
+    "git diff --name-only origin/main...HEAD",
+    "git log --oneline origin/main..HEAD",
+    "git show HEAD:README.md",
+    "git -c color.ui=never log -1",
+    "GIT_PAGER=cat git log -1",
+    "make",
+    "make check",
+    "make build MODULES=window,menubar",
+    "make build MODULES=window,menubar CONFIG=release",
+    "MODULES=menubar make build",
+    "make test ONLY=Settings",
+    "make test ONLY='WindowTests/hero'",
+    "make shots ONLY=island. SHOTS_LANG=de SHOTS_APPEARANCE=dark",
+    "NO_BUILD=1 make shots ONLY=window.",
+    "make check-texts CHECK_FLAGS=--ci",
+    "make check-design CHECK_FLAGS='--ci --streng'",
+    "DEVELOPER_DIR=/Library/Developer/CommandLineTools make check",
+    "cd App && make build",
+    "STARTER_HEADLESS=1 build/Starter.app/Contents/MacOS/Starter --selftest",
+    "STARTER_HEADLESS=1 build/Starter.app/Contents/MacOS/Starter --selftest window.chrome",
+    "STARTER_HEADLESS=1 \"build/Probe App.app/Contents/MacOS/Probe App\" --selftest",
+    "STARTER_HEADLESS=1 /tmp/probe/build/Probe.app/Contents/MacOS/Probe --selftest",
 ]
 
 
@@ -108,6 +174,13 @@ class GuardGitTests(unittest.TestCase):
                                 capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
         return result.stdout
+
+    def test_reasons_name_the_rule(self):
+        self.assertIn("umgeht die Git-Hooks", guard.check("git commit -n -m x"))
+        self.assertIn("anderes Programm", guard.check("git fetch --upload-pack=x origin"))
+        self.assertIn("nur ein Ziel", guard.check("make build run"))
+        self.assertIn("MODULES", guard.check("make build FOO=1"))
+        self.assertIn("ohne .. im Pfad", guard.check("STARTER_HEADLESS=1 build/../x.app/Contents/MacOS/x --selftest"))
 
     def test_hook_answers_with_a_deny_decision(self):
         out = json.loads(self.run_hook({"tool_name": "Bash", "tool_input": {"command": "git commit -anm x"}}))
@@ -155,22 +228,60 @@ class SettingsTests(unittest.TestCase):
         for command, expected in [
             ("make check", "allow"),
             ("make build MODULES=window,menubar", "allow"),
+            ("make build CONFIG=release", "allow"),
+            ("MODULES=menubar make build", "allow"),
             ("make test ONLY=Settings", "allow"),
             ("make shots ONLY=island.", "allow"),
             ("NO_BUILD=1 make shots ONLY=window.", "allow"),
             ("make readme-shots", "allow"),
             ("make hooks", "allow"),
             ("git worktree add --detach /tmp/red-team-C feature", "allow"),
+            ("git worktree add --detach /tmp/other feature", "none"),
             ("git worktree remove --force /tmp/red-team-C", "allow"),
             ("git worktree remove --force ../wt/A", "none"),
             ("pgrep -fl /tmp/red-team-C", "allow"),
             ("git status", "allow"),
+            ("git fetch origin", "allow"),
             ("git diff origin/main...HEAD", "allow"),
+            ("git log --oneline -5", "allow"),
             ("STARTER_HEADLESS=1 build/Starter.app/Contents/MacOS/Starter --selftest", "allow"),
+            ("python3 scripts/check_texts.py --ci", "allow"),
+            ("python3 scripts/test_python.py", "allow"),
+            ("python3 -m unittest discover -s scripts/tests -t . -p 'test_*.py'", "none"),
             ("grep -rn hooksPath scripts", "none"),
             ("git commit -m 'fix(island): keep the capsule below the menu bar'", "none"),
+            # forms the old trailing * let through without a question
+            ("git fetch --upload-pack=x origin", "deny"),
+            ("git diff --no-index /etc/hosts /dev/null", "deny"),
+            ("git difftool -x x", "deny"),
+            ("git diff-files", "none"),
+            ("make build run", "none"),
+            ("make test-python", "none"),
+            ("python3 -m unittest /tmp/x.py", "none"),
+            ("python3 scripts/check_texts.py --json /tmp/x", "none"),
+            ("bin/starter init --name X --help", "ask"),
         ]:
             self.assertEqual(decision(self.settings, command), expected, command)
+
+    def test_wildcards_in_allow_rules_are_only_these(self):
+        """Every other allow rule is exact. These keep a * for values and refs; guard-git.py checks what may stand
+        there (one goal, known variables in their form, no option that runs a program, no .. in the path)."""
+        wild = {rule for rule in self.settings["permissions"]["allow"] if "*" in rule}
+        self.assertEqual(wild, {
+            "Bash(make build MODULES=*)", "Bash(MODULES=* make build)", "Bash(make test ONLY=*)",
+            "Bash(make test MODULES=*)", "Bash(make shots ONLY=*)", "Bash(NO_BUILD=1 make shots ONLY=*)",
+            "Bash(git diff *)", "Bash(git log *)", "Bash(git show *)", "Bash(git merge-tree --write-tree *)",
+            "Bash(git worktree add --detach *red-team-*)", "Bash(git worktree remove --force *red-team-*)",
+            "Bash(pgrep -fl *)", "Bash(STARTER_HEADLESS=1 build/*.app/Contents/MacOS/* --selftest *)",
+            "Bash(STARTER_HEADLESS=1 build/*.app/Contents/MacOS/* --selftest)",
+            "Bash(codesign -dv *)", "Bash(codesign --verify *)", "Bash(otool -l *)", "Bash(plutil -lint *)",
+            "Bash(plutil -p *)",
+        })
+        for command in ["make build MODULES=window run", "make build MODULES=window SHELL=/x",
+                        "make test ONLY=x --eval=y", "git diff --no-index /etc/hosts /dev/null",
+                        "git log --ext-diff -p", "STARTER_HEADLESS=1 build/../x.app/Contents/MacOS/x --selftest",
+                        "STARTER_HEADLESS=1 build/A.app/Contents/MacOS/A --selftest x --render /tmp"]:
+            self.assertIsNotNone(guard.check(command), command)
 
     def test_actions_with_side_effects_ask(self):
         for command in [
