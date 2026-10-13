@@ -11,11 +11,16 @@ import FoundationModels
 /// A clipboard for tests: never touches the system pasteboard.
 final class NotesTestPasteboard: NotesPasteboard {
     var value: String?
+    var marks: [String]
     var written: [String] = []
 
-    init(_ value: String?) { self.value = value }
+    init(_ value: String?, marks: [String] = []) {
+        self.value = value
+        self.marks = marks
+    }
 
     func text() -> String? { value }
+    func types() -> [String] { ["public.utf8-plain-text"] + marks }
     func write(_ text: String) { written.append(text) }
 }
 
@@ -280,6 +285,17 @@ final class ExamplesTests: TestSuite {
             expectEqual(NotesCapture.capture(from: NotesTestPasteboard(nil), into: store), .empty)
             expectEqual(NotesCapture.capture(from: NotesTestPasteboard(" \n\t "), into: store), .empty)
             expect(store.notes.isEmpty)
+        }
+
+        test("capture: a copy marked as a password or one-time code is never saved") {
+            let store = emptyStore()
+            for mark in NotesCapture.concealedTypes.sorted() {
+                expectEqual(NotesCapture.capture(from: NotesTestPasteboard("hunter2", marks: [mark]), into: store), .concealed, mark)
+            }
+            expect(store.notes.isEmpty)
+            guard case .saved = NotesCapture.capture(from: NotesTestPasteboard("Gate B12", marks: ["public.html"]), into: store) else {
+                return fail("ordinary text not saved")
+            }
         }
 
         test("capture: long first lines are cut at a word, spaces collapsed") {
