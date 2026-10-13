@@ -144,6 +144,24 @@ final class ExamplesTests: TestSuite {
             expectEqual(store.note(note.id)?.body, "first and second")
         }
 
+        test("a note deleted for good leaves no text in the file, its index or its log") {
+            let url = tempDir().appendingPathComponent("notes.sqlite")
+            let store = NotesStore(url: url, now: { NotesSamples.now }, seed: false)
+            guard let gone = store.add(title: "Zebrafinch", body: "quokkaword secret") else { return fail("no note") }
+            for i in 0..<20 { store.add(title: "Keep \(i)", body: "other words \(i)") }
+            expectEqual(store.search("quokkaword").map(\.id), [gone.id])
+            store.trash(gone.id)
+            store.delete(gone.id)
+            expect(store.search("quokkaword").isEmpty)
+            var bytes = Data()
+            for suffix in ["", "-wal"] {
+                bytes.append((try? Data(contentsOf: URL(fileURLWithPath: url.path + suffix))) ?? Data())
+            }
+            expect(!bytes.isEmpty, "the file exists")
+            expect(bytes.range(of: Data("quokkaword".utf8)) == nil, "body text left in the file")
+            expect(bytes.range(of: Data("Zebrafinch".utf8)) == nil, "title left in the file")
+        }
+
         test("an edit is written after the autosave pause") {
             let store = emptyStore()
             guard let note = store.add(title: "A", body: "") else { return fail("no note") }

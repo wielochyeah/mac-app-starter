@@ -137,7 +137,8 @@ final class Database {
             throw Failure.open(message)
         }
         sqlite3_busy_timeout(handle, 3000)
-        try executeScript("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL;")
+        // secure_delete: deleted rows are overwritten in the file, not left in free pages
+        try executeScript("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL; PRAGMA secure_delete = ON;")
         try migrate(migrations)
     }
 
@@ -248,6 +249,14 @@ final class Database {
 
     private func storedVersion() throws -> Int {
         try query("PRAGMA user_version") { $0.int("user_version") ?? 0 }.first ?? 0
+    }
+
+    /// Rewrites the full-text index `table` in one piece and empties the write-ahead log, so text
+    /// that was deleted is no longer in the file (FTS5 keeps old index segments until they are
+    /// merged, the WAL keeps old pages until a checkpoint). Call after deleting for good.
+    func compact(fullText table: String? = nil) throws {
+        if let table { try execute("INSERT INTO \(table)(\(table)) VALUES('optimize')") }
+        try executeScript("PRAGMA wal_checkpoint(TRUNCATE)")
     }
 
     private var errorMessage: String {

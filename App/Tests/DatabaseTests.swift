@@ -110,6 +110,11 @@ final class DatabaseTests: TestSuite {
             }
         }
 
+        test("deleted rows are overwritten (secure_delete)") {
+            let db = try Database(url: tempDir().appendingPathComponent("s.sqlite"), migrations: [v1])
+            expectEqual(try db.query("PRAGMA secure_delete") { $0.int("secure_delete") }.first, 1)
+        }
+
         test("transactions roll back on error") {
             let db = try Database(url: nil, migrations: [v1])
             expectThrows {

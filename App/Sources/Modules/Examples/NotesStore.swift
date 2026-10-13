@@ -288,9 +288,10 @@ extension SettingKey {
         write("restore") { try $0.execute("UPDATE notes SET trashed_at = NULL WHERE id = ?", [.int(id)]) }
     }
 
+    /// Deletes a note for good, also from the search index and the write-ahead log.
     func delete(_ id: Int64) {
         pending[id] = nil
-        write("delete") { try $0.execute("DELETE FROM notes WHERE id = ?", [.int(id)]) }
+        if write("delete", { try $0.execute("DELETE FROM notes WHERE id = ?", [.int(id)]) }) { compact() }
     }
 
     /// Deletes notes that have been in the trash longer than `keep`; returns how many.
@@ -302,6 +303,7 @@ extension SettingKey {
             try db.execute("DELETE FROM notes WHERE trashed_at IS NOT NULL AND trashed_at < ?", [.of(cutoff)])
             removed = db.changes
         }
+        if removed > 0 { compact() }
         return removed
     }
 
@@ -312,6 +314,7 @@ extension SettingKey {
             try db.execute("DELETE FROM notes")
             try db.execute("DELETE FROM collections")
         }
+        compact()
         insertSamples()
         reload()
     }
@@ -330,6 +333,16 @@ extension SettingKey {
             Log.error("notes: \(what) failed: \(error)", "notes")
             problem = NotesText.storeProblem
             return false
+        }
+    }
+
+    /// After deleting for good: no trace of the deleted text stays in index segments or the log.
+    private func compact() {
+        guard let db, url != nil else { return }
+        do {
+            try db.compact(fullText: fullText ? "notes_fts" : nil)
+        } catch {
+            Log.warn("notes: compacting after a delete failed (\(error))", "notes")
         }
     }
 
