@@ -20,9 +20,9 @@ description: Rendert jede Szene der App ohne Fenster auf dem Bildschirm in Engli
 
 ```bash
 make shots                                  # alles: build/shots/<sprache>-<erscheinung>/<szene>.png und build/shots/index.html
-make shots ONLY=island.                     # nur Szenen, deren Kennung so beginnt
+make shots ONLY=onboarding.                 # nur Szenen, deren Kennung so beginnt
 make shots ONLY=settings. SHOTS_LANG=de     # nur Deutsch
-make shots ONLY=window. SHOTS_APPEARANCE=dark   # nur dunkel
+make shots ONLY=design. SHOTS_APPEARANCE=dark   # nur dunkel
 NO_BUILD=1 make shots ONLY=onboarding.      # vorhandenen Build nutzen
 make readme-shots                           # Bilder aus docs/screenshots/list.txt nach docs/screenshots/, höchstens 1200 px breit
 ```

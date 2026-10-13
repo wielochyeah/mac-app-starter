@@ -30,7 +30,7 @@ Gehört zum Modul `ai`; `bin/starter remove ai` entfernt diesen Skill mit dem Mo
 
 ## Prüfen
 
-- `make check`, `make build MODULES=window,ai` und `make build MODULES=window` (ohne KI muss alles bauen).
+- `make check`, `make build MODULES=<form>,ai` und `make build MODULES=<form>` (ohne KI muss alles bauen); `<form>` ist die App-Form des Projekts, `window` oder `menubar`, wie sie in `starter.json` steht.
 - `STARTER_HEADLESS=1 build/<Name>.app/Contents/MacOS/<Name> --selftest` (ohne Modell) und `… --selftest ai` (fragt das echte Apple-Modell ohne Fenster).
 - `make shots ONLY=ai.` und die eigenen Szenen in allen vier Fassungen ansehen.
 - Gegenprüfung mit dem Skill `red-team`, Blickwinkel Sicherheit (Netz, Protokoll, Downloads).

@@ -15,6 +15,10 @@ dev="$(xcode-select -p 2>/dev/null)"
 if [[ -n "$dev" ]]; then ok "developer dir: $dev"; else bad "no developer tools"; hint "xcode-select --install"; fi
 if command -v swiftc >/dev/null && sv="$(swiftc --version 2>&1 | head -1)" && [[ "$sv" == *"Swift version"* ]]; then
   ok "$sv"
+elif [[ "$sv" == *"license"* ]]; then
+  bad "the selected Xcode ($dev) waits for its licence: $sv"
+  hint "sudo xcodebuild -license (once, in your own terminal), or build without Xcode:"
+  hint "export DEVELOPER_DIR=/Library/Developer/CommandLineTools"
 else
   bad "swiftc does not run"; hint "xcode-select --install"
 fi
@@ -58,12 +62,16 @@ else
   warn "swift package not usable: ${out%%$'\n'*}"
 fi
 
-print "\nOptional (packaging, local AI)"
-for py in python3.12 python3.11 python3.13; do
-  if command -v $py >/dev/null; then ok "$py (MLX worker)"; found_py=1; break; fi
-done
-[[ -n "${found_py:-}" ]] || { warn "no python >= 3.11 (only for the optional mlx module)"; hint "brew install python@3.12"; }
-command -v uv >/dev/null && ok "uv" || warn "uv not installed (optional)"
+# The MLX worker's Python only while the project still has the module (starter.json names it, on or off).
+has_mlx="$(python3 -c 'import json; print(1 if "mlx" in (json.load(open("starter.json")).get("modules") or {}) else 0)' 2>/dev/null)"
+if [[ "$has_mlx" == 1 ]]; then print "\nOptional (packaging, local AI with mlx)"; else print "\nOptional (packaging)"; fi
+if [[ "$has_mlx" == 1 ]]; then
+  for py in python3.12 python3.11 python3.13; do
+    if command -v $py >/dev/null; then ok "$py (MLX worker)"; found_py=1; break; fi
+  done
+  [[ -n "${found_py:-}" ]] || { warn "no python >= 3.11 (only for the optional mlx module)"; hint "brew install python@3.12"; }
+  command -v uv >/dev/null && ok "uv" || warn "uv not installed (optional)"
+fi
 command -v brew >/dev/null && ok "brew $(brew --version 2>/dev/null | head -1 | awk '{print $2}')" || warn "Homebrew not installed (optional)"
 for tool in hdiutil iconutil sips tiffutil; do
   command -v $tool >/dev/null && ok "$tool" || warn "$tool missing (make dmg / make icon)"
