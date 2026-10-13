@@ -16,7 +16,7 @@
     {
       "id": "A-02",
       "schluessel": "pruefen",
-      "text": "Vor jedem Push ist `make check` grün (Regeln, Texte, Gestaltung, Kit, Build, Tests; der Hook `pre-push` führt es aus), für geänderte Module zusätzlich `make build MODULES=…` der betroffenen Kombinationen. Warnungen gelten als Fehler. Nach dem Prüfen läuft kein Prozess der App mehr.",
+      "text": "Vor jedem Push ist `make check` grün (Regeln, Texte, Gestaltung, Kit, Build, Tests; der Hook `pre-push` führt es aus, ohne Mac nur `make check-light`), für geänderte Module zusätzlich `make typecheck` oder `make build MODULES=…` der betroffenen Kombinationen. Warnungen gelten als Fehler, `make check` bricht bei jeder ab. Nach dem Prüfen läuft kein Prozess der App mehr.",
       "pakete": [],
       "durchsetzung": ["scripts/hooks/pre-push", "CI"],
       "ki": false
