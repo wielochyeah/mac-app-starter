@@ -64,10 +64,10 @@ enum IslandText {
         seconds >= IslandTiming.stays ? stays : Format.seconds(seconds)
     }
 
-    static var hoverExpand: String { tr(en: "Expand on hover", de: "Beim Überfahren ausklappen") }
+    static var hoverExpand: String { tr(en: "Expand on hover", de: "Karte unter dem Zeiger aufklappen") }
     static var hoverExpandDetail: String {
-        tr(en: "The card then shows the whole text with Copy and stays open while the pointer is on it. Off: the card stays small and shows only its buttons.",
-           de: "Die Karte zeigt dann den ganzen Text mit Kopieren und bleibt offen, solange der Zeiger darauf ist. Aus: Die Karte bleibt klein und zeigt nur ihre Knöpfe.")
+        tr(en: "The card then shows the whole text with “Copy” and stays open while the pointer is on it. Off: the card stays small and shows only its buttons.",
+           de: "Die Karte zeigt dann den ganzen Text mit „Kopieren“ und bleibt offen, solange der Zeiger darauf ist. Aus: Die Karte bleibt klein und zeigt nur ihre Tasten.")
     }
 
     static var feedback: String { tr(en: "Feedback", de: "Rückmeldung") }
@@ -76,7 +76,7 @@ enum IslandText {
     static var haptics: String { tr(en: "Trackpad feedback", de: "Trackpad-Rückmeldung") }
     static var hapticsDetail: String {
         tr(en: "A light tick on the trackpad when the pointer reaches a card or a button (Force Touch trackpads)",
-           de: "Ein spürbarer Tipp im Trackpad, wenn der Zeiger eine Karte oder einen Knopf erreicht (Force-Touch-Trackpads)")
+           de: "Ein spürbarer Tipp im Trackpad, wenn der Zeiger eine Karte oder eine Taste erreicht (Force-Touch-Trackpads)")
     }
     static var hideInFullscreen: String { tr(en: "Hide in full screen", de: "Im Vollbild ausblenden") }
     static var hideInFullscreenDetail: String {
@@ -140,7 +140,7 @@ enum IslandSampleText {
 
             Two notes are still open: the source for the market figures on page 4, and whether the appendix should list every interview. Both are marked yellow in the slides.
 
-            The export ran at full quality. The PDF is 4.2 MB, the slides 18 MB.
+            The export ran at full quality. The PDF is 4.2\u{202F}MB, the slides 18\u{202F}MB.
 
             Next week the numbers for the third quarter come in, with a second chart sheet.
             """,
@@ -151,7 +151,7 @@ enum IslandSampleText {
 
             Zwei Punkte sind noch offen: die Quelle für die Marktzahlen auf Seite 4 und ob der Anhang jedes Interview aufführen soll. Beide sind in den Folien gelb markiert.
 
-            Der Export lief in voller Qualität. Das PDF hat 4,2 MB, die Folien 18 MB.
+            Der Export lief in voller Qualität. Das PDF hat 4,2\u{202F}MB, die Folien 18\u{202F}MB.
 
             Nächste Woche kommen die Zahlen für das dritte Quartal, mit einem zweiten Diagrammblatt.
             """)

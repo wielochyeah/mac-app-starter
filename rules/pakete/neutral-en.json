@@ -42,6 +42,31 @@
         ],
         "erlaubt": ["Works offline", "Sorted by date"]
       }
+    },
+    {
+      "id": "zusage-en",
+      "label": "Zusage ohne Beleg",
+      "hinweis": "sagen, was die App tut („Notes are stored in one file on this Mac“); eine Zusage nur, wenn das Projekt sie einhält und ein Test sie belegt, dann mit // text-ausnahme: Grund",
+      "regeln": ["S-06"],
+      "art": "woerter",
+      "muster": [
+        "never\\s+leaves?",
+        "(?:are|is)\\s+safe"
+      ],
+      "flags": "i",
+      "bereiche": ["ui", "ki"],
+      "beispiele": {
+        "treffer": [
+          "Your data never leaves this Mac.",
+          "Notes never leave it",
+          "Your entries are safe"
+        ],
+        "erlaubt": [
+          "Notes are stored in one file on this Mac.",
+          "Leave the view with Esc",
+          "Is it safer?"
+        ]
+      }
     }
   ]
 }

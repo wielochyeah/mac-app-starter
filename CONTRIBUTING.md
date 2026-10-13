@@ -49,7 +49,7 @@ Teil A von `CLAUDE.md` wird nie von Hand geändert.
 | neues Feature | Skill `neues-feature`: Ordner unter `App/Sources/Features/`, Texte, Speicher, Registrierung, Szenen, Tests |
 | Seite im Hauptfenster | Skill `neue-ansicht` | <!-- modul:window -->
 | Einstellung oder Einstellungsbereich | Skill `neue-einstellung` |
-| Onboarding-Schritt | Skill `neuer-onboarding-schritt` |
+| Einrichtungsschritt | Skill `neuer-onboarding-schritt` |
 | Berechtigung | Skill `neue-berechtigung` |
 | Zustand der Insel | Skill `insel-zustand` | <!-- modul:island -->
 | Inhalt im Statusmenü | Skill `menueleisten-app` | <!-- modul:menubar -->
@@ -75,7 +75,7 @@ Für jedes wiederkehrende Problem gibt es genau einen Weg. Wer einen zweiten fin
 | Beobachten außerhalb von SwiftUI | `Observing.track(_:while:onChange:)` |
 | Protokoll | `Log.debug`, `info`, `warn`, `error`; nie Inhalte der Nutzerin |
 | Einstellungsbereich | `PaneScaffold` mit `SettingsSection` und den Zeilenmustern |
-| Onboarding-Schritt | `OnboardingPage` mit `OnboardingHeader`, `OnboardingStatusSlot`, `OnboardingHint` |
+| Einrichtungsschritt | `OnboardingPage` mit `OnboardingHeader`, `OnboardingStatusSlot`, `OnboardingHint` |
 | Namen von Dateien und Typen | Englisch, Typen in UpperCamelCase, eine Hauptsache je Datei, Dateiname gleich Typname |
 
 ## Tests

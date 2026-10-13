@@ -428,12 +428,74 @@ class InputTests(unittest.TestCase):
 
     def test_every_markdown_file_is_a_doc(self):
         self.repo.write("tools/README.md", "# Werkzeuge\n\n› Icon bauen\n")
-        self.repo.write("App/Resources/Notices/en.md", "Permission is hereby granted!\n")
         code, output = self.main()
         self.assertEqual(code, 1)
         self.assertIn("tools/README.md:3:1: Glyphe statt Symbol", output)
-        self.assertNotIn("Notices", output)
         self.assertIn("1 Befund in", output)
+
+    def test_notices_are_ui_text_in_the_language_of_their_name(self):
+        licence = "```\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND!\n```\n"
+        self.repo.write("App/Resources/Notices/en.md", "# Third-Party Notices\n\nThis app uses seamless code.\n\n" + licence)
+        self.repo.write("App/Resources/Notices/de.md", "# Hinweise\n\nDie Freigabe der Autoren liegt vor.\n\n" + licence)
+        findings, _ = check_texts.collect(self.repo.root, self.repo.terms())
+        self.assertEqual(sorted((f.path.split("/")[-1], f.term_id, f.line) for f in findings),
+                         [("de.md", "begriff-berechtigung", 3), ("en.md", "floskel-en", 3)])
+
+
+class DMGTextTests(unittest.TestCase):
+    """tools/dmg/DMGText.swift is UI text: DMGCopy(en:de:) is checked like tr(en:de:)."""
+
+    def setUp(self):
+        self.repo = Repo()
+
+    def tearDown(self):
+        self.repo.close()
+
+    def test_window_texts_are_checked_per_language(self):
+        self.repo.write("tools/dmg/DMGText.swift", "\n".join([
+            "enum DMGText {",
+            '    static let a = DMGCopy(en: "Drag it now!", de: "Zieh es — jetzt")',
+            '    static let b = DMGCopy(en: "Drag \\(app) to “\\(folder)”.", de: "Ziehe \\(app) auf „\\(folder)“.")',
+            '    static func c(_ de: String) -> DMGCopy { DMGCopy(en: "Open Anyway", de: de) }',
+            "}",
+            ""]))
+        findings, _ = check_texts.collect(self.repo.root, self.repo.terms())
+        self.assertEqual(sorted((f.term_id, f.line) for f in findings),
+                         [("ausrufezeichen", 2), ("gedankenstrich", 2), ("tr-ohne-literal", 4)])
+
+
+class UsageDefaultTests(unittest.TestCase):
+    """The starter's usage descriptions (rules/standard/infoplist.json) are placeholders for a project."""
+
+    def setUp(self):
+        self.repo = Repo()
+        self.standard = self.repo.read_json("rules/standard/infoplist.json")
+
+    def tearDown(self):
+        self.repo.close()
+
+    def findings(self, project, permissions, plist):
+        self.repo.write_json("starter.lock.json", {"starter": "mac-app-starter", "project": project})
+        self.repo.edit_json("starter.json", lambda c: c.update(permissions=permissions))
+        self.repo.write_json("App/Resources/InfoPlist.json", plist)
+        findings, _ = check_texts.collect(self.repo.root, self.repo.terms())
+        return [(f.term_id, f.match) for f in findings if f.term_id.startswith("nutzungstext")]
+
+    def test_a_project_replaces_the_default_of_every_listed_permission(self):
+        mic = "NSMicrophoneUsageDescription"
+        plist = {k: v for k, v in self.standard.items() if not k.startswith("_")}
+        self.assertEqual(self.findings("Demo", ["microphone", "notifications"], plist),
+                         [("nutzungstext-standard", f"{mic} (en, de)")])
+        plist[mic] = {"en": "Records your voice notes.", "de": plist[mic]["de"]}
+        self.assertEqual(self.findings("Demo", ["microphone"], plist), [("nutzungstext-standard", f"{mic} (de)")])
+        plist[mic] = {"en": "Records your voice notes.", "de": "Nimmt deine Sprachnotizen auf."}
+        self.assertEqual(self.findings("Demo", ["microphone"], plist), [])
+
+    def test_the_starter_keeps_its_file_and_the_defaults_equal(self):
+        plist = {k: v for k, v in self.standard.items() if not k.startswith("_")}
+        self.assertEqual(self.findings(None, ["microphone"], plist), [])
+        plist["NSCameraUsageDescription"] = {"en": "Takes pictures.", "de": "Nimmt Bilder auf."}
+        self.assertEqual(self.findings(None, ["microphone"], plist), [("nutzungstext-abweichung", "NSCameraUsageDescription")])
 
 
 class RepositoryTests(unittest.TestCase):
@@ -456,7 +518,8 @@ class RepositoryTests(unittest.TestCase):
             self.assertTrue(address or current == "sie", "the kit texts use du, so sie must find them")
             for finding in address:
                 self.assertTrue(rules_lib.path_matches(finding.path, ["App/Sources/**/*Text.swift", "App/Resources/InfoPlist.json",
-                                                                      "App/Sources/Features/**"]), finding.format())
+                                                                      "App/Resources/Notices/*.md", "App/Sources/Features/**"]),
+                                finding.format())
         finally:
             repo.close()
 

@@ -27,7 +27,7 @@ enum MenuBarText {
 
     // MARK: Menu and panel
 
-    static var setupMenu: String { tr(en: "Setup…", de: "Einrichtung …") }
+    static var setupMenu: String { tr(en: "Show Setup Again", de: "Einrichtung erneut zeigen") }
     static var actions: String { tr(en: "Actions", de: "Aktionen") }
     /// Opens the main window, in the panel footer and in the menu (one name for one action).
     static var openWindow: String { tr(en: "Open Window", de: "Fenster öffnen") }
@@ -57,10 +57,10 @@ enum MenuBarText {
         switch style {
         case .plain: tr(en: "The icon never changes. Click it to see what the app is doing.",
                         de: "Das Symbol bleibt immer gleich. Was die App tut, siehst du nach einem Klick darauf.")
-        case .marks: tr(en: "A small ring turns while the app works, a red dot shows when it needs you.",
-                        de: "Ein kleiner Ring dreht sich, solange die App arbeitet, ein roter Punkt zeigt, wenn sie dich braucht.")
-        case .color: tr(en: "The icon takes the accent color while the app works, a red dot shows when it needs you.",
-                        de: "Das Symbol wird in der Akzentfarbe gezeigt, solange die App arbeitet, ein roter Punkt zeigt, wenn sie dich braucht.")
+        case .marks: tr(en: "A small ring turns while the app works. A red dot appears when it needs you.",
+                        de: "Ein kleiner Ring dreht sich, solange die App arbeitet. Braucht sie dich, erscheint ein roter Punkt.")
+        case .color: tr(en: "The icon takes the accent color while the app works. A red dot appears when it needs you.",
+                        de: "Das Symbol nimmt die Akzentfarbe an, solange die App arbeitet. Braucht sie dich, erscheint ein roter Punkt.")
         }
     }
 
@@ -79,12 +79,12 @@ enum MenuBarText {
 
     static var actualSize: String { tr(en: "Actual size", de: "Originalgröße") }
     static var statusTextBoard: String { tr(en: "Status next to the icon", de: "Status neben dem Symbol") }
-    static var stateNames: String { tr(en: "The state's name", de: "Name des Zustands") }
+    static var stateNames: String { tr(en: "The state’s name", de: "Name des Zustands") }
     static var withShortTitle: String { tr(en: "Short title set by a module", de: "Kurztitel eines Moduls") }
     static var cut: String { tr(en: "Too long, cut", de: "Zu lang, gekürzt") }
     static var galleryIcon: String { tr(en: "Menu bar icon", de: "Menüleisten-Symbol") }
-    static var galleryPanel: String { tr(en: "Menu bar panel", de: "Menüleisten-Übersicht") }
-    static var galleryToggle: String { tr(en: "Panel toggle", de: "Schalter in der Übersicht") }
+    static var galleryPanel: String { tr(en: "Status menu", de: "Statusmenü") }
+    static var galleryToggle: String { tr(en: "Switch in the status menu", de: "Schalter im Statusmenü") }
 }
 
 /// Sample content of the panel renders (never shown in the app).

@@ -1,0 +1,51 @@
+{
+  "_comment": "Die Nutzungsbeschreibungen, die der Starter in App/Resources/InfoPlist.json mitbringt. check_texts.py meldet in einem Projekt (starter.lock.json nennt eins) jeden dieser Texte, der für eine Berechtigung aus starter.json unverändert geblieben ist; im Starter müssen beide Dateien gleich sein.",
+  "NSMicrophoneUsageDescription": {
+    "en": "The app uses the microphone to record what you say.",
+    "de": "Die App nutzt das Mikrofon, um aufzunehmen, was du sagst."
+  },
+  "NSCameraUsageDescription": {
+    "en": "The app uses the camera to take pictures.",
+    "de": "Die App nutzt die Kamera, um Bilder aufzunehmen."
+  },
+  "NSAppleEventsUsageDescription": {
+    "en": "The app asks other apps for details such as the title of the open document.",
+    "de": "Die App fragt andere Apps nach Angaben wie dem Titel des geöffneten Dokuments."
+  },
+  "NSSpeechRecognitionUsageDescription": {
+    "en": "The app turns what you say into text.",
+    "de": "Die App wandelt in Text um, was du sagst."
+  },
+  "NSContactsUsageDescription": {
+    "en": "The app reads your contacts to fill in the names you pick.",
+    "de": "Die App liest deine Kontakte, um die Namen einzusetzen, die du auswählst."
+  },
+  "NSCalendarsFullAccessUsageDescription": {
+    "en": "The app reads and creates calendar events when you ask it to.",
+    "de": "Die App liest und erstellt Termine, wenn du sie darum bittest."
+  },
+  "NSRemindersFullAccessUsageDescription": {
+    "en": "The app reads and creates reminders when you ask it to.",
+    "de": "Die App liest und erstellt Erinnerungen, wenn du sie darum bittest."
+  },
+  "NSPhotoLibraryUsageDescription": {
+    "en": "The app opens the photos you pick.",
+    "de": "Die App öffnet die Fotos, die du auswählst."
+  },
+  "NSLocationUsageDescription": {
+    "en": "The app uses your location to show results near you.",
+    "de": "Die App nutzt deinen Standort, um Ergebnisse in deiner Nähe zu zeigen."
+  },
+  "NSLocationWhenInUseUsageDescription": {
+    "en": "The app uses your location to show results near you.",
+    "de": "Die App nutzt deinen Standort, um Ergebnisse in deiner Nähe zu zeigen."
+  },
+  "NSBluetoothAlwaysUsageDescription": {
+    "en": "The app uses Bluetooth to connect the devices you choose.",
+    "de": "Die App nutzt Bluetooth, um die Geräte zu verbinden, die du auswählst."
+  },
+  "NSLocalNetworkUsageDescription": {
+    "en": "The app searches your local network for devices.",
+    "de": "Die App sucht in deinem lokalen Netzwerk nach Geräten."
+  }
+}

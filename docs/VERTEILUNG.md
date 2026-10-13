@@ -11,7 +11,7 @@ Wie aus dem Quellcode eine App wird, die jemand auf einem anderen Mac installier
   Info.plist                     aus starter.json (scripts/gen_config.py), dazu im Binary eingebettet
   MacOS/<Name>                   ein swiftc-Aufruf über Kit, Features und die eingeschalteten Module
   Resources/AppIcon.icns         aus make icon
-  Resources/<lang>.lproj/InfoPlist.strings   Erklärtexte der Berechtigungen in en und de
+  Resources/<lang>.lproj/InfoPlist.strings   Nutzungsbeschreibungen der Berechtigungen in en und de
   PkgInfo
 ```
 
@@ -28,7 +28,7 @@ Wie aus dem Quellcode eine App wird, die jemand auf einem anderen Mac installier
 | Developer ID | `signing.identity: "Developer ID Application: <Name> (<Team-ID>)"`, `signing.teamId` | Hardened Runtime mit Entitlements aus `build/gen/App.entitlements`; startet beim Empfänger erst ohne Warnung, wenn sie notarisiert ist |
 | Developer ID und Notarisierung | zusätzlich `signing.notarize: true` und `signing.notaryProfile` (oder `NOTARY_PROFILE`) | `make dmg` notarisiert App und DMG und heftet die Tickets an (Abschnitt 4) |
 
-**Ad hoc und Berechtigungen.** macOS verknüpft erteilte Berechtigungen (Mikrofon, Bedienungshilfen, Eingabeüberwachung, Bildschirmaufnahme) mit der Signatur des Builds. Ein ad hoc signierter neuer Build ist für macOS eine andere App: erteilte Berechtigungen gelten nicht mehr, die App fragt erneut oder zeigt sie als fehlend. Das betrifft die Entwicklung (jedes `make build`) und jede neue Fassung beim Empfänger. Abhilfe ist eine Developer ID; zum Testen setzt `tccutil reset All <bundleId>` den Stand nur dieser App zurück.
+**Ad hoc und Berechtigungen.** macOS verknüpft erlaubte Berechtigungen (Mikrofon, Bedienungshilfen, Eingabeüberwachung, Bildschirmaufnahme) mit der Signatur des Builds. Ein ad hoc signierter neuer Build ist für macOS eine andere App: erlaubte Berechtigungen gelten nicht mehr, die App fragt erneut oder zeigt sie als fehlend. Das betrifft die Entwicklung (jedes `make build`) und jede neue Fassung beim Empfänger. Abhilfe ist eine Developer ID; zum Testen setzt `tccutil reset All <bundleId>` den Stand nur dieser App zurück.
 
 **Developer ID.** Das Zertifikat liegt im Schlüsselbund des Build-Macs, nie im Repository. Unter der Hardened Runtime braucht jede Berechtigung ihr Entitlement; `scripts/gen_config.py` schreibt sie aus `permissions`, `tools/entitlements.plist` ergänzt die App. Ausnahmen der Hardened Runtime (etwa nicht signierter ausführbarer Speicher) brauchen einen Eintrag in `docs/DECISIONS.md`. Braucht eingebetteter Code eine Ausnahme (ein mitgelieferter Python-Interpreter, ein Hilfsprogramm), bekommt nur dieses Programm sie: `tools/entitlements-map.json` ordnet einem Pfad im Bundle (Glob, relativ zur App, etwa `Contents/Resources/python/bin/python3*`) eine eigene Plist zu. Die App selbst bekommt `com.apple.security.cs.disable-library-validation` nie, sonst lädt sie jede Bibliothek.
 
@@ -54,7 +54,7 @@ Nur mit Developer ID und nur auf ausdrücklichen Wunsch. Der Weg zu einem notari
 2. Einmal ein Profil für `notarytool` im Schlüsselbund anlegen: `xcrun notarytool store-credentials <profil> --apple-id <id> --team-id <team>` (fragt nach einem app-spezifischen Passwort und legt es im Schlüsselbund ab). Den Namen des Profils nennt `signing.notaryProfile` in `starter.json`; `NOTARY_PROFILE` in der Umgebung geht vor, ebenso `SIGN_IDENTITY` vor `signing.identity` (in `make build`, `make dmg` und `make notarize`).
 3. `signing.notarize: true`.
 
-`make dmg` signiert dann von innen nach außen mit Hardened Runtime, reicht die App mit `xcrun notarytool submit --wait` ein und heftet ihr Ticket an (`xcrun stapler staple`, damit auch die Kopie in /Programme es trägt), baut das DMG, signiert und notarisiert es ebenso und lässt den Hinweis auf „Dennoch öffnen“ im Fenster weg. Steht `signing.notarize` auf `true` und `signing.identity` auf `-`, sagt `make dmg` das und baut ein DMG ohne Notarisierung.
+`make dmg` signiert dann von innen nach außen mit Hardened Runtime, reicht die App mit `xcrun notarytool submit --wait` ein und heftet ihr Ticket an (`xcrun stapler staple`, damit auch die Kopie in `/Applications` es trägt), baut das DMG, signiert und notarisiert es ebenso und lässt den Hinweis auf „Dennoch öffnen“ im Fenster weg. Steht `signing.notarize` auf `true` und `signing.identity` auf `-`, sagt `make dmg` das und baut ein DMG ohne Notarisierung.
 
 `make notarize` (`scripts/notarize.sh`) notarisiert nur, was `make dmg` schon mit Developer ID gebaut hat, etwa um eine abgebrochene Einreichung zu wiederholen; es baut und signiert keine App. Ein DMG, das mit `signing.notarize: false` entstand, zeigt den Hinweis im Fenster und wird abgelehnt: Schalter setzen und `make dmg` neu ausführen. `scripts/notarize.sh --dry-run` prüft die Einstellungen und zeigt die Befehle, ohne etwas einzureichen.
 
@@ -73,13 +73,13 @@ Verwaltete Macs (MDM) können nicht notarisierte Apps ganz sperren. Wer an solch
 
 ## 6. Berechtigungen beim Empfänger
 
-- Gefragt wird im Onboarding oder beim ersten Gebrauch der Funktion, nie beim Start ohne Zusammenhang.
-- Bedienungshilfen, Eingabeüberwachung und Bildschirmaufnahme schaltet die Nutzerin in den Systemeinstellungen ein; die App öffnet den passenden Bereich und erkennt die Änderung selbst. Manche wirken erst nach einem Neustart der App; das Onboarding speichert vorher seinen Stand.
-- Nach einer neuen ad hoc signierten Fassung sind diese Berechtigungen erneut zu erteilen (Abschnitt 2).
+- Gefragt wird in der Einrichtung oder beim ersten Gebrauch der Funktion, nie beim Start ohne Zusammenhang.
+- Bedienungshilfen, Eingabeüberwachung und Bildschirmaufnahme schaltet die Nutzerin in den Systemeinstellungen ein; die App öffnet den passenden Bereich und erkennt die Änderung selbst. Manche wirken erst nach einem Neustart der App; die Einrichtung speichert vorher ihren Stand.
+- Nach einer neuen ad hoc signierten Fassung sind diese Berechtigungen erneut zu erlauben (Abschnitt 2).
 
 ## 7. Anmeldeobjekt (Modul `background`)
 
-`SMAppService.mainApp` registriert die App als Anmeldeobjekt. Das geht nur aus einem installierten Ort (`/Applications` oder `~/Applications`, im Finder „Programme“), nicht aus `build/`; sonst ist der Schalter in den Einstellungen gesperrt und eine Fußnote sagt, warum, und das Onboarding lässt den Schritt weg. Beim Bauen und Testen wird nie ein Anmeldeobjekt registriert. Die Nutzerin sieht und entfernt es in den Systemeinstellungen unter „Allgemein“, „Anmeldeobjekte“.
+`SMAppService.mainApp` registriert die App als Anmeldeobjekt. Das geht nur aus einem installierten Ort (`/Applications` oder `~/Applications`, im Finder „Programme“), nicht aus `build/`; sonst ist der Schalter in den Einstellungen gesperrt und eine Fußnote sagt, warum, und die Einrichtung lässt den Schritt weg. Beim Bauen und Testen wird nie ein Anmeldeobjekt registriert. Die Nutzerin sieht und entfernt es in den Systemeinstellungen unter Allgemein > Anmeldeobjekte & Erweiterungen.
 
 ## 8. Vor der ersten Weitergabe
 
@@ -87,7 +87,7 @@ Verwaltete Macs (MDM) können nicht notarisierte Apps ganz sperren. Wer an solch
 - Modul `mlx`: noch nicht weitergebbar. `make dmg` bündelt weder den MLX-Worker noch ein Python; die App im DMG zeigt MLX als „Nicht enthalten“ ohne Download (`docs/KI.md`, „MLX in einer weitergegebenen App“). Für Empfänger bleibt Apple Foundation Models über `ai`. <!-- modul:mlx -->
 - `app.bundleId` endgültig wählen: sie bestimmt den Ort der Daten (`~/Library/Application Support/<bundleId>/`), die Einstellungen und die Berechtigungen. Ein späterer Wechsel beginnt bei null.
 - `app.version` und `app.build` setzen, `CHANGELOG.md` ergänzen, `THIRD_PARTY_NOTICES.md` um mitgelieferten Fremdcode ergänzen.
-- Auf einem zweiten Mac oder Benutzer installieren und das Onboarding einmal ganz durchgehen (`docs/vorlagen/ABNAHME.md`, AK-60).
+- Auf einem zweiten Mac oder Benutzer installieren und die Einrichtung einmal ganz durchgehen (`docs/vorlagen/ABNAHME.md`, AK-60).
 
 ## 9. Updates
 

@@ -87,7 +87,10 @@
         "powerful\\w*",
         "smart(?:er|est)?",
         "robust\\w*",
-        "transformative"
+        "transformative",
+        "everything\\s+in\\s+one\\s+place",
+        "(?:one|a)\\s+(?:click|shortcut|keystroke|tap)\\s+away",
+        "a\\s+calm\\s+place"
       ],
       "flags": "i",
       "bereiche": ["ui", "ki"],
@@ -106,9 +109,13 @@
           "Insights about usage",
           "Magic summaries",
           "blazing-fast search",
-          "Welcome back"
+          "Welcome back",
+          "Everything in one place",
+          "One shortcut away",
+          "Just a click away",
+          "A calm place for your work"
         ],
-        "erlaubt": ["Use local models", "Smartphone", "Show more", "Transform text"]
+        "erlaubt": ["Use local models", "Smartphone", "Show more", "Transform text", "All notes in one list", "Takes one click", "A calm sound"]
       }
     }
   ]

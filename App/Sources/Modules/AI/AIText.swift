@@ -17,16 +17,16 @@ enum AIText {
         canSwitch
             ? tr(en: "Everything is ready. You can switch the model later in Settings.",
                  de: "Alles bereit. Das Modell kannst du später in den Einstellungen wechseln.")
-            : tr(en: "Everything is ready. You can check its state any time under Models in Settings.",
-                 de: "Alles bereit. Den Stand siehst du jederzeit in den Einstellungen unter Modelle.")
+            : tr(en: "Everything is ready. You can check its state anytime in Settings > Models.",
+                 de: "Alles bereit. Den Stand siehst du jederzeit unter Einstellungen > Modelle.")
     }
 
     // MARK: Providers
     static var providerSection: String { tr(en: "Provider", de: "Anbieter") }
     static var providerChoice: String { tr(en: "Use", de: "Verwenden") }
     static var providerChoiceDetail: String {
-        tr(en: "Automatic picks Apple Intelligence and falls back to MLX.",
-           de: "Automatisch nimmt Apple Intelligence, sonst MLX.")
+        tr(en: "“Automatic” uses Apple Intelligence and falls back to MLX.",
+           de: "„Automatisch“ nutzt Apple Intelligence, sonst MLX.")
     }
     static var automatic: String { tr(en: "Automatic", de: "Automatisch") }
     static var apple: String { tr(en: "Apple Intelligence", de: "Apple Intelligence") }
@@ -121,8 +121,8 @@ enum AIText {
             tr(en: "Start the download above. It keeps running when you go on.",
                de: "Starte oben den Download. Er läuft weiter, wenn du weitergehst.")
         case .deviceNotEligible where alternative:
-            tr(en: "You can choose another provider later under Models in Settings.",
-               de: "Einen anderen Anbieter wählst du später in den Einstellungen unter Modelle.")
+            tr(en: "You can choose another provider later in Settings > Models.",
+               de: "Einen anderen Anbieter wählst du später unter Einstellungen > Modelle.")
         case .unknown:
             tr(en: "None of the providers can answer right now.", de: "Gerade kann kein Anbieter antworten.")
         default: reasonHint(reason)
@@ -131,14 +131,14 @@ enum AIText {
     }
 
     // MARK: Try it
-    static var trySection: String { tr(en: "Try it", de: "Ausprobieren") }
-    static var tryPlaceholder: String { tr(en: "Ask something", de: "Frag etwas") }
+    static var trySection: String { tr(en: "Try It", de: "Ausprobieren") }
+    static var tryPlaceholder: String { tr(en: "Ask something", de: "Frage etwas") }
     static var trySample: String {
         tr(en: "Explain in one sentence what a menu bar app is.",
            de: "Erkläre in einem Satz, was eine Menüleisten-App ist.")
     }
     static var send: String { tr(en: "Send", de: "Senden") }
-    static var stop: String { tr(en: "Stop", de: "Stopp") }
+    static var stop: String { tr(en: "Stop", de: "Stoppen") }
     static var thinking: String { tr(en: "Writing", de: "Schreibt") }
     static var tryNote: String {
         tr(en: "The answer comes from the model in use. Nothing is saved.",
@@ -160,7 +160,7 @@ enum AIText {
     }
 
     // MARK: Models (rows; MLX fills them)
-    static var modelsSection: String { tr(en: "Models on this Mac", de: "Modelle auf diesem Mac") }
+    static var modelsSection: String { tr(en: "Models on This Mac", de: "Modelle auf diesem Mac") }
     static var download: String { tr(en: "Download", de: "Herunterladen") }
     /// "Qwen3 1.7B, 4-bit": a brand name (not translated) and its quantisation.
     static func modelName(_ name: String, bits: Int?) -> String {
@@ -179,11 +179,11 @@ enum AIText {
             tr(en: "The model declined to answer this.", de: "Darauf antwortet das Modell nicht.")
         case .unsupportedLanguage:
             tr(en: "The model does not support this language.", de: "Das Modell kann diese Sprache nicht.")
-        case .busy: tr(en: "The model is busy. Try again in a moment.", de: "Das Modell ist beschäftigt. Versuch es gleich noch mal.")
+        case .busy: tr(en: "The model is busy. Try again in a moment.", de: "Das Modell ist beschäftigt. Versuche es gleich noch einmal.")
         case .unsupported: tr(en: "This model cannot do that.", de: "Das kann dieses Modell nicht.")
         case .restarting(let seconds):
-            tr(en: "The model stopped unexpectedly. Next try in \(Format.number(Int(seconds.rounded(.up)))) s.",
-               de: "Das Modell wurde unerwartet beendet. Nächster Versuch in \(Format.number(Int(seconds.rounded(.up)))) s.")
+            tr(en: "The model stopped unexpectedly. Next try in \(Format.number(Int(seconds.rounded(.up))))\u{202F}s.",
+               de: "Das Modell wurde unerwartet beendet. Nächster Versuch in \(Format.number(Int(seconds.rounded(.up))))\u{202F}s.")
         case .workerCrashed: tr(en: "The model stopped unexpectedly.", de: "Das Modell wurde unerwartet beendet.")
         case .failed: tr(en: "The model could not answer.", de: "Das Modell konnte nicht antworten.")
         }
@@ -205,7 +205,7 @@ enum AIText {
         tr(en: "A menu bar app lives as a small icon at the top", de: "Eine Menüleisten-App sitzt als kleines Symbol oben")
     }
     static var sampleAnswer: String {
-        tr(en: "A menu bar app lives as a small icon at the top of the screen and opens a compact panel when you click it.",
-           de: "Eine Menüleisten-App sitzt als kleines Symbol oben am Bildschirm und öffnet beim Klick ein kleines Fenster.")
+        tr(en: "A menu bar app lives as a small icon at the top of the screen and opens a small menu when you click it.",
+           de: "Eine Menüleisten-App sitzt als kleines Symbol oben am Bildschirm und öffnet beim Klick ein kleines Menü.")
     }
 }

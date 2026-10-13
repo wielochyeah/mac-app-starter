@@ -352,7 +352,7 @@ final class OnboardingTests: TestSuite {
             Localizer.shared.forced = .en
             expectEqual(OnboardingText.doneTitle(complete: true), "All Set")
             expectEqual(OnboardingText.doneTitle(complete: false), "Almost Done")
-            expect(OnboardingText.doneMissing(["Input Monitoring"], collapsed: false).hasPrefix("Input Monitoring is not allowed yet."))
+            expect(OnboardingText.doneMissing(["Input Monitoring"], collapsed: false).hasPrefix("Permission for Input Monitoring is still missing."))
             expect(OnboardingText.doneMissing(["A", "B"], collapsed: false).hasPrefix("2 permissions"))
         }
 

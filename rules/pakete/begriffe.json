@@ -1,0 +1,122 @@
+{
+  "$schema": "../schema/paket.schema.json",
+  "id": "begriffe",
+  "titel": "Feste Begriffe der Oberfläche",
+  "gruppe": "schreiben",
+  "standardAktiv": true,
+  "abschaltbar": false,
+  "sprachen": ["de"],
+  "beschreibung": "Ein Ding, ein Wort: die deutschen Begriffe der Oberfläche, wie macOS 26 sie nutzt. Die Tabelle „Feste Begriffe der Oberfläche“ in docs/DESIGN.md (Abschnitt 9) nennt sie mit Grund; ein Projekt ergänzt seine eigenen als Paket in rules/projekt/pakete/.",
+  "begriffe": [
+    {
+      "id": "begriff-berechtigung",
+      "label": "Freigabe oder erteilt für eine Berechtigung",
+      "hinweis": "„Berechtigung“ als Nomen, „erlauben“ als Verb („Zugriff erlauben“, „Erlaubt“, „3 von 4 erlaubt“); „Freigabe“ heißt bei Apple Teilen",
+      "regeln": ["S-15"],
+      "art": "woerter",
+      "muster": ["Freigaben?", "erteil\\w*"],
+      "flags": "i",
+      "bereiche": ["ui"],
+      "beispiele": {
+        "treffer": ["Freigabe erteilen", "Erteilt", "3 Freigaben fehlen noch", "2 von 3 erteilt"],
+        "erlaubt": ["Zugriff erlauben", "Erlaubt", "Berechtigungen", "Gib die Kombination dort frei"]
+      }
+    },
+    {
+      "id": "begriff-einrichtung",
+      "label": "Onboarding in der Oberfläche",
+      "hinweis": "„Einrichtung“, wie das Fenster heißt („Einrichtung erneut zeigen“)",
+      "regeln": ["S-15"],
+      "art": "woerter",
+      "muster": ["Onboarding\\w*"],
+      "flags": "i",
+      "bereiche": ["ui"],
+      "beispiele": {
+        "treffer": ["Onboarding wiederholen", "Schritt im Onboarding"],
+        "erlaubt": ["Einrichtung erneut zeigen", "Einrichtungsschritt"]
+      }
+    },
+    {
+      "id": "begriff-taste",
+      "label": "Knopf statt Taste",
+      "hinweis": "„Taste“, wie macOS Bedienelemente zum Klicken nennt; gezeichnete Tasten der Tastatur sind „Tastenkappen“",
+      "regeln": ["S-15"],
+      "art": "woerter",
+      "muster": ["Kn[oö]pf\\w*"],
+      "flags": "i",
+      "bereiche": ["ui"],
+      "beispiele": {
+        "treffer": ["zeigt nur ihre Knöpfe", "einen Knopf erreicht", "Kopieren-Knopf"],
+        "erlaubt": ["zeigt nur ihre Tasten", "Große Tastenkappen"]
+      }
+    },
+    {
+      "id": "begriff-website",
+      "label": "Webseite statt Website",
+      "hinweis": "„Website“ wie bei Apple",
+      "regeln": ["S-15"],
+      "art": "woerter",
+      "muster": ["Webseiten?"],
+      "flags": "i",
+      "bereiche": ["ui"],
+      "beispiele": {
+        "treffer": ["Webseite", "Zur Webseite"],
+        "erlaubt": ["Website", "Zur Website"]
+      }
+    },
+    {
+      "id": "begriff-tastaturkurzbefehl",
+      "label": "Kurzbefehle als Name eines Bereichs",
+      "hinweis": "„Tastaturkurzbefehle“ als Titel, Bereich oder Pfad („Einstellungen > Tastaturkurzbefehle“); „Kurzbefehle“ allein ist Apples App",
+      "regeln": ["S-15"],
+      "art": "regex",
+      "muster": [
+        "^\\s*Kurzbefehle\\s*$",
+        "(?<=>\\s)Kurzbefehle(?![\\w-])",
+        "(?<![\\w-])Kurzbefehle(?=\\s*>)",
+        "(?<=Bereich\\s)Kurzbefehle(?![\\w-])"
+      ],
+      "flags": "",
+      "bereiche": ["ui"],
+      "umsetzung": "Nur als ganzer Text, als Teil eines Pfads mit „>“ und nach „Bereich“; im Fließtext eines Bereichs über Tastaturkurzbefehle bleibt „Kurzbefehl“ erlaubt.",
+      "beispiele": {
+        "treffer": ["Kurzbefehle", "Einstellungen > Kurzbefehle", "Kurzbefehle > Neu", "Bereich Kurzbefehle"],
+        "erlaubt": [
+          "Tastaturkurzbefehle",
+          "Einstellungen > Tastaturkurzbefehle",
+          "Diese Kurzbefehle wirken in jeder App",
+          "Noch keine Kurzbefehle",
+          "Dein Kurzbefehl"
+        ]
+      }
+    },
+    {
+      "id": "begriff-statusmenue",
+      "label": "Panel oder Übersicht für das Statusmenü",
+      "hinweis": "„Statusmenü“ für das Menü am Statussymbol in der Menüleiste, wie macOS die Menüs dort nennt",
+      "regeln": ["S-15"],
+      "art": "woerter",
+      "muster": ["(?:Menüleisten-)?Panels?", "Menüleisten-Übersicht"],
+      "flags": "i",
+      "bereiche": ["ui"],
+      "beispiele": {
+        "treffer": ["Menüleisten-Übersicht", "Schalter im Panel", "Menüleisten-Panel"],
+        "erlaubt": ["Statusmenü", "Schalter im Statusmenü", "Panelfarbe"]
+      }
+    },
+    {
+      "id": "begriff-widerrufen",
+      "label": "Rückgängig statt Widerrufen",
+      "hinweis": "„Widerrufen“ wie im Menü „Bearbeiten“ von macOS; „Das lässt sich nicht widerrufen.“",
+      "regeln": ["S-15"],
+      "art": "woerter",
+      "muster": ["rückgängig\\w*"],
+      "flags": "i",
+      "bereiche": ["ui"],
+      "beispiele": {
+        "treffer": ["Rückgängig", "Das lässt sich nicht rückgängig machen."],
+        "erlaubt": ["Widerrufen", "Das lässt sich nicht widerrufen."]
+      }
+    }
+  ]
+}

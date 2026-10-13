@@ -328,7 +328,7 @@ private struct PickerRowSample: View {
     var body: some View {
         SettingsSection {
             PickerRow(PatternsSampleText.interface, subtitle: PatternsSampleText.interfaceDetail,
-                      options: [("system", PatternsSampleText.system), ("de", Lang.de.nativeName), ("en", Lang.en.nativeName)],
+                      options: [("system", PatternsSampleText.system), ("en", Lang.en.nativeName), ("de", Lang.de.nativeName)],
                       selection: $lang)
             PickerRow(PatternsSampleText.appearance, subtitle: PatternsSampleText.appearanceDetail,
                       options: [("system", PatternsSampleText.system), ("light", PatternsSampleText.light), ("dark", PatternsSampleText.dark)],
@@ -489,7 +489,7 @@ private struct SamplePane: View {
                      subtitle: PatternsSampleText.generalIntro) {
             SettingsSection(PatternsSampleText.language) {
                 PickerRow(PatternsSampleText.interface, subtitle: PatternsSampleText.interfaceDetail,
-                          options: [("system", PatternsSampleText.system), ("de", Lang.de.nativeName), ("en", Lang.en.nativeName)],
+                          options: [("system", PatternsSampleText.system), ("en", Lang.en.nativeName), ("de", Lang.de.nativeName)],
                           selection: $lang)
                 PickerRow(PatternsSampleText.appearance, subtitle: PatternsSampleText.appearanceDetail,
                           options: [("system", PatternsSampleText.system), ("light", PatternsSampleText.light), ("dark", PatternsSampleText.dark)],

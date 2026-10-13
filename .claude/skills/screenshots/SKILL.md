@@ -38,7 +38,7 @@ Muster und eigene Konfiguration: Die Szenen des Kits und der Module (`onboarding
 Jede betroffene Szene in allen vier Fassungen (`en-light`, `en-dark`, `de-light`, `de-dark`) mit dem Werkzeug Read öffnen. Code lesen ersetzt kein Bild; ohne Bilder gilt die Ansicht als nicht geprüft.
 
 - Fünf Sekunden: Was ist das, was ist die Antwort, was ist die eine Hauptaktion?
-- Deutsch passt ohne Kürzung und ohne umgebrochene Knöpfe.
+- Deutsch passt ohne Kürzung und ohne umgebrochene Tasten.
 - Hell und dunkel sind beide gestaltet, Kontrast reicht, Akzent nur auf Bedienelementen und Auswahl.
 - Raster und Kanten: gleiche Abstände, gemeinsame linke Kante, Haarlinien zwischen Zeilen.
 - Nichts doppelt, kein Kasten im Kasten, keine Deko ohne Aufgabe.

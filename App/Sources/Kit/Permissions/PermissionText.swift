@@ -54,7 +54,7 @@ enum PermissionText {
         case .inputMonitoring:
             // umbruch: a balanced two-line subtitle under the step title (VoiceBud)
             tr(en: "\(app) needs your permission to notice\nyour keyboard shortcuts in every app.",
-               de: "\(app) braucht deine Erlaubnis, um deine\nKurzbefehle in jeder App zu erkennen.")
+               de: "\(app) braucht deine Erlaubnis, um in jeder App\ndeine Tastaturkurzbefehle zu erkennen.")
         case .screenRecording:
             tr(en: "\(app) needs your permission to see what is on your screen.",
                de: "\(app) braucht deine Erlaubnis, um zu sehen, was auf dem Bildschirm ist.")
@@ -143,7 +143,7 @@ enum PermissionText {
             return [changeLater(kind)]
         case .restartNeeded:
             return [tr(en: "The permission takes effect once \(app) restarts.\nSetup continues right here afterwards.",
-                       de: "Die Freigabe greift erst, wenn \(app) neu startet.\nDanach geht die Einrichtung genau hier weiter.")]
+                       de: "Die Berechtigung greift erst, wenn \(app) neu startet.\nDanach geht die Einrichtung genau hier weiter.")]
         case .missing, .requested, .denied:
             break
         }
@@ -175,7 +175,7 @@ enum PermissionText {
                              de: "Danach startest du \(app) einmal neu, mit einem Klick hier.")
             if status == .missing {
                 let open = tr(en: "In the dialog, click “Open System Settings” and turn on \(quoted) there.",
-                              de: "Klick im Dialog auf „Systemeinstellungen öffnen“ und schalte dort \(quoted) ein.")
+                              de: "Klicke im Dialog auf „Systemeinstellungen öffnen“ und schalte dort \(quoted) ein.")
                 return kind.needsRestart ? [open, restart] : [open]
             }
             let switchOn = tr(en: "Turn on \(quoted) in System Settings under \(list).",
@@ -186,7 +186,7 @@ enum PermissionText {
 
     static var revealHint: String {
         tr(en: "Not in the list? Click [Show in Finder](app://reveal) and drag the app into it.",
-           de: "Steht die App nicht in der Liste? Klick auf [Im Finder zeigen](app://reveal) und zieh sie hinein.")
+           de: "Steht die App nicht in der Liste? Klicke auf [Im Finder zeigen](app://reveal) und ziehe sie hinein.")
     }
 
     private static func changeLater(_ kind: PermissionKind) -> String {
@@ -205,7 +205,7 @@ enum PermissionText {
         switch status {
         case .granted: PatternsText.granted
         case .denied: PatternsText.denied
-        case .missing: tr(en: "Not set up", de: "Nicht eingerichtet")
+        case .missing: tr(en: "Not allowed yet", de: "Noch nicht erlaubt")
         case .requested: tr(en: "Waiting", de: "Wartet")
         case .restartNeeded: tr(en: "After restart", de: "Nach Neustart")
         }
@@ -216,5 +216,5 @@ enum PermissionText {
         kind.prompt == .settingsSwitch ? PatternsText.waitingForSwitch : PatternsText.waitingForAnswer
     }
 
-    static var firstUse: String { tr(en: "Asked on first use", de: "Fragt bei der ersten Nutzung") }
+    static var firstUse: String { tr(en: "Asked on first use", de: "Abfrage bei der ersten Nutzung") }
 }

@@ -202,6 +202,48 @@
       "erlaubt": []
     },
     {
+      "id": "gerade-anfuehrung",
+      "paket": "zeichen",
+      "regeln": [
+        "S-11"
+      ],
+      "pruefer": "check_texts",
+      "label": "Gerades Anführungszeichen oder gerader Apostroph",
+      "hinweis": "„…“ im Deutschen, “…” im Englischen, Apostroph als ’ (U+2019), etwa „Andreas’ Notizen“ und “you won’t”",
+      "art": "regex",
+      "quelle": "\"|(?!’)['’]",
+      "flags": "",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "einheit-leerzeichen",
+      "paket": "zeichen",
+      "regeln": [
+        "S-11"
+      ],
+      "pruefer": "check_texts",
+      "label": "Einheit mit normalem Leerzeichen",
+      "hinweis": "Zahl und Einheit über Format oder ByteText, sonst ein schmales geschütztes Leerzeichen \\u{202F} zwischen Zahl und Einheit",
+      "art": "regex",
+      "quelle": "(?:(?<=\\d)|(?<=\\WX)|(?<=^X))[ \\t\\u00A0](?:ms|min|s|h|KB|MB|GB|TB|km|%)(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de",
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
       "id": "floskel",
       "paket": "floskeln",
       "regeln": [
@@ -211,7 +253,7 @@
       "label": "Floskel",
       "hinweis": "konkret sagen, was passiert, mit Zahl und Einheit",
       "art": "woerter",
-      "quelle": "(?<!\\w)(?:nahtlos\\w*|mühelos\\w*|muehelos\\w*|revolution(?:är|aer)\\w*|bahnbrechend\\w*|innovativ\\w*|leistungsstark\\w*|ganzheitlich\\w*|ma(?:ß|ss?)geschneidert\\w*|KI[- ]?(?:gestützt|basiert)\\w*|AI[- ]powered|seamless\\w*|effortless\\w*|game[- ]?changer\\w*|Insights?|Einblicke|Magie|magisch\\w*|auf\\s+einen\\s+Blick|tauch(?:e|en\\s+Sie)\\s+(?:\\w+\\s+)?ein|lass(?:\\s+uns|t\\s+uns)|willkommen\\s+(?:zurück|bei|im|in|zu|zum|an\\s+Bord)|hier\\s+(?:findest|siehst)\\s+du|hier\\s+finden\\s+Sie|alles,?\\s+was\\s+(?:du|Sie)\\s+(?:brauch(?:st|en)|wissen\\s+(?:musst|müssen))|mehr\\s+erfahren|los\\s+geht['’]s|ups|hoppla|oh\\s+nein|Superkr(?:a|ä)ft\\w*)(?!\\w)",
+      "quelle": "(?<!\\w)(?:nahtlos\\w*|mühelos\\w*|muehelos\\w*|revolution(?:är|aer)\\w*|bahnbrechend\\w*|innovativ\\w*|leistungsstark\\w*|ganzheitlich\\w*|ma(?:ß|ss?)geschneidert\\w*|KI[- ]?(?:gestützt|basiert)\\w*|AI[- ]powered|seamless\\w*|effortless\\w*|game[- ]?changer\\w*|Insights?|Einblicke|Magie|magisch\\w*|auf\\s+einen\\s+Blick|tauch(?:e|en\\s+Sie)\\s+(?:\\w+\\s+)?ein|lass(?:\\s+uns|t\\s+uns)|willkommen\\s+(?:zurück|bei|im|in|zu|zum|an\\s+Bord)|hier\\s+(?:findest|siehst)\\s+du|hier\\s+finden\\s+Sie|alles,?\\s+was\\s+(?:du|Sie)\\s+(?:brauch(?:st|en)|wissen\\s+(?:musst|müssen))|mehr\\s+erfahren|los\\s+geht['’]s|ups|hoppla|oh\\s+nein|Superkr(?:a|ä)ft\\w*|alles\\s+an\\s+einem\\s+Ort|(?:einen?|ein)\\s+(?:Klick|Kurzbefehl|Tastendruck)\\s+entfernt|ein(?:en)?\\s+ruhige[nr]?\\s+Ort)(?!\\w)",
       "flags": "i",
       "bereiche": [
         "ui",
@@ -344,7 +386,7 @@
       "label": "Floskel in der Oberfläche",
       "hinweis": "konkret sagen, was die Funktion tut",
       "art": "woerter",
-      "quelle": "(?<!\\w)(?:leverag(?:e|es|ed|ing)|unlock(?:s|ed|ing)?|elevat(?:e|es|ed|ing)|empower\\w*|streamlin(?:e|es|ed|ing)|harness(?:es|ed|ing)?|dive\\s+(?:in|into)|(?:your|the|a)\\s+journey|insights?|magic(?:al|ally)?|delightful\\w*|(?:blazing(?:ly)?|lightning)[- ]fast|all[- ]in[- ]one|one[- ]stop|welcome\\s+back|oops|whoops|uh[- ]oh|yay|woo-?hoo|awesome|amazing\\w*|stunning\\w*|powerful\\w*|smart(?:er|est)?|robust\\w*|transformative)(?!\\w)",
+      "quelle": "(?<!\\w)(?:leverag(?:e|es|ed|ing)|unlock(?:s|ed|ing)?|elevat(?:e|es|ed|ing)|empower\\w*|streamlin(?:e|es|ed|ing)|harness(?:es|ed|ing)?|dive\\s+(?:in|into)|(?:your|the|a)\\s+journey|insights?|magic(?:al|ally)?|delightful\\w*|(?:blazing(?:ly)?|lightning)[- ]fast|all[- ]in[- ]one|one[- ]stop|welcome\\s+back|oops|whoops|uh[- ]oh|yay|woo-?hoo|awesome|amazing\\w*|stunning\\w*|powerful\\w*|smart(?:er|est)?|robust\\w*|transformative|everything\\s+in\\s+one\\s+place|(?:one|a)\\s+(?:click|shortcut|keystroke|tap)\\s+away|a\\s+calm\\s+place)(?!\\w)",
       "flags": "i",
       "bereiche": [
         "ui",
@@ -378,6 +420,27 @@
       "erlaubt": []
     },
     {
+      "id": "zusage",
+      "paket": "neutral",
+      "regeln": [
+        "S-06"
+      ],
+      "pruefer": "check_texts",
+      "label": "Zusage ohne Beleg",
+      "hinweis": "sagen, was die App tut („Die Notizen liegen in einer Datei auf diesem Mac“); eine Zusage nur, wenn das Projekt sie einhält und ein Test sie belegt, dann mit // text-ausnahme: Grund",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:verlass\\w*\\s+(?:\\w+\\s+){0,3}nie|(?:sind|ist)\\s+sicher)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
       "id": "werbeversprechen-en",
       "paket": "neutral-en",
       "regeln": [
@@ -395,6 +458,167 @@
       ],
       "sprachen": [
         "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "zusage-en",
+      "paket": "neutral-en",
+      "regeln": [
+        "S-06"
+      ],
+      "pruefer": "check_texts",
+      "label": "Zusage ohne Beleg",
+      "hinweis": "sagen, was die App tut („Notes are stored in one file on this Mac“); eine Zusage nur, wenn das Projekt sie einhält und ein Test sie belegt, dann mit // text-ausnahme: Grund",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:never\\s+leaves?|(?:are|is)\\s+safe)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "en"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "begriff-berechtigung",
+      "paket": "begriffe",
+      "regeln": [
+        "S-15"
+      ],
+      "pruefer": "check_texts",
+      "label": "Freigabe oder erteilt für eine Berechtigung",
+      "hinweis": "„Berechtigung“ als Nomen, „erlauben“ als Verb („Zugriff erlauben“, „Erlaubt“, „3 von 4 erlaubt“); „Freigabe“ heißt bei Apple Teilen",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:Freigaben?|erteil\\w*)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "begriff-einrichtung",
+      "paket": "begriffe",
+      "regeln": [
+        "S-15"
+      ],
+      "pruefer": "check_texts",
+      "label": "Onboarding in der Oberfläche",
+      "hinweis": "„Einrichtung“, wie das Fenster heißt („Einrichtung erneut zeigen“)",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:Onboarding\\w*)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "begriff-taste",
+      "paket": "begriffe",
+      "regeln": [
+        "S-15"
+      ],
+      "pruefer": "check_texts",
+      "label": "Knopf statt Taste",
+      "hinweis": "„Taste“, wie macOS Bedienelemente zum Klicken nennt; gezeichnete Tasten der Tastatur sind „Tastenkappen“",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:Kn[oö]pf\\w*)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "begriff-website",
+      "paket": "begriffe",
+      "regeln": [
+        "S-15"
+      ],
+      "pruefer": "check_texts",
+      "label": "Webseite statt Website",
+      "hinweis": "„Website“ wie bei Apple",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:Webseiten?)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "begriff-tastaturkurzbefehl",
+      "paket": "begriffe",
+      "regeln": [
+        "S-15"
+      ],
+      "pruefer": "check_texts",
+      "label": "Kurzbefehle als Name eines Bereichs",
+      "hinweis": "„Tastaturkurzbefehle“ als Titel, Bereich oder Pfad („Einstellungen > Tastaturkurzbefehle“); „Kurzbefehle“ allein ist Apples App",
+      "art": "regex",
+      "quelle": "^\\s*Kurzbefehle\\s*$|(?<=>\\s)Kurzbefehle(?![\\w-])|(?<![\\w-])Kurzbefehle(?=\\s*>)|(?<=Bereich\\s)Kurzbefehle(?![\\w-])",
+      "flags": "",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "begriff-statusmenue",
+      "paket": "begriffe",
+      "regeln": [
+        "S-15"
+      ],
+      "pruefer": "check_texts",
+      "label": "Panel oder Übersicht für das Statusmenü",
+      "hinweis": "„Statusmenü“ für das Menü am Statussymbol in der Menüleiste, wie macOS die Menüs dort nennt",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:(?:Menüleisten-)?Panels?|Menüleisten-Übersicht)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "begriff-widerrufen",
+      "paket": "begriffe",
+      "regeln": [
+        "S-15"
+      ],
+      "pruefer": "check_texts",
+      "label": "Rückgängig statt Widerrufen",
+      "hinweis": "„Widerrufen“ wie im Menü „Bearbeiten“ von macOS; „Das lässt sich nicht widerrufen.“",
+      "art": "woerter",
+      "quelle": "(?<!\\w)(?:rückgängig\\w*)(?!\\w)",
+      "flags": "i",
+      "bereiche": [
+        "ui"
+      ],
+      "sprachen": [
+        "de"
       ],
       "erlaubt": []
     },
@@ -541,6 +765,27 @@
       "hinweis": "deutsches Wort, etwa Abbrechen, Weiter, Einstellungen, Sichern, Löschen, Schließen, Beenden",
       "art": "woerter",
       "quelle": "(?<!\\w)(?:Please|Submit|Cancel|Continue|Welcome|Settings|Preferences|Loading|Save|Delete|Edit|Close|Confirm|Retry|Previous|Next|Done|Quit|Allow|Deny|Skip|Undo|Redo|Copy|Paste|Search)(?!\\w)",
+      "flags": "",
+      "bereiche": [
+        "ui",
+        "ki"
+      ],
+      "sprachen": [
+        "de"
+      ],
+      "erlaubt": []
+    },
+    {
+      "id": "anfuehrung-de",
+      "paket": "englisch",
+      "regeln": [
+        "S-11"
+      ],
+      "pruefer": "check_texts",
+      "label": "Englisches Anführungszeichen im Deutschen",
+      "hinweis": "deutsche Anführungszeichen „…“, etwa „Erlauben“",
+      "art": "regex",
+      "quelle": "”|(?<![^\\s(\\[/])“(?=\\S)",
       "flags": "",
       "bereiche": [
         "ui",

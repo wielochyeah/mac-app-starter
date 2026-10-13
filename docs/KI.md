@@ -26,7 +26,7 @@ let content = try await ai.structured(prompt: input, schema: schema)      // Dyn
 - Anbieter erfüllen `LocalModelProvider`; Tests speisen einen eigenen Anbieter ein und rufen nie das echte Modell.
 - Fehler tragen einen Text für die Nutzerin in beiden Sprachen (nicht verfügbar, abgebrochen, Zeitüberschreitung, Modell fehlt) und nie den Prompt.
 - Der Bereich „Modelle“ zeigt Anbieter, Verfügbarkeit mit Hinweis, wie sie sich herstellen lässt (etwa Apple Intelligence in den Systemeinstellungen einschalten, mit Link), ein Testfeld mit gestreamter Antwort und einen Zähler der Aufrufe mit letzter Dauer.
-- Der Onboarding-Schritt „Lokale KI“ (order 400) zeigt die Verfügbarkeit und mit `mlx` die Download-Zeilen.
+- Der Einrichtungsschritt „Lokale KI“ (order 400) zeigt die Verfügbarkeit und mit `mlx` die Download-Zeilen.
 
 ## Datenschutzversprechen
 
@@ -41,7 +41,7 @@ Die App hält diese Zusagen ein; jede Funktion mit KI erbt sie:
 ## Modelle für MLX
 
 - Katalog: `ai-worker/models.json` mit Name, Rolle, Hugging-Face-Adresse und Größe; mindestens ein kleines Standardmodell (unter 1 GB, 4 Bit) und eine größere Wahl für bessere Antworten.
-- Download: nur auf Knopfdruck in den Einstellungen oder im Onboarding, mit Größe vorher, Fortschritt „x von y GB“, Pause und erneutem Versuch. Der Download läuft in einem eigenen Prozess (`ai-worker/download.py`) und misst den Fortschritt am Cache gegen die Gesamtgröße.
+- Download: nur auf Klick in den Einstellungen oder in der Einrichtung, mit Größe vorher, Fortschritt „x von y GB“, Pause und erneutem Versuch. Der Download läuft in einem eigenen Prozess (`ai-worker/download.py`) und misst den Fortschritt am Cache gegen die Gesamtgröße.
 - Ablage: unter `~/Library/Application Support/<bundleId>/Models/huggingface` (`MLXPaths.hfHome`, mit `STARTER_DATA_DIR` in dessen Ordner); Modelle kommen nie ins Repository und lassen sich in den Einstellungen löschen.
 - Umgebung: `ai-worker/setup.sh` legt `ai-worker/.venv` mit Python 3.12 an (aus Homebrew, sonst 3.11 oder 3.13, sonst über uv) und installiert die festen Versionen aus `ai-worker/requirements.lock`: jedes Paket nur als Wheel und nur mit der Prüfsumme aus der Sperrdatei (`--require-hashes --only-binary :all:`), `pip` selbst bleibt, wie die venv es mitbringt. `ai-worker/setup.sh --check` prüft nur; nach einer Änderung an `ai-worker/requirements.txt` schreibt `--lock` die Sperrdatei mit Prüfsummen neu (`ai-worker/lock.py`). Das Skript installiert nie Homebrew oder uv selbst; fehlt beides, sagt es, welcher Befehl fehlt.
 
@@ -57,7 +57,7 @@ Ein Python-Prozess (`ai-worker/`), den `MLXWorkerClient` startet und überwacht:
 
 ## MLX in einer weitergegebenen App
 
-Noch nicht gebaut: `mlx` läuft nur in Entwickler-Builds aus dem Projekt (`make build` und `ai-worker/setup.sh`). Ein Release-Build sucht den Worker nur in `Contents/Resources/ai-worker` und Python nur in `Contents/Resources/python/bin/python3` seines eigenen Bundles, nie im Projekt oder über Umgebungsvariablen. `make dmg` legt beides noch nicht hinein und sagt das in der Ausgabe; die App im DMG zeigt MLX deshalb als „Nicht enthalten“, ohne Download-Knöpfe. Apple Foundation Models (`ai`) funktioniert im DMG wie gewohnt.
+Noch nicht gebaut: `mlx` läuft nur in Entwickler-Builds aus dem Projekt (`make build` und `ai-worker/setup.sh`). Ein Release-Build sucht den Worker nur in `Contents/Resources/ai-worker` und Python nur in `Contents/Resources/python/bin/python3` seines eigenen Bundles, nie im Projekt oder über Umgebungsvariablen. `make dmg` legt beides noch nicht hinein und sagt das in der Ausgabe; die App im DMG zeigt MLX deshalb als „Nicht enthalten“, ohne Download-Tasten. Apple Foundation Models (`ai`) funktioniert im DMG wie gewohnt.
 
 Was für die Weitergabe fehlt, ist ein Skript `ai-worker/package.sh <Pfad zur .app>`, das `make dmg` aufruft, sobald es existiert:
 

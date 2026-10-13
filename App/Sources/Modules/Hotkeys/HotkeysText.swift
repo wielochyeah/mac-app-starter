@@ -4,13 +4,13 @@
 enum HotkeysText {
     // MARK: Pane
 
-    static var pane: String { tr(en: "Keyboard Shortcuts", de: "Kurzbefehle") }
+    static var pane: String { tr(en: "Keyboard Shortcuts", de: "Tastaturkurzbefehle") }
     static var paneIntro: String {
         tr(en: "These shortcuts work in every app, even while \(AppInfo.displayName) is in the background.",
            de: "Diese Kurzbefehle wirken in jeder App, auch wenn \(AppInfo.displayName) im Hintergrund ist.")
     }
     static var paneFootnote: String {
-        tr(en: "A shortcut is a key with modifier keys, like ⌥⇧⌘K, or an F-key alone. \(AppInfo.displayName) refuses what macOS or almost every app already uses and says what it does.",
+        tr(en: "A shortcut is a key with modifier keys, like ⌥⇧⌘K, or an F-key alone. \(AppInfo.displayName) refuses combinations that macOS or almost every app already uses and tells you what they do there.",
            de: "Ein Kurzbefehl ist eine Taste mit Sondertasten, etwa ⌥⇧⌘K, oder eine F-Taste allein. Was macOS oder fast jede App schon nutzt, lehnt \(AppInfo.displayName) ab und sagt dir, was die Kombination dort tut.")
     }
     static var emptyTitle: String { tr(en: "No shortcuts yet", de: "Noch keine Kurzbefehle") }
@@ -23,17 +23,17 @@ enum HotkeysText {
 
     static var change: String { tr(en: "Change", de: "Ändern") }
     static var cancel: String { tr(en: "Cancel", de: "Abbrechen") }
-    static var standard: String { tr(en: "Default", de: "Standard") }
+    static var standard: String { tr(en: "Use Default", de: "Standard verwenden") }
     static var standardHelp: String { tr(en: "Back to the default shortcut", de: "Zurück zum Standard-Kurzbefehl") }
-    static var undo: String { tr(en: "Undo", de: "Rückgängig") }
+    static var undo: String { tr(en: "Undo", de: "Widerrufen") }
     static func use(_ keys: String) -> String { tr(en: "Use \(keys)", de: "\(keys) übernehmen") }
-    static var pressKeys: String { tr(en: "Press keys…", de: "Drück die Tasten …") }
+    static var pressKeys: String { tr(en: "Press keys…", de: "Drücke die Tasten …") }
     static var none: String { tr(en: "None", de: "Keiner") }
     static var recordPrompt: String {
         // \u{00A0} (no-break space) and \u{2011} (no-break hyphen) keep glyph groups, "⌫ removes"
         // and "F-key" on one line
         tr(en: "Press the new combination: a key with up to four modifier keys (⌃\u{00A0}⌥\u{00A0}⇧\u{00A0}⌘), or an F\u{2011}key. Esc\u{00A0}cancels, ⌫\u{00A0}removes the shortcut.",
-           de: "Drück die neue Kombination: eine Taste mit bis zu vier Sondertasten (⌃\u{00A0}⌥\u{00A0}⇧\u{00A0}⌘) oder eine F\u{2011}Taste. Esc\u{00A0}bricht ab, ⌫\u{00A0}entfernt den Kurzbefehl.")
+           de: "Drücke die neue Kombination: eine Taste mit bis zu vier Sondertasten (⌃\u{00A0}⌥\u{00A0}⇧\u{00A0}⌘) oder eine F\u{2011}Taste. Esc\u{00A0}bricht ab, ⌫\u{00A0}entfernt den Kurzbefehl.")
     }
     static var recordHolding: String {
         tr(en: "Now add a key, like a letter or a number.", de: "Jetzt noch eine Taste dazu, etwa einen Buchstaben oder eine Zahl.")
@@ -41,7 +41,7 @@ enum HotkeysText {
     /// After a refusal while recording (every reason already says what to press instead).
     static var escToCancel: String { tr(en: "Esc\u{00A0}cancels.", de: "Esc\u{00A0}bricht ab.") }
     static var removed: String {
-        tr(en: "No shortcut. Default brings the original back.", de: "Kein Kurzbefehl. Mit Standard kommt der ursprüngliche zurück.")
+        tr(en: "No shortcut. “Use Default” brings the original back.", de: "Kein Kurzbefehl. Mit „Standard verwenden“ kommt der ursprüngliche zurück.")
     }
     static func accessibilityKeys(_ keys: String) -> String { tr(en: "Shortcut \(keys)", de: "Kurzbefehl \(keys)") }
 
@@ -49,7 +49,7 @@ enum HotkeysText {
 
     static var modifiersAlone: String {
         tr(en: "Modifier keys alone do not work here. Press them together with a key, like ⌃⌥K.",
-           de: "Sondertasten allein gehen hier nicht. Drück sie zusammen mit einer Taste, etwa ⌃⌥K.")
+           de: "Sondertasten allein gehen hier nicht. Drücke sie zusammen mit einer Taste, etwa ⌃⌥K.")
     }
     static func twoKeys(_ a: String, _ b: String) -> String {
         tr(en: "\(a) and \(b) are two regular keys at once. macOS cannot report that as a shortcut. A shortcut is one key with up to four modifier keys (⌃\u{00A0}⌥\u{00A0}⇧\u{00A0}⌘).",
@@ -64,12 +64,12 @@ enum HotkeysText {
            de: "Die fn-Taste zusammen mit einer anderen Taste meldet macOS nicht an Apps. Solche Kombinationen nutzt macOS selbst, etwa fn F für Vollbild oder fn Q für die Schnellnotiz. Lass fn weg.")
     }
     static func caughtEarlier(_ keys: String) -> String {
-        tr(en: "macOS or another app caught \(keys) before \(AppInfo.displayName) could see the keys (like ⌘Space for Spotlight or ⇧⌘4 for screenshots). This combination is taken, use another one.",
-           de: "macOS oder eine andere App hat \(keys) abgefangen, bevor \(AppInfo.displayName) die Tasten sehen konnte (etwa ⌘Leertaste für Spotlight oder ⇧⌘4 für Bildschirmfotos). Diese Kombination ist schon belegt, nimm eine andere.")
+        tr(en: "macOS or another app caught \(keys) before \(AppInfo.displayName) could see the keys (like ⌘Space for Spotlight or ⇧⌘4 for screenshots). This combination is taken. Use another one.",
+           de: "macOS oder eine andere App hat \(keys) abgefangen, bevor \(AppInfo.displayName) die Tasten sehen konnte (etwa ⌘Leertaste für Spotlight oder ⇧⌘4 für Bildschirmfotos). Diese Kombination ist schon belegt. Nimm eine andere.")
     }
     static var lostFocus: String {
-        tr(en: "\(AppInfo.displayName) moved to the background. If macOS used the combination itself (like ⌘⇥ or ⌘Space), it is taken. Click Change to try again.",
-           de: "\(AppInfo.displayName) ist in den Hintergrund gerückt. Hat macOS die Kombination selbst genutzt (etwa ⌘⇥ oder ⌘Leertaste), ist sie schon belegt. Klick auf Ändern für einen neuen Versuch.")
+        tr(en: "\(AppInfo.displayName) moved to the background. If macOS used the combination itself (like ⌘⇥ or ⌘Space), it is taken. Click “Change” to try again.",
+           de: "\(AppInfo.displayName) ist in den Hintergrund gerückt. Hat macOS die Kombination selbst genutzt (etwa ⌘⇥ oder ⌘Leertaste), ist sie schon belegt. Klicke auf „Ändern“ für einen neuen Versuch.")
     }
     static func heldElsewhere(_ keys: String) -> String {
         tr(en: "Another app already holds \(keys), like Raycast, Alfred or a window tool. \(AppInfo.displayName) would not get the keys. Free the combination there or use another one.",
@@ -84,15 +84,15 @@ enum HotkeysText {
 
     static func heldElsewhereStatus(_ keys: String) -> String {
         tr(en: "Another app holds \(keys), so this shortcut does not arrive. Free it there or choose another one.",
-           de: "Eine andere App hält \(keys) fest, dieser Kurzbefehl kommt nicht an. Gib ihn dort frei oder wähl einen anderen.")
+           de: "Eine andere App hält \(keys) fest, deshalb kommt dieser Kurzbefehl nicht an. Gib ihn dort frei oder wähle einen anderen.")
     }
     static func duplicateStatus(_ keys: String, of title: String) -> String {
         tr(en: "“\(title)” has the same keys \(keys) and gets them, so this shortcut does nothing. Choose another combination.",
-           de: "„\(title)“ hat dieselben Tasten \(keys) und bekommt sie, dieser Kurzbefehl tut nichts. Wähl eine andere Kombination.")
+           de: "„\(title)“ hat dieselben Tasten \(keys) und bekommt sie, deshalb tut dieser Kurzbefehl nichts. Wähle eine andere Kombination.")
     }
     static func failedStatus(_ keys: String, _ status: Int) -> String {
         tr(en: "macOS did not accept \(keys) (error \(status)). Choose another combination.",
-           de: "macOS hat \(keys) nicht angenommen (Fehler \(status)). Wähl eine andere Kombination.")
+           de: "macOS hat \(keys) nicht angenommen (Fehler \(status)). Wähle eine andere Kombination.")
     }
 
     // MARK: Rule reasons (ShortcutRules)
@@ -103,12 +103,12 @@ enum HotkeysText {
            de: "Lautstärke-, Medien- und Helligkeitstasten behält macOS für sich. Nimm eine F-Taste oder eine Kombination mit ⌃ oder ⌘.")
     }
     static func alwaysMacOS(_ keys: String, _ what: String) -> String {
-        tr(en: "\(keys) \(what), that always belongs to macOS. Use another combination.",
-           de: "\(keys) \(what), das gehört immer macOS. Nimm eine andere Kombination.")
+        tr(en: "\(keys) \(what). That always belongs to macOS. Use another combination.",
+           de: "\(keys) \(what). Das gehört immer macOS. Nimm eine andere Kombination.")
     }
     static func systemNamed(_ keys: String, _ what: String) -> String {
-        tr(en: "\(keys) \(what), it is a macOS shortcut (System Settings > Keyboard > Keyboard Shortcuts). Use another combination.",
-           de: "\(keys) \(what), das ist ein Kurzbefehl von macOS (Systemeinstellungen > Tastatur > Tastaturkurzbefehle). Nimm eine andere Kombination.")
+        tr(en: "\(keys) \(what). It is a macOS shortcut (System Settings > Keyboard > Keyboard Shortcuts). Use another combination.",
+           de: "\(keys) \(what). Das ist ein Kurzbefehl von macOS (Systemeinstellungen > Tastatur > Tastaturkurzbefehle). Nimm eine andere Kombination.")
     }
     static func systemUnnamed(_ keys: String) -> String {
         tr(en: "macOS uses \(keys) itself (System Settings > Keyboard > Keyboard Shortcuts). Use another combination.",
@@ -127,7 +127,7 @@ enum HotkeysText {
            de: "\(keys) \(what), und das in fast jeder App. Als Kurzbefehl von \(app) ginge das überall verloren. Nimm eine andere Kombination.")
     }
     static var commandAlone: String {
-        tr(en: "⌘ with a single key belongs to the apps' menu commands. Add ⌃, ⌥ or ⇧.",
+        tr(en: "⌘ with a single key belongs to the apps’ menu commands. Add ⌃, ⌥ or ⇧.",
            de: "⌘ mit nur einer Taste gehört den Menübefehlen der Apps. Nimm ⌃, ⌥ oder ⇧ dazu.")
     }
     static func everyTextField(_ keys: String, _ what: String) -> String {
@@ -161,15 +161,15 @@ enum HotkeysText {
            de: "\(keys) tippt auf deiner Tastatur „\(ch)“. Als Kurzbefehl könntest du „\(ch)“ in keiner App mehr schreiben. Nimm ⌃ oder ⌘ dazu.")
     }
     static func textWarnNote(_ keys: String, _ what: String) -> String {
-        tr(en: "Note: \(keys) \(what), that then no longer works.", de: "Hinweis: \(keys) \(what), das geht dann nicht mehr.")
+        tr(en: "Note: \(keys) \(what). That then no longer works.", de: "Hinweis: \(keys) \(what). Das geht dann nicht mehr.")
     }
     static func typesSpaceNote(_ keys: String) -> String {
         tr(en: "Note: on your keyboard \(keys) types a space, which then no longer works in any app.",
-           de: "Hinweis: \(keys) tippt auf deiner Tastatur ein Leerzeichen, das geht dann in keiner App mehr.")
+           de: "Hinweis: \(keys) tippt auf deiner Tastatur ein Leerzeichen. Das geht dann in keiner App mehr.")
     }
     static func rareCharacterNote(_ keys: String, _ ch: String) -> String {
         tr(en: "Note: on your keyboard \(keys) types “\(ch)”, which then no longer works in any app. In password fields macOS pauses such shortcuts, so “\(ch)” arrives there.",
-           de: "Hinweis: \(keys) tippt auf deiner Tastatur „\(ch)“, das geht dann in keiner App mehr. In Passwortfeldern setzt macOS solche Kurzbefehle aus, dort kommt dann „\(ch)“ an.")
+           de: "Hinweis: \(keys) tippt auf deiner Tastatur „\(ch)“. Das geht dann in keiner App mehr. In Passwortfeldern setzt macOS solche Kurzbefehle aus, dort kommt dann „\(ch)“ an.")
     }
     static func terminalRefuse(_ keys: String, _ what: String) -> String {
         tr(en: "\(keys) \(what) (in the Terminal, also in iTerm and VS Code). As a shortcut that would be lost there. Use another combination.",
@@ -217,34 +217,34 @@ enum HotkeysText {
 
     // MARK: Onboarding step
 
-    static var stepTitle: String { tr(en: "Your shortcut", de: "Dein Kurzbefehl") }
+    static var stepTitle: String { tr(en: "Your Shortcut", de: "Dein Tastaturkurzbefehl") }
     static func stepSubtitle(_ title: String) -> String {
         tr(en: "Start “\(title)” from any app with these keys.", de: "„\(title)“ startest du aus jeder App mit diesen Tasten.")
     }
     static func stepSubtitleNoKeys(_ title: String) -> String {
-        tr(en: "Choose keys to start “\(title)” from any app.", de: "Wähl Tasten, mit denen du „\(title)“ aus jeder App startest.")
+        tr(en: "Choose keys to start “\(title)” from any app.", de: "Wähle Tasten, mit denen du „\(title)“ aus jeder App startest.")
     }
-    static var stepTry: String { tr(en: "Press the keys once to try it", de: "Drück die Tasten einmal zum Ausprobieren") }
+    static var stepTry: String { tr(en: "Press the keys once to try it", de: "Drücke die Tasten einmal zum Ausprobieren") }
     static var stepWorks: String { tr(en: "Works", de: "Klappt") }
-    static var stepNoShortcut: String { tr(en: "No shortcut set. Click Change.", de: "Kein Kurzbefehl gesetzt. Klick auf Ändern.") }
+    static var stepNoShortcut: String { tr(en: "No shortcut set. Click “Change”.", de: "Kein Kurzbefehl gesetzt. Klicke auf „Ändern“.") }
     static var stepNoShortcutDefault: String {
-        tr(en: "No shortcut set. Click Change or Default.", de: "Kein Kurzbefehl gesetzt. Klick auf Ändern oder Standard.")
+        tr(en: "No shortcut set. Click “Change” or “Use Default”.", de: "Kein Kurzbefehl gesetzt. Klicke auf „Ändern“ oder „Standard verwenden“.")
     }
     static var stepRecording: String { tr(en: "Recording a new shortcut", de: "Aufnahme läuft") }
     static var stepHeld: String { tr(en: "Another app holds these keys", de: "Eine andere App hält diese Tasten fest") }
     static var stepFailed: String { tr(en: "macOS did not accept these keys", de: "macOS hat diese Tasten nicht angenommen") }
     static func stepDuplicate(_ title: String) -> String { tr(en: "Same keys as “\(title)”", de: "Dieselben Tasten wie „\(title)“") }
     static var stepFootnote: String {
-        tr(en: "You can change it any time in Settings > Keyboard Shortcuts.",
-           de: "Du kannst ihn jederzeit unter Einstellungen > Kurzbefehle ändern.")
+        tr(en: "You can change it anytime in Settings > Keyboard Shortcuts.",
+           de: "Du kannst ihn jederzeit unter Einstellungen > Tastaturkurzbefehle ändern.")
     }
 
     // MARK: Gallery and scenes
 
-    static var galleryRecorder: String { tr(en: "Shortcut recorder", de: "Kurzbefehl-Aufnahme") }
-    static var galleryBigKeys: String { tr(en: "Large key caps", de: "Große Tasten") }
-    static var galleryPane: String { tr(en: "Shortcuts pane", de: "Bereich Kurzbefehle") }
-    static var galleryStep: String { tr(en: "Shortcut step", de: "Schritt Kurzbefehl") }
+    static var galleryRecorder: String { tr(en: "Shortcut recorder", de: "Aufnahme für Tastaturkurzbefehle") }
+    static var galleryBigKeys: String { tr(en: "Large key caps", de: "Große Tastenkappen") }
+    static var galleryPane: String { tr(en: "Keyboard shortcuts pane", de: "Bereich Tastaturkurzbefehle") }
+    static var galleryStep: String { tr(en: "Shortcut step", de: "Schritt Tastaturkurzbefehl") }
 }
 
 /// Texts of the sample hotkeys in renders and the gallery (never registered in the running app).
@@ -252,7 +252,7 @@ enum HotkeysSampleText {
     static var quickWindow: String { tr(en: "Open quick window", de: "Schnellfenster öffnen") }
     static var quickWindowDetail: String { tr(en: "From anywhere, also in full screen", de: "Von überall, auch im Vollbild") }
     static var captureSelection: String { tr(en: "Capture selection", de: "Auswahl übernehmen") }
-    static var captureSelectionDetail: String { tr(en: "Takes the selected text of the app in front", de: "Nimmt den markierten Text der App vorne") }
+    static var captureSelectionDetail: String { tr(en: "Takes the selected text of the active app", de: "Nimmt den markierten Text der aktiven App") }
     static var pause: String { tr(en: "Pause and resume", de: "Pausieren und fortsetzen") }
     static var stateIdle: String { tr(en: "Set", de: "Gesetzt") }
     static var stateRecording: String { tr(en: "Recording", de: "Aufnahme") }

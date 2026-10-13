@@ -24,10 +24,10 @@ enum SettingsText {
     static var interface: String { tr(en: "App language", de: "Sprache der App") }
     static var interfaceDetail: String { tr(en: "Windows, menus and notifications", de: "Fenster, Menüs und Mitteilungen") }
     static var languageNote: String {
-        tr(en: "With System, the app uses the first language it supports from the list under Language & Region in System Settings.",
-           de: "Bei „System“ nutzt die App aus der Liste unter Sprache & Region in den Systemeinstellungen die erste Sprache, die sie beherrscht.")
+        tr(en: "With “Automatic”, the app uses the first language it supports from the list in System Settings under General > Language & Region.",
+           de: "Bei „Automatisch“ nutzt die App die erste Sprache, die sie beherrscht, aus der Liste in den Systemeinstellungen unter Allgemein > Sprache & Region.")
     }
-    static var followMac: String { tr(en: "System", de: "System") }
+    static var followMac: String { tr(en: "Automatic", de: "Automatisch") }
     static var appearance: String { tr(en: "Appearance", de: "Erscheinungsbild") }
     static var lightOrDark: String { tr(en: "Light or dark", de: "Hell oder dunkel") }
     static var appearanceDetail: String { tr(en: "For every window of this app", de: "Für alle Fenster dieser App") }
@@ -37,15 +37,15 @@ enum SettingsText {
     static var showSetup: String { tr(en: "Setup", de: "Einrichtung") }
     static var showSetupDetail: String {
         tr(en: "Go through language and permissions again without resetting anything",
-           de: "Sprache und Freigaben noch einmal durchgehen, ohne etwas zurückzusetzen")
+           de: "Sprache und Berechtigungen noch einmal durchgehen, ohne etwas zurückzusetzen")
     }
-    static var showSetupButton: String { tr(en: "Show Again", de: "Erneut zeigen") }
+    static var showSetupButton: String { tr(en: "Show Setup Again", de: "Einrichtung erneut zeigen") }
     static var reset: String { tr(en: "Reset settings", de: "Einstellungen zurücksetzen") }
     static var resetDetail: String { tr(en: "Every setting goes back to its default", de: "Alle Einstellungen gehen auf den Standard zurück") }
     static var resetButton: String { tr(en: "Reset…", de: "Zurücksetzen …") }
     static var resetConfirmTitle: String { tr(en: "Reset all settings?", de: "Alle Einstellungen zurücksetzen?") }
     static var resetConfirmText: String {
-        tr(en: "Language, appearance and the options in every pane go back to their defaults. You won't need to go through setup again.",
+        tr(en: "Language, appearance and the options in every pane go back to their defaults. You won’t need to go through setup again.",
            de: "Sprache, Erscheinungsbild und die Optionen aller Bereiche gehen auf den Standard zurück. Die Einrichtung musst du nicht wiederholen.")
     }
     static var resetConfirmButton: String { tr(en: "Reset", de: "Zurücksetzen") }
@@ -70,7 +70,7 @@ enum SettingsText {
 
 /// Fixed texts of the settings render scenes (never shown in the running app).
 enum SettingsSampleText {
-    static var website: String { tr(en: "Website", de: "Webseite") }
+    static var website: String { tr(en: "Website", de: "Website") }
     static var feedback: String { tr(en: "Send feedback", de: "Feedback senden") }
     /// Extra panes of the `settings.window-many` scene (a project with content panes, like VoiceBud).
     static var panes: [(group: SettingsGroup, title: () -> String, symbol: String, tint: TintName)] {
@@ -78,7 +78,7 @@ enum SettingsSampleText {
          (.content, { tr(en: "Dictionary", de: "Wörterbuch") }, "book.fill", .orange),
          (.content, { tr(en: "Snippets", de: "Textbausteine") }, "text.quote", .teal),
          (.settings, { tr(en: "Sounds", de: "Töne") }, "speaker.wave.2.fill", .red),
-         (.settings, { tr(en: "Shortcuts", de: "Kurzbefehle") }, "command", .graphite),
+         (.settings, { tr(en: "Keyboard Shortcuts", de: "Tastaturkurzbefehle") }, "command", .graphite),
          (.settings, { tr(en: "Privacy", de: "Datenschutz") }, "hand.raised.fill", .blue),
          (.settings, { tr(en: "Updates", de: "Aktualisierungen") }, "arrow.down.circle.fill", .green)]
     }

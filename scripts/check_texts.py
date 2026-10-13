@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Language check of every text people read (rules S-01 to S-14, D-04, D-10 in CLAUDE.md).
+"""Language check of every text people read (rules S-01 to S-15, D-04, D-10 in CLAUDE.md).
 
 Reads the compiled terms from rules/generated/begriffe.json and the scope from rules/index.json and
 rules/code.json, then checks:
 
-  ui         both literals of every tr(en: "…", de: "…") in App/Sources: English with the English packs, German
-             with the German packs; both non-empty, the same interpolations (`x.en` and `x.de` count as one), the
-             same trailing ellipsis (German with a space before it, English without); tr literals only in *Text.swift
-             files; the values of App/Resources/InfoPlist.json the same way
+  ui         both literals of every tr(en: "…", de: "…") in App/Sources and of DMGCopy(en:de:) in
+             tools/dmg/DMGText.swift (rules/code.json, zweisprachig): English with the English packs, German with
+             the German packs; both non-empty, the same interpolations (`x.en` and `x.de` count as one), the same
+             trailing ellipsis (German with a space before it, English without); tr literals only in *Text.swift
+             files; the values of App/Resources/InfoPlist.json the same way; App/Resources/Notices/<lang>.md as
+             prose in its language (code blocks with licence texts left out)
+  usage      in a project (starter.lock.json names one) every usage description of a permission listed in
+             starter.json that is still the starter's default (rules/standard/infoplist.json); in the starter itself
+             InfoPlist.json and that file must be the same
   literals   UI text written as a literal in a view (Text("…"), Button("…"), .help("…"), NSMenuItem(title: "…"),
              title: { "…" } of the Registry types …, list in rules/code.json); Text(verbatim: "…") only with a
              // verbatim: reason comment
@@ -38,6 +43,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import rules_lib  # noqa: E402
 import swift_source  # noqa: E402
+import gen_config  # noqa: E402
 from rules_lib import Finding, Term  # noqa: E402
 
 ROOT = rules_lib.ROOT
@@ -70,6 +76,11 @@ T_VERBATIM = own("verbatim-ohne-grund", "Text(verbatim:) mit Literal ohne Grund"
 T_UNUSED = own("ausnahme-ungenutzt", "Ausnahme ohne Befund", ["S-10"], "den Kommentar entfernen")
 T_NO_REASON = own("ausnahme-ohne-grund", "Ausnahme ohne Grund", ["S-10"], "den Grund nach dem Doppelpunkt nennen")
 T_LEX = own("nicht-lesbar", "Datei nicht lesbar", ["S-10"], "Literal oder Kommentar schließen")
+T_DEFAULT_USAGE = own("nutzungstext-standard", "Nutzungsbeschreibung des Starters unverändert", ["S-07"],
+                      "sagen, wofür diese App den Zugriff nutzt; eine Zusage nur, wenn das Projekt sie einhält und ein "
+                      "Test sie belegt")
+T_STANDARD_DRIFT = own("nutzungstext-abweichung", "Nutzungsbeschreibung weicht vom Standard des Starters ab", ["S-07"],
+                       "im Starter App/Resources/InfoPlist.json und rules/standard/infoplist.json gleich halten")
 
 
 def make(path: str, line: int, column: int, kind, match: str, context: str = "") -> Finding:
@@ -84,6 +95,15 @@ class Scope:
     docs: List[str]
     infoplist: str
     exceptions: List[dict]
+    infoplist_standard: Optional[str] = None
+    ui_markdown: List[str] = field(default_factory=list)
+
+    def markdown_lang(self, rel: str) -> Optional[str]:
+        """The language of a Markdown file shown in the app (`Notices/en.md`), from its name; None for docs."""
+        if not rules_lib.path_matches(rel, self.ui_markdown):
+            return None
+        stem = Path(rel).stem
+        return stem if stem in rules_lib.LANGS else None
 
     def areas_for(self, rel: str) -> Optional[Set[str]]:
         """None = every area; a set = only these areas; empty set = file not checked."""
@@ -100,7 +120,8 @@ def load_scope(root: Path) -> Tuple[Scope, dict]:
     code_file = f"rules/{index.get('code', 'code.json')}"
     code = rules_lib.read_json_file(root / code_file, code_file)
     scope = index["pruefumfang"]
-    return Scope(scope["swift"], scope["kommentare"], scope["doku"], scope["infoplist"], scope.get("ausnahmen", [])), code["uiTexte"]
+    return Scope(scope["swift"], scope["kommentare"], scope["doku"], scope["infoplist"], scope.get("ausnahmen", []),
+                 scope.get("infoplistStandard"), scope.get("uiMarkdown", [])), code["uiTexte"]
 
 
 def walk(root: Path, roots: Sequence[str], suffixes: Tuple[str, ...]) -> List[str]:
@@ -274,7 +295,7 @@ def check_ui_texts(rel: str, src: swift_source.Source, terms: Sequence[Term], ui
                    verbatim: Exceptions, breaks: Exceptions) -> List[Finding]:
     findings: List[Finding] = []
     is_text_file = fnmatch.fnmatch(Path(rel).name, ui["textDateien"])
-    for _, at, open_paren in swift_source.find_calls(src, ["tr"]):
+    for _, at, open_paren in swift_source.find_calls(src, ui.get("zweisprachig", ["tr"])):
         args, close = swift_source.call_arguments(src, open_paren)
         if [a.label for a in args[:2]] != ["en", "de"] or len(args) != 2:
             continue
@@ -412,8 +433,8 @@ def check_python_comments(rel: str, text: str, terms: Sequence[Term], keyword: s
     return findings
 
 
-def check_markdown(rel: str, text: str, terms: Sequence[Term]) -> List[Finding]:
-    return rules_lib.find_findings(rules_lib.blank_markdown(text), terms, "doku", "de", rel)
+def check_markdown(rel: str, text: str, terms: Sequence[Term], area: str = "doku", lang: str = "de") -> List[Finding]:
+    return rules_lib.find_findings(rules_lib.blank_markdown(text), terms, area, lang, rel)
 
 
 def check_infoplist(rel: str, text: str, terms: Sequence[Term]) -> List[Finding]:
@@ -434,6 +455,43 @@ def check_infoplist(rel: str, text: str, terms: Sequence[Term]) -> List[Finding]
                 findings.append(make(rel, line, 1, T_EMPTY, f"{key} {lang}"))
                 continue
             findings += rules_lib.find_findings(entry, terms, "ui", lang, rel, lambda o, l=entry_line: l, lambda o: o + 1)
+    return findings
+
+
+def usage_line(lines: List[str], key: str) -> int:
+    return next((i + 1 for i, line in enumerate(lines) if f'"{key}"' in line), 1)
+
+
+def check_usage_defaults(root: Path, rel: str, text: str, standard_rel: Optional[str]) -> List[Finding]:
+    """In a project (starter.lock.json names one): every usage description of a permission listed in starter.json that
+    is still the starter's default, in either language. In the starter: InfoPlist.json equals the stored defaults, so
+    a project recognises them. Without starter.lock.json (a test repository) nothing is compared."""
+    lock_path = root / "starter.lock.json"
+    if not standard_rel or not lock_path.is_file() or not (root / standard_rel).is_file():
+        return []
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return []  # check_infoplist reports the broken file
+    lock = rules_lib.read_json_file(lock_path, "starter.lock.json")
+    standard = {k: v for k, v in rules_lib.read_json_file(root / standard_rel, standard_rel).items() if not k.startswith("_")}
+    lines = text.split("\n")
+    findings: List[Finding] = []
+    if isinstance(lock, dict) and lock.get("project"):
+        config = rules_lib.read_json_file(root / "starter.json", "starter.json")
+        permissions = [p for p in config.get("permissions", []) if gen_config.permission_ok(p)]
+        for key in gen_config.usage_keys({"permissions": permissions}):
+            value, default = data.get(key), standard.get(key)
+            if not isinstance(value, dict) or not isinstance(default, dict):
+                continue
+            same = [lang for lang in ("en", "de") if value.get(lang) and value.get(lang) == default.get(lang)]
+            if same:
+                findings.append(make(rel, usage_line(lines, key), 1, T_DEFAULT_USAGE, f"{key} ({', '.join(same)})"))
+        return findings
+    keys = set(standard) | {k for k, v in data.items() if not k.startswith("_") and isinstance(v, dict)}
+    for key in sorted(keys):
+        if data.get(key) != standard.get(key):
+            findings.append(make(rel, usage_line(lines, key), 1, T_STANDARD_DRIFT, key))
     return findings
 
 
@@ -464,8 +522,10 @@ def collect(root: Path, terms: Sequence[Term], only: Sequence[str] = ()) -> Tupl
             continue
         if rel in plist:
             findings += check_infoplist(rel, text, terms)
+            findings += check_usage_defaults(root, rel, text, scope.infoplist_standard)
         elif rel.endswith(".md"):
-            findings += check_markdown(rel, text, terms)
+            lang = scope.markdown_lang(rel)
+            findings += check_markdown(rel, text, terms, "ui", lang) if lang else check_markdown(rel, text, terms)
         elif rel.endswith(".swift"):
             if rel not in swift_files:
                 areas = {"kommentar"} if areas is None else areas & {"kommentar"}

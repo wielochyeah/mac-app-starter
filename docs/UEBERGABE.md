@@ -47,7 +47,7 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
    bin/starter init --non-interactive --name "<Name>" --bundle-id <com.firma.app> --accent <akzent> --symbol <sf.symbol> --anrede <du|sie> --module-aus <modul,modul>
    ```
 
-   `--anrede sie` wählt die förmliche Anrede. Die Texte des Kits sind in der du-Form geschrieben, im Starter rund 130 Stellen in den `*Text.swift`-Dateien und in `App/Resources/InfoPlist.json`. `init` trägt sie als bekannte Befunde in `rules/baseline/texte.json` ein, damit `make check` und der Hook `pre-push` grün bleiben; die Liste ist die Aufgabe. `python3 scripts/check_texts.py --streng` zeigt jede Stelle; nach dem Umschreiben verkleinert `python3 scripts/check_texts.py --baseline-aktualisieren` die Liste, wachsen darf sie nicht. Eine eigene Unterzeile für den Willkommensschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
+   `--anrede sie` wählt die förmliche Anrede. Die Texte des Kits sind in der du-Form geschrieben, im Starter rund 130 Stellen in den `*Text.swift`-Dateien und in `App/Resources/InfoPlist.json`. `init` trägt sie als bekannte Befunde in `rules/baseline/texte.json` ein, damit `make check` und der Hook `pre-push` grün bleiben; die Liste ist die Aufgabe. `python3 scripts/check_texts.py --streng` zeigt jede Stelle; nach dem Umschreiben verkleinert `python3 scripts/check_texts.py --baseline-aktualisieren` die Liste, wachsen darf sie nicht. Eine eigene Unterzeile für den Begrüßungsschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
 
    Steht im Bericht „Starter-Commit: unbekannt“, gibt es den Tag `v<Version>` des Starters noch nicht oder `--ohne-netz` war gesetzt. Das ist kein Fehler: `bin/starter sync` nimmt dann den Tag selbst als Basis, sobald es ihn gibt, oder `--basis <commit>`.
 3. Commit-Identität des Projekts in `starter.json` eintragen (`commit.name`, `commit.email`; die Person, unter deren Namen das Projekt committet, nie eine erfundene), dann `make hooks`. `make hooks` setzt sie als Git-Identität dieses Repositorys, wenn Git noch keine kennt, und meldet eine abweichende, statt sie zu überschreiben. Bis die Identität in `starter.json` steht, nimmt der Hook `commit-msg` keinen Commit an.
@@ -59,7 +59,7 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
    make run              # die App einmal selbst starten
    ```
 
-   `build/shots/index.html` zeigt alle Szenen als Übersicht. Beim ersten `make run` öffnet das Onboarding.
+   `build/shots/index.html` zeigt alle Szenen als Übersicht. Beim ersten `make run` öffnet die Einrichtung.
 
 ## 3. Was vom Starter übrig ist
 
@@ -67,8 +67,8 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
 
 | Datei | Was |
 |---|---|
-| `starter.json` | `app.displayName` (heißt wie `app.name`, Umlaute hier), `app.tagline` (leer, sonst zeigt der Willkommensschritt nur den Namen), Akzent, Symbol, Copyright, Module, Berechtigungen, Anrede, Commit-Identität, Signatur. Tagline, Anzeigename und Identität nennt der Auftraggeber, sie werden nie erfunden |
-| `App/Resources/InfoPlist.json` | Erklärtexte der Berechtigungen, die das Projekt nutzt, konkret für diese App |
+| `starter.json` | `app.displayName` (heißt wie `app.name`, Umlaute hier), `app.tagline` (leer, sonst zeigt der Begrüßungsschritt nur den Namen), Akzent, Symbol, Copyright, Module, Berechtigungen, Anrede, Commit-Identität, Signatur. Tagline, Anzeigename und Identität nennt der Auftraggeber, sie werden nie erfunden |
+| `App/Resources/InfoPlist.json` | Nutzungsbeschreibungen der Berechtigungen, die das Projekt nutzt, konkret für diese App (`make check-texts` meldet jede, die noch der Platzhalter des Starters ist) |
 | `docs/PROJECT.md` | Zweck, Zielgruppe, App-Formen, Ansichten, Daten, Berechtigungen, KI, Verteilung, offene Fragen |
 | `README.md` | `init` setzt eine kurze Einleitung mit dem Namen ein; Zweck und eigene Bilder ergänzen. Aufbau, Regeln, Module, Befehle, Betrieb und Pflege bleiben |
 | `docs/screenshots/` | `init` löscht die Bilder des Starters; eigene Bilder trägt `docs/screenshots/list.txt` ein, `make readme-shots` legt sie an |
@@ -120,7 +120,7 @@ Arbeite in Claude Code auf einem Mac: Bauen, Testen und Rendern laufen nur unter
 
 Neue Wünsche während der Arbeit kommen in `docs/agents/VORGABEN.md`; der Agent arbeitet sie als Regel in `rules/projekt/` ein.
 
-Agenten starten die App beim Bauen nie selbst, fragen keine Berechtigung an und registrieren kein Anmeldeobjekt; sie prüfen mit `make test`, `make shots` und `--selftest`. Den Start der App, das Onboarding auf einem frischen Benutzer und die Berechtigungsdialoge prüft eine Person.
+Agenten starten die App beim Bauen nie selbst, fragen keine Berechtigung an und registrieren kein Anmeldeobjekt; sie prüfen mit `make test`, `make shots` und `--selftest`. Den Start der App, die Einrichtung auf einem frischen Benutzer und die Berechtigungsdialoge prüft eine Person.
 
 ## 5. Branchschutz
 
@@ -187,8 +187,8 @@ Der Probelauf zeigt, was sich ändert. Der echte Lauf übernimmt Kit-Pfade, füh
 - `make check` ist grün, die CI auf dem letzten Pull Request und auf `main` ebenso (`make check`, Typecheck jeder Modul-Kombination, Renders).
 - Die Reste des Starters aus Abschnitt 3 sind abgearbeitet.
 - Jede genutzte App-Form ist in Renders angesehen: jede Szene in en und de, hell und dunkel.
-- Das Onboarding ist einmal auf einem frischen Benutzer durchgegangen (`tccutil reset All <bundleId>` setzt nur diese App zurück).
-- Jede Berechtigung ist mit der installierten App aus dem DMG erteilt, abgelehnt und nach einem Neustart erkannt worden.
+- Die Einrichtung ist einmal auf einem frischen Benutzer durchgegangen (`tccutil reset All <bundleId>` setzt nur diese App zurück).
+- Jede Berechtigung ist mit der installierten App aus dem DMG erlaubt, abgelehnt und nach einem Neustart erkannt worden.
 - Die Insel ist an einem Mac mit und einem ohne Notch geprüft, falls sie genutzt wird.
 - Das DMG öffnet mit gestaltetem Fenster und installiert auf einem zweiten Mac oder Benutzer; bei Developer ID bestehen `codesign --verify --deep --strict`, `spctl -a -vv` und `xcrun stapler validate`.
 - Das App-Symbol ist ein eigenes Motiv, kein SF Symbol.

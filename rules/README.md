@@ -7,14 +7,15 @@ Die einzige Quelle aller Regeln für Agenten. Was hier steht, gilt; `CLAUDE.md` 
 | Datei | Inhalt | Wer liest sie |
 |---|---|---|
 | `index.json` | Präambel, Rangfolge, Gruppen und Pakete, Werkzeuge der Regeln mit Pfad, Bereiche, Prüfumfang mit begründeten Ausnahmen | `make rules`, alle Prüfungen |
-| `gruppen/schreiben.json` | S-01 bis S-14: Zeichen, Floskeln, Anrede, neutrale Sprache, fehlende Werte, zwei Sprachen, Typografie, Kommentare | `make rules` (Teil A), KI-Prompts |
+| `gruppen/schreiben.json` | S-01 bis S-15: Zeichen, Floskeln, Anrede, neutrale Sprache, fehlende Werte, zwei Sprachen, Typografie, Kommentare, feste Begriffe der Oberfläche | `make rules` (Teil A), KI-Prompts |
 | `gruppen/design.json` | D-01 bis D-14: Tokens, Raster, Typografie, Symbole, Muster, eine Hauptaktion, keine Deko, hell und dunkel, Bewegung, deutsche Längen, Zustände, Barrierefreiheit, Renders, App-Formen | `make rules` (Teil A) |
 | `gruppen/technik.json` | T-01 bis T-11: Build ohne Xcode, Swift 6, Module, Kit-Wege, kein Netz, Privatsphäre, Abhängigkeiten, nie auf dem Bildschirm, Tests, erzeugte Dateien, Signatur | `make rules` (Teil A) |
 | `gruppen/arbeitsweise.json` | A-01 bis A-10: Vorgaben, Prüfen, Commits, Identität, eigene Dateien, Kit-Pfade, Gegenprüfung, Beweise, Fragen, sauberes Repository | `make rules` (Teil A) |
 | `pakete/*.json` | Begriffe mit Muster, Ersatzhinweis, Bereichen, Sprachen und Beispielen | `check_texts.py`, `check_design.py`, Hook `commit-msg`, KI-Texte |
-| `code.json` | wo ein String-Literal in Swift ein UI-Text ist (Aufrufe, Modifikatoren, Labels, Zuweisungen, Formate, Titel-Closures wie `title: { "…" }`) | `check_texts.py` |
+| `code.json` | wo ein String-Literal in Swift ein UI-Text ist (zweisprachige Aufrufe `tr` und `DMGCopy`, Aufrufe, Modifikatoren, Labels, Zuweisungen, Formate, Titel-Closures wie `title: { "…" }`) | `check_texts.py` |
 | `schema/*.schema.json` | JSON-Schema für Gruppen und Pakete | Editor, `make rules` |
 | `projekt/projekt.json`, `projekt/pakete/*.json` | Regeln `P-NN` und Sprachpakete des Projekts; der Ordner gehört dem Projekt | `make rules` (Abschnitt „Projektregeln“ in Teil B), alle Prüfungen |
+| `standard/infoplist.json` | die Nutzungsbeschreibungen, die der Starter in `App/Resources/InfoPlist.json` mitbringt; in einem Projekt meldet `check_texts.py` jede, die für eine Berechtigung aus `starter.json` noch unverändert ist, im Starter muss sie gleich `InfoPlist.json` sein | `check_texts.py` |
 | `baseline/texte.json`, `baseline/design.json` | bekannte Befunde, die beim Einführen einer Regel schon da waren; dürfen nur schrumpfen | `check_texts.py`, `check_design.py` |
 | `generated/begriffe.json`, `generated/ki-schreibregeln.json` | erzeugt, nie von Hand ändern | alle Prüfungen, KI-Prompts |
 
@@ -28,7 +29,7 @@ Ein Paket bündelt Begriffe. Das Paket nennt seine Prüfung (`pruefer`: `check_t
 
 - `art`: `regex` (Alternativen mit `|` verbunden), `woerter` (zusätzlich als ganze Wörter eingerahmt) oder `verfahren` (Prüfverfahren, beschrieben in `umsetzung`, heute `markdown-absatz`)
 - `muster` im Format von Python `re` und `flags` (`i`, `m`, `s`, `x`); ein Apostroph steht immer als `['’]`, auch geschrieben als `\'` oder `\x27`, sonst rutscht die typografische Form durch, `make rules` prüft das
-- `bereiche`: `ui` (beide Literale jedes `tr(en:de:)` und `App/Resources/InfoPlist.json`), `kommentar` (Swift und Python, englisch, Code in Backticks ausgeblendet), `doku` (jede Markdown-Datei außer den Ausnahmen in `index.json`, deutsch), `commit` (Commit-Nachrichten, englisch), `ki` (KI-Texte der App), `swift` (Swift-Code ohne Kommentare und Literale in `App/Sources`, `App/Tests` und `tools`)
+- `bereiche`: `ui` (beide Literale jedes `tr(en:de:)` und `DMGCopy(en:de:)`, `App/Resources/InfoPlist.json` und `App/Resources/Notices/<sprache>.md` ohne Code-Blöcke), `kommentar` (Swift und Python, englisch, Code in Backticks ausgeblendet), `doku` (jede Markdown-Datei außer den Ausnahmen in `index.json`, deutsch), `commit` (Commit-Nachrichten, englisch), `ki` (KI-Texte der App), `swift` (Swift-Code ohne Kommentare und Literale in `App/Sources`, `App/Tests` und `tools`)
 - `regeln`: die Regeln, die der Begriff prüft; die Meldung nennt genau diese
 - `beiAnrede` (optional): der Begriff gilt nur, wenn `starter.json` `texts.anrede` diesen Wert hat; so verbietet das Paket `anrede` mit `du` die Sie-Form und umgekehrt
 - `ausgenommenePfade` (optional, auch am Paket): Globs, für die der Begriff nicht gilt, etwa `App/Sources/Kit/Design/**` für die Gestaltung

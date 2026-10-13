@@ -21,7 +21,7 @@ description: Baut eine Funktion des Projekts unter App/Sources/Features nach den
 
 Ein Ordner `App/Sources/Features/<Name>/`, Namen auf Englisch in UpperCamelCase:
 
-- `<Name>Feature.swift`: `enum <Name>Feature { static func register() { … } }` hängt Seiten, Einstellungsbereiche, Onboarding-Schritte, Menüeinträge, Galerie-Einträge und Render-Szenen an `Registry` an. Angemeldet wird es mit einer Zeile `<Name>Feature.register()` in `Features.register()` (`App/Sources/Features/Features.swift`); `Modules.registerAll()` ruft `Features.register()` einmal nach dem Kit und allen Modulen auf.
+- `<Name>Feature.swift`: `enum <Name>Feature { static func register() { … } }` hängt Seiten, Einstellungsbereiche, Einrichtungsschritte, Menüeinträge, Galerie-Einträge und Render-Szenen an `Registry` an. Angemeldet wird es mit einer Zeile `<Name>Feature.register()` in `Features.register()` (`App/Sources/Features/Features.swift`); `Modules.registerAll()` ruft `Features.register()` einmal nach dem Kit und allen Modulen auf.
 - `<Name>Text.swift`: `enum <Name>Text` mit jedem sichtbaren Text als `static var x: String { tr(en: "…", de: "…") }`, Mehrzahl und Platzhalter als `static func`. Keine Texte in Views.
 - `<Name>Store.swift`: Zugriff auf Daten. Tabellen über `Database` mit nummerierten Migrationen (`Database.Migration(1, "CREATE TABLE …")`), Zeilen als `RowDecodable`. Kleine Vorlieben über `SettingKey`, Name mit Präfix des Features (`notes.sort`).
 - `<Name>Model.swift`: `@Observable final class`, reine Logik ohne Datei- und Netzzugriff dort, wo sie testbar sein soll.
@@ -49,7 +49,7 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
 3. Daten und Logik mit Tests: Erwartungswerte aus der Anforderung oder einer Handrechnung, eingespeiste Uhr statt `Date()` in Logik, die Zeit braucht.
 4. Ansichten und Bezüge zu Modulen mit dem passenden Skill:
    - Einstellungsbereich: `neue-einstellung`
-   - Onboarding-Schritt: `neuer-onboarding-schritt`
+   - Einrichtungsschritt: `neuer-onboarding-schritt`
    - Berechtigung: `neue-berechtigung`
    - Seite im Hauptfenster: `neue-ansicht` <!-- modul:window -->
    - Abschnitt im Statusmenü: `menueleisten-app` <!-- modul:menubar -->

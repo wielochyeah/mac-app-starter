@@ -26,7 +26,7 @@ enum WindowText {
     /// "Nothing matches “Garten”."
     static func noResultsMessage(_ query: String) -> String {
         tr(en: "Nothing matches “\(query)”. Check the spelling or search for a shorter word.",
-           de: "Nichts passt zu „\(query)“. Prüf die Schreibweise oder such nach einem kürzeren Wort.")
+           de: "Nichts passt zu „\(query)“. Prüfe die Schreibweise oder suche nach einem kürzeren Wort.")
     }
 
     /// Accessibility label of a tile: "Recipes, 24 entries".
@@ -45,7 +45,7 @@ enum WindowText {
     static var stepPageTitle: String { tr(en: "Add a page", de: "Seite anlegen") }
     static var stepPageText: String {
         tr(en: "Create a view under Features and add it to Registry.pages as an AppPage. It shows up in the sidebar.",
-           de: "Leg unter Features eine Ansicht an und häng sie als AppPage an Registry.pages. Sie erscheint in der Seitenleiste.")
+           de: "Lege unter Features eine Ansicht an und hänge sie als AppPage an Registry.pages. Sie erscheint in der Seitenleiste.")
     }
     static var stepBlocksTitle: String { tr(en: "Use the building blocks", de: "Bausteine nutzen") }
     static var stepBlocksText: String {

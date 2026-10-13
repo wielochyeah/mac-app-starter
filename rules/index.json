@@ -35,6 +35,7 @@
     "pakete/floskeln-en.json",
     "pakete/neutral.json",
     "pakete/neutral-en.json",
+    "pakete/begriffe.json",
     "pakete/anrede.json",
     "pakete/fehlende-werte.json",
     "pakete/platzhalter.json",
@@ -62,12 +63,14 @@
         "S-04",
         "S-05",
         "S-06",
+        "S-07",
         "S-08",
         "S-09",
         "S-10",
         "S-11",
         "S-12",
         "S-14",
+        "S-15",
         "D-04",
         "D-10"
       ],
@@ -139,7 +142,7 @@
       "pfad": "App/Sources/Kit/Design"
     },
     {
-      "name": "Muster für Onboarding-Schritte und Einstellungsbereiche",
+      "name": "Muster für Einrichtungsschritte und Einstellungsbereiche",
       "regeln": ["D-05", "D-06", "D-11"],
       "pfad": "App/Sources/Kit/Design/Patterns"
     },
@@ -210,8 +213,13 @@
     },
     {
       "name": "Nutzungsbeschreibungen der Berechtigungen in beiden Sprachen",
-      "regeln": ["S-10", "T-06"],
+      "regeln": ["S-07", "S-10", "T-06"],
       "pfad": "App/Resources/InfoPlist.json"
+    },
+    {
+      "name": "Nutzungsbeschreibungen des Starters: in einem Projekt meldet `make check-texts` jede, die für eine Berechtigung aus `starter.json` unverändert blieb",
+      "regeln": ["S-07"],
+      "pfad": "rules/standard/infoplist.json"
     },
     {
       "name": "Einstellungen des Projekts: Name, Akzent, Module, Anrede, Commit-Identität, Signatur",
@@ -231,7 +239,7 @@
     "personen": "texts.personen: Namen, die in Code-Kommentaren nicht stehen sollen (Paket kommentare)"
   },
   "bereiche": {
-    "ui": "UI-Texte: die beiden Literale jedes tr(en:de:) und die Werte in App/Resources/InfoPlist.json, je nach Sprache",
+    "ui": "UI-Texte: die beiden Literale jedes tr(en:de:) und DMGCopy(en:de:), die Werte in App/Resources/InfoPlist.json und die Hinweise zu Drittanbietern in App/Resources/Notices/<sprache>.md (ohne Code-Blöcke mit den Lizenztexten), je nach Sprache",
     "kommentar": "Kommentare in Swift- und Python-Dateien (Sprache Englisch)",
     "doku": "jede Markdown-Datei im Repository außer den Ausnahmen, ohne Code-Blöcke, Inline-Code, HTML-Kommentare und Link-Ziele (Sprache Deutsch)",
     "commit": "Betreff und Text einer Commit-Nachricht (Sprache Englisch), geprüft vom Hook commit-msg",
@@ -239,11 +247,13 @@
     "swift": "Swift-Code ohne Kommentare und Literale in App/Sources, App/Tests und tools/, geprüft von check_design.py"
   },
   "pruefumfang": {
-    "swift": ["App/Sources"],
+    "swift": ["App/Sources", "tools/dmg/DMGText.swift"],
     "swiftCode": ["App/Sources", "App/Tests", "tools"],
     "kommentare": ["App", "tools", "scripts", "ai-worker", ".claude"],
     "doku": ["."],
     "infoplist": "App/Resources/InfoPlist.json",
+    "infoplistStandard": "rules/standard/infoplist.json",
+    "uiMarkdown": ["App/Resources/Notices/*.md"],
     "ausnahmen": [
       {
         "pfad": "docs/bau/**",
@@ -260,10 +270,6 @@
       {
         "pfad": "**/node_modules/**",
         "grund": "fremde Pakete"
-      },
-      {
-        "pfad": "App/Resources/Notices/**",
-        "grund": "Lizenzhinweise im Wortlaut der Rechteinhaber, in beiden Sprachen der App"
       },
       {
         "pfad": "scripts/tests/**",

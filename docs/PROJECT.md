@@ -31,7 +31,7 @@ Vorlage. Der Agent füllt sie beim Start eines Projekts (Bootstrap-Schritt 3) un
 | `<Übersicht>` | Hauptfenster, Seitenleiste „<Gruppe>“ | `<Was ist neu?>` | `<Eintrag anlegen>` | `<feature>.page` |
 | `<Bereich>` | Einstellungen | `<Wie stelle ich X ein?>` | | `<feature>.pane` |
 
-Jede Ansicht ist über `Registry` eingetragen (Seite, Einstellungsbereich, Onboarding-Schritt) und hat eine Render-Szene. Szenen eines Features heißen `<feature>.<zustand>` (etwa `notes.page`, `notes.pane`, `notes.empty`), damit `make shots ONLY=<feature>.` alle trifft; die Präfixe `window.`, `settings.`, `island.` und die anderen Modul- und Kit-Präfixe gehören dem Starter.
+Jede Ansicht ist über `Registry` eingetragen (Seite, Einstellungsbereich, Einrichtungsschritt) und hat eine Render-Szene. Szenen eines Features heißen `<feature>.<zustand>` (etwa `notes.page`, `notes.pane`, `notes.empty`), damit `make shots ONLY=<feature>.` alle trifft; die Präfixe `window.`, `settings.`, `island.` und die anderen Modul- und Kit-Präfixe gehören dem Starter.
 
 ## 4. Datenobjekte und Speicher
 
@@ -44,11 +44,11 @@ Daten liegen unter `~/Library/Application Support/<bundleId>/`. Nichts verlässt
 
 ## 5. Berechtigungen
 
-| Berechtigung | Wofür | Onboarding-Schritt | ohne sie |
+| Berechtigung | Wofür | Einrichtungsschritt | ohne sie |
 |---|---|---|---|
 | `<notifications>` | `<Hinweis, wenn eine Aufgabe fertig ist>` | ja | `<Funktion X ist aus, die App sagt warum>` |
 
-Die Liste ist dieselbe wie `permissions` in `starter.json`; die Erklärtexte stehen in `App/Resources/InfoPlist.json` in beiden Sprachen.
+Die Liste ist dieselbe wie `permissions` in `starter.json`; die Nutzungsbeschreibungen stehen in `App/Resources/InfoPlist.json` in beiden Sprachen und sagen, wofür diese App den Zugriff nutzt.
 
 ## 6. Lokale KI
 

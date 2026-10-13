@@ -8,7 +8,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 ### E-01 (12.10.2026): Template-Repository mit Manifest, Schwester von app-starter
 
-- **Entscheidung:** `mac-app-starter` ist ein GitHub-Template-Repository für native Mac-Apps. Es übernimmt von `app-starter` (Web) die Mechanik: `starter.manifest.json` trennt Kit-, gemeinsame und Projekt-Pfade, `starter.lock.json` hält den Stand, `bin/starter` richtet ein, entfernt Module und zieht neuere Fassungen nach; dazu die Regelquelle `rules/`, die Prüfer-Subagenten und die Dokumente. Gestaltung, Onboarding, Einstellungen, Insel und Verteilung kommen aus VoiceBud.
+- **Entscheidung:** `mac-app-starter` ist ein GitHub-Template-Repository für native Mac-Apps. Es übernimmt von `app-starter` (Web) die Mechanik: `starter.manifest.json` trennt Kit-, gemeinsame und Projekt-Pfade, `starter.lock.json` hält den Stand, `bin/starter` richtet ein, entfernt Module und zieht neuere Fassungen nach; dazu die Regelquelle `rules/`, die Prüfer-Subagenten und die Dokumente. Gestaltung, Einrichtung, Einstellungen, Insel und Verteilung kommen aus VoiceBud.
 - **Grund:** Agenten arbeiten zuverlässig, wenn fertiger, getesteter Code und feste Regeln im Repository liegen; Manifest, Lock und Sync fangen die Drift zwischen Starter und Projekten ab.
 - **Folgen:** Projekte ändern keine Kit-Pfade, sondern melden Bedarf in `docs/STARTER_FEEDBACK.md` (Skill `starter-rueckfluss`).
 
@@ -16,7 +16,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 - **Entscheidung:** Fenster-App (`window`), Menüleisten-App (`menubar`), Insel an der Notch (`island`) und Hintergrund (`background`) sind Module, dazu `hotkeys`, `ai`, `mlx` und `examples`. Ein Projekt wählt eine oder mehrere Formen und entfernt den Rest mit `bin/starter remove <modul>`. Mindestens `window` oder `menubar` bleibt.
 - **Grund:** Der Starter soll für jede Art von Mac-App taugen, nicht nur für Apps an der Notch. Ohne Fenster und ohne Menüleiste wären die Einstellungen nicht erreichbar.
-- **Folgen:** Kit (Core, Design, Texte, Onboarding, Einstellungen, Berechtigungen, Galerie, Render, Main) bleibt immer. Die Aktivierungsrichtlinie ist `.regular` mit `window`, sonst `.accessory` mit `LSUIElement`; Einstellungen und Onboarding schalten eine Accessory-App vorübergehend auf `.regular`, bis das letzte dieser Fenster zu ist.
+- **Folgen:** Kit (Core, Design, Texte, Einrichtung, Einstellungen, Berechtigungen, Galerie, Render, Main) bleibt immer. Die Aktivierungsrichtlinie ist `.regular` mit `window`, sonst `.accessory` mit `LSUIElement`; Einstellungen und Einrichtung schalten eine Accessory-App vorübergehend auf `.regular`, bis das letzte dieser Fenster zu ist.
 
 ## Technik
 
@@ -54,7 +54,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 - **Entscheidung:** Jeder sichtbare Text steht in einer `*Text.swift`-Datei als `tr(en: "…", de: "…")`; Views enthalten keine Textliterale. `Localizer.shared` folgt den Sprachen des Macs, bis die Nutzerin eine wählt; `STARTER_LANG` erzwingt eine Sprache für Renders und Tests. Die deutsche Anrede (`du` oder `Sie`) steht in `starter.json` (`texts.anrede`), Standard `du` wie bei Apple und VoiceBud.
 - **Grund:** Beide Sprachen sind durch die Signatur Pflicht und können nicht auseinanderlaufen; ein beobachtbares Objekt lässt SwiftUI bei einem Wechsel neu zeichnen, ohne Bundles oder Neustart. String-Kataloge bräuchten `xcstringstool` aus Xcode.
-- **Folgen:** Mehrzahl und Platzhalter sind `static func`. Erklärtexte der Berechtigungen kommen aus `App/Resources/InfoPlist.json` und werden beim Bauen in `.lproj`-Dateien geschrieben.
+- **Folgen:** Mehrzahl und Platzhalter sind `static func`. Nutzungsbeschreibungen der Berechtigungen kommen aus `App/Resources/InfoPlist.json` und werden beim Bauen in `.lproj`-Dateien geschrieben.
 
 ### E-09 (12.10.2026): Nur Design-Tokens, Farben aus dem Farbschema
 
@@ -84,7 +84,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 - **Entscheidung:** Das Modul `ai` nutzt standardmäßig Apple Foundation Models. Das Modul `mlx` (aus) bringt einen Python-Worker mit MLX, einen Modellkatalog und Downloads mit Fortschritt.
 - **Grund:** Foundation Models braucht keinen Download und spricht Deutsch; mlx-swift lässt sich ohne Xcode nicht bauen, der Python-Worker mit dem Protokoll aus VoiceBud schon.
-- **Folgen:** Ohne Apple Intelligence zeigt die App einen ehrlichen Aus-Zustand. Einzelheiten in `docs/KI.md`.
+- **Folgen:** Ohne Apple Intelligence zeigt die App einen Aus-Zustand mit Grund. Einzelheiten in `docs/KI.md`.
 
 ### E-14 (12.10.2026): Kein Netz ohne Auftrag
 
@@ -140,7 +140,7 @@ Die Kennungen beginnen mit E (Entscheidung), weil D bereits die Designregeln in 
 
 ### E-22 (12.10.2026): Ausgewogene Zweizeiler nur als Unterzeile unter einem Titel
 
-- **Entscheidung:** Ein fester Umbruch in einem UI-Text (`\n` mitten im Satz) ist erlaubt, wenn er eine Unterzeile direkt unter dem Titel eines Onboarding-Schritts oder Einstellungsbereichs in zwei etwa gleich lange Zeilen teilt, wie bei VoiceBud. Er steht an einer Satzgrenze (nach einem Komma oder vor einer Ergänzung), in jeder Sprache an ihrer eigenen Stelle, und `// umbruch: Grund` steht direkt über dem `tr`. Überall sonst (Knöpfe, Zeilen, Fußnoten, Fließtext, Menüs, Mitteilungen) bleibt jeder Umbruch mitten im Satz ein Befund (D-10).
+- **Entscheidung:** Ein fester Umbruch in einem UI-Text (`\n` mitten im Satz) ist erlaubt, wenn er eine Unterzeile direkt unter dem Titel eines Einrichtungsschritts oder Einstellungsbereichs in zwei etwa gleich lange Zeilen teilt, wie bei VoiceBud. Er steht an einer Satzgrenze (nach einem Komma oder vor einer Ergänzung), in jeder Sprache an ihrer eigenen Stelle, und `// umbruch: Grund` steht direkt über dem `tr`. Überall sonst (Tasten, Zeilen, Fußnoten, Fließtext, Menüs, Mitteilungen) bleibt jeder Umbruch mitten im Satz ein Befund (D-10).
 - **Grund:** Unter einem zentrierten Titel in einer festen Spalte bricht ein langer Satz sonst mit einem einzelnen Wort in der zweiten Zeile um; das wirkt unfertig. Außerhalb solcher Unterzeilen hängt die Zeilenlänge von Fensterbreite und Sprache ab, ein fester Umbruch wäre dort falsch.
 - **Folgen:** Jeder Zweizeiler wird in den Renders mit `de` und `en` angesehen; passt eine Zeile nicht mehr in die Spalte, fällt der Umbruch weg. Die Prüfung lässt den Umbruch nur unter dem Kommentar `// umbruch:` durch, alle anderen Regeln gelten für den Text weiter.
 

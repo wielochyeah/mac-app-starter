@@ -3,7 +3,7 @@ name: neuer-onboarding-schritt
 description: Fügt dem Onboarding einen Schritt hinzu (OnboardingStep mit Reihenfolge und Bedingung, OnboardingPage mit Kopf, Status-Slot und Hinweis, Fußleiste über den Kontext, beide Sprachen, Render-Szenen je Zustand). Nutzen, wenn beim ersten Start etwas erklärt, gewählt oder erlaubt werden muss.
 ---
 
-# Neuer Onboarding-Schritt
+# Neuer Einrichtungsschritt
 
 ## Verträge und Dateien
 
@@ -33,7 +33,7 @@ Eigene Schritte nutzen freie Werte dazwischen, etwa 30 bis 290 für Erklärungen
 
 ## Schritte
 
-1. Braucht es den Schritt wirklich? Ein Schritt erklärt eine Sache, verlangt eine Entscheidung oder eine Erlaubnis. Was später in den Einstellungen reicht, gehört nicht ins Onboarding.
+1. Braucht es den Schritt wirklich? Ein Schritt erklärt eine Sache, verlangt eine Entscheidung oder eine Berechtigung. Was später in den Einstellungen reicht, gehört nicht in die Einrichtung.
 2. Seite bauen, nur aus Mustern:
 
    ```swift
@@ -49,7 +49,7 @@ Eigene Schritte nutzen freie Werte dazwischen, etwa 30 bis 290 für Erklärungen
    Abstände zwischen Blöcken nur `Space.xs`, `Space.s`, `Space.m`, `Space.l` als `.padding(.bottom, …)`. Links im Text als `[Titel](app://aktion)` mit `perform`.
 3. Weiter erst, wenn es geht: `context.canContinue.wrappedValue = false`, solange etwas fehlt. Hält der Schritt selbst die Hauptaktion (Status-Slot mit `.action`), ist „Weiter“ nicht primär: dafür meldet `register()` eine Regel an, `OnboardingKit.advanceRules["sync"] = { _ in OnboardingAdvance(isPrimary: false) }` (mit `title:` auch ein anderer Text wie `CommonText.skip`). Ohne Regel ist „Weiter“ primär.
 4. Registrieren: `Registry.onboardingSteps.append(OnboardingStep(id: "sync", order: 120, isIncluded: { true }, content: { context in AnyView(SyncStep(context: context)) }))`. `isIncluded` wird beim Öffnen ausgewertet; ein Schritt, der nicht zutrifft, fehlt ganz.
-5. Was der Schritt festlegt, speichert er sofort über `SettingKey`; das Onboarding kann jederzeit geschlossen und später mit `AppActions.openOnboarding()` fortgesetzt werden. Eine Wahl, die erst nach „Fertig“ gelten soll (etwa ein Anmeldeobjekt), wendet ein Eintrag in `Registry.onboardingFinishedHooks` an (`{ firstTime in … }`, nicht beim Neustart für eine Freigabe).
+5. Was der Schritt festlegt, speichert er sofort über `SettingKey`; die Einrichtung kann jederzeit geschlossen und später mit `AppActions.openOnboarding()` fortgesetzt werden. Eine Wahl, die erst nach „Fertig“ gelten soll (etwa ein Anmeldeobjekt), wendet ein Eintrag in `Registry.onboardingFinishedHooks` an (`{ firstTime in … }`, nicht beim Neustart für eine Berechtigung).
 6. Texte: Titel kurz, Untertitel sagt, warum, in einem Satz. Keine Begrüßungsfloskeln.
 7. Render-Szenen `onboarding.<id>` je Zustand (Ausgangslage, gewählt, Fehler) im Fensterrahmen: `RenderBoard { StaticWindow(size: Metrics.onboardingWindow, chrome: .onboarding) { … } }`.
 

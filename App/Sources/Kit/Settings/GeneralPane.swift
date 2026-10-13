@@ -99,7 +99,7 @@ struct GeneralPane: View {
             SettingsSection(SettingsText.language, footnote: SettingsText.languageNote) {
                 // each language in its own name, so it can be found in either language
                 PickerRow(SettingsText.interface, subtitle: SettingsText.interfaceDetail,
-                          options: [("system", SettingsText.followMac), ("de", Lang.de.nativeName), ("en", Lang.en.nativeName)],
+                          options: [("system", SettingsText.followMac), ("en", Lang.en.nativeName), ("de", Lang.de.nativeName)],
                           selection: language)
             }
             SettingsSection(SettingsText.appearance) {
