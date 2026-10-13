@@ -98,7 +98,7 @@ private struct TypeSamples: View {
         VStack(alignment: .leading, spacing: Space.xs) {
             ForEach(rows, id: \.0) { name, font in
                 HStack(alignment: .firstTextBaseline, spacing: Space.m) {
-                    Text(verbatim: name).font(TypeScale.caption.monospaced()).foregroundStyle(t.fg3).frame(width: 110, alignment: .leading)
+                    Text(verbatim: name).font(TypeScale.caption.monospaced()).foregroundStyle(t.fg2).frame(width: 110, alignment: .leading)
                     Text(DesignText.typeSample).font(font).foregroundStyle(t.fg).lineLimit(1)
                 }
             }

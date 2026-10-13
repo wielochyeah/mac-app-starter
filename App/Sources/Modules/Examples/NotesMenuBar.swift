@@ -53,7 +53,7 @@ struct NotesPanelSection: View {
                 }
                 Text(NotesText.panelHint)
                     .font(TypeScale.caption)
-                    .foregroundStyle(t.fg3)
+                    .foregroundStyle(t.fg2)
                     .padding(.horizontal, Space.xs)
                     .padding(.top, Space.xxs)
                     .padding(.bottom, Space.xxs)

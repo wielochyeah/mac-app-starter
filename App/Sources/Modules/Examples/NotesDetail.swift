@@ -154,7 +154,7 @@ struct NoteEditor: View {
                 Spacer(minLength: Space.xs)
                 Text(saving ? NotesText.saving : NotesText.saved)
                     .font(TypeScale.secondary)
-                    .foregroundStyle(t.fg3)
+                    .foregroundStyle(t.fg2)
                     .lineLimit(1)
                 Chip(NotesText.moveToTrash, symbol: "trash", action: trash).fixedSize()
             }

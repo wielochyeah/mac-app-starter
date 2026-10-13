@@ -159,7 +159,7 @@ private struct ItemListRow<Menu: View>: View {
             case .index:
                 Text(Format.number(index + 1))
                     .font(TypeScale.secondary.monospacedDigit())
-                    .foregroundStyle(strongSelection ? t.onAccent : isSelected ? t.accentText : t.fg3)
+                    .foregroundStyle(strongSelection ? t.onAccent : isSelected ? t.accentText : t.fg2)
                     .frame(width: Metrics.Window.listIndex, alignment: .trailing)
             case .artwork:
                 Artwork(seed: item.seed ?? item.id, symbol: item.symbol)

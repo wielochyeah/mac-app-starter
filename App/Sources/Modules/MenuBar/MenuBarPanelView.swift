@@ -204,7 +204,7 @@ struct MenuBarActionRow: View {
                 Text(title).font(TypeScale.body).foregroundStyle(t.fg).lineLimit(1)
                 Spacer(minLength: Space.xs)
                 if let shortcut, !shortcut.isEmpty {
-                    Text(shortcut).font(TypeScale.secondary).foregroundStyle(t.fg3)
+                    Text(shortcut).font(TypeScale.secondary).foregroundStyle(t.fg2)
                 }
             }
             .padding(.horizontal, Space.xs)

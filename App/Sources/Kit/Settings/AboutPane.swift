@@ -100,7 +100,7 @@ struct AboutPane: View {
                     .monospacedDigit()
                     .textSelection(.enabled)
                 if !info.copyright.isEmpty {
-                    Text(info.copyright).font(TypeScale.caption).foregroundStyle(t.fg3)
+                    Text(info.copyright).font(TypeScale.caption).foregroundStyle(t.fg2)
                 }
             }
             .frame(maxWidth: .infinity)
