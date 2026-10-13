@@ -28,12 +28,12 @@ struct DMGCopy {
 
 enum DMGText {
     /// `app` is the name Finder shows under the icon (the bundle's file name), `folder` the link's name.
+    /// With `sie` the German line is an infinitive, which needs no address form at all.
     static func drag(_ app: String, to folder: String, anrede: DMGAnrede) -> DMGCopy {
-        let de = switch anrede {
-        case .du: "Zieh \(app) auf „\(folder)“."
-        case .sie: "Ziehen Sie \(app) auf „\(folder)“."
+        switch anrede {
+        case .du: DMGCopy(en: "Drag \(app) to “\(folder)”.", de: "Ziehe \(app) auf „\(folder)“.")
+        case .sie: DMGCopy(en: "Drag \(app) to “\(folder)”.", de: "\(app) auf „\(folder)“ ziehen.")
         }
-        return DMGCopy(en: "Drag \(app) to \(folder).", de: de)
     }
 
     /// The Gatekeeper step for builds that are not notarized. Since macOS 15 a right click > Open
