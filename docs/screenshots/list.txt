@@ -4,8 +4,9 @@
 # tools/icon.png (App-Symbol) und tools/dmg.png (DMG-Fenster), die die Werkzeuge in tools/ zeichnen.
 # Nur wenige, sorgfältig gewählte Bilder; alles andere bleibt in build/shots und kommt nie ins Repository.
 # Szenen eines Moduls beginnen mit seinem Namen (island.…); bin/starter remove nimmt ihre Zeilen und Bilder mit,
-# ebenso Zeilen mit „# modul:<name>“ am Ende. bin/starter init löscht die Bilder des Starters (Block unten).
+# ebenso Zeilen mit „# modul:<name>“ am Ende.
 # nur-im-starter:anfang
+# Die Bilder des Starters; bin/starter init löscht diesen Block und die Bilder.
 de-light/examples.overview.png  # modul:examples
 en-dark/examples.detail-done.png  # modul:examples,ai
 de-dark/island.done-hover.png  # modul:island

@@ -440,8 +440,9 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
         lines.append(f"  Vorlage fehlt, Datei unverändert: {names(result.missing_templates)}")
     if not dry_run:
         lines.append(f"  {result.checksums} Prüfsummen der Kit-Dateien in starter.lock.json")
-    lines.append(f"  starter.json: Name, Bundle-ID, Version {NEW_VERSION}; Commit-Identität {cleared} "
-                 "(commit.name und commit.email eintragen, sonst lehnt der Hook commit-msg jeden Commit ab)")
+    identity = f"Commit-Identität {cleared}" if result.identity_cleared else "Commit-Identität leer"
+    lines.append(f"  starter.json: Name, Bundle-ID, Version {NEW_VERSION}; {identity} "
+                 "(commit.name und commit.email des Projekts eintragen, sonst lehnt der Hook commit-msg jeden Commit ab)")
     if result.tagline_cleared:
         lines.append("  starter.json: app.tagline des Starters entfernt; einen eigenen Satz als "
                      "app.tagline {\"en\": …, \"de\": …} eintragen, sonst zeigt der Willkommensschritt nur den Namen")
