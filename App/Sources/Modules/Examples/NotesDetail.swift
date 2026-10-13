@@ -15,15 +15,13 @@ struct NoteDetailPage: View {
     @Environment(\.notesAIBoard) private var board
     #endif
 
-    @State private var title = ""
-    @State private var text = ""
-    @State private var loaded = false
+    @State private var editing = NoteEditorText()
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let t = Theme(scheme)
         if let note = store.note(noteID) {
-            let shown = NoteItem.shownTitle(loaded ? title : note.title)
+            let shown = NoteItem.shownTitle(editing.isLoaded ? editing.title : note.title)
             PageScaffold(shown, showsTitle: false) {
                 VStack(alignment: .leading, spacing: Space.s) {
                     Button { navigator.close() } label: {
@@ -36,7 +34,7 @@ struct NoteDetailPage: View {
                     DetailHeader(eyebrow: store.collection(note.collectionID)?.name ?? NotesText.noCollection, title: shown,
                                  meta: NotesText.meta(note, now: store.now()), seed: note.seed, symbol: NotesLook.symbol(note, in: store),
                                  primary: HeaderAction(CommonText.copy, symbol: "doc.on.doc") {
-                                     NotesActions.copy(NoteItem.with(note, title: title, body: text))
+                                     NotesActions.copy(NoteItem.with(note, title: editing.title, body: editing.body))
                                  },
                                  secondary: HeaderAction(note.pinned ? NotesText.unpin : NotesText.pin,
                                                          symbol: note.pinned ? "pin.slash" : "pin") {
@@ -60,14 +58,15 @@ struct NoteDetailPage: View {
                 editor(note)
                 #endif
             }
-            .onAppear { load(note) }
+            .onAppear { editing.load(note, draft: store.draft(noteID)) }
+            .onChange(of: note) { _, stored in editing.follow(stored, draft: store.draft(noteID)) }
             .onDisappear { leave() }
         }
     }
 
     private func editor(_ note: NoteItem) -> some View {
-        NoteEditor(title: Binding(get: { loaded ? title : note.title }, set: { title = $0; changed() }),
-                   text: Binding(get: { loaded ? text : note.body }, set: { text = $0; changed() }),
+        NoteEditor(title: Binding(get: { editing.isLoaded ? editing.title : note.title }, set: { editing.title = $0; changed() }),
+                   text: Binding(get: { editing.isLoaded ? editing.body : note.body }, set: { editing.body = $0; changed() }),
                    collection: Binding(get: { note.collectionID ?? 0 }, set: { store.move(note.id, to: $0 == 0 ? nil : $0) }),
                    collections: store.collections, saving: store.isSaving) {
             store.trash(note.id)
@@ -78,21 +77,14 @@ struct NoteDetailPage: View {
     #if MODUL_AI
     /// Summary and title suggestion work on the text as it is in the editor.
     private func assistant(_ note: NoteItem) -> some View {
-        NotesAISection(note: NoteItem.with(note, title: loaded ? title : note.title, body: loaded ? text : note.body),
+        NotesAISection(note: NoteItem.with(note, title: editing.isLoaded ? editing.title : note.title,
+                                           body: editing.isLoaded ? editing.body : note.body),
                        session: (board ?? .shared).session(for: note.id), store: store)
     }
     #endif
 
-    private func load(_ note: NoteItem) {
-        guard !loaded else { return }
-        let draft = store.draft(note.id)
-        title = draft?.title ?? note.title
-        text = draft?.body ?? note.body
-        loaded = true
-    }
-
     private func changed() {
-        store.edit(noteID, title: title, body: text)
+        store.edit(noteID, title: editing.title, body: editing.body)
     }
 
     /// Writes the last edit; a new note left empty goes away again.

@@ -72,6 +72,31 @@ extension NoteCollection: RowDecodable {
     }
 }
 
+/// What an open editor shows. Loaded once (an edit not written yet wins over the stored note),
+/// changed by typing, and it follows the store when the store changed the note itself while no
+/// edit waits ("Add to Note", "Use Title"): otherwise the next keystroke would write the old text
+/// back over that change.
+struct NoteEditorText: Equatable {
+    var title = ""
+    var body = ""
+    private(set) var isLoaded = false
+
+    mutating func load(_ note: NoteItem, draft: (title: String, body: String)?) {
+        guard !isLoaded else { return }
+        title = draft?.title ?? note.title
+        body = draft?.body ?? note.body
+        isLoaded = true
+    }
+
+    /// The stored note changed. With nothing typed waiting to be written the editor and the store
+    /// agreed before, so the store's version is the newer one.
+    mutating func follow(_ note: NoteItem, draft: (title: String, body: String)?) {
+        guard isLoaded, draft == nil else { return }
+        title = note.title
+        body = note.body
+    }
+}
+
 /// A title the local model suggested, with up to three one-word tags.
 struct NoteTitleSuggestion: Equatable {
     var title: String

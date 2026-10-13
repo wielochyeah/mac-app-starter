@@ -90,6 +90,60 @@ final class ExamplesTests: TestSuite {
             expectEqual(store.note(note.id)?.body, "Line edited\n\nSummary")
         }
 
+        test("the open editor keeps Add to Note and Use Title through the next keystrokes") {
+            let store = emptyStore()
+            guard let note = store.add(title: "Trip", body: "Passport") else { return fail("no note") }
+            var editor = NoteEditorText()
+            editor.load(note, draft: store.draft(note.id))
+            // what the view does: every keystroke goes to the store, every store change to follow()
+            @MainActor func type(_ more: String) {
+                editor.body += more
+                store.edit(note.id, title: editor.title, body: editor.body)
+            }
+            @MainActor func storeChanged() {
+                if let stored = store.note(note.id) { editor.follow(stored, draft: store.draft(note.id)) }
+            }
+            type(" and charger")
+            store.append(note.id, "Summary: bring the passport.")
+            storeChanged()
+            expectEqual(editor.body, "Passport and charger\n\nSummary: bring the passport.", "the editor shows the summary")
+            type("!")
+            store.flush()
+            storeChanged()
+            expectEqual(store.note(note.id)?.body, "Passport and charger\n\nSummary: bring the passport.!", "summary kept")
+            store.rename(note.id, to: "Passport reminder")
+            storeChanged()
+            expectEqual(editor.title, "Passport reminder")
+            type("?")
+            store.flush()
+            expectEqual(store.note(note.id)?.title, "Passport reminder", "taken title kept")
+        }
+
+        test("the editor loads a waiting edit and does not follow the store while one waits") {
+            let store = emptyStore()
+            guard let note = store.add(title: "A", body: "one") else { return fail("no note") }
+            store.edit(note.id, title: "A", body: "one two")
+            var editor = NoteEditorText()
+            editor.load(note, draft: store.draft(note.id))
+            expectEqual(editor.body, "one two", "the edit not written yet wins")
+            editor.load(NoteItem.with(note, title: "X", body: "X"), draft: nil)
+            expectEqual(editor.body, "one two", "loaded once")
+            editor.body = "one two three"
+            store.edit(note.id, title: editor.title, body: editor.body)
+            editor.follow(note, draft: store.draft(note.id))
+            expectEqual(editor.body, "one two three", "typing waits to be written: the editor stays")
+        }
+
+        test("Move to Trash right after typing keeps the typed text") {
+            let store = emptyStore()
+            guard let note = store.add(title: "Draft", body: "first") else { return fail("no note") }
+            store.edit(note.id, title: "Draft", body: "first and second")
+            store.trash(note.id)
+            expect(!store.isSaving, "nothing waits after the trash")
+            store.restore(note.id)
+            expectEqual(store.note(note.id)?.body, "first and second")
+        }
+
         test("an edit is written after the autosave pause") {
             let store = emptyStore()
             guard let note = store.add(title: "A", body: "") else { return fail("no note") }

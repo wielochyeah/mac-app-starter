@@ -277,8 +277,10 @@ extension SettingKey {
         }
     }
 
+    /// Moves a note to the trash; what was typed into it last is written first, so a restore
+    /// brings it back as it was.
     func trash(_ id: Int64) {
-        pending[id] = nil
+        flush()
         write("trash") { try $0.execute("UPDATE notes SET trashed_at = ?, pinned = 0 WHERE id = ?", [.of(self.now()), .int(id)]) }
     }
 
