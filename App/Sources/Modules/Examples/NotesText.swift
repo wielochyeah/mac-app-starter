@@ -158,8 +158,8 @@ enum NotesText {
     static var captureAction: String { tr(en: "Save Clipboard as Note", de: "Zwischenablage als Notiz sichern") }
     static var islandSaving: String { tr(en: "Saving", de: "Sichert") }
     static var islandSaved: String { tr(en: "Saved to Notes", de: "In Notizen gesichert") }
-    static var clipboardEmpty: String { tr(en: "The clipboard has no text", de: "Die Zwischenablage enthält keinen Text") }
-    static var clipboardConcealed: String { tr(en: "Private text not saved", de: "Privater Text nicht gesichert") }
+    static var clipboardEmpty: String { tr(en: "No text copied", de: "Kein Text kopiert") }
+    static var clipboardConcealed: String { tr(en: "Private copy skipped", de: "Private Kopie übersprungen") }
     static var copiedNotice: String { tr(en: "Note copied", de: "Notiz kopiert") }
     static var menuTitle: String { tr(en: "Notes", de: "Notizen") }
     static var panelEmpty: String { tr(en: "No notes yet", de: "Noch keine Notizen") }
