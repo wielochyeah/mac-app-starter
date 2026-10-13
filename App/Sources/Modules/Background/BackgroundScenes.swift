@@ -50,7 +50,7 @@ enum BackgroundSamples {
     static let now = Date(timeIntervalSince1970: 1_791_000_000)
 
     static func settings() -> Settings {
-        Settings(fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("starter-render-background-unused.json"))
+        Settings.inMemory()
     }
 
     /// Five jobs: done with a note, nothing to do (hovered: Run Now), running, failed, switched off.

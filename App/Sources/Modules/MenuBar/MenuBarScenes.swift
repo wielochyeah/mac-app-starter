@@ -79,9 +79,9 @@ enum MenuBarSamples {
         ]
     }
 
-    /// Settings for pane renders: defaults, never written (the file is never saved unless changed).
+    /// Settings for pane renders: defaults, never written.
     static func settings() -> Settings {
-        Settings(fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("starter-render-menubar-unused.json"))
+        Settings.inMemory()
     }
 
     /// 9:41 today in the local calendar (the clock in renders).

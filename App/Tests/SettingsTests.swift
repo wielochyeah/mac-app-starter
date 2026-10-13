@@ -28,6 +28,22 @@ final class SettingsTests: TestSuite {
             expect(!FileManager.default.fileExists(atPath: s.fileURL.path), "reading must not create the file")
         }
 
+        test("in memory: defaults, changes kept, nothing read or written") {
+            let s = Settings.inMemory()
+            expectEqual(s[.testCount], 3)
+            s[.testCount] = 9
+            s[.testName] = "Ada"
+            expectEqual(s[.testCount], 9)
+            expectEqual(s[.testName], "Ada")
+            s.reload()
+            expectEqual(s[.testCount], 9, "reload has no file to read")
+            s.reset(.testName)
+            expectEqual(s[.testName], "none")
+            expect(!FileManager.default.fileExists(atPath: s.fileURL.path), "never writes its file")
+            expectEqual(s.lastError, nil)
+            expectEqual(Settings.inMemory()[.testCount], 3, "each one starts from the defaults")
+        }
+
         test("values round-trip through the file") {
             let url = tempDir().appendingPathComponent("settings.json")
             let s = Settings(fileURL: url)

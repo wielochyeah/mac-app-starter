@@ -76,10 +76,19 @@ nonisolated enum JSONValue: Codable, Equatable, Sendable {
 ///   is on disk, so another writer's keys survive.
 /// - A file that is not valid JSON is moved aside to `settings.json.broken` on the next save.
 /// - `@Observable`: SwiftUI views that read a key redraw when any key changes.
+/// - `Settings.inMemory()` never reads or writes a file (scenes and samples).
 @Observable final class Settings {
     static let shared = Settings(fileURL: Paths.settingsFile)
 
+    /// Starts from the defaults and keeps every change in memory: a render never depends on a file
+    /// an earlier run left behind. `fileURL` is a fresh path that is never created.
+    static func inMemory() -> Settings {
+        Settings(fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("settings-in-memory-\(UUID().uuidString).json"),
+                 persists: false)
+    }
+
     let fileURL: URL
+    @ObservationIgnored private let persists: Bool
     private(set) var values: [String: JSONValue] = [:]
     /// The last save error, for diagnostics (nil after a good save).
     private(set) var lastError: String?
@@ -87,8 +96,13 @@ nonisolated enum JSONValue: Codable, Equatable, Sendable {
     @ObservationIgnored private var dirty: Set<String> = []
     @ObservationIgnored private var fileWasBroken = false
 
-    init(fileURL: URL) {
+    convenience init(fileURL: URL) {
+        self.init(fileURL: fileURL, persists: true)
+    }
+
+    private init(fileURL: URL, persists: Bool) {
         self.fileURL = fileURL
+        self.persists = persists
         reload()
     }
 
@@ -120,6 +134,7 @@ nonisolated enum JSONValue: Codable, Equatable, Sendable {
     /// Re-reads the file (changes made elsewhere). Unsaved changes are dropped.
     func reload() {
         dirty.removeAll()
+        guard persists else { return }
         switch Self.read(fileURL) {
         case .missing:
             values = [:]
@@ -145,6 +160,10 @@ nonisolated enum JSONValue: Codable, Equatable, Sendable {
     }
 
     private func save() {
+        guard persists else {
+            dirty.removeAll()
+            return
+        }
         do {
             let fm = FileManager.default
             try fm.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)

@@ -44,7 +44,7 @@ Einstellungen liegen als JSON in `~/Library/Application Support/<bundleId>/setti
    Gruppen sind `SettingsSection`, Zeilen die Muster; Haarlinien setzt `SettingsSection` selbst. Eine Aktion, die sich nicht widerrufen lässt (zurücksetzen, löschen), fragt an Ort und Stelle: die Zeile mit der Taste weicht mit `Motion.expand` einer `ConfirmRow(titel, text:, button:, cancel:, confirm:)`, wie in „Allgemein“ bei „Einstellungen zurücksetzen“. Ein Suchfeld steht im Kopfband (`PaneScaffold(…) { SearchField(text: $query) } content: { … }`), Listen mit eigenem Scrollen nutzen `layout: .fill`.
 4. Registrieren: `Registry.settingsPanes.append(SettingsPane(id: "notes", group: .settings, order: 100, title: { NotesText.pane }, symbol: "note.text", tint: .yellow, content: { AnyView(NotesPane()) }))`. Funktionen des Projekts nehmen `order` 100 bis 199 in Zehnerschritten; „Allgemein“ hat 0, „Über“ 1000, die Module ihre eigenen Bereiche (Tabelle „Reihenfolge in der Registry“ in `docs/MODULE.md`). Zwei Bereiche teilen sich nie einen Wert.
 5. Texte in `<Name>Text.swift`, beide Sprachen; Fußnoten erklären Folgen in einem Satz.
-6. Render-Szene `<feature>.pane` mit Beispielwerten; bei Zuständen (Berechtigung fehlt, nichts eingerichtet) je eine Szene.
+6. Render-Szene `<feature>.pane` mit Beispielwerten; bei Zuständen (Berechtigung fehlt, nichts eingerichtet) je eine Szene. Braucht die Szene eigene Werte, liest sie ein `Settings.inMemory()` (startet mit den Standardwerten, schreibt nie eine Datei), nie `Settings.shared`.
 7. Test: Standardwert, Schreiben und Lesen über `Settings(fileURL:)` in einem `tempDir()`, kaputter Wert fällt auf den Standard.
 
 ## Prüfen

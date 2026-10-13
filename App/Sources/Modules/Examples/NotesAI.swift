@@ -303,7 +303,7 @@ final class NotesPreviewModel: LocalModelProvider {
     /// A `LocalAI` with only this provider (settings in memory, never written).
     static func localAI(_ availability: AIAvailability) -> LocalAI {
         let ai = LocalAI()
-        ai.settings = Settings(fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("starter-render-notes-ai.json"))
+        ai.settings = Settings.inMemory()
         ai.register(NotesPreviewModel(availability))
         return ai
     }
