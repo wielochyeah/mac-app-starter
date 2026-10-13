@@ -28,7 +28,7 @@ define run_script
 	else echo "make: $(1) fehlt (übersprungen)"; fi
 endef
 
-.PHONY: help doctor build run test test-python check check-light shots readme-shots icon dmg notarize \
+.PHONY: help doctor build run test test-python check check-light typecheck shots readme-shots icon dmg notarize \
         rules hooks probe clean check-rules check-texts check-design check-kit
 
 help:
@@ -43,6 +43,7 @@ help:
 	@echo "make check-texts   Texte in beiden Sprachen, keine Texte in Views   (CHECK_FLAGS=--ci oder --streng)"
 	@echo "make check-design  nur Design-Tokens außerhalb von Kit/Design   (CHECK_FLAGS=--ci oder --streng)"
 	@echo "make check-kit     Kit-Dateien, Bauunterlagen, Prüfungen in Makefile, Hooks und CI"
+	@echo "make typecheck     jede Modul-Kombination der CI prüfen, ohne zu bauen   (MODULES=a,b für eine)"
 	@echo "make shots         jede Szene nach build/shots (+ index.html)   (ONLY=<präfix>  SHOTS_LANG  SHOTS_APPEARANCE)"
 	@echo "make readme-shots  Bilder aus docs/screenshots/list.txt nach docs/screenshots (höchstens 1200 px breit)"
 	@echo "make icon          App-Symbol nach App/Resources/AppIcon.icns"
@@ -67,6 +68,9 @@ test:
 
 test-python:
 	@python3 scripts/test_python.py
+
+typecheck:
+	@scripts/typecheck.sh
 
 shots:
 	@scripts/render.sh

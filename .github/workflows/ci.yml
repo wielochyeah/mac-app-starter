@@ -1,64 +1,95 @@
 name: CI
 
-# Every push gets the cheap jobs (checks on Linux, make check on one Mac). The module matrix, the release build, the
-# renders and the template probes cost about 27 macOS jobs; they run for pull requests, on the default branch and on
-# version tags only (condition "full" below), not for every hourly backup push of a working branch.
+# Minutes on macOS runners count ten times in private repositories, so the Mac jobs run only where they find something
+# new (.github/ci_plan.py decides, docs/UEBERGABE.md section 5 has the table and the expected minutes):
+#   every push and pull request   Linux: rules, texts, design, kit, commit messages, Python tests
+#   pull request (not a draft)    one Mac: make check, self-test, release build
+#   default branch, tags, weekly, manual run
+#                                 Mac: make check (unless the push is a merged pull request), typecheck of every module
+#                                 combination in one job, renders; in the starter also template probe and removals
+#   tags                          the DMG
+# Pushes to working branches need no Mac: their pull request runs it, and the pre-push hook ran the checks.
+# A full run on any branch: gh workflow run ci.yml --ref <branch>.
 on:
   push:
     branches: ["**"]
     tags: ["v*"]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
 
 # Read access to the code is all the checks need; a compromised step cannot push or change the repository.
 permissions:
   contents: read
 
+# A newer push to the same pull request or working branch cancels the older run; runs on the default branch and on
+# tags always finish.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') && github.ref != format('refs/heads/{0}', github.event.repository.default_branch)) }}
 
 env:
   # Pinned Xcode on the macos-26 runner image; scripts/pick-sdk.sh picks the newest SDK this compiler can read.
   # The build itself never uses xcodebuild or SwiftPM, only swiftc from this developer directory.
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
 
+# Actions are pinned to the full commit of a release (tag in the comment); a moved tag cannot change what runs here.
+# Updates: look up the commit of the new tag (gh api repos/actions/checkout/git/ref/tags/<tag>) and replace both.
 jobs:
-  # Which module combinations and removals exist here. A project that removed modules keeps this file unchanged, so the
-  # matrices come from the module folders that are still there (.github/ci_plan.py), and the starter-only probes are
-  # skipped in projects.
   plan:
     name: Plan
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
+      state: ${{ steps.plan.outputs.state }}
       starter: ${{ steps.plan.outputs.starter }}
+      check: ${{ steps.plan.outputs.check }}
+      full: ${{ steps.plan.outputs.full }}
+      probes: ${{ steps.plan.outputs.probes }}
       combos: ${{ steps.plan.outputs.combos }}
       removals: ${{ steps.plan.outputs.removals }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Module, Kombinationen, Entfernungen
+          fetch-depth: 0
+      - name: Repository, Mac-Jobs, Kombinationen, Entfernungen
         id: plan
         run: python3 .github/ci_plan.py
 
-  # The Python checks need no Mac; they run on the cheaper Linux runner.
+  # A repository made with "Use this template" is the starter's copy until bin/starter init has run. No Mac job runs
+  # for it; this job fails with the next step, so the first push does not look green by accident.
+  needs-init:
+    name: Einrichten (bin/starter init)
+    needs: plan
+    if: ${{ needs.plan.outputs.state == 'needs-init' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: bin/starter init ausführen
+        run: |
+          echo "::error title=Noch nicht eingerichtet::Dieses Repository ist eine Kopie des Starters. Auf einem Mac klonen, bin/starter init ausführen (docs/UEBERGABE.md), committen und pushen; danach laufen die Prüfungen."
+          exit 1
+
+  # The Python checks need no Mac; they run on the cheaper Linux runner, for every push and pull request.
   checks:
     name: Regeln, Texte, Design, Kit, Commits
+    needs: plan
+    if: ${{ needs.plan.outputs.state != 'needs-init' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The token stays out of .git/config; no step pushes. The whole history, so the commits of the branch can be
-          # checked against origin/main.
+          # The token stays out of .git/config; no step pushes. The whole history, for the range of commits below.
           persist-credentials: false
           fetch-depth: 0
-      - name: zsh for the Makefile
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
-      # The commit-msg hook runs only locally and can be skipped; CI repeats author and format for every new commit.
-      - name: Autor und Format aller Commits, die noch nicht auf main liegen
-        run: python3 scripts/check_commit_msg.py --bereich origin/main..HEAD
+      # The commit-msg hook runs only locally and can be skipped; CI repeats it for the commits of this push or pull
+      # request (pull requests: format only). A squash merge takes the title of the pull request as its subject.
+      - name: Format und Autor der neuen Commits
+        run: python3 scripts/check_commit_msg.py --github
       - name: Regeln aus rules/ und CLAUDE.md Teil A ohne Abweichung
         run: make check-rules
       # --ci: a finding that was fixed but still sits in rules/baseline/ is an error here (locally only a hint)
@@ -68,14 +99,21 @@ jobs:
         run: make check-design CHECK_FLAGS=--ci
       - name: Kit-Pfade und Pflichtprüfungen unverändert
         run: make check-kit
+      - name: Python-Tests der Werkzeuge
+        run: make test-python
 
-  # The modules from starter.json, on every push: everything make check does, then the bundle itself.
+  # The modules from starter.json: everything make check does (warnings are errors), then the bundle itself, the
+  # release build and the tooling under the python3 of the Command Line Tools.
   build:
-    name: make check (starter.json)
+    # The name of the required check only where the job runs or may be skipped for good (draft, documentation only);
+    # a working-branch push that leaves the Mac to its pull request reports under another name.
+    name: ${{ (github.event_name == 'push' && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) && !startsWith(github.ref, 'refs/tags/')) && 'make check (im Pull Request)' || 'make check (starter.json)' }}
+    needs: plan
+    if: ${{ needs.plan.outputs.check == 'true' }}
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Werkzeuge
@@ -87,76 +125,70 @@ jobs:
           source build/gen/app.env
           codesign --verify --strict "build/$APP_NAME.app"
           STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
+      - name: Release-Build und Selbsttest
+        run: |
+          STRICT=1 make build CONFIG=release
+          source build/gen/app.env
+          STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
       # The tooling must run with the python3 of the Command Line Tools (3.9) on the developer's Mac; python3 on the
       # runner's PATH is a newer Homebrew Python, /usr/bin/python3 is Apple's 3.9.
       - name: Python-Werkzeuge mit /usr/bin/python3 (3.9)
         run: |
           /usr/bin/python3 --version
           /usr/bin/python3 -m py_compile bin/starter .claude/hooks/*.py .github/ci_plan.py
-          /usr/bin/python3 -m unittest discover -s scripts/tests -t . -p 'test_*.py'
-          if [[ -d scripts/starter/tests ]]; then
-            /usr/bin/python3 -m unittest discover -s scripts/starter/tests -t scripts -p 'test_*.py'
-          fi
+          /usr/bin/python3 scripts/test_python.py
 
-  build-matrix:
-    name: Build (${{ matrix.modules }})
+  # Every module combination, type-checked one after another in one job (a few seconds each), warnings as errors.
+  typecheck:
+    name: Modul-Kombinationen (typecheck)
     needs: plan
-    if: ${{ (github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v')) && needs.plan.outputs.combos != '[]' }}
-    runs-on: macos-26
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        modules: ${{ fromJSON(needs.plan.outputs.combos) }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: make build
-        env:
-          COMBO: ${{ matrix.modules }}
-        run: make build MODULES="$COMBO"
-      - name: Signatur und Selbsttest ohne Fenster
-        run: |
-          source build/gen/app.env
-          codesign --verify --strict "build/$APP_NAME.app"
-          STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
-
-  release-build:
-    name: Release-Build
-    if: ${{ github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v') }}
-    runs-on: macos-26
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: make build CONFIG=release
-        run: make build CONFIG=release
-      - name: Selbsttest ohne Fenster
-        run: |
-          source build/gen/app.env
-          STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
-
-  shots:
-    name: Renders (en, de, hell, dunkel)
-    if: ${{ github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ needs.plan.outputs.full == 'true' }}
     runs-on: macos-26
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: make typecheck
+        run: make typecheck
+
+  shots:
+    name: Renders (en, de, hell, dunkel)
+    needs: plan
+    if: ${{ needs.plan.outputs.full == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: make shots
         run: make shots
-      - name: Renders als Artefakt
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
+      # A red render keeps every picture for three days; a green one only the pictures of README.md and the overview.
+      - name: Bilder des README
+        if: ${{ success() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/readme"
+          if [ -f build/shots/index.html ]; then cp build/shots/index.html "$RUNNER_TEMP/readme/"; fi
+          sed -e 's/#.*//' -e 's/[[:space:]]//g' docs/screenshots/list.txt | grep -v '^tools/' | grep -v '^$' | while read -r entry; do
+            if [ -f "build/shots/$entry" ]; then mkdir -p "$RUNNER_TEMP/readme/$(dirname "$entry")"; cp "build/shots/$entry" "$RUNNER_TEMP/readme/$entry"; fi
+          done
+      - name: README-Bilder als Artefakt
+        if: ${{ success() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shots-readme-${{ github.run_id }}
+          path: ${{ runner.temp }}/readme/
+          retention-days: 3
+          if-no-files-found: warn
+      - name: Alle Renders als Artefakt
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: shots-${{ github.run_id }}
           path: build/shots/
-          retention-days: 14
-          if-no-files-found: error
+          retention-days: 3
+          if-no-files-found: ignore
 
   dmg:
     name: DMG
@@ -164,7 +196,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: make dmg (ad hoc signiert)
@@ -180,7 +212,7 @@ jobs:
           codesign --verify --deep --strict "$mnt/$APP_NAME.app"
           hdiutil detach "$mnt"
       - name: DMG als Artefakt
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dmg-${{ github.ref_name }}
           path: build/dmg/*.dmg
@@ -192,11 +224,11 @@ jobs:
   template-probe:
     name: Template-Probe
     needs: plan
-    if: ${{ needs.plan.outputs.starter == 'true' && (github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v')) }}
+    if: ${{ needs.plan.outputs.probes == 'true' }}
     runs-on: macos-26
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Frische Kopie ohne Verlauf des Starters
@@ -212,7 +244,7 @@ jobs:
       - name: bin/starter init
         working-directory: ${{ runner.temp }}/probe
         run: bin/starter init --non-interactive --name Probe --bundle-id org.example.probe --ohne-netz
-      # init empties the starter's commit identity; until the project enters its own, the hook refuses every commit.
+      # init leaves the commit identity empty; until the project enters its own, the hook refuses every commit.
       - name: Ohne eigene Commit-Identität nimmt der Hook keinen Commit an
         working-directory: ${{ runner.temp }}/probe
         run: |
@@ -232,7 +264,7 @@ jobs:
   module-removal:
     name: Modul entfernen (${{ matrix.name }})
     needs: plan
-    if: ${{ needs.plan.outputs.starter == 'true' && (github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v')) }}
+    if: ${{ needs.plan.outputs.probes == 'true' }}
     runs-on: macos-26
     timeout-minutes: 40
     strategy:
@@ -240,7 +272,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.removals) }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Frische Kopie und bin/starter init
@@ -271,10 +303,10 @@ jobs:
       - name: Build, Selbsttest, Tests
         working-directory: ${{ runner.temp }}/probe
         run: |
-          make build
+          STRICT=1 make build
           source build/gen/app.env
           STARTER_HEADLESS=1 "build/$APP_NAME.app/Contents/MacOS/$APP_NAME" --selftest
-          make test
+          STRICT=1 make test
       - name: Keine Reste des Moduls
         working-directory: ${{ runner.temp }}/probe
         run: make check-kit

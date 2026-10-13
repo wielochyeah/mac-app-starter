@@ -96,16 +96,24 @@ gh api -X PUT repos/<owner>/<repo>/branches/main/protection \
   -F "enforce_admins=true" -F "required_pull_request_reviews=null" -F "restrictions=null"
 ```
 
-Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. Was wann läuft:
+Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. `strict=true` ist nötig: nur dann hat der Pull Request genau den Stand geprüft, der auf `main` landet, und der Merge braucht keinen zweiten `make check`.
 
-| Jobs | wann |
-|---|---|
-| `Regeln, Texte, Design, Kit, Commits` (Linux), `make check (starter.json)` (Mac, mit Selbsttest und den Python-Werkzeugen unter `/usr/bin/python3` 3.9) | jeder Push |
-| `Build (<module>)` je Kombination, `Release-Build`, `Renders (en, de, hell, dunkel)` | Pull Requests, Standard-Branch, Tags `v*` |
-| `Template-Probe`, `Modul entfernen (<modul>)` | dazu nur im Starter selbst |
-| `DMG` | Tags `v*` |
+Minuten auf macOS-Runnern zählen in privaten Repositorys zehnfach, Linux-Minuten einfach. Deshalb entscheidet der Job `Plan` (`.github/ci_plan.py`), welche Mac-Jobs ein Ereignis braucht:
 
-Der Job `Plan` (`.github/ci_plan.py`) liest aus den Ordnern unter `App/Sources/Modules/`, welche Module es noch gibt: Kombinationen mit einem entfernten Modul fallen weg, und die Proben des Starters laufen in einem Projekt nicht. Die stündlichen Sicherungs-Pushes eines Arbeits-Branches kosten so einen Mac-Job statt rund 27 (im Starter; ein Projekt ohne Beispiele und mit weniger Modulen hat weniger); Minuten auf macOS-Runnern zählen in privaten Repositorys mehrfach. Wer weiter sparen muss, kürzt `COMBOS` in `.github/ci_plan.py`, nie die Prüfungen.
+| Ereignis | Jobs | Mac-Minuten, geschätzt |
+|---|---|---|
+| Push auf einen Arbeits-Branch | `Regeln, Texte, Design, Kit, Commits` (Linux, mit den Python-Tests) | 0 |
+| Pull Request, kein Entwurf, jede Aktualisierung | dazu `make check (starter.json)`: `make check` mit Warnungen als Fehler, Selbsttest, Release-Build, Python-Werkzeuge unter `/usr/bin/python3` 3.9 | etwa 10 |
+| Pull Request als Entwurf, oder nur Doku geändert (`*.md` außerhalb von `App/`, `docs/`) | nur Linux | 0 |
+| Merge über GitHub auf `main` | `Modul-Kombinationen (typecheck)`: jede Kombination aus `.github/ci_plan.py` in einem Job geprüft, ohne zu bauen; `Renders (en, de, hell, dunkel)` | etwa 15 |
+| direkter Push auf `main`, wöchentlich montags, `gh workflow run ci.yml --ref <branch>` | dazu `make check (starter.json)` | etwa 25 |
+| Tag `v*` | alles davon und `DMG` | etwa 30 |
+| im Starter selbst: `main`, Tags, Lauf von Hand | dazu `Template-Probe` und `Modul entfernen (<modul>)` je Modul | etwa 60 mehr |
+| Kopie aus „Use this template“ vor `bin/starter init` | nur `Einrichten (bin/starter init)` (Linux), schlägt mit dem Hinweis auf `bin/starter init` fehl | 0 |
+
+Die Schätzung beruht auf etwa dem Dreifachen der Zeiten auf einem Mac mit Apple Silicon (`make check` 2,5 Minuten, `make typecheck` 3 Minuten). Ein Pull Request mit fünf Aktualisierungen kostet so etwa 50 Mac-Minuten, abgerechnet 500; vorher liefen je Aktualisierung bis zu 27 Mac-Jobs. Renders behalten die CI drei Tage: bei Grün nur die Bilder aus `docs/screenshots/list.txt` und die Übersicht, bei Rot alle. Wer weiter sparen muss, kürzt `COMBOS` in `.github/ci_plan.py`, nie die Prüfungen.
+
+Der Plan liest aus den Ordnern unter `App/Sources/Modules/`, welche Module es noch gibt: Kombinationen mit einem entfernten Modul fallen weg. Ein Repository gilt nur als der Starter, wenn es `repository` aus `starter.manifest.json` ist (Groß- und Kleinschreibung zählen nicht); jede andere Kopie ohne `bin/starter init` bekommt keinen Mac-Job.
 
 ## 6. Verteilen
 

@@ -776,7 +776,7 @@ def ci_jobs(text):
     return dict(zip(parts[1::2], parts[2::2]))
 
 
-FULL_RUN = "github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
+PINNED = re.compile(r"uses: ([\w-]+/[\w-]+)@([0-9a-f]{40}) # v\d+\.\d+\.\d+$", re.M)
 
 
 class CiTests(unittest.TestCase):
@@ -786,30 +786,52 @@ class CiTests(unittest.TestCase):
         cls.jobs = ci_jobs(cls.ci)
 
     def test_ci_runs_every_gate(self):
-        for needle in ["make check-rules", "make check-texts", "make check-design", "make check-kit", "make check", "make build",
-                       "make test", "make shots", "--selftest", "check_commit_msg.py", "bin/starter init", "bin/starter remove",
-                       "persist-credentials: false"]:
+        for needle in ["make check-rules", "make check-texts", "make check-design", "make check-kit", "make check", "make typecheck",
+                       "make test", "make shots", "--selftest", "check_commit_msg.py --github", "bin/starter init",
+                       "bin/starter remove", "persist-credentials: false", "make test-python"]:
             self.assertIn(needle, self.ci)
         self.assertNotIn("continue-on-error: true", self.ci)
         self.assertNotRegex(self.ci, r"if:\s*false")
 
-    def test_every_push_runs_make_check_and_the_expensive_jobs_wait_for_a_pull_request(self):
-        for job in ("plan", "checks", "build"):
-            self.assertNotIn("\n    if:", self.jobs[job], job)
-        self.assertIn("run: make check\n", self.jobs["build"])
-        for job in ("build-matrix", "release-build", "shots", "template-probe", "module-removal"):
-            self.assertIn(FULL_RUN, self.jobs[job], job)
+    def test_actions_are_pinned_to_a_commit(self):
+        uses = re.findall(r"uses: (\S+)", self.ci)
+        self.assertTrue(uses)
+        self.assertEqual(len(PINNED.findall(self.ci)), len(uses), uses)
+
+    def test_plan_decides_and_needs_init_gets_no_mac(self):
+        self.assertIn("python3 .github/ci_plan.py", self.jobs["plan"])
+        self.assertNotIn("\n    if:", self.jobs["plan"])
+        self.assertIn("needs.plan.outputs.state == 'needs-init'", self.jobs["needs-init"])
+        self.assertIn("ubuntu-latest", self.jobs["needs-init"])
+        self.assertIn("exit 1", self.jobs["needs-init"])
+        self.assertIn("needs.plan.outputs.state != 'needs-init'", self.jobs["checks"])
+        for job in ("build", "typecheck", "shots", "template-probe", "module-removal"):
+            self.assertIn("needs: plan", self.jobs[job], job)
+            self.assertIn("macos-26", self.jobs[job], job)
+        self.assertIn("needs.plan.outputs.check == 'true'", self.jobs["build"])
+        for job in ("typecheck", "shots"):
+            self.assertIn("needs.plan.outputs.full == 'true'", self.jobs[job], job)
+        for job in ("template-probe", "module-removal"):
+            self.assertIn("needs.plan.outputs.probes == 'true'", self.jobs[job], job)
+        self.assertIn("fromJSON(needs.plan.outputs.removals)", self.jobs["module-removal"])
         self.assertIn("startsWith(github.ref, 'refs/tags/v')", self.jobs["dmg"])
 
-    def test_module_jobs_follow_the_plan(self):
-        self.assertIn("fromJSON(needs.plan.outputs.combos)", self.jobs["build-matrix"])
-        self.assertIn("fromJSON(needs.plan.outputs.removals)", self.jobs["module-removal"])
-        for job in ("template-probe", "module-removal"):
-            self.assertIn("needs.plan.outputs.starter == 'true'", self.jobs[job], job)
-        self.assertIn("python3 .github/ci_plan.py", self.jobs["plan"])
+    def test_one_mac_job_per_pull_request_with_release_build(self):
+        build = self.jobs["build"]
+        self.assertIn("run: make check\n", build)
+        self.assertIn("make build CONFIG=release", build)
+        self.assertIn("'make check (starter.json)'", build)
+        self.assertIn("types: [opened, synchronize, reopened, ready_for_review]", self.ci)
+
+    def test_renders_keep_little(self):
+        shots = self.jobs["shots"]
+        self.assertNotIn("retention-days: 14", shots)
+        self.assertEqual(re.findall(r"retention-days: (\d+)", shots), ["3", "3"])
+        self.assertIn("if: ${{ failure() }}", shots)
+        self.assertIn("docs/screenshots/list.txt", shots)
 
     def test_tooling_runs_under_the_system_python(self):
-        self.assertIn("/usr/bin/python3 -m unittest discover -s scripts/tests", self.jobs["build"])
+        self.assertIn("/usr/bin/python3 scripts/test_python.py", self.jobs["build"])
 
 
 class CiPlanTests(unittest.TestCase):
@@ -818,14 +840,23 @@ class CiPlanTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, root)
         for folder in folders:
             (root / "App" / "Sources" / "Modules" / folder).mkdir(parents=True)
-        (root / "starter.lock.json").write_text(json.dumps({"project": project}), encoding="utf-8")
-        manifest = ROOT / "starter.manifest.json"
-        if manifest.is_file():
-            shutil.copy(manifest, root / "starter.manifest.json")
+        lock = {"description": "x", "starter": "mac-app-starter", "version": "1.0.0", "state": "release", "source": None,
+                "commit": None, "project": project, "createdOn": None, "lastSyncedOn": None, "removedModules": [],
+                "checksums": {}}
+        (root / "starter.lock.json").write_text(json.dumps(lock), encoding="utf-8")
+        shutil.copy(ROOT / "starter.manifest.json", root / "starter.manifest.json")
+        shutil.copytree(ROOT / "scripts" / "starter", root / "scripts" / "starter",
+                        ignore=shutil.ignore_patterns("tests", "__pycache__"))
+        shutil.copy(ROOT / "scripts" / "gen_config.py", root / "scripts" / "gen_config.py")
         return root
 
+    def env(self, root, repository):
+        return {"GITHUB_REPOSITORY": repository, "GITHUB_WORKSPACE": str(root)}
+
     def test_starter_builds_every_combination_and_tries_every_removal(self):
-        result = ci_plan.plan(self.make_tree(["Window", "MenuBar", "Island", "Background", "Hotkeys", "AI", "MLX", "Examples"], None))
+        root = self.make_tree(["Window", "MenuBar", "Island", "Background", "Hotkeys", "AI", "MLX", "Examples"], None)
+        result = ci_plan.plan(root, env=self.env(root, "WielochYeah/Mac-App-Starter"))
+        self.assertEqual(result["state"], "starter")
         self.assertEqual(result["starter"], "true")
         self.assertEqual(result["combos"], ci_plan.COMBOS + ["window,menubar,island,background,hotkeys,ai,mlx,examples"])
         removals = {entry["name"]: entry for entry in result["removals"]}
@@ -839,8 +870,17 @@ class CiPlanTests(unittest.TestCase):
         self.assertEqual(sorted(order), ["ai", "background", "hotkeys", "island", "mlx", "window"])
         self.assertLess(order.index("mlx"), order.index("ai"))
 
+    def test_a_repository_made_from_the_template_is_not_the_starter(self):
+        root = self.make_tree(["Window", "MenuBar", "Examples"], None)
+        result = ci_plan.plan(root, "push", {"ref": "refs/heads/main", "repository": {"default_branch": "main"}},
+                              env=self.env(root, "someone/new-app"))
+        self.assertEqual(result["state"], "needs-init")
+        self.assertEqual([result[key] for key in ("starter", "check", "full", "probes")], ["false"] * 4)
+
     def test_project_without_menubar_and_island_drops_their_jobs(self):
-        result = ci_plan.plan(self.make_tree(["Window", "AI", "MLX", "Examples"], "Notizen"))
+        root = self.make_tree(["Window", "AI", "MLX", "Examples"], "Notizen")
+        result = ci_plan.plan(root, env=self.env(root, "someone/notizen"))
+        self.assertEqual(result["state"], "project")
         self.assertEqual(result["starter"], "false")
         self.assertEqual(result["combos"], ["window", "window,ai", "window,ai,mlx", "window,examples", "window,ai,examples",
                                             "window,ai,mlx,examples"])
@@ -848,12 +888,52 @@ class CiPlanTests(unittest.TestCase):
         self.assertNotIn("window", removals)  # the last app form: bin/starter refuses it
         self.assertEqual(removals["alle"], {"name": "alle", "remove": "mlx ai", "strip": True, "last": "window"})
 
+    def test_which_mac_jobs_each_event_gets(self):
+        repo = {"default_branch": "main"}
+        pr = {"pull_request": {"draft": False, "base": {"sha": "a"}, "head": {"sha": "b"}}, "repository": repo}
+        draft = {"pull_request": {"draft": True}, "repository": repo}
+        branch = {"ref": "refs/heads/feature", "before": "1" * 40, "after": "2" * 40, "repository": repo}
+        main = dict(branch, ref="refs/heads/main")
+        tag = dict(branch, ref="refs/tags/v1.1.0")
+
+        def jobs(event_name, event, state="project", committer="ada@example.org", changed=None):
+            plan = ci_plan.decide(event_name, event, state, committer, changed)
+            return "".join(key[0] if plan[key] else "-" for key in ("check", "full", "probes"))
+
+        self.assertEqual(jobs("pull_request", pr), "c--")
+        self.assertEqual(jobs("pull_request", draft), "---")
+        self.assertEqual(jobs("push", branch), "---")
+        self.assertEqual(jobs("push", main), "cf-")
+        self.assertEqual(jobs("push", main, committer="noreply@github.com"), "-f-")  # merged pull request
+        self.assertEqual(jobs("push", main, state="starter"), "cfp")
+        self.assertEqual(jobs("push", tag, state="starter"), "cfp")
+        self.assertEqual(jobs("schedule", {}, state="starter"), "cf-")
+        self.assertEqual(jobs("workflow_dispatch", {}, state="starter"), "cfp")
+        self.assertEqual(jobs("workflow_dispatch", {}, state="project"), "cf-")
+        self.assertEqual(jobs("push", main, state="needs-init"), "---")
+        self.assertEqual(jobs("pull_request", pr, changed=["README.md", "docs/UEBERGABE.md"]), "---")
+        self.assertEqual(jobs("pull_request", pr, changed=["README.md", "App/Sources/Kit/X.swift"]), "c--")
+        self.assertEqual(jobs("pull_request", pr, changed=["THIRD_PARTY_NOTICES.md"]), "c--")
+        self.assertEqual(jobs("push", main, changed=[".claude/skills/x/SKILL.md"]), "---")
+
+    def test_combinations_for_make_typecheck(self):
+        root = self.make_tree(["MenuBar"], None)
+        out = subprocess.run([sys.executable, str(ROOT / ".github" / "ci_plan.py"), "--kombinationen", str(root)],
+                             capture_output=True, text=True, check=True).stdout
+        self.assertEqual(out.split(), ["menubar"])
+
     def test_output_lines_for_github(self):
         root = self.make_tree(["MenuBar"], None)
         target = root / "out.txt"
-        env = dict(os.environ, GITHUB_OUTPUT=str(target))
-        subprocess.run([sys.executable, str(ROOT / ".github" / "ci_plan.py"), str(root)], env=env, check=True, capture_output=True)
+        event = root / "event.json"
+        event.write_text(json.dumps({"ref": "refs/heads/main", "repository": {"default_branch": "main"}}), encoding="utf-8")
+        env = dict(os.environ, GITHUB_OUTPUT=str(target), GITHUB_REPOSITORY="wielochyeah/mac-app-starter",
+                   GITHUB_WORKSPACE=str(root), GITHUB_EVENT_NAME="workflow_dispatch", GITHUB_EVENT_PATH=str(event))
+        subprocess.run([sys.executable, str(ROOT / ".github" / "ci_plan.py"), str(root)], env=env, check=True,
+                       capture_output=True, cwd=str(root))
         lines = dict(line.split("=", 1) for line in target.read_text(encoding="utf-8").splitlines())
+        self.assertEqual(lines["state"], "starter")
+        self.assertEqual((lines["check"], lines["full"], lines["probes"]), ("true", "true", "true"))
         self.assertEqual(json.loads(lines["combos"]), ["menubar"])
         self.assertEqual(json.loads(lines["removals"]), [{"name": "alle", "remove": "", "strip": False, "last": "menubar"}])
 
