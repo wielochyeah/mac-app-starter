@@ -1,9 +1,10 @@
 """Template probe (make probe; not part of make test, it builds the app several times).
 
 Copies the starter's files (git ls-files, new files included) into a temp folder, `git init`, runs
-`bin/starter init --non-interactive` with icon and build, checks that a commit fails while the commit
-identity is empty (when the commit-msg hook exists), then removes each module in its own copy of
-that project and builds it:
+`bin/starter init --non-interactive` with icon and build, then `make check` in the new project (a check
+that only passes in the starter's own tree, like the old test_packaging, fails here), checks that a commit
+fails while the commit identity is empty (when the commit-msg hook exists), then removes each module in its
+own copy of that project and builds it:
   island, background, hotkeys, examples, mlx, menubar   removed, make build green, check-kit part 1 green
   ai        refused (mlx still there); then mlx and ai removed, build green
   window    removed, build green; then menubar refused (one of window/menubar stays)
@@ -74,12 +75,17 @@ class TemplateProbe(unittest.TestCase):
         sh(["git", *GIT_ID, "add", "-A"], cls.base)
         sh(["git", *GIT_ID, "commit", "-qm", "chore: init"], cls.base)
         cls.results = {}
+        cls.check_code, cls.check_out, cls.check_seconds = None, "", 0.0
         if cls.init_code == 0:
+            start = time.time()
+            cls.check_code, cls.check_out = sh(["make", "check"], cls.base)
+            cls.check_seconds = time.time() - start
             cls.results = cls.run_removals()
 
     @classmethod
     def tearDownClass(cls):
-        report = [f"probe: init {'grün' if cls.init_code == 0 else 'ROT'} ({cls.init_seconds:.0f} s)"]
+        report = [f"probe: init {'grün' if cls.init_code == 0 else 'ROT'} ({cls.init_seconds:.0f} s)",
+                  f"probe: make check nach init exit {cls.check_code} ({cls.check_seconds:.0f} s)"]
         for name, steps in cls.results.items():
             report.append(f"probe: {name}: " + "; ".join(f"{label} exit {code} ({secs:.0f} s)"
                                                           for label, code, _, secs in steps))
@@ -119,11 +125,22 @@ class TemplateProbe(unittest.TestCase):
         self.assertIn("bin/starter init hat das Projekt Probe App eingerichtet", self.init_out)
         self.assertTrue((self.base / "build" / "Probe App.app").is_dir(), "make build ran")
         self.assertFalse((self.base / "docs" / "bau").exists())
+        readme = (self.base / "README.md").read_text(encoding="utf-8")
+        self.assertTrue(readme.startswith("# Probe App\n"), readme[:200])
+        self.assertNotIn("Rundgang", readme)
+        self.assertEqual(sorted((self.base / "docs" / "screenshots").glob("*.png")), [], "starter pictures are gone")
         lock = read_lock(self.base)
         self.assertEqual(lock["project"], "Probe App")
         findings = kitcheck.Findings()
         kitcheck.check_project(self.base, read_manifest(self.base), lock, kitcheck.working_files(self.base), findings)
         self.assertEqual(findings.problems, [])
+
+    def test_make_check_is_green_in_the_new_project(self):
+        if self.init_code != 0:
+            self.skipTest("init ist rot")
+        self.assertEqual(self.check_code, 0, self.check_out[-4000:])
+        self.assertIn("check-kit:", self.check_out)
+        self.assertIn("0 failures", self.check_out)
 
     def test_a_feature_keeps_check_kit_green(self):
         """A project's first feature and its tests go to project paths; no kit file changes."""
