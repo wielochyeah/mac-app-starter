@@ -71,13 +71,15 @@ struct ShortcutRecorderRow: View {
         }
         if let problem { return (problem.text, t.strikeText) }
         if let note = recorder.note, note.target == id { return (note.text, nil) }
+        // keys that are set but do not arrive are a warning (orange, like the step's status line);
+        // red stays for a combination refused while recording
         if let keys = center.display(id) {
             switch center.status[id] {
-            case .heldElsewhere?: return (HotkeysText.heldElsewhereStatus(keys), t.strikeText)
-            case .failed(let code)?: return (HotkeysText.failedStatus(keys, Int(code)), t.strikeText)
+            case .heldElsewhere?: return (HotkeysText.heldElsewhereStatus(keys), t.warnText)
+            case .failed(let code)?: return (HotkeysText.failedStatus(keys, Int(code)), t.warnText)
             case .duplicate(let other)?:
                 let title = center.definition(other)?.title() ?? other
-                return (HotkeysText.duplicateStatus(keys, of: title), t.strikeText)
+                return (HotkeysText.duplicateStatus(keys, of: title), t.warnText)
             default: break
             }
         }
