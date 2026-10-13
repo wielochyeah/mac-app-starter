@@ -7,7 +7,8 @@
 // Before building this way, generate the config once (and after every starter.json change):
 //     python3 scripts/gen_config.py
 // It writes build/gen/AppConfig.swift (compiled here) and build/gen/Info.plist (embedded here).
-// Modules come from starter.json, like in the default path. Tests run only through `make test`.
+// Modules and the minimum macOS (app.minimumMacOS) come from starter.json, like in the default path; a missing or
+// unreadable starter.json stops here instead of building some other module set. Tests run only through `make test`.
 
 import Foundation
 import PackageDescription
@@ -18,12 +19,23 @@ let moduleDirs: [(key: String, dir: String)] = [
     ("hotkeys", "Hotkeys"), ("ai", "AI"), ("mlx", "MLX"), ("examples", "Examples"),
 ]
 
-var enabled: Set<String> = ["window", "menubar"]
-if let data = try? Data(contentsOf: root.appendingPathComponent("starter.json")),
-   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-   let modules = json["modules"] as? [String: Bool] {
-    enabled = Set(modules.filter(\.value).map(\.key))
+func starterConfig() -> [String: Any] {
+    let url = root.appendingPathComponent("starter.json")
+    guard let data = try? Data(contentsOf: url) else { fatalError("Package.swift: \(url.path) is missing or unreadable") }
+    guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+        fatalError("Package.swift: starter.json is not a JSON object (python3 scripts/gen_config.py names the problem)")
+    }
+    return json
 }
+
+let config = starterConfig()
+guard let modules = config["modules"] as? [String: Bool] else { fatalError("Package.swift: starter.json has no modules") }
+let unknown = Set(modules.keys).subtracting(moduleDirs.map(\.key))
+if !unknown.isEmpty { fatalError("Package.swift: unknown modules in starter.json: \(unknown.sorted())") }
+guard let minimumMacOS = (config["app"] as? [String: Any])?["minimumMacOS"] as? String else {
+    fatalError("Package.swift: starter.json has no app.minimumMacOS")
+}
+let enabled = Set(modules.filter(\.value).map(\.key))
 let active = moduleDirs.filter { enabled.contains($0.key) }
 
 var swiftSettings: [SwiftSetting] = [.defaultIsolation(MainActor.self)]
@@ -39,7 +51,7 @@ if enabled.contains("ai") { linkerSettings.append(.linkedFramework("FoundationMo
 
 let package = Package(
     name: "App",
-    platforms: [.macOS(.v26)],
+    platforms: [.macOS(minimumMacOS)],
     targets: [
         .executableTarget(
             name: "App",

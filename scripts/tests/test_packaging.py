@@ -434,5 +434,38 @@ class ToolBuildTests(unittest.TestCase):
         self.assertIn("du|sie", res.stderr)
 
 
+def manifest_api():
+    """The PackageDescription module of the selected developer dir, or None."""
+    dev = subprocess.run(["xcode-select", "-p"], capture_output=True, text=True).stdout.strip() if shutil.which("xcode-select") else ""
+    dev = os.environ.get("DEVELOPER_DIR") or dev
+    for path in (Path(dev) / "usr/lib/swift/pm/ManifestAPI",
+                 Path(dev) / "Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/pm/ManifestAPI"):
+        if (path / "PackageDescription.swiftmodule").exists():
+            return path
+    return None
+
+
+class PackageManifestTests(unittest.TestCase):
+    """Package.swift (the second build path) follows starter.json: modules and app.minimumMacOS, and stops on a
+    starter.json it cannot read instead of building another module set."""
+
+    def test_reads_the_minimum_macos_and_never_defaults_modules(self):
+        text = (ROOT / "Package.swift").read_text(encoding="utf-8")
+        self.assertIn(".macOS(minimumMacOS)", text)
+        self.assertNotIn(".v26", text)
+        self.assertIn('fatalError("Package.swift: starter.json has no modules")', text)
+        self.assertNotIn('var enabled: Set<String> = ["window", "menubar"]', text)
+
+    @unittest.skipUnless(sys.platform == "darwin" and shutil.which("swiftc") and manifest_api(),
+                         "type-checks against PackageDescription (macOS)")
+    def test_type_checks(self):
+        env = {k: v for k, v in os.environ.items() if k != "SDKROOT"}
+        sdk = subprocess.run([str(ROOT / "scripts" / "pick-sdk.sh")], capture_output=True, text=True, env=env).stdout.strip()
+        res = subprocess.run(["swiftc", "-typecheck", "-sdk", sdk, "-I", str(manifest_api()), "-swift-version", "6",
+                              "-package-description-version", "6.2", str(ROOT / "Package.swift")],
+                             capture_output=True, text=True, env=dict(env, SDKROOT=sdk))
+        self.assertEqual(res.returncode, 0, res.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
