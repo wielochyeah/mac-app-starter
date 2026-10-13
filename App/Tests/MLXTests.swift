@@ -123,6 +123,14 @@ final class MLXTests: TestSuite {
             do { try ModelCatalog(version: 1, defaultID: "a", models: [m]).validate() } catch { fail("valid catalog: \(error)") }
         }
 
+        test("the models folder is created on a download and kept out of backups") {
+            let hfHome = tempDir().appendingPathComponent("Models/huggingface", isDirectory: true)
+            let folder = MLXPaths.prepareModelsFolder(hfHome)
+            expectEqual(folder.lastPathComponent, "Models")
+            let values = try folder.resourceValues(forKeys: [.isExcludedFromBackupKey])
+            expectEqual(values.isExcludedFromBackup, true)
+        }
+
         test("hub cache: complete snapshots only, blob bytes include partial files") {
             let hub = tempDir()
             let fm = FileManager.default

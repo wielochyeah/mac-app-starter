@@ -50,6 +50,7 @@ import Observation
     static func standard() -> ModelDownloads {
         ModelDownloads(catalog: .current, hub: MLXPaths.hub) { model in
             guard let dir = MLXPaths.workerDir, let python = MLXPaths.python(workerDir: dir) else { return nil }
+            MLXPaths.prepareModelsFolder()
             let catalog = ModelCatalog.current
             var args = ["-u", dir.appendingPathComponent("download.py").path, "--repo", model.repo, "--total", String(model.bytes),
                         "--hf-home", MLXPaths.hfHome.path, "--watch-stdin"]

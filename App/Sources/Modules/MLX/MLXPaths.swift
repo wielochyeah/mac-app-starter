@@ -51,6 +51,18 @@ nonisolated enum MLXPaths {
 
     static var hub: URL { hfHome.appendingPathComponent("hub", isDirectory: true) }
 
+    /// Creates the models folder (the parent of `hfHome`) and keeps it out of Time Machine and
+    /// other backups: gigabytes that can be downloaded again. Called before a download starts.
+    @discardableResult
+    static func prepareModelsFolder(_ hfHome: URL = hfHome) -> URL {
+        let folder = Paths.ensure(hfHome.deletingLastPathComponent())
+        var url = folder
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? url.setResourceValues(values)
+        return folder
+    }
+
     /// The worker's and downloader's stderr (library output, tracebacks). Never the protocol.
     static var logFile: URL { Paths.caches.appendingPathComponent("mlx-worker.log") }
 
