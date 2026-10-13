@@ -75,7 +75,7 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
 
    Der Selbsttest `window.chrome` baut headless das echte Hauptfenster und zeichnet seine erste Seite; auch dabei entsteht keine Datei. <!-- modul:window -->
 7. Prüfbare Annahmen zur Laufzeit (Datei lesbar, Migration aktuell) als `SelfTestCheck` eintragen.
-8. Eine Karte für den Onboarding-Schritt „Funktionen“: `OnboardingFeatures.items.append(OnboardingFeature(id: "<feature>.<punkt>", order: 10, symbol: "<sf.symbol>", title: { <Name>Text.featureTitle }, detail: { <Name>Text.featureDetail }))` im `register()`. Der Schritt zeigt die ersten drei Karten nach `order` und fehlt, solange es keine gibt; die Szene `onboarding.features` zeigt Beispielkarten des Starters, nicht die des Projekts.
+8. Eine Karte für den Einrichtungsschritt „Funktionen“: `OnboardingFeatures.items.append(OnboardingFeature(id: "<feature>.<punkt>", order: 10, symbol: "<sf.symbol>", title: { <Name>Text.featureTitle }, detail: { <Name>Text.featureDetail }))` im `register()`. Der Schritt zeigt die ersten drei Karten nach `order` und fehlt, solange es keine gibt; die Szene `onboarding.features` zeigt Beispielkarten des Starters, nicht die des Projekts.
 9. Sobald das erste eigene Feature steht: `bin/starter strip-examples`. <!-- modul:examples -->
 
 ## Prüfen

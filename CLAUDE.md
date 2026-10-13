@@ -163,7 +163,7 @@ Zweck, Zielgruppe, Fachsprache, App-Formen und offene Fragen stehen in `docs/PRO
 5. Vor lokaler KI `docs/KI.md`. <!-- modul:ai -->
 6. Im Strangbetrieb die eigene Datei-Zuständigkeit in `docs/agents/straenge.json`. Ein Strang ist ein Arbeitspaket mit eigener Session, eigenem Branch und festen Dateien; die Integration führt die Stränge zusammen und pflegt die gemeinsamen Dateien.
 
-Der Einstieg für einen Agenten in ein neues Projekt (Bootstrap) steht in `README.md` im Abschnitt „Ein neues Projekt starten“.
+Der Einstieg für einen Agenten in ein neues Projekt (Bootstrap-Prompt) steht in `docs/UEBERGABE.md`, Abschnitt 4.
 
 Die eine Einstellungsdatei ist `starter.json`: Name, Bundle-ID, Akzent, Symbol, Module, Berechtigungen, Sprachen und Anrede der Texte, Commit-Identität und Signatur. `scripts/gen_config.py` erzeugt daraus beim Build `AppConfig`, Info.plist und die Nutzungsbeschreibungen. Welche Pfade dem Starter gehören und welche dem Projekt, steht in `starter.manifest.json`.
 

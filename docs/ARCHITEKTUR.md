@@ -36,7 +36,7 @@ Ablauf eines Starts:
 App/Sources/
   Kit/        immer dabei, gehört dem Starter
     Core/       Lang (tr, Localizer, Format), Settings, Database, Registry, RenderMode, Paths, Log, AppInfo, Version, Observing
-    Design/     Theme und Tokens, Komponenten, Patterns (Onboarding- und Einstellungsmuster), Seitenleiste (`Metrics.Sidebar`), Island-Tokens, Katalog
+    Design/     Theme und Tokens, Komponenten, Patterns (Muster für Einrichtung und Einstellungen), Seitenleiste (`Metrics.Sidebar`), Island-Tokens, Katalog
     Texts/      CommonText, KitText, DesignText
     Main/       Entry, CommandLine, AppDelegate, AppForm, AppActions, WindowHost, MainMenu, HeadlessWindows, Modules, SelfTest
     Onboarding/ Fenster, Ablauf, Kit-Schritte

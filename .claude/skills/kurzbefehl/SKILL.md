@@ -1,6 +1,6 @@
 ---
 name: kurzbefehl
-description: Legt einen globalen Kurzbefehl an, den die Nutzerin ändern kann (HotkeyCenter.shared.register mit Standard und Aktion, Regeln gegen belegte und tippende Kombinationen, Eintrag im Bereich Kurzbefehle, optional im Onboarding). Nutzen, wenn eine Funktion aus jeder App heraus per Tastatur erreichbar sein soll. Gehört zum Modul hotkeys.
+description: Legt einen globalen Kurzbefehl an, den die Nutzerin ändern kann (HotkeyCenter.shared.register mit Standard und Aktion, Regeln gegen belegte und tippende Kombinationen, Eintrag im Bereich „Tastaturkurzbefehle“, optional in der Einrichtung). Nutzen, wenn eine Funktion aus jeder App heraus per Tastatur erreichbar sein soll. Gehört zum Modul hotkeys.
 ---
 
 # Kurzbefehl

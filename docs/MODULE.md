@@ -21,7 +21,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 
 ## Reihenfolge in der Registry
 
-Jedes Modul hat für seine Einstellungsbereiche und Onboarding-Schritte einen eigenen Bereich von `order`-Werten; zwei Beiträge teilen sich nie einen Wert. Eigene Funktionen des Projekts nehmen die freien Bereiche, in Zehnerschritten.
+Jedes Modul hat für seine Einstellungsbereiche und Einrichtungsschritte einen eigenen Bereich von `order`-Werten; zwei Beiträge teilen sich nie einen Wert. Eigene Funktionen des Projekts nehmen die freien Bereiche, in Zehnerschritten.
 
 | `order` | Einstellungsbereich (Gruppe `.settings`, unter den Inhalten) |
 |---|---|
@@ -31,10 +31,10 @@ Jedes Modul hat für seine Einstellungsbereiche und Onboarding-Schritte einen ei
 | 250 bis 299 | Menüleiste (`menubar`, 250) | <!-- modul:menubar -->
 | 300 bis 349 | Modelle (`ai`, 300; `mlx` ist ein Abschnitt darin) | <!-- modul:ai -->
 | 350 bis 399 | Hintergrund (`background`, 350) | <!-- modul:background -->
-| 400 bis 449 | Kurzbefehle (`hotkeys`, 400) | <!-- modul:hotkeys -->
+| 400 bis 449 | Tastaturkurzbefehle (`hotkeys`, 400) | <!-- modul:hotkeys -->
 | 1000 | Über (Kit) |
 
-Die Gruppe `.content` steht oben; dort beginnen Bereiche der Funktionen bei 100 (Beispiel „Notizen“), die Galerie des Kits (nur in Debug-Builds) hat 900. Die Reihenfolge der Onboarding-Schritte steht im Skill `neuer-onboarding-schritt`: Kit 0 bis 20, Funktionen 30 bis 299, Berechtigungen 300 bis 399, dann `ai` 400, `island` 500, `hotkeys` 600, `background` 900, Fertig 1000.
+Die Gruppe `.content` steht oben; dort beginnen Bereiche der Funktionen bei 100 (Beispiel „Notizen“), die Galerie des Kits (nur in Debug-Builds) hat 900. Die Reihenfolge der Einrichtungsschritte steht im Skill `neuer-onboarding-schritt`: Kit 0 bis 20, Funktionen 30 bis 299, Berechtigungen 300 bis 399, dann `ai` 400, `island` 500, `hotkeys` 600, `background` 900, Fertig 1000.
 
 <!-- modul:window:anfang -->
 ## window: Fenster-App

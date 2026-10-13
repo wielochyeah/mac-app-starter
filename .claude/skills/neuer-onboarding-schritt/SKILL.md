@@ -1,6 +1,6 @@
 ---
 name: neuer-onboarding-schritt
-description: Fügt dem Onboarding einen Schritt hinzu (OnboardingStep mit Reihenfolge und Bedingung, OnboardingPage mit Kopf, Status-Slot und Hinweis, Fußleiste über den Kontext, beide Sprachen, Render-Szenen je Zustand). Nutzen, wenn beim ersten Start etwas erklärt, gewählt oder erlaubt werden muss.
+description: Fügt der Einrichtung einen Schritt hinzu (OnboardingStep mit Reihenfolge und Bedingung, OnboardingPage mit Kopf, Status-Slot und Hinweis, Fußleiste über den Kontext, beide Sprachen, Render-Szenen je Zustand). Nutzen, wenn beim ersten Start etwas erklärt, gewählt oder erlaubt werden muss.
 ---
 
 # Neuer Einrichtungsschritt

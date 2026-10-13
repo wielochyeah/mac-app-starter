@@ -25,7 +25,7 @@ Mindestens `window` oder `menubar` bleibt, sonst sind die Einstellungen nicht er
 
 | Stufe | Inhalt | fertig, wenn |
 |---|---|---|
-| 1 | `<Ansichten, Einstellungen, Onboarding-Schritte, Hintergrundaufgaben>` | `<Abnahme in Sätzen>` |
+| 1 | `<Ansichten, Einstellungen, Einrichtungsschritte, Hintergrundaufgaben>` | `<Abnahme in Sätzen>` |
 
 ## Stränge
 
