@@ -1,6 +1,6 @@
 ---
 name: ki-funktion
-description: Baut eine Funktion mit lokaler KI (LocalAI.shared mit respond, stream, structured über DynamicGenerationSchema, Verfügbarkeit mit ehrlichem Aus-Zustand, Abbruch, keine Protokollierung von Inhalten). Nutzen, wenn ein Sprachmodell auf dem Mac Text zusammenfassen, umschreiben, einordnen oder Daten aus Text ziehen soll. Gehört zum Modul ai.
+description: Baut eine Funktion mit lokaler KI (LocalAI.shared mit respond, stream, structured über DynamicGenerationSchema, Verfügbarkeit mit sichtbarem Aus-Zustand samt Grund, Abbruch, keine Protokollierung von Inhalten). Nutzen, wenn ein Sprachmodell auf dem Mac Text zusammenfassen, umschreiben, einordnen oder Daten aus Text ziehen soll. Gehört zum Modul ai.
 ---
 
 # KI-Funktion

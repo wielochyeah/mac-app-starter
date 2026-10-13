@@ -1,6 +1,6 @@
 ---
 name: neue-ansicht
-description: Legt eine Seite im Hauptfenster an (Eintrag in der Seitenleiste über AppPage, Seitengerüst, Bausteine im Stil von Apple Music, Suche, leere und Fehlerzustände, Render-Szene). Nutzen, wenn das Hauptfenster eine neue Ansicht bekommt. Gehört zum Modul window.
+description: Legt eine Seite im Hauptfenster an (Eintrag in der Seitenleiste über AppPage, Seitengerüst, Bausteine im Stil von Musik, Suche, leere und Fehlerzustände, Render-Szene). Nutzen, wenn das Hauptfenster eine neue Ansicht bekommt. Gehört zum Modul window.
 ---
 
 # Neue Ansicht im Hauptfenster

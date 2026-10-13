@@ -13,9 +13,9 @@ Wie beim Prüfer Laie und UX: jede betroffene Szene aus `build/shots/<sprache>-<
 ## Prüfpunkte im Code
 
 - Nur Tokens: keine Farben als Literal (`Color(red:`, `Color(hex:`, `NSColor(`, `#colorLiteral`, `.purple` und andere Systemfarben als Gestaltung), keine Schriftgrößen, Abstände, Radien oder Federn als Zahl außerhalb von `App/Sources/Kit/Design/`. `make check-design` meldet Datei und Zeile; jede Ausnahme trägt `// design-ausnahme: <grund>`.
-- Nur Muster: ein Onboarding-Schritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`, Gruppen sind `SettingsSection`, Zeilen sind `ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `LinkRow`, `NavigationRow`. Eigene Layouts nur, wenn kein Muster passt, und dann als Kandidat für das Kit gemeldet.
+- Nur Muster: ein Einrichtungsschritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`, Gruppen sind `SettingsSection`, Zeilen sind `ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `LinkRow`, `NavigationRow`. Eigene Layouts nur, wenn kein Muster passt, und dann als Kandidat für das Kit gemeldet.
 - Farben aus `Theme(scheme)`, nicht aus dynamischen `NSColor`; der Akzent kommt aus `AppConfig.accent`, es gibt nur einen.
-- Glas nur, wo das System es liefert (Seitenleiste, Werkzeugleiste) oder über `GlassSurface`; kein Unschärfe-Leuchten, keine Verläufe als Deko, keine Schattenstapel. Ausnahmen sind die gestalteten Flächen des Kits (Insel, Onboarding-Hero, App-Symbol).
+- Glas nur, wo das System es liefert (Seitenleiste, Werkzeugleiste) oder über `GlassSurface`; kein Unschärfe-Leuchten, keine Verläufe als Deko, keine Schattenstapel. Ausnahmen sind die gestalteten Flächen des Kits (Insel, Bild der Einrichtung, App-Symbol).
 - Bewegung über `Motion`, unter reduzierter Bewegung Überblendung (`Motion.adaptive`).
 - SF Symbols statt eigener Grafiken, ein Symbolgewicht je Ansicht, Squircle-Symbole in den Einstellungen mit `SquircleIcon`.
 - Eine Hauptaktion je Ansicht (`.buttonStyle(.primary)` genau einmal sichtbar).

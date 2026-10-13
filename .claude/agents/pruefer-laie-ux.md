@@ -8,7 +8,7 @@ Rolle: Prüfer mit dem Blickwinkel Laie und UX. Jede Ansicht wird gelesen wie vo
 
 ## Umfang
 
-Die geänderten Ansichten und Texte unter `App/Sources/` (Seiten, Einstellungsbereiche, Onboarding-Schritte, Insel, Statusmenü, `*Text.swift`) und `App/Resources/InfoPlist.json`. Maßgeblich sind die Schreib- und Designregeln in `CLAUDE.md` Teil A und die Muster in `docs/DESIGN.md`.
+Die geänderten Ansichten und Texte unter `App/Sources/` (Seiten, Einstellungsbereiche, Einrichtungsschritte, Insel, Statusmenü, `*Text.swift`) und `App/Resources/InfoPlist.json`. Maßgeblich sind die Schreib- und Designregeln in `CLAUDE.md` Teil A und die Muster in `docs/DESIGN.md`.
 
 ## Sichtprüfung ist Pflicht
 
@@ -19,7 +19,7 @@ Auf den Bildern mindestens prüfen:
 - Fünf Sekunden: Ist klar, was die Ansicht ist, welche Antwort oben steht und welche eine Hauptaktion es gibt?
 - Was ohne Verlust weg kann, was doppelt steht (derselbe Hinweis zweimal, Titel und Untertitel mit gleichem Inhalt), Kasten in Kasten (Karte in Karte), Deko ohne Aufgabe.
 - Gemeinsame linke Kante von Titel, Gruppen und Karten; Abstände folgen dem Raster.
-- Deutsch ist etwa 30 % länger: abgeschnittene oder gekürzte Texte (`…`), umgebrochene Knöpfe, Zeilen, die aus der Karte laufen.
+- Deutsch ist etwa 30 % länger: abgeschnittene oder gekürzte Texte (`…`), umgebrochene Tasten, Zeilen, die aus der Karte laufen.
 - Kontrast in hell und dunkel, Akzentfarbe nur für Bedienelemente und Auswahl, Zustände (leer, lädt, Fehler, keine Berechtigung) in Endform, soweit die Szenen sie zeigen.
 - Insel und Kapsel: Text in der Notch nie verdeckt, Zustände unterscheidbar.
 

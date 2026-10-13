@@ -8,7 +8,7 @@ Rolle: Prüfer mit dem Blickwinkel Sicherheit und Datenschutz. Auftrag: Lücken 
 
 ## Prüfpunkte
 
-- Berechtigungen: nur über `App/Sources/Kit/Permissions/`; jede genutzte Berechtigung steht in `permissions` von `starter.json`, hat einen Erklärtext in beiden Sprachen in `App/Resources/InfoPlist.json` und einen Onboarding-Schritt. Keine Anfrage beim Start ohne Zusammenhang, keine Abfrage im Hintergrund, die einen Dialog auslöst.
+- Berechtigungen: nur über `App/Sources/Kit/Permissions/`; jede genutzte Berechtigung steht in `permissions` von `starter.json`, hat eine Nutzungsbeschreibung in beiden Sprachen in `App/Resources/InfoPlist.json` und einen Einrichtungsschritt. Die Nutzungsbeschreibung sagt, wofür die App den Zugriff nutzt, und sagt nichts zu, was kein Test belegt. Keine Anfrage beim Start ohne Zusammenhang, keine Abfrage im Hintergrund, die einen Dialog auslöst.
 - Entitlements (`build/gen/App.entitlements` aus `scripts/gen_config.py`): nur, was die Berechtigungen brauchen; unter der Hardened Runtime keine Ausnahmen wie `allow-unsigned-executable-memory` oder `disable-library-validation` ohne Eintrag in `docs/DECISIONS.md`.
 - Netz: kein Netzaufruf außer einem Modell-Download, den die Nutzerin ausgelöst hat, und den Werkzeugen in `scripts/`. Keine Analyse, keine Absturzberichte, keine Update-Prüfung, keine eingebetteten Adressen von Diensten.
 - Daten: Nutzerinhalte (Texte, Prompts, Antworten der KI, Dateinamen) nie in `Log`, nie in Fehlermeldungen, die gespeichert werden; Daten nur unter `~/Library/Application Support/<bundleId>/` und `Paths`; Dateien atomar schreiben; keine Pfade aus fremden Eingaben ohne Prüfung.

@@ -14,14 +14,14 @@ Gehört zum Modul `hotkeys`; `bin/starter remove hotkeys` entfernt diesen Skill 
 | Anmelden | `App/Sources/Modules/Hotkeys/HotkeyCenter.swift` | `HotkeyCenter.shared.register(id:title:subtitle:default:order:showInOnboarding:onRelease:action:)`, nur `id`, `title`, `default` und `action` sind Pflicht; Änderungen der Nutzerin liegen in den Einstellungen und greifen ohne Neustart |
 | Kombination | `KeyCombo` | `KeyCombo(keyCode:modifiers:)` mit virtuellem Tastencode (`kVK_*` aus Carbon, gleich auf jeder Belegung) und `KeyModifiers` (`.command`, `.shift`, `.option`, `.control`), Anzeige mit ⌃⌥⇧⌘ und dem Tastennamen der aktuellen Tastaturbelegung |
 | Regeln | `ShortcutRules` | lehnt Kurzbefehle des Systems, Standardbefehle von Apps (⌘W, ⌘Q, ⌃A …), Kombinationen, die auf der Belegung ein Zeichen tippen (⌥L ergibt @ auf deutscher Tastatur), und Doppelungen innerhalb der App ab; jede Ablehnung nennt den Grund und schlägt eine freie Variante vor |
-| Oberfläche | Bereich „Kurzbefehle“, `ShortcutRecorder`, Onboarding-Schritt „Dein Kurzbefehl“ (order 600) | Aufnehmen, Prüfen, Standard wiederherstellen |
+| Oberfläche | Bereich „Tastaturkurzbefehle“, `ShortcutRecorder`, Einrichtungsschritt „Dein Tastaturkurzbefehl“ (order 600) | Aufnehmen, Prüfen, Standard wiederherstellen |
 
 Technisch läuft das über Carbon `RegisterEventHotKey`; das braucht keine Berechtigung für Eingabeüberwachung.
 
 ## Schritte
 
 1. Braucht die Funktion wirklich einen globalen Kurzbefehl? Befehle, die nur im Fenster der App gelten, sind Menüeinträge mit Tastenkürzel (`MenuItemContribution.shortcut`).
-2. Standard wählen, der die Regeln besteht: mindestens zwei Umschalttasten, darunter ⌃ oder ⌘, keine Belegung des Systems. Vorher im Test gegen `ShortcutRules` prüfen.
+2. Standard wählen, der die Regeln besteht: mindestens zwei Sondertasten, darunter ⌃ oder ⌘, keine Belegung des Systems. Vorher im Test gegen `ShortcutRules` prüfen.
 3. Anmelden im `register()` des Features:
 
    ```swift
@@ -35,7 +35,7 @@ Technisch läuft das über Carbon `RegisterEventHotKey`; das braucht keine Berec
 
    Kennung mit Präfix des Features; Titel als Tätigkeit. Die Konstanten `kVK_*` brauchen `import Carbon` in der Datei. ⌃⌥Leertaste wäre kein guter Standard: macOS wählt damit die nächste Eingabequelle.
 4. Die Aktion kehrt schnell zurück und stößt die Arbeit nur an; sie öffnet kein Fenster, ohne die App zu aktivieren.
-5. Ein Kurzbefehl, der in Renders oder Tests gebraucht wird, wird nur dort angemeldet, nie im Produktionscode für die Vorschau. Mit dem ersten echten Kurzbefehl im `register()` erscheinen der Bereich „Kurzbefehle“ und, mit `showInOnboarding: true`, der Schritt „Dein Kurzbefehl“. Tests, die Bereiche oder Schritte zählen, leiten ihre Erwartung aus `HotkeyCenter.shared` ab (`definitions`, `onboardingHotkey`), wie `HotkeysSceneTests` es tut, statt anzunehmen, dass die App keinen Kurzbefehl hat.
+5. Ein Kurzbefehl, der in Renders oder Tests gebraucht wird, wird nur dort angemeldet, nie im Produktionscode für die Vorschau. Mit dem ersten echten Kurzbefehl im `register()` erscheinen der Bereich „Tastaturkurzbefehle“ und, mit `showInOnboarding: true`, der Schritt „Dein Tastaturkurzbefehl“. Tests, die Bereiche oder Schritte zählen, leiten ihre Erwartung aus `HotkeyCenter.shared` ab (`definitions`, `onboardingHotkey`), wie `HotkeysSceneTests` es tut, statt anzunehmen, dass die App keinen Kurzbefehl hat.
 6. Render-Szenen: `hotkeys.pane` zeigt die Beispiel-Kurzbefehle des Moduls; ist der neue Befehl der wichtigste der App, `showInOnboarding: true` und `hotkeys.onboarding` ansehen. Den eigenen Kurzbefehl zeigt eine eigene Szene mit einer eigenen `HotkeyCenter`, die nichts bei macOS anmeldet:
 
    ```swift
