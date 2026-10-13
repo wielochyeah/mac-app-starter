@@ -5,7 +5,9 @@ import SwiftUI
 /// Prints one line per failure and a summary; exit code 0 when all pass. Shows no window.
 enum SelfTestRunner {
     /// `only` nil: every check that is not on demand. A prefix: the checks whose id starts with it.
-    static func run(only: String? = nil) -> Int32 {
+    /// `report` gets each failure line and the summary; the default writes failures to stderr and the
+    /// summary to stdout, a test passes a collector so an expected failure prints nothing.
+    static func run(only: String? = nil, report: (_ line: String, _ isFailure: Bool) -> Void = console) -> Int32 {
         var failures: [String] = []
         let checks = Registry.selfTests.sorted { $0.id < $1.id }.filter { check in
             guard let only else { return !check.onDemand }
@@ -18,9 +20,13 @@ enum SelfTestRunner {
             if let problem = check.run() { failures.append("\(check.id): \(problem)") }
         }
         if NSApp.windows.contains(where: \.isVisible) { failures.append("kit.headless: a window became visible") }
-        for f in failures { FileHandle.standardError.write(Data("selftest FAIL \(f)\n".utf8)) }
-        print("selftest: \(checks.count) checks, \(failures.count) failures")
+        for f in failures { report("selftest FAIL \(f)", true) }
+        report("selftest: \(checks.count) checks, \(failures.count) failures", false)
         return failures.isEmpty ? 0 : 1
+    }
+
+    nonisolated static func console(_ line: String, _ isFailure: Bool) {
+        if isFailure { FileHandle.standardError.write(Data("\(line)\n".utf8)) } else { print(line) }
     }
 
     /// The kit's own checks (registered by `KitModule`).

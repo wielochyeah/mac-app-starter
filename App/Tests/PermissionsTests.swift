@@ -277,8 +277,10 @@ final class PermissionsTests: TestSuite {
         }
 
         test("probe refuses kinds it cannot check in a fresh process") {
-            expectEqual(PermissionProbe.answer("microphone"), 2)
-            expectEqual(PermissionProbe.answer("bogus"), 2)
+            var refused: [String] = []
+            expectEqual(PermissionProbe.answer("microphone") { refused.append($0) }, 2)
+            expectEqual(PermissionProbe.answer("bogus") { refused.append($0) }, 2)
+            expectEqual(refused, ["--permission-probe: microphone cannot be probed", "--permission-probe: bogus cannot be probed"])
         }
 
         test("launch flag --permission-probe is a tool flag") {

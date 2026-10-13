@@ -24,12 +24,17 @@ final class SelfTestFilterTests: TestSuite {
                     SelfTestCheck(id: "x.live", onDemand: true) { ran.append("x.live"); return nil },
                     SelfTestCheck(id: "y.other") { ran.append("y.other"); return nil },
                 ]
-                expectEqual(SelfTestRunner.run(), 0)
+                var lines: [String] = []
+                let collect: (String, Bool) -> Void = { line, isFailure in lines.append(isFailure ? "FAIL \(line)" : line) }
+                expectEqual(SelfTestRunner.run(report: collect), 0)
                 expectEqual(ran, ["x.cheap", "y.other"])
                 ran = []
-                expectEqual(SelfTestRunner.run(only: "x."), 0)
+                expectEqual(SelfTestRunner.run(only: "x.", report: collect), 0)
                 expectEqual(ran, ["x.cheap", "x.live"])
-                expectEqual(SelfTestRunner.run(only: "nothing"), 1, "an unknown prefix fails")
+                expectEqual(SelfTestRunner.run(only: "nothing", report: collect), 1, "an unknown prefix fails")
+                expectEqual(lines, ["selftest: 2 checks, 0 failures", "selftest: 2 checks, 0 failures",
+                                    "FAIL selftest FAIL no self-test id starts with \"nothing\"",
+                                    "selftest: 0 checks, 1 failures"])
             }
         }
     }

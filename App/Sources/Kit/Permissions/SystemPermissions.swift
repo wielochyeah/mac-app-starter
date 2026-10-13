@@ -155,10 +155,12 @@ final class SystemPermissions: PermissionBackend {
 enum PermissionProbe {
     nonisolated static let flag = "--permission-probe"
 
-    /// Child side: prints the status word, exit 0; unknown or uncheckable kind: exit 2.
-    nonisolated static func answer(_ id: String) -> Int32 {
+    /// Child side: prints the status word, exit 0; unknown or uncheckable kind: exit 2 and a line for
+    /// `refused` (stderr by default; a test collects it, so an expected refusal prints nothing).
+    nonisolated static func answer(_ id: String,
+                                   refused: (String) -> Void = { FileHandle.standardError.write(Data("\($0)\n".utf8)) }) -> Int32 {
         guard let kind = PermissionKind(id: id), let status = SystemPermissions.checkNow(kind) else {
-            FileHandle.standardError.write(Data("\(flag): \(id) cannot be probed\n".utf8))
+            refused("\(flag): \(id) cannot be probed")
             return 2
         }
         print(status.rawValue)
