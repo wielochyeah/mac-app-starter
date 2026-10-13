@@ -160,6 +160,7 @@
     "files": [
       "scripts/build.sh",
       "scripts/test.sh",
+      "scripts/test_python.py",
       "scripts/check_kit.py",
       "scripts/rules_sync.py",
       "scripts/check_texts.py",
@@ -172,21 +173,23 @@
       "file": "Makefile",
       "targets": {
         "check": ["check-rules", "check-texts", "check-design", "check-kit", "build", "test"],
+        "check-light": ["check-rules", "check-texts", "check-design", "check-kit", "test-python"],
         "check-rules": ["scripts/rules_sync.py"],
         "check-texts": ["scripts/check_texts.py"],
         "check-design": ["scripts/check_design.py"],
         "check-kit": ["scripts/check_kit.py"],
         "build": ["scripts/build.sh"],
-        "test": ["scripts/test.sh"]
+        "test": ["scripts/test.sh"],
+        "test-python": ["scripts/test_python.py"]
       }
     },
     "hooks": {
       "scripts/hooks/commit-msg": ["scripts/check_commit_msg.py"],
-      "scripts/hooks/pre-push": ["make check"]
+      "scripts/hooks/pre-push": ["make check", "make check-light"]
     },
     "ci": {
       "file": ".github/workflows/ci.yml",
-      "steps": [["make check"]]
+      "steps": [["make check"], ["make check-kit"], ["scripts/check_commit_msg.py"]]
     }
   }
 }

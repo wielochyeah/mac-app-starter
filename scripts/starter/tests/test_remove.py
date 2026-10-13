@@ -91,6 +91,36 @@ class RemoveTests(TempDirCase):
         self.assertNotIn(PENDING, read_lock(root))
         self.assertIsNone(cli.finish_pending_build(root, "bin/starter remove background", True))
 
+    def test_uncommitted_files_keep_their_whole_name(self):
+        from starter.remove import uncommitted
+        root = self.repo()
+        write_files(root, {"README.md": "changed\n", "App/Sources/Features/New.swift": "enum New {}\n"})
+        git(root, "mv", "docs/DESIGN.md", "docs/GESTALTUNG.md")
+        self.assertEqual(sorted(uncommitted(root)), ["App/Sources/Features/New.swift", "README.md", "docs/GESTALTUNG.md"])
+        plan = self.remove(root, "island")
+        self.assertIn("README.md", plan.dirty)
+
+    def test_without_a_swift_compiler_the_build_is_skipped_and_noted(self):
+        """A cloud agent on Linux: remove writes its changes, skips make build, says so and notes pendingBuild."""
+        import contextlib
+        import io
+        from unittest import mock
+        from starter import cli, remove as remove_module_file
+        from starter.manifest import PENDING
+        root = self.repo()
+        with mock.patch.object(remove_module_file, "swift_missing", return_value="kein Swift-Compiler (kein Mac, Linux)"), \
+                mock.patch.object(remove_module_file, "run_make", side_effect=AssertionError("built")):
+            plan = remove_module(root, "island", build=True, check_origin=False)
+            text = remove_module_file.report(plan, dry_run=False, build=True)
+            self.assertIsNone(plan.build_ok)
+            self.assertIn("kein Swift-Compiler (kein Mac, Linux): Build übersprungen", text)
+            self.assertIn("--ohne-build", text)
+            self.assertEqual(read_lock(root)[PENDING], "bin/starter remove island")
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                self.assertEqual(cli.finish_pending_build(root, "bin/starter remove island", True), 1)
+            self.assertIn("steht make build noch aus", err.getvalue())
+
     def test_dry_run_report_speaks_of_what_would_happen(self):
         from starter.remove import report
         root = self.repo()

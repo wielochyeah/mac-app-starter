@@ -26,7 +26,7 @@ from .common import (StarterError, cut_blocks, git, has_block, inside, is_text_f
                      write_text)
 from .manifest import Manifest, is_project, kit_checksums, read_lock, read_manifest, set_pending_build, write_lock
 from .remove import (apply_removal, dangling_report, plan_removal, present_modules, read_texts, refuse_in_starter,
-                     run_make, simulate, uncommitted)
+                     run_make, simulate, swift_missing, uncommitted)
 
 NEW_VERSION = "0.1.0"
 
@@ -65,6 +65,7 @@ class InitResult:
     anrede: str = "du"
     rules_synced: bool = False
     build_ok: Optional[bool] = None                     # None: not built
+    build_skipped: Optional[str] = None                 # why make build could not run here
     dirty: List[str] = field(default_factory=list)      # uncommitted changes before init
 
 
@@ -266,6 +267,10 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
         result.rules_synced = (root / "scripts" / "rules_sync.py").is_file()
 
     if opts.build:
+        result.build_skipped = swift_missing()
+        if result.build_skipped:
+            set_pending_build(root, "bin/starter init")
+            return result
         if (root / "scripts" / "icon.sh").exists():
             if not run_make(root, "icon"):
                 result.notes.append("make icon ist gescheitert; später von Hand ausführen")
@@ -325,6 +330,10 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
                          "#if MODUL_<NAME> … #endif umschließen) und bin/starter init erneut aufrufen: es baut dann "
                          "noch einmal. Oder zurück zur unveränderten Kopie (verwirft alle nicht committeten "
                          "Änderungen): git restore --source=HEAD --staged --worktree -- .")
+        elif result.build_skipped:
+            lines.append(f"  {result.build_skipped}: make icon und make build übersprungen. Auf einem Mac bin/starter "
+                         "init erneut aufrufen, dann baut es (Vermerk pendingBuild in starter.lock.json); --ohne-build "
+                         "überspringt den Build ausdrücklich.")
         elif not build:
             lines.append("  Danach: make icon und make build (mit --ohne-build übersprungen)")
         lines.append("Danach: commit.name und commit.email in starter.json eintragen, make hooks, make check, "

@@ -108,6 +108,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(pkg.settings(c, environ={})["NOTARY_PROFILE"], "from-config")
         self.assertEqual(pkg.settings(c, environ={"NOTARY_PROFILE": "env"})["NOTARY_PROFILE"], "env")
 
+    @unittest.skipUnless(Path("/bin/zsh").exists(), "needs zsh (macOS)")
     def test_shell_env_is_quoted(self):
         out = pkg.shell_env({"NAME": "My App", "X": "it's"})
         res = subprocess.run(["/bin/zsh", "-c", out + 'print -r -- "$PKG_NAME|$PKG_X"'], capture_output=True, text=True)
@@ -242,6 +243,7 @@ class NotaryTests(unittest.TestCase):
             pkg.notary_plan("x.zip", self.ID, "p")
 
 
+@unittest.skipUnless(Path("/bin/zsh").exists(), "scripts/notarize.sh is a zsh script (macOS)")
 class NotarizeScriptTests(unittest.TestCase):
     def run_dry(self, stamp):
         with tempfile.TemporaryDirectory() as tmp:
@@ -312,6 +314,7 @@ class PinTests(unittest.TestCase):
         self.assertEqual(names, {"dmgbuild", "ds-store", "mac-alias"})
 
 
+@unittest.skipUnless(sys.platform == "darwin" and shutil.which("swiftc"), "builds Swift tools (macOS with swiftc)")
 class ToolBuildTests(unittest.TestCase):
     """Builds the icon and DMG tools (they compile against Kit/Design/Theme.swift and Tokens.swift)
     and runs them, so a Kit change that breaks them fails make test, not the next release.

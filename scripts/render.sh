@@ -7,6 +7,11 @@
 set -euo pipefail
 ROOT="${0:A:h:h}"
 cd "$ROOT"
+source scripts/lib/swift.sh
+require_value ONLY "${ONLY:-}" '^[A-Za-z0-9._-]+$' island.
+require_value SHOTS_LANG "${SHOTS_LANG:-}" '^(en|de)$' de
+require_value SHOTS_APPEARANCE "${SHOTS_APPEARANCE:-}" '^(light|dark)$' dark
+require_value NO_BUILD "${NO_BUILD:-}" '^[01]$' 1
 [[ "${NO_BUILD:-0}" == 1 ]] || scripts/build.sh
 source build/gen/app.env
 BIN="build/$APP_NAME.app/Contents/MacOS/$APP_NAME"

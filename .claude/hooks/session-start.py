@@ -97,8 +97,10 @@ def doctor_env(environ=None, default_sdk=xcrun_default_sdk):
 def doctor_line(root, platform=sys.platform, runner=run, environ=None, default_sdk=xcrun_default_sdk):
     if platform != "darwin":
         return (
-            "Werkzeuge: kein Mac. make build, make test und make shots laufen nur unter macOS; "
-            "die Prüfskripte in Python (make check-rules, check-texts, check-design, check-kit) laufen hier."
+            "Werkzeuge: kein Mac. Bauen, Testen und Rendern (make build, make test, make shots) brauchen Claude Code auf "
+            "einem Mac; hier laufen nur Doku, Regeln und die Prüfskripte in Python (make check-rules, check-texts, "
+            "check-design, check-kit). Änderungen an Swift-Code nicht ungeprüft committen, sondern für eine Sitzung "
+            "auf dem Mac liegen lassen; git push führt hier nur die Prüfungen ohne Mac aus."
         )
     script = os.path.join(root, "scripts", "doctor.sh")
     if not os.path.isfile(script):

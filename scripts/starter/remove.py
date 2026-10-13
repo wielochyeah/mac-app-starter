@@ -10,17 +10,20 @@ then `make build` unless --ohne-build. When the guard finds a use of a module ty
 from __future__ import annotations
 
 import json
+import platform
 import shlex
+import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, build_env, checksum, git, inside, is_starter_origin, is_text_file, origin_url, remove_empty_dirs,
+from .common import (StarterError, build_env, checksum, git_bytes, inside, is_text_file, remove_empty_dirs,
                      working_files, write_text)
-from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, set_pending_build, write_lock
+from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, repo_state, set_pending_build, write_lock
 from .markers import dangling_references, transform
 
 
@@ -36,6 +39,7 @@ class RemovalPlan:
     next_steps: List[str] = field(default_factory=list)
     already_removed: bool = False
     build_ok: Optional[bool] = None                            # None: not built
+    build_skipped: Optional[str] = None                        # why make build could not run here
     dirty: List[str] = field(default_factory=list)             # uncommitted changes before the removal
 
     @property
@@ -172,7 +176,7 @@ def simulate(manifest: Manifest, modules: List[str], files: List[str], texts: Di
 
 
 def refuse_in_starter(root: Path, manifest: Manifest, command: str) -> None:
-    if is_starter_origin(origin_url(root), manifest.repository):
+    if repo_state(root, manifest, read_lock(root)) == "starter":
         raise StarterError(f"Das Repository {manifest.repository} ist der Starter selbst; {command} läuft nur "
                            "in einer Kopie („Use this template“, dann bin/starter init).")
 
@@ -207,15 +211,35 @@ def apply_removal(root: Path, plan: RemovalPlan, manifest: Manifest) -> None:
         write_lock(root, lock)
 
 
+def swift_missing() -> Optional[str]:
+    """Why make build cannot run here (a Linux container of a cloud agent, a Mac without the Command Line Tools),
+    or None. The tools then write their changes, skip the build and note it as pendingBuild in the lock."""
+    if sys.platform != "darwin":
+        return f"kein Swift-Compiler (kein Mac, {platform.system() or sys.platform})"
+    if shutil.which("swiftc") is None:
+        return "kein Swift-Compiler (swiftc fehlt, xcode-select --install)"
+    return None
+
+
 def run_make(root: Path, target: str) -> bool:
     res = subprocess.run(["make", target], cwd=str(root), env=build_env())
     return res.returncode == 0
 
 
 def uncommitted(root: Path) -> List[str]:
-    """Paths with changes that are not committed (git status), for the warning before a write."""
-    out = git(root, ["status", "--porcelain", "-z"], check=False)
-    return [entry[3:] for entry in out.split("\0") if len(entry) > 3]
+    """Paths with changes that are not committed (git status), for the warning before a write. The
+    porcelain output is read unstripped: its first entry starts with a space (" M file")."""
+    out = (git_bytes(root, ["status", "--porcelain", "-z"]) or b"").decode("utf-8", "replace")
+    paths, entries = [], out.split("\0")
+    index = 0
+    while index < len(entries):
+        entry = entries[index]
+        index += 1
+        if len(entry) > 3:
+            paths.append(entry[3:])
+            if entry[0] in "RC":
+                index += 1  # a rename or copy names its source in the next field
+    return paths
 
 
 def remove_module(root: Path, name: str, dry_run: bool = False, build: bool = True,
@@ -231,8 +255,12 @@ def remove_module(root: Path, name: str, dry_run: bool = False, build: bool = Tr
     plan.dirty = uncommitted(root)
     apply_removal(root, plan, manifest)
     if build:
-        plan.build_ok = run_make(root, "build")
-        set_pending_build(root, None if plan.build_ok else f"bin/starter remove {name}")
+        plan.build_skipped = swift_missing()
+        if plan.build_skipped:
+            set_pending_build(root, f"bin/starter remove {name}")
+        else:
+            plan.build_ok = run_make(root, "build")
+            set_pending_build(root, None if plan.build_ok else f"bin/starter remove {name}")
     return plan
 
 
@@ -275,10 +303,14 @@ def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
         lines.append(f"  Oder zurück zum Stand vor remove (setzt auch frühere, nicht committete Änderungen dieser "
                      f"Dateien zurück): {restore_command(plan.touched)}")
         return "\n".join(lines) + "\n"
-    if not build:
+    if plan.build_skipped:
+        lines.append(f"  {plan.build_skipped}: Build übersprungen. Auf einem Mac bin/starter remove {plan.module} "
+                     "erneut aufrufen, dann baut es (Vermerk pendingBuild in starter.lock.json); --ohne-build "
+                     "überspringt den Build ausdrücklich.")
+    elif not build:
         lines.append("  Danach: make build (mit --ohne-build übersprungen)")
     lines.append(f"  Danach: make check, dann ein Commit nur für dieses Modul, etwa "
-                 f"„chore(starter): remove module {plan.module}“")
+                 f"„chore(setup): remove module {plan.module}“")
     return "\n".join(lines) + "\n"
 
 

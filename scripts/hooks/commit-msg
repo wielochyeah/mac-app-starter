@@ -1,5 +1,6 @@
-#!/bin/zsh
+#!/bin/sh
 # Checks author and message of every commit (rules A-03, A-04, S-01 to S-04). Installed with `make hooks`.
-set -euo pipefail
+# POSIX sh and python3 only, so it runs on a Mac and in a Linux container alike.
+set -eu
 ROOT="$(git rev-parse --show-toplevel)"
 exec python3 "$ROOT/scripts/check_commit_msg.py" "$1"

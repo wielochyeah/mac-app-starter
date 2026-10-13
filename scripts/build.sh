@@ -1,15 +1,18 @@
 #!/bin/zsh
 # Builds build/<Name>.app with one plain swiftc call (no Xcode, no SwiftPM).
 #   CONFIG=debug|release (default debug)   MODULES=window,menubar (overrides starter.json)
+#   STRICT=1 (make check): warnings are errors
 # Steps: gen_config -> swiftc (Info.plist embedded via -sectcreate) -> .app bundle in a temp dir
 # -> codesign (ad hoc unless signing.identity or SIGN_IDENTITY names a certificate) -> mv into place.
 set -euo pipefail
 ROOT="${0:A:h:h}"
 cd "$ROOT"
+source scripts/lib/swift.sh
 CONFIG="${CONFIG:-debug}"
 if [[ "$CONFIG" != debug && "$CONFIG" != release ]]; then
   print -u2 "build.sh: CONFIG must be debug or release (got $CONFIG)"; exit 2
 fi
+require_value MODULES "${MODULES:-}" '^[a-z0-9_]+(,[a-z0-9_]+)*$' window,menubar
 command -v swiftc >/dev/null || { print -u2 "build.sh: swiftc missing (xcode-select --install, then make doctor)"; exit 1; }
 
 python3 scripts/gen_config.py --out build/gen >/dev/null
@@ -17,7 +20,6 @@ python3 scripts/gen_config.py --out build/gen >/dev/null
 sign_override="${SIGN_IDENTITY:-}"
 source build/gen/app.env
 [[ -n "$sign_override" ]] && SIGN_IDENTITY="$sign_override"
-source scripts/lib/swift.sh
 use_sdk
 
 sources=("${(@f)$(swift_sources)}")
@@ -28,7 +30,7 @@ TMP="$(mktemp -d "$ROOT/build/.tmp.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 start=$SECONDS
 # Same file name as the final binary: the linker's ad-hoc signature identifier is the output name.
-swiftc "${flags[@]}" \
+run_swiftc "${flags[@]}" \
   -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker "$ROOT/build/gen/Info.plist" \
   -o "$TMP/$APP_NAME" "${sources[@]}"
 

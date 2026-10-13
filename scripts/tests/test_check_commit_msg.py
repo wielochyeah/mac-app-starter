@@ -211,12 +211,90 @@ class GitTests(unittest.TestCase):
         self.assertEqual(len(found), 1)
         self.assertIn("skipped the hook", found[0])
 
-    def test_pre_push_hook_is_zsh_and_runs_make_check(self):
-        hook = self.dir / "scripts/hooks/pre-push"
-        self.assertTrue(os.access(hook, os.X_OK))
-        self.assertIn("make check", hook.read_text(encoding="utf-8"))
-        self.assertEqual(subprocess.run(["zsh", "-n", str(hook)]).returncode, 0)
-        self.assertEqual(subprocess.run(["zsh", "-n", str(self.dir / "scripts/hooks/commit-msg")]).returncode, 0)
+    def test_hooks_are_posix_sh(self):
+        for name in ("pre-push", "commit-msg"):
+            hook = self.dir / "scripts" / "hooks" / name
+            self.assertTrue(os.access(hook, os.X_OK), name)
+            self.assertTrue(hook.read_text(encoding="utf-8").startswith("#!/bin/sh\n"), name)
+            self.assertEqual(subprocess.run(["sh", "-n", str(hook)]).returncode, 0, name)
+
+    def run_pre_push(self, system):
+        """The real pre-push hook with a stand-in for uname and make that records its arguments."""
+        bin_dir = self.dir / "fake-bin"
+        bin_dir.mkdir(exist_ok=True)
+        (bin_dir / "uname").write_text("#!/bin/sh\necho {}\n".format(system), encoding="utf-8")
+        (bin_dir / "make").write_text('#!/bin/sh\necho "$@" > "{}"\n'.format(self.dir / "make-args"), encoding="utf-8")
+        for name in ("uname", "make"):
+            os.chmod(bin_dir / name, 0o755)
+        env = dict(self.env, PATH=str(bin_dir) + os.pathsep + os.environ["PATH"])
+        result = subprocess.run([str(self.dir / "scripts/hooks/pre-push"), "origin", "x"], cwd=self.dir, env=env,
+                                input="", capture_output=True, text=True)
+        return result, (self.dir / "make-args").read_text(encoding="utf-8").strip()
+
+    def test_pre_push_runs_make_check_on_a_mac_and_the_light_checks_elsewhere(self):
+        result, args = self.run_pre_push("Darwin")
+        self.assertEqual((result.returncode, args), (0, "check"), result.stderr)
+        result, args = self.run_pre_push("Linux")
+        self.assertEqual((result.returncode, args), (0, "check-light"), result.stderr)
+        self.assertIn("kein Mac (Linux)", result.stdout)
+        self.assertIn("nur auf einem Mac", result.stdout)
+
+    def test_range_skips_listed_history_and_commits_github_made(self):
+        self.assertEqual(self.commit("feat: add the first file").returncode, 0)
+        long = "feat: " + "x" * 100
+        (self.dir / "file.txt").write_text("long", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-q", "--no-verify", "-m", long)
+        sha = self.git("rev-parse", "HEAD").stdout.strip()
+        github = dict(self.env, GIT_AUTHOR_NAME="Contributor", GIT_AUTHOR_EMAIL="c@example.com",
+                      GIT_COMMITTER_NAME="GitHub", GIT_COMMITTER_EMAIL="noreply@github.com")
+        (self.dir / "file.txt").write_text("merged", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-q", "--no-verify", "-m", "fix: take the pull request (#3)", env=github)
+        found = ccm.check_range("HEAD~2..HEAD", IDENTITY, self.dir)
+        self.assertEqual(len(found), 1, found)
+        self.assertIn("Zeichen", found[0])
+        self.assertEqual(ccm.check_range("HEAD~2..HEAD", IDENTITY, self.dir, exceptions=[sha[:7]]), [])
+        (self.dir / ".github").mkdir()
+        (self.dir / ".github" / "commit-ausnahmen.txt").write_text(f"# x\n{sha[:9]} too long, published\n", encoding="utf-8")
+        self.assertEqual(ccm.read_exceptions(self.dir), [sha[:9]])
+
+    def test_pull_request_range_ignores_the_author(self):
+        self.assertEqual(self.commit("feat: add the first file").returncode, 0)
+        other = dict(self.env, GIT_AUTHOR_NAME="Bob", GIT_AUTHOR_EMAIL="bob@example.com")
+        (self.dir / "file.txt").write_text("bob", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-q", "--no-verify", "-m", "fix: change the file", env=other)
+        self.assertTrue(ccm.check_range("HEAD~1..HEAD", IDENTITY, self.dir))
+        self.assertEqual(ccm.check_range("HEAD~1..HEAD", IDENTITY, self.dir, format_only=True), [])
+
+    def test_push_ranges(self):
+        self.assertEqual(self.commit("feat: add the first file").returncode, 0)
+        first = self.git("rev-parse", "HEAD").stdout.strip()
+        self.assertEqual(self.commit("fix: change the file").returncode, 0)
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        repo = {"default_branch": "main"}
+        push = {"ref": "refs/heads/main", "before": first, "after": head, "repository": repo}
+        self.assertEqual(ccm.github_range("push", push, self.dir)[0], f"{first}..{head}")
+        new_branch = dict(push, ref="refs/heads/work", before="0" * 40)
+        self.git("update-ref", "refs/remotes/origin/main", first)
+        self.assertEqual(ccm.github_range("push", new_branch, self.dir)[0], f"origin/main..{head}")
+        first_push = dict(push, before="0" * 40)
+        self.assertEqual(ccm.github_range("push", first_push, self.dir)[0], head)
+        gone = dict(push, before="d" * 40)
+        self.assertEqual(ccm.github_range("push", gone, self.dir)[0], head)
+
+    def test_github_mode_reads_the_event(self):
+        self.assertEqual(self.commit("feat: add the first file").returncode, 0)
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        event = self.dir / "event.json"
+        event.write_text(json.dumps({"ref": "refs/heads/main", "before": "0" * 40, "after": head,
+                                     "repository": {"default_branch": "main"}}), encoding="utf-8")
+        env = dict(self.env, GITHUB_EVENT_NAME="push", GITHUB_EVENT_PATH=str(event))
+        result = subprocess.run([sys.executable, str(self.dir / "scripts/check_commit_msg.py"), "--github"],
+                                cwd=self.dir, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("erster Push von main", result.stdout)
 
     def test_range_skips_listed_history_and_commits_github_made(self):
         self.assertEqual(self.commit("feat: add the first file").returncode, 0)

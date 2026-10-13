@@ -305,6 +305,8 @@ class SessionStartTests(unittest.TestCase):
     def test_doctor_is_skipped_off_macos(self):
         line = session_start.doctor_line(str(self.tmp), platform="linux", runner=lambda *a, **k: self.fail("ran doctor"))
         self.assertIn("kein Mac", line)
+        self.assertIn("Claude Code auf einem Mac", line)
+        self.assertIn("Swift-Code nicht ungeprüft committen", line)
 
     def test_doctor_runs_without_what_the_python3_shim_injects(self):
         (self.tmp / "scripts").mkdir()

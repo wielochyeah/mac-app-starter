@@ -372,8 +372,9 @@ def run(root: Path, env: Optional[Mapping[str, str]] = None) -> Findings:
                               "bin/starter init")
         check_starter(root, manifest, lock, files, f)
     if lock.get(PENDING):
-        f.warnings.append(f"nach „{lock[PENDING]}“ war make build rot; nach der Korrektur {lock[PENDING]} erneut "
-                          "aufrufen (baut noch einmal und löscht den Vermerk pendingBuild in starter.lock.json)")
+        f.warnings.append(f"nach „{lock[PENDING]}“ ist make build noch nicht grün gelaufen (rot oder ohne "
+                          f"Swift-Compiler übersprungen); auf einem Mac {lock[PENDING]} erneut aufrufen (baut noch "
+                          "einmal und löscht den Vermerk pendingBuild in starter.lock.json)")
     check_switches(root, manifest, is_project(lock), f)
     return f
 

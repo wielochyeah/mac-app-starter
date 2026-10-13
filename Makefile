@@ -1,38 +1,57 @@
 # mac-app-starter: one entry point for building, testing, rendering and packaging.
-# No Xcode, no SwiftPM: scripts/build.sh calls swiftc once (see docs, BAUPLAN §2).
+# No Xcode, no SwiftPM: scripts/build.sh calls swiftc once (docs/ARCHITEKTUR.md).
 #
 #   make build MODULES=window,menubar CONFIG=release
 #   make shots ONLY=design.
 #   make test ONLY=Settings
+#
+# Recipes run in /bin/sh, so everything that needs no Mac (make check-light) also runs on Linux. The variables
+# below reach the scripts as environment, taken literally: $(value …) keeps make from running a "$(shell …)" inside
+# a value, and each script checks its value against a strict pattern. CHECK_FLAGS takes only --ci and --streng.
 
-SHELL := /bin/zsh
+SHELL := /bin/sh
 .DEFAULT_GOAL := help
-export MODULES CONFIG ONLY SHOTS_LANG SHOTS_APPEARANCE NO_BUILD
+PASS_VARS := MODULES CONFIG ONLY SHOTS_LANG SHOTS_APPEARANCE NO_BUILD
+$(foreach v,$(PASS_VARS),$(eval override $(v) := $$(value $(v))))
+export $(PASS_VARS) STRICT
 
-# Runs a script when it exists, otherwise says which strand still has to add it.
+CHECK_FLAGS_UNKNOWN := $(filter-out --ci --streng,$(value CHECK_FLAGS))
+ifneq ($(strip $(CHECK_FLAGS_UNKNOWN)),)
+$(error CHECK_FLAGS kennt nur --ci und --streng, nicht: $(CHECK_FLAGS_UNKNOWN))
+endif
+CHECK_ARGS := $(foreach flag,$(value CHECK_FLAGS),"$(flag)")
+
+# Runs a script when it exists, otherwise says that it is missing. $(2) holds only checked flags.
 define run_script
-	@if [[ -x "$(1)" ]]; then "$(1)" $(2); \
-	elif [[ -f "$(1)" ]]; then python3 "$(1)" $(2); \
-	else print "make: $(1) is not yet available (skipped)"; fi
+	@if [ -x "$(1)" ]; then "$(1)" $(2); \
+	elif [ -f "$(1)" ]; then python3 "$(1)" $(2); \
+	else echo "make: $(1) fehlt (übersprungen)"; fi
 endef
 
-.PHONY: help doctor build run test check shots readme-shots icon dmg notarize rules hooks clean \
-        check-rules check-texts check-design check-kit probe
+.PHONY: help doctor build run test test-python check check-light shots readme-shots icon dmg notarize \
+        rules hooks probe clean check-rules check-texts check-design check-kit
 
 help:
-	@print "make doctor        check the toolchain (never installs anything)"
-	@print "make build         debug build -> build/<Name>.app   (MODULES=a,b  CONFIG=release)"
-	@print "make run           build and open the app"
-	@print "make test          Swift tests (build/tests/run-tests) + Python tests   (ONLY=<prefix>)"
-	@print "make check         rules, texts, design, kit checks + build + test (before every push)"
-	@print "make shots         render every scene to build/shots (+ index.html)   (ONLY=<prefix>)"
-	@print "make readme-shots  docs/screenshots/list.txt into docs/screenshots (max 1200 px wide)"
-	@print "make icon          render App/Resources/AppIcon.icns"
-	@print "make dmg           release build + designed DMG in build/dmg"
-	@print "make rules         write CLAUDE.md part A and word lists from rules/"
-	@print "make hooks         use scripts/hooks as git hooks"
-	@print "make probe         template probe: init a copy, remove each module, build (slow, starter only)"
-	@print "make clean         remove build/"
+	@echo "make doctor        Werkzeuge prüfen (installiert nichts)"
+	@echo "make build         Debug-Build nach build/<Name>.app   (MODULES=a,b  CONFIG=release)"
+	@echo "make run           bauen und die App starten (nur für Menschen, nie beim Prüfen)"
+	@echo "make test          Swift-Tests (build/tests/run-tests) und Python-Tests   (ONLY=<präfix>)"
+	@echo "make test-python   nur die Python-Tests der Werkzeuge"
+	@echo "make check         vor jedem Push: Regeln, Texte, Design, Kit, Build und Tests, Warnungen als Fehler"
+	@echo "make check-light   alles aus make check, was ohne Mac läuft (Regeln, Texte, Design, Kit, Python-Tests)"
+	@echo "make check-rules   CLAUDE.md Teil A und Wortlisten passen zu rules/"
+	@echo "make check-texts   Texte in beiden Sprachen, keine Texte in Views   (CHECK_FLAGS=--ci oder --streng)"
+	@echo "make check-design  nur Design-Tokens außerhalb von Kit/Design   (CHECK_FLAGS=--ci oder --streng)"
+	@echo "make check-kit     Kit-Dateien, Bauunterlagen, Prüfungen in Makefile, Hooks und CI"
+	@echo "make shots         jede Szene nach build/shots (+ index.html)   (ONLY=<präfix>  SHOTS_LANG  SHOTS_APPEARANCE)"
+	@echo "make readme-shots  Bilder aus docs/screenshots/list.txt nach docs/screenshots (höchstens 1200 px breit)"
+	@echo "make icon          App-Symbol nach App/Resources/AppIcon.icns"
+	@echo "make dmg           Release-Build und gestaltetes DMG nach build/dmg"
+	@echo "make notarize      ein DMG aus make dmg erneut zur Notarisierung einreichen"
+	@echo "make rules         CLAUDE.md Teil A und Wortlisten aus rules/ schreiben"
+	@echo "make hooks         scripts/hooks als Git-Hooks einrichten, Commit-Identität melden"
+	@echo "make probe         Probe der Vorlage: Kopie, init, make check, jedes Modul entfernen (langsam, nur im Starter)"
+	@echo "make clean         build/ löschen"
 
 doctor:
 	@scripts/doctor.sh
@@ -45,6 +64,9 @@ run:
 
 test:
 	@scripts/test.sh
+
+test-python:
+	@python3 scripts/test_python.py
 
 shots:
 	@scripts/render.sh
@@ -70,22 +92,26 @@ check-rules:
 	$(call run_script,scripts/rules_sync.py,--check)
 
 check-texts:
-	$(call run_script,scripts/check_texts.py,$(CHECK_FLAGS))
+	$(call run_script,scripts/check_texts.py,$(CHECK_ARGS))
 
 check-design:
-	$(call run_script,scripts/check_design.py,$(CHECK_FLAGS))
+	$(call run_script,scripts/check_design.py,$(CHECK_ARGS))
 
 check-kit:
 	$(call run_script,scripts/check_kit.py)
 
+# make check builds and tests with warnings as errors (rule A-02); a plain make build stays tolerant.
+check: override STRICT := 1
 check: check-rules check-texts check-design check-kit build test
+
+# What the pre-push hook runs without a Mac (scripts/hooks/pre-push): no Swift compiler, no build.
+check-light: check-rules check-texts check-design check-kit test-python
 
 probe:
 	@python3 -m unittest discover -s scripts/starter/tests -t scripts -p 'probe_*.py'
 
 hooks:
-	@if [[ -d scripts/hooks ]]; then git config core.hooksPath scripts/hooks && print "git hooks: scripts/hooks"; \
-	else print "make: scripts/hooks is not yet available (skipped)"; fi
+	@python3 scripts/git_setup.py
 
 clean:
 	rm -rf build
