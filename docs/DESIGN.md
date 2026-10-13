@@ -21,9 +21,9 @@ Vorbild sind VoiceBud und die Apps von macOS 26 (Musik, Systemeinstellungen, Kon
 |---|---|
 | Flächen | `windowBg`, `sidebarBg`, `sidebarPanel`, `card`, `field`, `chip`, `chipActive`, `segmentTrack`, `segmentSelected`, `capsuleBg` |
 | Linien | `separator` (Haarlinie 0,5 pt), `cardStroke`, `windowStroke`, `sidebarPanelStroke`, `capsuleStroke`, `tileEdge`, `squircleEdge` |
-| Text | `fg` (Haupttext), `fg2` (Nebentext), `fg3` (leise), `prose` (Fließtext im Onboarding), `sideGroup` (Gruppentitel der Seitenleiste) |
+| Text | `fg` (Haupttext), `fg2` (Nebentext: Untertitel, Werte, Zeiten, Zähler, Hinweise), `prose` (Fließtext im Onboarding), `sideGroup` (Gruppentitel der Seitenleiste), `fg3` (nur Platzhalter, Gesperrtes, Pausiertes und Zierglyphen wie Chevron oder Lupe, nie Text zum Lesen) |
 | Akzent | `accent` (Bedienelemente), `accentText` (Text im Akzent, 4,5:1), `ring` (Fokus, Auswahl), `onAccent` (Schrift auf Akzent), `accentSoft`, `accentGradient` |
-| Zustand | `ok`, `warn`, `idle`, `okText`, `warnText`, `okSoft`, `warnSoft`; Fehler `strike` als Zeichen (Symbol, Punkt, Ring, mindestens 3:1) und `strikeText` als roter Text (mindestens 4,5:1) |
+| Zustand | `ok`, `warn`, `idle`, `okText`, `warnText`, `okSoft`, `warnSoft`; Fehler `strike` als Zeichen (Symbol, Punkt, Ring, mindestens 3:1), `strikeText` als roter Text (mindestens 4,5:1) und `strikeSoft` als Grund einer roten Marke. Jeder Fehler ist rot, jede Warnung orange, in Marke, Punkt und Zeile gleich |
 | Bedienelemente | `switchOff`, `trackOff`, `knob`, `knobShadow`, `buttonSecondary`, `buttonSecondaryEdge`, `buttonPrimaryEdge`, `buttonShadow`, `rowHover`, `sideSel`, `detent` |
 | Renders | `glassStandIn`, `glassStroke`, `desk`, `deskShadow`, `panelShadow`, `wallpaper`, `menuBarTint`, `menuBarText`, `traffic*` |
 
@@ -109,7 +109,9 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 
 - Kopfband 52 pt mit Squircle-Symbol und Titel, Spalte bis 640 pt links bündig, Gruppen 20 pt auseinander.
 - Zeilen: `ToggleRow`, `PickerRow` (Segmente oder Menü), `ValueRow` (mit `ValueCapsule`), `ButtonRow`, `ConfirmRow` (fragt an Ort und Stelle vor einer Aktion, die sich nicht rückgängig machen lässt: Abbrechen ist die Hauptaktion und liegt auf `Esc`, die Aktion steht rot auf einem ruhigen Knopf ohne Taste), `LinkRow`, `NavigationRow`; Hover über `HoverButton`.
-- Hinweise: `InlineNotice` mit `info`, `success`, `warning`, `error` und höchstens einer Aktion.
+- Unter dem Kopfband steht eine Zeile `subtitle`, die sagt, wofür der Bereich da ist; so beginnt jeder Bereich im selben Abstand. Ausnahme ist „Über“: dort nimmt der Block aus App-Symbol, Name und Version diesen Platz ein.
+- Hinweise: `InlineNotice` mit `info`, `success`, `warning`, `error` und höchstens einer Aktion. `info` ist neutral (Symbol in `fg2` auf ruhiger Fläche, ohne Rand), damit ein roter, grüner oder orangefarbener Akzent nie wie Fehler, Erfolg oder Warnung aussieht. Der Chip steht rechts, solange der Text daneben mindestens 240 pt breit bleibt (`Metrics.noticeTextMin`), sonst darunter; `actionBelow` setzt ihn immer darunter.
+- Eine Fußnote, die mit einer Auswahl wechselt, bekommt alle möglichen Texte als `footnoteReserve` und hält die Höhe des längsten in der aktuellen Sprache; sie steht direkt unter der Gruppe, die sie erklärt.
 - Downloads und lange Arbeiten: `ProgressRow` mit Rolle, Name, Phase (wartet, läuft, pausiert, fertig) und Bytes über `ByteText` („1,4 von 3,0 GB“).
 - Listen mit Suche: `ListCard` mit `ListSearch.matches` (Groß- und Kleinschreibung und Akzente egal), leer mit Titel und einem Satz; Zähler in der Seitenleiste mit `CountBadge`.
 - Auswahl mit Vorschau: `TilePicker(tone: .settings)` als erste Zeile einer Gruppe.
@@ -118,7 +120,7 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 
 | Form | Gestalt |
 |---|---|
-| Hauptfenster (`window`) | `NavigationSplitView` mit Seitenleiste aus Systemglas und Gruppen (`PageSection`), Werkzeugleiste mit Suche, Seiten mit großem Titel; Bausteine wie in Musik: Kopf mit Bild (`HeroHeader`), Reihen von Kacheln (`Shelf`), Raster (`TileGrid`), Listen mit Index und Nebeninfo (`ItemList`), erzeugte Bilder aus Text und Symbol (`Artwork`), leere Seite (`EmptyPage`) |
+| Hauptfenster (`window`) | `NavigationSplitView` mit Seitenleiste aus Systemglas und Gruppen (`PageSection`), Werkzeugleiste mit Suche, Seiten mit großem Titel; Bausteine wie in Musik: Kopf mit Bild (`HeroHeader`), Reihen von Kacheln (`Shelf`), Raster (`TileGrid`), Listen mit Index und Nebeninfo (`ItemList`, jede Zeile 44 pt), erzeugte Bilder aus Text und Symbol (`Artwork`), leere Seite (`EmptyPage`) und leerer Inhalt unter dem Titel (`PageEmptyState`, `NoResults`), beide mittig im freien Raum |
 | Einstellungen (Kit) | eigenes Fenster 900 x 620 wie die Systemeinstellungen: Seitenleiste mit farbigen Squircle-Symbolen, oben Inhalte, darunter Einstellungen; Bereich nach dem Muster oben; die Pfeiltasten wechseln den Bereich |
 | Onboarding (Kit) | Fenster 720 x 560 mit durchsichtiger Titelleiste und nur dem Schließen-Knopf, Seiten gleiten 26 pt mit Feder, unter reduzierter Bewegung Überblendung |
 | Statusmenü (`menubar`) | Symbol als Vorlage, Zustände `idle`, `busy`, `attention`; Panel wie ein Modul im Kontrollzentrum: abgerundet, Glas, 340 pt (D-14 erlaubt 320 bis 360), Kopf mit App-Symbol und Statuszeile, Abschnitte, Fußzeile mit Einstellungen und Beenden |
@@ -133,7 +135,8 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 ## 8. Glas und Tiefe
 
 - Glas nur, wo das System es liefert (Seitenleiste, Werkzeugleiste, Menüs) oder über `GlassSurface` für schwebende Flächen (Statusmenü-Panel). Kein Unschärfe-Leuchten, keine farbigen Lichthöfe, keine Verläufe als Hintergrund von Inhalten.
-- Gestaltete Flächen mit Verlauf gibt es an drei Stellen: Insel, Bild im Onboarding (`OnboardingHero`, Glanz im Akzent hinter dem App-Symbol) und App-Symbol. Sonst sind Flächen ruhig.
+- Gestaltete Flächen mit Verlauf gibt es an vier Stellen: Insel, Bild im Onboarding (`OnboardingHero`, Glanz im Akzent hinter dem App-Symbol), App-Symbol und `Artwork` im Hauptfenster (Kacheln, Listenbilder, Kopf mit Bild). Sonst sind Flächen ruhig.
+- `Artwork` dreht den Akzent je Eintrag um bis zu 90° in jede Richtung (ein violetter Akzent ergibt Petrol, Blau, Indigo, Violett, Magenta und Rosé), mit 72 bis 95 % seiner Sättigung, und bleibt so dunkel, dass weiße Symbole 3:1 behalten. Ein Regal sieht dadurch abwechslungsreich aus wie in Musik und nicht wie eine Fläche in einer Farbe. Grenzen: nur als Bild eines Eintrags, nie als Hintergrund einer Seite, eines Bereichs oder einer Karte; ein grauer Akzent (`graphit`) bleibt grau.
 - Schatten nur aus Tokens (`panelShadow`, `buttonShadow`, `knobShadow`), nie gestapelt.
 - In Renders zeichnet `GlassSurface` eine Fläche in `glassStandIn`; die echte Wirkung prüft die Person am Mac.
 
@@ -156,7 +159,7 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 
 - Jedes Bedienelement hat ein Label für VoiceOver, Symbole ohne Text eine Beschreibung; Zustände (an, aus, ausgewählt) werden gesprochen.
 - Alles ist mit der Tastatur erreichbar; der Fokusring kommt vom System oder aus `ring`.
-- Text 4,5:1 in hell und dunkel, Bedienelemente 3:1 gegen ihre Umgebung; Farbe ist nie das einzige Zeichen (Zustand zusätzlich mit Symbol oder Wort).
+- Text 4,5:1 in hell und dunkel, Bedienelemente 3:1 gegen ihre Umgebung; Farbe ist nie das einzige Zeichen (Zustand zusätzlich mit Symbol oder Wort). `fg2`, `prose` und `sideGroup` erreichen 4,5:1 auf Fenster, Karte und Seitenleiste, `fg3` nicht und ist deshalb kein Text zum Lesen; `DesignTests` prüft beides.
 - Reduzierte Bewegung und erhöhter Kontrast werden respektiert.
 
 ## 12. Renders ansehen
@@ -169,7 +172,7 @@ Jede sichtbare Änderung bringt Render-Szenen mit (`RenderScene`, Kennung `<bere
 4. Zum Vergleich die Beispiele `patterns.sample-pane`, `patterns.sample-step` und `patterns.sample-permission`.
 5. In der Statusdatei stehen die angesehenen Szenen. Ohne Bilder gilt die Oberfläche als nicht geprüft.
 
-Renders zeigen kein echtes Glas, keine echten Fensterrahmen, keine Insel an der echten Notch und keine Systemdialoge; das prüft die Person am Mac mit `make run`.
+Renders zeigen kein echtes Glas, keine echten Fensterrahmen, keine Insel an der echten Notch und keine Systemdialoge; das prüft die Person am Mac mit `make run`. Inhalt, den die Unterkante eines Fensters, Blatts oder einer Seitenleiste abschneidet, blendet in Renders über die letzten 28 pt aus (`renderEdgeFade()`), wo das echte Fenster scrollt; so endet kein Bild mitten in einer Zeile.
 
 ## 13. Was nicht vorkommt
 
