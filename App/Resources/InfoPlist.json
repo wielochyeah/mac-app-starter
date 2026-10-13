@@ -1,51 +1,51 @@
 {
-  "_comment": "Usage descriptions shown by macOS when the app asks for a permission. scripts/gen_config.py copies the keys of the permissions listed in starter.json into Info.plist (en) and <lang>.lproj/InfoPlist.strings. Say concretely what the app does with the access.",
+  "_comment": "Usage descriptions shown by macOS when the app asks for a permission. scripts/gen_config.py copies the keys of the permissions listed in starter.json into Info.plist (en) and <lang>.lproj/InfoPlist.strings. Say what the app uses the access for; promise more (stays on the Mac, nothing is uploaded) only when the project keeps it and a test proves it. These are the starter's defaults (rules/standard/infoplist.json): after bin/starter init, make check-texts reports every default left for a permission that starter.json lists.",
   "NSMicrophoneUsageDescription": {
-    "en": "The microphone is used only while you record. Audio stays on your Mac.",
-    "de": "Das Mikrofon läuft nur, während du aufnimmst. Der Ton bleibt auf deinem Mac."
+    "en": "The app uses the microphone to record what you say.",
+    "de": "Die App nutzt das Mikrofon, um aufzunehmen, was du sagst."
   },
   "NSCameraUsageDescription": {
-    "en": "The camera is used only while you take a picture. Images stay on your Mac.",
-    "de": "Die Kamera läuft nur, während du ein Bild aufnimmst. Bilder bleiben auf deinem Mac."
+    "en": "The app uses the camera to take pictures.",
+    "de": "Die App nutzt die Kamera, um Bilder aufzunehmen."
   },
   "NSAppleEventsUsageDescription": {
-    "en": "Lets the app ask other apps for the details it needs for your action.",
-    "de": "Damit die App andere Apps nach den Angaben fragen kann, die sie für deine Aktion braucht."
+    "en": "The app asks other apps for details such as the title of the open document.",
+    "de": "Die App fragt andere Apps nach Angaben wie dem Titel des geöffneten Dokuments."
   },
   "NSSpeechRecognitionUsageDescription": {
-    "en": "Speech is turned into text on your Mac.",
-    "de": "Sprache wird auf deinem Mac in Text umgewandelt."
+    "en": "The app turns what you say into text.",
+    "de": "Die App wandelt in Text um, was du sagst."
   },
   "NSContactsUsageDescription": {
-    "en": "Contacts are read to fill in names you pick. Nothing is uploaded.",
-    "de": "Kontakte werden gelesen, um Namen einzusetzen, die du auswählst. Nichts wird hochgeladen."
+    "en": "The app reads your contacts to fill in the names you pick.",
+    "de": "Die App liest deine Kontakte, um die Namen einzusetzen, die du auswählst."
   },
   "NSCalendarsFullAccessUsageDescription": {
-    "en": "Calendar events are read and created only when you ask for it.",
-    "de": "Termine werden nur gelesen und angelegt, wenn du darum bittest."
+    "en": "The app reads and creates calendar events when you ask it to.",
+    "de": "Die App liest und erstellt Termine, wenn du sie darum bittest."
   },
   "NSRemindersFullAccessUsageDescription": {
-    "en": "Reminders are read and created only when you ask for it.",
-    "de": "Erinnerungen werden nur gelesen und angelegt, wenn du darum bittest."
+    "en": "The app reads and creates reminders when you ask it to.",
+    "de": "Die App liest und erstellt Erinnerungen, wenn du sie darum bittest."
   },
   "NSPhotoLibraryUsageDescription": {
-    "en": "Photos you pick are opened in the app. Nothing is uploaded.",
-    "de": "Fotos, die du auswählst, werden in der App geöffnet. Nichts wird hochgeladen."
+    "en": "The app opens the photos you pick.",
+    "de": "Die App öffnet die Fotos, die du auswählst."
   },
   "NSLocationUsageDescription": {
-    "en": "Your location is used for local results and never leaves your Mac.",
-    "de": "Dein Standort wird für Ergebnisse in deiner Nähe benutzt und verlässt deinen Mac nie."
+    "en": "The app uses your location to show results near you.",
+    "de": "Die App nutzt deinen Standort, um Ergebnisse in deiner Nähe zu zeigen."
   },
   "NSLocationWhenInUseUsageDescription": {
-    "en": "Your location is used for local results and never leaves your Mac.",
-    "de": "Dein Standort wird für Ergebnisse in deiner Nähe benutzt und verlässt deinen Mac nie."
+    "en": "The app uses your location to show results near you.",
+    "de": "Die App nutzt deinen Standort, um Ergebnisse in deiner Nähe zu zeigen."
   },
   "NSBluetoothAlwaysUsageDescription": {
-    "en": "Bluetooth is used to connect the devices you choose.",
-    "de": "Bluetooth verbindet die Geräte, die du auswählst."
+    "en": "The app uses Bluetooth to connect the devices you choose.",
+    "de": "Die App nutzt Bluetooth, um die Geräte zu verbinden, die du auswählst."
   },
   "NSLocalNetworkUsageDescription": {
-    "en": "The local network is used to find devices on your network.",
-    "de": "Das lokale Netzwerk wird benutzt, um Geräte in deinem Netz zu finden."
+    "en": "The app searches your local network for devices.",
+    "de": "Die App sucht in deinem lokalen Netzwerk nach Geräten."
   }
 }
