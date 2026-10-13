@@ -199,6 +199,20 @@ extension SettingKey {
         if on { schedule(job) } else { scheduler.cancel(id) }
     }
 
+    /// Reads the switches from the settings again ("Reset all settings" removed them, a hand
+    /// edit changed them): a job back on is scheduled, one now off is cancelled.
+    func reloadSwitches() {
+        guard let settings else { return }
+        let now = Set(settings[.backgroundDisabledJobs])
+        guard now != disabled else { return }
+        let before = disabled
+        disabled = now
+        guard isStarted else { return }
+        for job in jobs where before.contains(job.id) != now.contains(job.id) {
+            if now.contains(job.id) { scheduler.cancel(job.id) } else { schedule(job) }
+        }
+    }
+
     // MARK: Running
 
     func record(_ id: String) -> JobRecord { records[id] ?? JobRecord() }

@@ -231,6 +231,34 @@ final class BackgroundTests: TestSuite {
             expectEqual(settings[.backgroundDisabledJobs], [])
         }
 
+        test("Reset all settings turns switched-off jobs back on, and a later switch keeps the reset") {
+            let settings = Settings(fileURL: tempDir().appendingPathComponent("settings.json"))
+            let scheduler = FakeJobScheduler()
+            let jobs = BackgroundJobs(store: MemoryJobStore(), scheduler: scheduler, settings: settings)
+            jobs.register(id: "a", title: { "A" }, interval: 3600) { .nothingToDo }
+            jobs.register(id: "b", title: { "B" }, interval: 3600) { .nothingToDo }
+            jobs.start()
+            jobs.setEnabled("a", false)
+            SettingsReset.perform(on: settings, applyToApp: false)
+            jobs.reloadSwitches()   // what the module's didReset hook does
+            expect(jobs.isEnabled("a"), "a is on again")
+            expect(scheduler.scheduled["a"] != nil, "a is scheduled again")
+            jobs.setEnabled("b", false)
+            expectEqual(settings[.backgroundDisabledJobs], ["b"], "the old list is not written back")
+            expect(scheduler.scheduled["b"] == nil)
+            // a hand edit that switches a off again cancels it
+            settings[.backgroundDisabledJobs] = ["a", "b"]
+            jobs.reloadSwitches()
+            expect(!jobs.isEnabled("a") && scheduler.scheduled["a"] == nil)
+        }
+
+        test("the module re-reads the switches after a reset") {
+            let before = SettingsReset.didReset.count
+            Registry.withScratch { BackgroundModule.register() }
+            expectEqual(SettingsReset.didReset.count, before + 1)
+            SettingsReset.didReset.removeLast()
+        }
+
         // MARK: Running
 
         test("a scheduled fire runs the job and records outcome and duration") {
