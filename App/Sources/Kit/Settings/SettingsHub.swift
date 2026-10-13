@@ -52,7 +52,7 @@ extension SettingKey {
     /// else General, else the first. Nil only when there are no panes at all.
     static func resolve(_ requested: String?, current: String?, available: [String]) -> String? {
         if let requested, available.contains(requested) { return requested }
-        if let requested { Log.warn("settings: no pane \"\(requested)\"", "settings") }
+        if let requested { Log.warn("settings: no pane \"\(public: requested)\"", "settings") }
         if let current, available.contains(current) { return current }
         if available.contains("general") { return "general" }
         return available.first

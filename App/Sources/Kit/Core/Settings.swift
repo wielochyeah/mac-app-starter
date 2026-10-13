@@ -96,7 +96,7 @@ nonisolated enum JSONValue: Codable, Equatable, Sendable {
         get { values[key.name]?.decode(V.self) ?? key.defaultValue }
         set {
             guard let value = try? JSONValue(encoding: newValue) else {
-                Log.error("settings: cannot encode \(key.name)", "settings")
+                Log.error("settings: cannot encode \(public: key.name)", "settings")
                 return
             }
             guard values[key.name] != value else { return }
@@ -127,7 +127,7 @@ nonisolated enum JSONValue: Codable, Equatable, Sendable {
         case .broken:
             values = [:]
             fileWasBroken = true
-            Log.warn("settings: \(fileURL.lastPathComponent) is not valid JSON, using defaults", "settings")
+            Log.warn("settings: \(public: fileURL.lastPathComponent) is not valid JSON, using defaults", "settings")
         case .ok(let object):
             values = object
             fileWasBroken = false

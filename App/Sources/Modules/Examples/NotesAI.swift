@@ -77,7 +77,7 @@ enum NotesAI {
         guard AIWait.until(timeout: 60, { !session.isSummarizing }) else { return "summary timed out" }
         switch session.summary {
         case .done(let text):
-            Log.info("notes: live summary has \(text.count) characters", "notes")
+            Log.info("notes: live summary has \(public: text.count) characters", "notes")
             return nil
         case .failed(let message): return "summary failed: \(message)"
         default: return "summary ended without text"

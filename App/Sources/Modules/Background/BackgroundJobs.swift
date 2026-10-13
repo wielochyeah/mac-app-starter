@@ -150,7 +150,7 @@ extension SettingKey {
                   qos: QualityOfService = .utility, exact: Bool = false,
                   run: @escaping @Sendable () async throws -> JobOutcome) {
         guard !jobs.contains(where: { $0.id == id }) else {
-            Log.error("background: job \(id) registered twice, keeping the first", "background")
+            Log.error("background: job \(public: id) registered twice, keeping the first", "background")
             return
         }
         let spec = JobSchedule(id: id, interval: max(interval, 1), tolerance: tolerance ?? JobSchedule.defaultTolerance(interval: max(interval, 1), exact: exact),
@@ -243,9 +243,9 @@ extension SettingKey {
         do {
             try store.save(id, finished)
         } catch {
-            Log.error("background: saving \(id) failed: \(error)", "background")
+            Log.error("background: saving \(public: id) failed: \(error)", "background")
         }
-        if outcome.isFailure { Log.warn("background: \(id) failed", "background") }
+        if outcome.isFailure { Log.warn("background: \(public: id) failed", "background") }
         return outcome
     }
 

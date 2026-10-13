@@ -76,7 +76,7 @@ extension SettingKey {
         do {
             db = try Database(url: url, migrations: Self.migrations)
         } catch {
-            Log.error("notes: opening \(url?.lastPathComponent ?? "memory") failed: \(error)", "notes")
+            Log.error("notes: opening \(public: url?.lastPathComponent ?? "memory") failed: \(error)", "notes")
             problem = NotesText.storeProblem
             db = try? Database(url: nil, migrations: Self.migrations)
         }
@@ -330,7 +330,7 @@ extension SettingKey {
             reload()
             return true
         } catch {
-            Log.error("notes: \(what) failed: \(error)", "notes")
+            Log.error("notes: \(public: what) failed: \(error)", "notes")
             problem = NotesText.storeProblem
             return false
         }

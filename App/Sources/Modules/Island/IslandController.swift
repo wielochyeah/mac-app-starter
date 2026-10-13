@@ -582,7 +582,7 @@ final class Island {
 
     private func rebuild(_ why: String) {
         lastRebuild = deps.scheduler.now
-        Log.warn("island: \(why)", "island")
+        Log.warn("island: \(public: why)", "island")
         host.rebuild()
         orderedIn = false
         shownBefore = false
@@ -631,6 +631,6 @@ final class Island {
     }
 
     private func trace(_ message: String) {
-        Log.debug("island: \(message)", "island")
+        Log.debug("island: \(public: message)", "island")
     }
 }

@@ -119,6 +119,18 @@ final class AppFormTests: TestSuite {
             expect(!LaunchFlags.parse(["app", "--demo", "--selftest"]).errors.isEmpty)
         }
 
+        test("log lines: interpolated values are private unless marked public") {
+            let path = "/Users/someone/Documents/secret.txt"
+            let id = 42
+            let line: LogMessage = "notes: opening \(path) failed for note \(public: id)"
+            expectEqual(line.redacted, "notes: opening <private> failed for note 42")
+            expectEqual(line.full, "notes: opening /Users/someone/Documents/secret.txt failed for note 42")
+            expect(line.hasPrivate)
+            let fixed: LogMessage = "settings: reset to defaults"
+            expectEqual(fixed.redacted, "settings: reset to defaults")
+            expect(!fixed.hasPrivate)
+        }
+
         test("tool runs are headless without STARTER_HEADLESS; normal launches and --demo follow it") {
             for args in [["app", "--render", "/x"], ["app", "--selftest"], ["app", "--permission-probe", "microphone"]] {
                 let flags = LaunchFlags.parse(args)

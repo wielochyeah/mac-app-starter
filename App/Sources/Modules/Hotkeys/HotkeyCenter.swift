@@ -136,7 +136,7 @@ final class MemoryHotkeyStore: HotkeyStore {
         droppedStandards[id] = nil
         if let combo = standard, !combo.isShortcut {
             // a plain key as a global hotkey could no longer be typed in any app
-            Log.warn("hotkeys: \(id) standard \(layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, dropped", "hotkeys")
+            Log.warn("hotkeys: \(public: id) standard \(public: layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, dropped", "hotkeys")
             droppedStandards[id] = combo
             standard = nil
         }
@@ -151,7 +151,7 @@ final class MemoryHotkeyStore: HotkeyStore {
             nextNumber += 1
         }
         if let why = standardProblem(id) {
-            Log.warn("hotkeys: \(id) standard: \(why)", "hotkeys")
+            Log.warn("hotkeys: \(public: id) standard: \(public: why)", "hotkeys")
         }
         apply()
         onRegister?()
@@ -196,7 +196,7 @@ final class MemoryHotkeyStore: HotkeyStore {
     func set(_ id: String, _ choice: HotkeyChoice) {
         guard let definition = definition(id) else { return }
         if case .combo(let combo) = choice, !combo.isShortcut {
-            Log.warn("hotkeys: \(id) \(layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, not set", "hotkeys")
+            Log.warn("hotkeys: \(public: id) \(public: layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, not set", "hotkeys")
             return
         }
         var value = choice
@@ -219,7 +219,7 @@ final class MemoryHotkeyStore: HotkeyStore {
     private func load(_ id: String) -> HotkeyChoice {
         let choice = store.load(id)
         if case .combo(let combo) = choice, !combo.isShortcut {
-            Log.warn("hotkeys: stored \(id) \(layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, using the standard", "hotkeys")
+            Log.warn("hotkeys: stored \(public: id) \(public: layout.label(combo)) has no ⌃, ⌥ or ⌘ and is no F-key, using the standard", "hotkeys")
             return .standard
         }
         return choice
@@ -307,7 +307,7 @@ final class MemoryHotkeyStore: HotkeyStore {
         for d in definitions {
             guard let combo = (choices[d.id] ?? .standard).resolved(standard: d.standard) else { continue }
             guard taken.insert(combo).inserted else {
-                Log.warn("hotkeys: \(d.id) has the same keys as an earlier hotkey, not registered twice", "hotkeys")
+                Log.warn("hotkeys: \(public: d.id) has the same keys as an earlier hotkey, not registered twice", "hotkeys")
                 continue
             }
             want[d.id] = combo
@@ -354,10 +354,10 @@ final class MemoryHotkeyStore: HotkeyStore {
                 // registered plainly: presses arrive once the other app lets go
                 registered[d.id] = wanted
                 next[d.id] = .heldElsewhere
-                Log.info("hotkeys: \(d.id) \(layout.label(wanted)) is held exclusively by another app", "hotkeys")
+                Log.info("hotkeys: \(public: d.id) \(public: layout.label(wanted)) is held exclusively by another app", "hotkeys")
             case .failed(let code):
                 next[d.id] = .failed(code)
-                Log.warn("hotkeys: \(d.id) \(layout.label(wanted)) refused by macOS (status \(code))", "hotkeys")
+                Log.warn("hotkeys: \(public: d.id) \(public: layout.label(wanted)) refused by macOS (status \(public: code))", "hotkeys")
             }
         }
         if next != status { status = next }
