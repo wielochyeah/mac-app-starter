@@ -110,7 +110,7 @@ Binary + Info.plist + Resources ──> build/<Name>.app ──codesign──> f
 
 ## 9. Package.swift
 
-`Package.swift` ist der zweite Weg für Xcode oder ein intaktes SwiftPM: dieselben Quellen, dieselben Modul-Flags aus `starter.json`, `build/gen/AppConfig.swift` vorher mit `python3 scripts/gen_config.py` erzeugen. Tests laufen nur über `make test`. Weil SwiftPM auf Macs mit gemischten Command Line Tools abstürzt, wurde das Manifest beim Bau des Starters einmal typgeprüft; eine laufende Prüfung dieses Wegs gibt es nicht. `make doctor` sagt, ob SwiftPM auf dem eigenen Mac läuft.
+`Package.swift` ist der zweite Weg für Xcode oder ein intaktes SwiftPM: dieselben Quellen, dieselben Modul-Flags aus `starter.json`, `build/gen/AppConfig.swift` vorher mit `python3 scripts/gen_config.py` erzeugen. Tests laufen nur über `make test`. Die Python-Tests prüfen das Manifest bei jedem `make test` mit `swiftc -typecheck` gegen PackageDescription; ganz gebaut (`swift build`) wurde es zuletzt mit Xcode 27 und Swift 6.4 für Fassung 1.0.0. Das Manifest schließt alles außer den Quellen aus, sonst nähme SwiftPM die erzeugten `.lproj`-Ordner unter `build/` als Ressourcen. Mit den Command Line Tools allein stürzt SwiftPM auf Macs mit gemischter Installation ab; `make doctor` sagt, ob SwiftPM auf dem eigenen Mac läuft.
 
 ## 10. Tests
 
