@@ -37,6 +37,24 @@ guard let minimumMacOS = (config["app"] as? [String: Any])?["minimumMacOS"] as? 
 }
 let enabled = Set(modules.filter(\.value).map(\.key))
 let active = moduleDirs.filter { enabled.contains($0.key) }
+let sources = ["App/Sources/Kit", "App/Sources/Features"] + active.map { "App/Sources/Modules/\($0.dir)" }
+    + ["build/gen/AppConfig.swift"]
+
+// The target's path is the repository root (AppConfig.swift is generated into build/gen), so everything else in
+// it is excluded: SwiftPM would take the generated build/gen/Resources/*.lproj (or those of a built .app) as
+// resources of the package and stop, and warn about every other file. Hidden entries (.git, .build) it skips itself.
+func entries(_ dir: String) -> [String] {
+    let path = dir.isEmpty ? root.path : root.appendingPathComponent(dir).path
+    let names = (try? FileManager.default.contentsOfDirectory(atPath: path)) ?? []
+    return names.filter { !$0.hasPrefix(".") }.map { dir.isEmpty ? $0 : "\(dir)/\($0)" }
+}
+func outsideSources(_ dir: String) -> [String] {
+    entries(dir).flatMap { path -> [String] in
+        if sources.contains(path) { return [] }
+        if sources.contains(where: { $0.hasPrefix(path + "/") }) { return outsideSources(path) }
+        return [path]
+    }
+}
 
 var swiftSettings: [SwiftSetting] = [.defaultIsolation(MainActor.self)]
 swiftSettings += active.map { .define("MODUL_\($0.key.uppercased())") }
@@ -56,10 +74,8 @@ let package = Package(
         .executableTarget(
             name: "App",
             path: ".",
-            exclude: ["App/Sources/Features/README.md"],
-            sources: ["App/Sources/Kit", "App/Sources/Features"]
-                + active.map { "App/Sources/Modules/\($0.dir)" }
-                + ["build/gen/AppConfig.swift"],
+            exclude: outsideSources("") + ["App/Sources/Features/README.md"],
+            sources: sources,
             swiftSettings: swiftSettings,
             linkerSettings: linkerSettings
         ),
