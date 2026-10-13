@@ -106,7 +106,7 @@ enum OnboardingText {
 
     // MARK: Gallery
 
-    static var galleryWelcomeArt: String { tr(en: "Welcome art", de: "Willkommensbild") }
+    static var galleryWelcomeArt: String { tr(en: "Welcome art", de: "Begrüßungsbild") }
     static var galleryFeatureRow: String { tr(en: "Feature row", de: "Funktionszeile") }
     static var galleryDoneIcon: String { tr(en: "App icon with check", de: "App-Symbol mit Haken") }
 }
