@@ -152,6 +152,16 @@ class ProjectTests(TempDirCase):
         init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
         return root
 
+    def test_a_project_without_own_feature_cards_gets_a_hint(self):
+        root = self.project()
+        self.assertTrue(any("noch keine Funktionskarte" in w for w in kitcheck.run(root).warnings))
+        write_files(root, {"App/Sources/Features/Notes/NotesFeature.swift":
+                           "enum NotesFeature {\n    static func register() {\n        OnboardingFeatures.items.append(x)\n"
+                           "    }\n}\n"})
+        f = kitcheck.run(root)
+        self.assertFalse(any("Funktionskarte" in w for w in f.warnings), f.warnings)
+        self.assertEqual(f.problems, [], problems_text(f))
+
     def test_pictures_that_are_not_there(self):
         root = self.project({"docs/PROJECT.md": "![x](docs/screenshots/de-light-own.png)\n",
                              "docs/screenshots/list.txt": "de-light/settings.window.png\n"})

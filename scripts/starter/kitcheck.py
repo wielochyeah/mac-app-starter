@@ -435,6 +435,11 @@ def run(root: Path, env: Optional[Mapping[str, str]] = None) -> Findings:
         f.warnings.append(f"nach „{lock[PENDING]}“ ist make build noch nicht grün gelaufen (rot oder ohne "
                           f"Swift-Compiler übersprungen); auf einem Mac {lock[PENDING]} erneut aufrufen (baut noch "
                           "einmal und löscht den Vermerk pendingBuild in starter.lock.json)")
+    if state == "project" and not any(
+            p.startswith("App/Sources/Features/") and p.endswith(".swift")
+            and "OnboardingFeatures.items.append" in (_read(root, p) or "") for p in files):
+        f.warnings.append("das Onboarding zeigt noch keine Funktionskarte des Projekts (nur die der Module, mit "
+                          "strip-examples keine); eine Karte je Funktion: Skill neues-feature, Schritt 8")
     if state in ("project", "starter", "unknown"):
         config = cfg.read_config(root)
         texts = {p: t for p, t in read_texts(root, [p for p in files if p.endswith(".md") or p == pics.LIST]).items()}
