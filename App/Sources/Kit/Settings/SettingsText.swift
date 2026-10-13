@@ -16,6 +16,10 @@ enum SettingsText {
 
     // General
     static var general: String { tr(en: "General", de: "Allgemein") }
+    static var generalIntro: String {
+        tr(en: "Language and appearance apply to every window of the app at once.",
+           de: "Sprache und Erscheinungsbild gelten sofort für jedes Fenster der App.")
+    }
     static var language: String { tr(en: "Language", de: "Sprache") }
     static var interface: String { tr(en: "App language", de: "Sprache der App") }
     static var interfaceDetail: String { tr(en: "Windows, menus and notifications", de: "Fenster, Menüs und Mitteilungen") }

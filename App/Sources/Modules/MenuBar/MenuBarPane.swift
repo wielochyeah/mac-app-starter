@@ -14,7 +14,8 @@ struct MenuBarPane: View {
         let visible = Binding(get: { settings[.menuBarVisible] }, set: { settings[.menuBarVisible] = $0 })
         PaneScaffold(title: MenuBarText.paneTitle, symbol: "menubar.rectangle", tint: .indigo, subtitle: MenuBarText.paneIntro) {
             // the note explains the chosen style, so it sits right under the tiles
-            SettingsSection(MenuBarText.iconSection, footnote: MenuBarText.styleNote(style.wrappedValue), footnoteLines: 2) {
+            SettingsSection(MenuBarText.iconSection, footnote: MenuBarText.styleNote(style.wrappedValue),
+                            footnoteReserve: MenuBarIconStyle.allCases.map(MenuBarText.styleNote)) {
                 TilePicker(MenuBarIconStyle.allCases.map { TileOption($0, title: MenuBarText.styleName($0)) },
                            selection: style, tone: .settings) { value in
                     MenuBarStylePreview(style: value)

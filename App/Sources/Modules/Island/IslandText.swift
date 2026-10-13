@@ -24,6 +24,10 @@ enum IslandText {
     // MARK: Settings pane
 
     static var pane: String { tr(en: "Island & Capsule", de: "Insel und Kapsel") }
+    static var paneIntro: String {
+        tr(en: "While the app works, it shows progress and results at the top of the screen.",
+           de: "Während die App arbeitet, zeigt sie Fortschritt und Ergebnis oben am Bildschirm.")
+    }
 
     static func style(_ style: IslandStyle) -> String {
         switch style {
