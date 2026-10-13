@@ -66,7 +66,20 @@ enum SettingsController {
             problems.append("minimum size \(window.minSize), expected \(Metrics.settingsWindowMin)")
         }
         if window.frame.size != Metrics.settingsWindow { problems.append("size \(window.frame.size) after layout") }
+        // the unified toolbar is taller than the 52 pt header band (66 pt on macOS 26), but macOS
+        // centres the traffic lights 26 pt from the top: the header's title must sit on that line,
+        // as the renders draw it
+        if let lights = Self.trafficLightsCentre(window), abs(lights - Metrics.paneHeader / 2) > 1 {
+            problems.append("traffic lights centred \(lights) pt from the top, the header band at \(Metrics.paneHeader / 2)")
+        }
         return problems.isEmpty ? nil : problems.joined(separator: "; ")
+    }
+
+    /// Distance of the close button's centre from the window's top edge.
+    static func trafficLightsCentre(_ window: NSWindow) -> CGFloat? {
+        guard let button = window.standardWindowButton(.closeButton), let frame = button.superview?.convert(button.frame, to: nil)
+        else { return nil }
+        return window.frame.height - frame.midY
     }
 
     private static func didClose() {
