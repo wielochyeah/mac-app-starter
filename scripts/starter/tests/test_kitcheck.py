@@ -30,6 +30,21 @@ class StarterFixtureTests(TempDirCase):
         f = kitcheck.run(self.repo())
         self.assertEqual(f.problems, [], problems_text(f))
 
+    def test_a_picture_of_a_module_scene_must_go_with_the_module(self):
+        """After init and remove island, README.md would still show the island's picture: marked or starter-only."""
+        files = {"README.md": "# Starter\n\n![Insel](docs/screenshots/de-dark-island.pane.png)\n",
+                 "docs/screenshots/de-dark-island.pane.png": "png"}
+        text = problems_text(kitcheck.run(self.repo(files)))
+        self.assertIn("remove island: README.md:3 zeigt docs/screenshots/de-dark-island.pane.png", text)
+        for fixed in ("![Insel](docs/screenshots/de-dark-island.pane.png) <!-- modul:island -->\n",
+                      "<!-- nur-im-starter:anfang -->\n![Insel](docs/screenshots/de-dark-island.pane.png)\n"
+                      "<!-- nur-im-starter:ende -->\n"):
+            root = self.tmp / ("r" + str(len(fixed)))
+            repo_files = dict(base_files(), **files)
+            repo_files["README.md"] = "# Starter\n\n" + fixed
+            f = kitcheck.run(make_repo(root, repo_files))
+            self.assertEqual(f.problems, [], problems_text(f))
+
     def test_unclassified_file(self):
         f = kitcheck.run(self.repo({"LICENSE": "MIT\n"}))
         self.assertIn("LICENSE", problems_text(f))
@@ -136,6 +151,20 @@ class ProjectTests(TempDirCase):
         root = make_repo(self.tmp / "p", files)
         init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
         return root
+
+    def test_pictures_that_are_not_there(self):
+        root = self.project({"docs/PROJECT.md": "![x](docs/screenshots/de-light-own.png)\n",
+                             "docs/screenshots/list.txt": "de-light/settings.window.png\n"})
+        f = kitcheck.run(root)
+        self.assertIn("docs/PROJECT.md:1 zeigt docs/screenshots/de-light-own.png, das es nicht gibt", problems_text(f))
+        self.assertTrue(any("de-light-settings.window.png fehlt noch" in w for w in f.warnings), f.warnings)
+
+    def test_a_list_line_of_a_removed_module(self):
+        from starter.remove import remove_module
+        root = self.project()
+        remove_module(root, "island", build=False, check_origin=False)
+        write_files(root, {"docs/screenshots/list.txt": "de-dark/island.pane.png\n"})
+        self.assertIn("nennt die Szene island.pane des entfernten Moduls island", problems_text(kitcheck.run(root)))
 
     def test_clean_project(self):
         f = kitcheck.run(self.project())

@@ -21,6 +21,7 @@ from typing import Dict, List, Optional
 
 from . import config as cfg
 from . import globs
+from . import pictures as pics
 from .common import (StarterError, build_env, checksum, git_bytes, inside, is_text_file, remove_empty_dirs,
                      working_files, write_text)
 from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, repo_state, set_pending_build, write_lock
@@ -33,6 +34,7 @@ class RemovalPlan:
     deleted: List[str] = field(default_factory=list)
     edited: Dict[str, str] = field(default_factory=dict)       # path -> new text
     emptied: List[str] = field(default_factory=list)           # Swift files with nothing left
+    pictures: List[str] = field(default_factory=list)          # README pictures of the module's scenes
     dangling: List[str] = field(default_factory=list)
     config: Optional[dict] = None                              # new starter.json
     config_notes: List[str] = field(default_factory=list)
@@ -44,7 +46,7 @@ class RemovalPlan:
 
     @property
     def touched(self) -> List[str]:
-        return self.deleted + self.emptied + sorted(self.edited) + [cfg.CONFIG, LOCK]
+        return self.deleted + self.emptied + self.pictures + sorted(self.edited) + [cfg.CONFIG, LOCK]
 
 
 def module_present(root: Path, manifest: Manifest, name: str, files: List[str], config: dict) -> bool:
@@ -105,6 +107,15 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
             if new != text:
                 plan.edited[path] = new
 
+    if pics.LIST in remaining:
+        before = remaining[pics.LIST]
+        after = pics.drop_module_lines(before, name)
+        if after != before:
+            remaining[pics.LIST] = plan.edited[pics.LIST] = after
+        original = (root / pics.LIST).read_text(encoding="utf-8", errors="replace")
+        gone = set(pics.entries(original)) - set(pics.entries(after))
+        kept = pics.referenced({p: t for p, t in remaining.items() if p.endswith(".md") or p == pics.LIST})
+        plan.pictures = sorted(p for p in (pics.picture(e) for e in gone) if p in files and p not in kept)
     prune_baselines(plan, remaining)
     gone = {p: (root / p).read_text(encoding="utf-8", errors="replace") for p in plan.deleted + plan.emptied
             if p.endswith(".swift")}
@@ -188,7 +199,7 @@ def apply_removal(root: Path, plan: RemovalPlan, manifest: Manifest) -> None:
     # the project had left unchanged, so earlier project changes stay visible to check-kit.
     before = {p: checksum(root, p) for p in plan.edited
               if in_project and manifest.classify(p) == "kit" and (root / p).is_file()}
-    for path in plan.deleted + plan.emptied:
+    for path in plan.deleted + plan.emptied + plan.pictures:
         full = inside(root, path)
         if full.exists():
             full.unlink()
@@ -284,6 +295,7 @@ def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
                  f"  {_count(len(plan.deleted), 'Datei', 'Dateien')} löschen: {names(plan.deleted)}",
                  f"  Modul-Blöcke und Markierungen entfernen in: {names(sorted(plan.edited))}",
                  f"  danach leer und löschen: {names(plan.emptied)}",
+                 f"  Bilder der Szenen des Moduls löschen: {names(plan.pictures)}",
                  f"  starter.json: {names(plan.config_notes)}"]
         lines += [f"  Danach: {s}" for s in plan.next_steps]
         return "\n".join(lines) + "\n"
@@ -291,6 +303,7 @@ def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
              f"  {_count(len(plan.deleted), 'Datei', 'Dateien')}: {names(plan.deleted)}",
              f"  Modul-Blöcke und Markierungen entfernt in: {names(sorted(plan.edited))}",
              f"  leer geworden und gelöscht: {names(plan.emptied)}",
+             f"  Bilder der Szenen des Moduls gelöscht: {names(plan.pictures)}",
              f"  starter.json: {names(plan.config_notes)}"]
     if plan.dirty:
         lines.append(f"  Hinweis: {_count(len(plan.dirty), 'Datei hatte', 'Dateien hatten')} schon vorher nicht "

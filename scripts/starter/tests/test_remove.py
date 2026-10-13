@@ -121,6 +121,21 @@ class RemoveTests(TempDirCase):
                 self.assertEqual(cli.finish_pending_build(root, "bin/starter remove island", True), 1)
             self.assertIn("steht make build noch aus", err.getvalue())
 
+    def test_lines_and_pictures_of_the_module_scenes_go(self):
+        listing = ("# Bilder\nde-dark/island.pane.png\nde-light/examples.menubar.png  # modul:examples,island\n"
+                   "de-light/settings.window.png\ntools/icon.png\n")
+        root = self.repo({"docs/screenshots/list.txt": listing,
+                          "docs/screenshots/de-dark-island.pane.png": "png",
+                          "docs/screenshots/de-light-examples.menubar.png": "png",
+                          "docs/screenshots/de-light-settings.window.png": "png"})
+        plan = self.remove(root, "island")
+        self.assertEqual(plan.pictures, ["docs/screenshots/de-dark-island.pane.png",
+                                         "docs/screenshots/de-light-examples.menubar.png"])
+        self.assertEqual(self.read(root, "docs/screenshots/list.txt"),
+                         "# Bilder\nde-light/settings.window.png\ntools/icon.png\n")
+        self.assertFalse((root / "docs/screenshots/de-dark-island.pane.png").exists())
+        self.assertTrue((root / "docs/screenshots/de-light-settings.window.png").exists())
+
     def test_dry_run_report_speaks_of_what_would_happen(self):
         from starter.remove import report
         root = self.repo()

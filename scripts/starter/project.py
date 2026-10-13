@@ -24,6 +24,7 @@ from typing import List, Optional
 
 from . import config as cfg
 from . import globs
+from . import pictures as pics
 from .common import (StarterError, build_env, cut_blocks, git, has_block, inside, is_text_file, remove_empty_dirs,
                      working_files, write_text)
 from .manifest import Manifest, is_project, kit_checksums, read_lock, read_manifest, set_pending_build, write_lock
@@ -64,6 +65,8 @@ class InitResult:
     checksums: int = 0
     notes: List[str] = field(default_factory=list)
     tagline_cleared: bool = False
+    readme_intro: bool = False                          # README.md got the project's short introduction
+    pictures_removed: List[str] = field(default_factory=list)  # starter pictures no text names any more
     anrede: str = "du"
     anrede_findings: Optional[int] = None               # du texts recorded in rules/baseline/texte.json (anrede sie)
     rules_synced: bool = False
@@ -228,9 +231,19 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
     replaced = set(result.replaced)
     result.blocks = sorted({f for f in block_texts if f not in replaced}
                            | {dst for src, dst in moves if src in block_texts})
+    # The starter's title, introduction and tour are starter-only; the project's README starts with its own name.
+    readme = block_texts.get("README.md")
+    if readme is None and (root / "README.md").is_file():
+        readme = (root / "README.md").read_text(encoding="utf-8", errors="replace")
+    if readme is not None and not readme.lstrip().startswith("# "):
+        block_texts["README.md"] = readme_intro(opts.name) + readme.lstrip("\n")
+        result.readme_intro = True
     result.commit = opts.starter_commit if opts.starter_commit is not None else \
         starter_commit_for(root, manifest.repository, lock["version"], opts.offline)
     if opts.dry_run:
+        texts = {f: block_texts.get(f) or (root / f).read_text(encoding="utf-8", errors="replace")
+                 for f in files if f.endswith(".md") or f == pics.LIST}
+        result.pictures_removed = unused_pictures(files, texts)
         return result
 
     result.dirty = uncommitted(root)
@@ -269,6 +282,12 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
             raise StarterError(dangling_report(plan).rstrip())
         apply_removal(root, plan, manifest)
     result.checksums = len(read_lock(root)["checksums"])
+    now = working_files(root)
+    texts = {f: (root / f).read_text(encoding="utf-8", errors="replace") for f in now
+             if f.endswith(".md") or f == pics.LIST}
+    result.pictures_removed = unused_pictures(now, texts)
+    for f in result.pictures_removed:
+        inside(root, f).unlink()
     failed = sync_rules(root)
     if failed is not None:
         result.notes.append("make rules ist gescheitert; von Hand ausführen, sonst ist make check rot:\n    "
@@ -289,6 +308,19 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
         result.build_ok = run_make(root, "build")
         set_pending_build(root, None if result.build_ok else "bin/starter init")
     return result
+
+
+def readme_intro(name: str) -> str:
+    """The head of README.md in a new project; the starter's title, introduction and tour are starter-only."""
+    return (f"# {name}\n\n{name} ist eine native Mac-App, entstanden aus dem mac-app-starter. Zweck, Zielgruppe und "
+            "offene Fragen stehen in `docs/PROJECT.md`, Einrichtung und Weiterbau in `docs/UEBERGABE.md`.\n\n")
+
+
+def unused_pictures(files: List[str], texts: dict) -> List[str]:
+    """PNGs in docs/screenshots that no Markdown file names and docs/screenshots/list.txt does not list: the
+    starter's tour pictures once its README section and list block are cut."""
+    kept = pics.referenced(texts)
+    return sorted(f for f in files if f.startswith(pics.FOLDER) and f.endswith(".png") and f not in kept)
 
 
 def sync_rules(root: Path) -> Optional[str]:
@@ -396,9 +428,14 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
         f"  als Nachschlagewerk des Starters angelegt: {names(result.moved)}",
         f"  durch leere Vorlagen ersetzt: {names(result.replaced)}",
         f"  Abschnitte „nur im Starter“ entfernt in: {names(result.blocks)}",
+        f"  Bilder des Starters aus docs/screenshots gelöscht: {len(result.pictures_removed)}"
+        + (" (eigene über docs/screenshots/list.txt und make readme-shots)" if result.pictures_removed else ""),
         f"  Module entfernt: {names(result.modules_removed)}",
         f"  Starter-Commit: {result.commit or UNKNOWN_COMMIT.format(version=result.version)}",
     ]
+    if result.readme_intro:
+        lines.append(f"  README.md: Titel, Einleitung und Rundgang des Starters entfernt, eine kurze Einleitung für "
+                     f"{result.project} eingesetzt; Zweck und eigene Bilder ergänzen")
     if result.missing_templates:
         lines.append(f"  Vorlage fehlt, Datei unverändert: {names(result.missing_templates)}")
     if not dry_run:

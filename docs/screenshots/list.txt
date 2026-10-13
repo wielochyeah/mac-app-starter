@@ -3,15 +3,19 @@
 # Eine Zeile je Bild: <sprache>-<erscheinung>/<szene>.png aus build/shots (vorher make shots), dazu
 # tools/icon.png (App-Symbol) und tools/dmg.png (DMG-Fenster), die die Werkzeuge in tools/ zeichnen.
 # Nur wenige, sorgfältig gewählte Bilder; alles andere bleibt in build/shots und kommt nie ins Repository.
-de-light/examples.overview.png
-en-dark/examples.detail-done.png
-de-dark/island.done-hover.png
-de-light/examples.menubar.png
+# Szenen eines Moduls beginnen mit seinem Namen (island.…); bin/starter remove nimmt ihre Zeilen und Bilder mit,
+# ebenso Zeilen mit „# modul:<name>“ am Ende. bin/starter init löscht die Bilder des Starters (Block unten).
+# nur-im-starter:anfang
+de-light/examples.overview.png  # modul:examples
+en-dark/examples.detail-done.png  # modul:examples,ai
+de-dark/island.done-hover.png  # modul:island
+de-light/examples.menubar.png  # modul:examples,menubar
 de-light/onboarding.welcome.png
 de-light/onboarding.language.png
 de-dark/onboarding.permission-restart.png
 de-light/settings.window.png
-de-dark/island.pane.png
-de-light/ai.pane.png
+de-dark/island.pane.png  # modul:island
+de-light/ai.pane.png  # modul:ai
 tools/dmg.png
 tools/icon.png
+# nur-im-starter:ende

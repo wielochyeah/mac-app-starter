@@ -335,6 +335,31 @@ class InitTests(TempDirCase):
         self.assertIn("Starter-Commit: unbekannt: der Tag v1.0.0", text)
         self.assertIn("kein Fehler", text)
 
+    def test_the_starter_tour_goes_and_the_readme_starts_with_the_project(self):
+        tour = ("<!-- nur-im-starter:anfang -->\n# Mac-App-Starter\n\nVorlage.\n\n"
+                "![Insel](docs/screenshots/de-dark-island.pane.png)\n<!-- nur-im-starter:ende -->\n\n## Aufbau\n\nText.\n")
+        listing = ("# Bilder\n# nur-im-starter:anfang\nde-dark/island.pane.png  # modul:island\n# nur-im-starter:ende\n"
+                   "de-light/settings.window.png\n")
+        root = self.repo({"README.md": tour, "docs/screenshots/list.txt": listing,
+                          "docs/screenshots/de-dark-island.pane.png": "png",
+                          "docs/screenshots/de-light-settings.window.png": "png",
+                          "docs/screenshots/de-light-own.png": "png",
+                          "docs/PROJECT.md": "![eigenes](docs/screenshots/de-light-own.png)\n"})
+        dry = init(root, options(dry_run=True))
+        self.assertEqual(dry.pictures_removed, ["docs/screenshots/de-dark-island.pane.png"])
+        self.assertTrue((root / "docs/screenshots/de-dark-island.pane.png").exists())
+        result = init(root, options())
+        readme = self.read(root, "README.md")
+        self.assertTrue(readme.startswith("# Notizen\n\nNotizen ist eine native Mac-App"), readme)
+        self.assertNotIn("Mac-App-Starter", readme)
+        self.assertIn("## Aufbau", readme)
+        self.assertTrue(result.readme_intro)
+        self.assertEqual(result.pictures_removed, ["docs/screenshots/de-dark-island.pane.png"])
+        self.assertFalse((root / "docs/screenshots/de-dark-island.pane.png").exists())
+        self.assertTrue((root / "docs/screenshots/de-light-settings.window.png").exists(), "still listed")
+        self.assertTrue((root / "docs/screenshots/de-light-own.png").exists(), "named by a guide")
+        self.assertEqual(self.read(root, "docs/screenshots/list.txt"), "# Bilder\nde-light/settings.window.png\n")
+
     def test_default_bundle_id(self):
         self.assertEqual(default_bundle_id("Meine App 2"), "com.example.meineapp2")
 
