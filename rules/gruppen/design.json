@@ -3,7 +3,7 @@
   "id": "design",
   "titel": "Design",
   "praefix": "D",
-  "geltung": "Gilt für jede Oberfläche unter `App/Sources`: Fenster, Einstellungsbereiche, Onboarding-Schritte, Insel und Kapsel, Menüleisten-Panel, Menüs, und für Icon und DMG unter `tools/`. Maße, Muster und Beispiele stehen in `docs/DESIGN.md`; Vorbild ist VoiceBud auf macOS 26.",
+  "geltung": "Gilt für jede Oberfläche unter `App/Sources`: Fenster, Einstellungsbereiche, Einrichtungsschritte, Insel und Kapsel, Statusmenü, Menüs, und für App-Symbol und DMG unter `tools/`. Maße, Muster und Beispiele stehen in `docs/DESIGN.md`; Vorbild ist VoiceBud auf macOS 26.",
   "regeln": [
     {
       "id": "D-01",
@@ -32,7 +32,7 @@
     {
       "id": "D-04",
       "schluessel": "symbole",
-      "text": "Symbole nur aus SF Symbols über `Image(systemName:)`, keine Bild-Assets für Icons, keine Emojis, keine Glyphen als Icons. Das App-Icon entsteht im Code (`make icon`). Icon-Knöpfe tragen ein `.accessibilityLabel` aus einer `*Text.swift`-Datei.",
+      "text": "Symbole nur aus SF Symbols über `Image(systemName:)`, keine Bild-Assets für Icons, keine Emojis, keine Glyphen als Icons. Das App-Icon entsteht im Code (`make icon`). Tasten nur mit Symbol tragen ein `.accessibilityLabel` aus einer `*Text.swift`-Datei.",
       "pakete": ["zeichen"],
       "durchsetzung": ["make check-texts (Emoji, Glyphen)", "make check-design (Bild-Assets)", "Selbsttest kit.symbol", "Review"],
       "ki": false
@@ -40,7 +40,7 @@
     {
       "id": "D-05",
       "schluessel": "muster",
-      "text": "Ein Onboarding-Schritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`; Gruppen sind `SettingsSection`, Zeilen die Muster aus `Kit/Design/Patterns` (`ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `ProgressRow`, `ListCard`). Eigene Layouts nur, wo kein Muster passt; ein allgemein nützliches wird als Kandidat für `Kit/Design` gemeldet.",
+      "text": "Ein Einrichtungsschritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`; Gruppen sind `SettingsSection`, Zeilen die Muster aus `Kit/Design/Patterns` (`ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `ProgressRow`, `ListCard`). Eigene Layouts nur, wo kein Muster passt; ein allgemein nützliches wird als Kandidat für `Kit/Design` gemeldet.",
       "pakete": [],
       "durchsetzung": ["Review (pruefer-design)", "Galerie"],
       "ki": false
@@ -112,7 +112,7 @@
     {
       "id": "D-14",
       "schluessel": "app-formen",
-      "text": "Fenster entstehen über `WindowHost`, die Aktivierungsrichtlinie regelt `AppForm`: `.regular` mit Modul `window`, sonst `.accessory`, Einstellungen und Onboarding schalten vorübergehend um. Die Insel misst den Bildschirm (Notch, Menüleistenhöhe) und legt nichts fest; Panels der Menüleiste sind 320 bis 360 pt breit.",
+      "text": "Fenster entstehen über `WindowHost`, die Aktivierungsrichtlinie regelt `AppForm`: `.regular` mit Modul `window`, sonst `.accessory`, Einstellungen und Einrichtung schalten vorübergehend um. Die Insel misst den Bildschirm (Notch, Menüleistenhöhe) und legt nichts fest; das Statusmenü ist 320 bis 360 pt breit.",
       "pakete": [],
       "durchsetzung": ["Review (pruefer-integration)"],
       "ki": false

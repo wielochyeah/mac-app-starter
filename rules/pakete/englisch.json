@@ -6,7 +6,7 @@
   "standardAktiv": true,
   "abschaltbar": false,
   "sprachen": ["de"],
-  "beschreibung": "Englische Wendungen, Befehlswörter und Anführungszeichen, die in einem deutschen Text stehen geblieben sind, meist weil eine Übersetzung fehlt oder die Argumente von tr(en:de:) vertauscht sind. Mehrwort-Phrasen gelten ohne Rücksicht auf Groß- und Kleinschreibung; einzelne Wörter nur großgeschrieben und nur Befehle auf Knöpfen und in Menüs (nicht Login, Dock oder Finder).",
+  "beschreibung": "Englische Wendungen, Befehlswörter und Anführungszeichen, die in einem deutschen Text stehen geblieben sind, meist weil eine Übersetzung fehlt oder die Argumente von tr(en:de:) vertauscht sind. Mehrwort-Phrasen gelten ohne Rücksicht auf Groß- und Kleinschreibung; einzelne Wörter nur großgeschrieben und nur Befehle auf Tasten und in Menüs (nicht Login, Dock oder Finder).",
   "begriffe": [
     {
       "id": "englisch-phrase",

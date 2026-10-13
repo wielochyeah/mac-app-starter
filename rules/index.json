@@ -142,7 +142,7 @@
       "pfad": "App/Sources/Kit/Design"
     },
     {
-      "name": "Muster für Onboarding-Schritte und Einstellungsbereiche",
+      "name": "Muster für Einrichtungsschritte und Einstellungsbereiche",
       "regeln": ["D-05", "D-06", "D-11"],
       "pfad": "App/Sources/Kit/Design/Patterns"
     },

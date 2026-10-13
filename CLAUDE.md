@@ -40,13 +40,13 @@ Gilt für jeden Text, den Menschen lesen: UI-Texte in beiden Sprachen, Nutzungsb
 
 ### Design
 
-Gilt für jede Oberfläche unter `App/Sources`: Fenster, Einstellungsbereiche, Onboarding-Schritte, Insel und Kapsel, Menüleisten-Panel, Menüs, und für Icon und DMG unter `tools/`. Maße, Muster und Beispiele stehen in `docs/DESIGN.md`; Vorbild ist VoiceBud auf macOS 26.
+Gilt für jede Oberfläche unter `App/Sources`: Fenster, Einstellungsbereiche, Einrichtungsschritte, Insel und Kapsel, Statusmenü, Menüs, und für App-Symbol und DMG unter `tools/`. Maße, Muster und Beispiele stehen in `docs/DESIGN.md`; Vorbild ist VoiceBud auf macOS 26.
 
 - **D-01** Farben, Abstände, Radien, Schriftgrade und Federn kommen nur aus `App/Sources/Kit/Design` (`Theme`, `Space`, `Radius`, `TypeScale`, `Motion`, `Metrics`, `IslandPalette`). Farben entstehen aus dem SwiftUI-`ColorScheme` über `Theme(scheme)`, nie aus dynamischem `NSColor` oder Systemfarben wie `.secondary`, damit Renders ohne Fenster genau wie das Fenster aussehen. Ein fehlender Wert wird ein neues Token in `Kit/Design` (mit Kontrasttest), keine Zahl in der Ansicht; eine begründete Ausnahme trägt `// design-ausnahme: Grund`.
 - **D-02** Abstände kommen aus `Space`: Raster 8, 12, 16, 24, 32 (`Space.xs` bis `Space.xl`), 4 und 2 nur zum Feinausgleich, 20 für den Inhalt eines Einstellungsbereichs (`Space.pane`), 12 und 9 als Einzug von Zeilen in Karten (`Space.rowX`, `Space.rowY`), 9 zwischen Symbol und Titel (`Space.iconGap`). Zeilen in Karten und Listen sind mindestens 44 pt hoch (`Metrics.rowMinHeight`), Zeilen der Seitenleiste 34 pt (`Metrics.sidebarRow`). Ecken sind kontinuierlich (`style: .continuous`) mit Radien aus `Radius`, Linien Haarlinien von 0,5 pt.
 - **D-03** Nur die Systemschrift (SF Pro) in den Graden von `TypeScale`, keine eigene Schrift und keine freie Größe. Zahlen, die sich ändern, mit `.monospacedDigit()`. Kein Textstil des Systems (`.headline`, `.body`). Kleinster Grad für Text ist `TypeScale.caption` (11 pt), für Plaketten und Zähler `TypeScale.badge` (10,5 pt); `TypeScale.micro` (9,5 pt) nur in Insel, Kapsel und für das Symbol eines Chips.
-- **D-04** Symbole nur aus SF Symbols über `Image(systemName:)`, keine Bild-Assets für Icons, keine Emojis, keine Glyphen als Icons. Das App-Icon entsteht im Code (`make icon`). Icon-Knöpfe tragen ein `.accessibilityLabel` aus einer `*Text.swift`-Datei.
-- **D-05** Ein Onboarding-Schritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`; Gruppen sind `SettingsSection`, Zeilen die Muster aus `Kit/Design/Patterns` (`ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `ProgressRow`, `ListCard`). Eigene Layouts nur, wo kein Muster passt; ein allgemein nützliches wird als Kandidat für `Kit/Design` gemeldet.
+- **D-04** Symbole nur aus SF Symbols über `Image(systemName:)`, keine Bild-Assets für Icons, keine Emojis, keine Glyphen als Icons. Das App-Icon entsteht im Code (`make icon`). Tasten nur mit Symbol tragen ein `.accessibilityLabel` aus einer `*Text.swift`-Datei.
+- **D-05** Ein Einrichtungsschritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`; Gruppen sind `SettingsSection`, Zeilen die Muster aus `Kit/Design/Patterns` (`ToggleRow`, `PickerRow`, `ValueRow`, `ButtonRow`, `ProgressRow`, `ListCard`). Eigene Layouts nur, wo kein Muster passt; ein allgemein nützliches wird als Kandidat für `Kit/Design` gemeldet.
 - **D-06** Jede Ansicht ist in fünf Sekunden verständlich: der Titel nennt sie, die Unterzeile sagt mit einem kurzen Satz oder einer Zahl, was hier passiert, und es gibt genau eine Hauptaktion (`.buttonStyle(.primary)`). Hält ein Statusfeld die Aktion, ist `Weiter` nicht primär. Fachliches liegt eine Ebene tiefer.
 - **D-07** Ruhig und präzise statt geschmückt: keine Glows, Blobs, Schatten-Stapel, Unschärfe als Schmuck, kein Lila-Verlauf auf allem, keine bunten Kacheln ohne Bedeutung, keine Animation zur Zierde. Glas nur nativ (Seitenleiste und Werkzeugleiste unter macOS 26) oder über `GlassSurface`, das in Renders einen Token-Ersatz zeichnet. Verläufe nur als Token (`Theme.accentGradient`, `Wallpaper`).
 - **D-08** Hell und dunkel sind beide gestaltet. Text erreicht mindestens 4,5:1 auf seinem Grund, Ringe und Bedienelemente 3:1; jede neue Farbe bekommt ihren Kontrasttest in `App/Tests/DesignTests.swift`.
@@ -55,7 +55,7 @@ Gilt für jede Oberfläche unter `App/Sources`: Fenster, Einstellungsbereiche, O
 - **D-11** Jeder Bereich mit Daten hat gestaltete Zustände: leer (`EmptyState` mit Titel, einem Satz und höchstens einer Aktion), beschäftigt (`Spinner`, `ProgressRow`), Fehler (`InlineNotice`: was fehlt und was daraus folgt). Ein optionaler Abschnitt ohne Inhalt entfällt samt Überschrift.
 - **D-12** Alles ist mit der Tastatur erreichbar (Fokus sichtbar, `↑` und `↓` in Listen, `Esc`, `⌘W`, `⌘,`), Bedienelemente haben Namen für VoiceOver, Trefferflächen sind mindestens 24 pt groß, Zeilen in Karten und Listen mindestens 44 pt (`Metrics.rowMinHeight`).
 - **D-13** Jeder sichtbare Zustand hat eine `RenderScene` (Kennung `<bereich>.<zustand>`). Vor „fertig“ werden alle betroffenen Szenen in en und de, hell und dunkel gerendert (`make shots ONLY=<präfix>`) und jedes PNG angesehen; die angesehenen Bilder stehen in der Statusdatei. Ohne Bilder lautet das Ergebnis der Sichtprüfung „nicht geprüft“.
-- **D-14** Fenster entstehen über `WindowHost`, die Aktivierungsrichtlinie regelt `AppForm`: `.regular` mit Modul `window`, sonst `.accessory`, Einstellungen und Onboarding schalten vorübergehend um. Die Insel misst den Bildschirm (Notch, Menüleistenhöhe) und legt nichts fest; Panels der Menüleiste sind 320 bis 360 pt breit.
+- **D-14** Fenster entstehen über `WindowHost`, die Aktivierungsrichtlinie regelt `AppForm`: `.regular` mit Modul `window`, sonst `.accessory`, Einstellungen und Einrichtung schalten vorübergehend um. Die Insel misst den Bildschirm (Notch, Menüleistenhöhe) und legt nichts fest; das Statusmenü ist 320 bis 360 pt breit.
 
 ### Technik
 
@@ -132,7 +132,7 @@ Wo die Werkzeuge und Bausteine liegen, die die Regeln nennen. `make check-rules`
 | Baselines der Prüfungen (dürfen nur schrumpfen, im Projekt leer) | A-06 | `rules/baseline` |
 | `make check`, `make build`, `make test`, `make shots`, `make doctor` | A-02, T-01, T-09, D-13 | `Makefile` |
 | Tokens `Theme`, `Space`, `Radius`, `TypeScale`, `Motion`, `Metrics`, `IslandPalette` | D-01, D-02, D-03, D-07, D-09 | `App/Sources/Kit/Design` |
-| Muster für Onboarding-Schritte und Einstellungsbereiche | D-05, D-06, D-11 | `App/Sources/Kit/Design/Patterns` |
+| Muster für Einrichtungsschritte und Einstellungsbereiche | D-05, D-06, D-11 | `App/Sources/Kit/Design/Patterns` |
 | Kontrasttests der Tokens | D-08 | `App/Tests/DesignTests.swift` |
 | `tr(en:de:)`, `Localizer`, `Format` | S-10, S-11, S-13 | `App/Sources/Kit/Core/Lang.swift` |
 | `SettingKey` und `Settings` | T-04 | `App/Sources/Kit/Core/Settings.swift` |

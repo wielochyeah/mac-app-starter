@@ -17,7 +17,7 @@
       "muster": ["(?:(?<=[^\\W_])|(?<=[,;]))[ \\t]*\\n[ \\t]*(?=[^\\W_])"],
       "flags": "",
       "bereiche": ["ui"],
-      "umsetzung": "Ein Umbruch nach einem Satzende bleibt erlaubt (zwei Zeilen im Onboarding wie bei VoiceBud).",
+      "umsetzung": "Ein Umbruch nach einem Satzende bleibt erlaubt (zwei Zeilen in der Einrichtung wie bei VoiceBud).",
       "beispiele": {
         "treffer": ["Einträge der\nListe"],
         "erlaubt": ["Einträge der Liste", "Gespeichert.\nNächster Schritt", "Punkt\n- Liste"]
