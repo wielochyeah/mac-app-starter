@@ -85,10 +85,33 @@ class StateTests(TempDirCase):
             (None, {"GITHUB_REPOSITORY": "wielochyeah/mac-app-starter"}, "starter"),
             ("https://github.com/wielochyeah/mac-app-starter.git", {"GITHUB_REPOSITORY": "beispiel/notizen"},
              "needs-init"),
+            ("https://github.com/WielochYeah/Mac-App-Starter.git", {}, "starter"),
+            (None, {"GITHUB_REPOSITORY": "WielochYeah/MAC-APP-STARTER"}, "starter"),
+            # a copy the CI job made elsewhere (the template probe) is not the checked-out repository
+            (None, {"GITHUB_REPOSITORY": "wielochyeah/mac-app-starter", "GITHUB_WORKSPACE": "/elsewhere"}, "unknown"),
         ]
         for i, (origin, env, state) in enumerate(cases):
             root = make_repo(self.tmp / f"r{i}", base_files(), origin)
             self.assertEqual(repo_state(root, read_manifest(root), read_lock(root), env), state, (origin, env))
+        root = self.tmp / "r0"
+        self.assertEqual(repo_state(root, read_manifest(root), read_lock(root),
+                                    {"GITHUB_REPOSITORY": "wielochyeah/mac-app-starter", "GITHUB_WORKSPACE": str(root)}),
+                         "starter")
+
+    def test_detect_state_never_fails(self):
+        from starter.manifest import detect_state
+        self.assertEqual(detect_state(self.tmp, {}), "unknown")
+        root = self.repo("https://github.com/someone/new-app.git")
+        self.assertEqual(detect_state(root, {}), "needs-init")
+
+    def test_init_and_remove_refuse_a_differently_cased_starter_clone(self):
+        from starter.common import StarterError
+        from starter.remove import remove_module
+        root = self.repo("https://github.com/WielochYeah/Mac-App-Starter.git")
+        with self.assertRaises(StarterError):
+            init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
+        with self.assertRaises(StarterError):
+            remove_module(root, "island", build=False)
 
     def test_copy_without_init_fails_check_kit(self):
         root = self.repo("https://github.com/beispiel/notizen.git")
