@@ -1,7 +1,7 @@
 <!-- nur-im-starter:anfang -->
 # Mac-App-Starter
 
-Vorlage, aus der jede neue native Mac-App startet, auch eine fachlich völlig andere. Ein Agent baut ab dem ersten Auftrag Funktionen und muss Fenster, Einstellungen, Einrichtung, Gestaltung, Sprachen und Verteilung nicht neu bauen. Gebaut wird ohne Xcode, mit den Command Line Tools allein.
+Vorlage, aus der jede neue native Mac-App startet, auch eine fachlich völlig andere. Ein Agent baut ab dem ersten Auftrag Funktionen und muss Fenster, Einstellungen, Einrichtung, Gestaltung, Sprachen und Verteilung nicht neu bauen. Gebaut wird mit einem `swiftc`-Aufruf: die Command Line Tools genügen, ein installiertes Xcode geht ebenso.
 
 ![Übersicht im Hauptfenster mit dem Beispiel „Notizen“](docs/screenshots/de-light-examples.overview.png)
 
@@ -21,7 +21,7 @@ Fertig verdrahtet sind:
 
 ## Rundgang
 
-Alle Bilder rendert die App selbst, ohne Fenster auf dem Bildschirm (`make shots`, dann `make readme-shots`). Sie zeigen das Beispiel „Notizen“, das `bin/starter strip-examples` wieder entfernt; ein Projekt ersetzt sie über `docs/screenshots/list.txt` durch eigene.
+Alle Bilder rendert die App selbst, ohne Fenster auf dem Bildschirm (`make shots`, dann `make readme-shots`). Sie zeigen das Beispiel „Notizen“ (Modul `examples`). In einem neuen Projekt löscht `bin/starter init` sie; eigene Bilder trägt `docs/screenshots/list.txt` ein.
 
 ### Hauptfenster
 
@@ -45,7 +45,7 @@ Das Statusmenü unter dem Statussymbol zeigt die Abschnitte der Funktionen, hier
 
 Im ersten Schritt wächst die echte Insel aus einer gezeichneten Notch und meldet eine gesicherte Notiz; ohne Modul `island` steht dort das App-Symbol vor dem Akzent.
 
-![Begrüßung mit der Insel](docs/screenshots/de-light-onboarding.welcome.png)
+![Begrüßungsschritt mit der Insel](docs/screenshots/de-light-onboarding.welcome.png)
 
 Danach wählst du die Sprache der App, Englisch oder Deutsch, und sie wechselt sofort.
 
@@ -57,7 +57,7 @@ Jede Berechtigung bekommt einen eigenen Schritt; braucht eine Berechtigung einen
 
 ### Einstellungen
 
-Das Einstellungsfenster ist wie die Systemeinstellungen aufgebaut: oben die Bereiche der Funktionen, darunter „Allgemein“ mit Sprache, Erscheinungsbild und Zurücksetzen.
+Das Einstellungsfenster ist wie die Systemeinstellungen aufgebaut: oben die Bereiche der Funktionen, darunter die Einstellungen von Kit und Modulen. „Allgemein“ regelt Sprache und Erscheinungsbild, zeigt die Einrichtung erneut und setzt alles zurück.
 
 ![Einstellungen, Bereich „Allgemein“](docs/screenshots/de-light-settings.window.png)
 
@@ -65,7 +65,7 @@ Das Einstellungsfenster ist wie die Systemeinstellungen aufgebaut: oben die Bere
 
 ![Bereich „Insel und Kapsel“](docs/screenshots/de-dark-island.pane.png)
 
-„Modelle“ sagt, ob Apple Intelligence bereit ist, und schickt eine Testfrage an das Modell auf dem Mac; gespeichert werden nur Anzahl und Dauer der Anfragen.
+„Modelle“ zeigt, ob Apple Intelligence bereit ist, schickt eine Testfrage an das Modell auf dem Mac und zählt Anfragen und Fehlschläge.
 
 ![Bereich „Modelle“ mit Testantwort](docs/screenshots/de-light-ai.pane.png)
 
@@ -81,11 +81,11 @@ Das Einstellungsfenster ist wie die Systemeinstellungen aufgebaut: oben die Bere
 
 ## Stand
 
-Fassung 1.0.0 vom 12.10.2026, die Änderungen stehen in `CHANGELOG.md`. Die Bauunterlagen (Statusberichte der Stränge und der Integration) liegen unter `docs/bau/`; `bin/starter init` entfernt sie in einem Projekt. Ein neues Projekt richtet sich nach `docs/UEBERGABE.md`.
+Fassung 1.0.0 vom 13.10.2026, die Änderungen stehen in `CHANGELOG.md`. Die Bauunterlagen (Statusberichte der Stränge und der Integration) liegen unter `docs/bau/`; `bin/starter init` entfernt sie in einem Projekt.
 
 ## Ein neues Projekt starten
 
-Bauen, Testen und Rendern brauchen einen Mac mit Apple Silicon und macOS 26, für Agenten Claude Code auf diesem Mac (Desktop-App oder Terminal); eine Sitzung in einem Linux-Container kann nur an Doku, Regeln und den Python-Werkzeugen arbeiten. Schritt für Schritt in `docs/UEBERGABE.md`. Kurz:
+Bauen, Testen und Rendern brauchen einen Mac mit Apple Silicon und macOS 26; Agenten arbeiten dort in Claude Code (Desktop-App oder Terminal). Eine Sitzung in einem Linux-Container ändert nur Doku, Regeln und die Python-Werkzeuge. Schritt für Schritt in `docs/UEBERGABE.md`, kurz:
 
 1. Auf GitHub beim Repository `mac-app-starter` „Use this template“ wählen, privat anlegen und auf dem Mac klonen.
 2. `make doctor` prüft die Werkzeuge (Command Line Tools genügen) und installiert nichts.
@@ -141,7 +141,7 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 |---|---|
 | `make doctor` | Werkzeuge prüfen (Command Line Tools, Compiler, SDK, Python), installiert nichts |
 | `make build` | Debug-Build nach `build/<Name>.app`; `MODULES=a,b` wählt andere Module, `CONFIG=release` optimiert |
-| `make run` | bauen und die App starten |
+| `make run` | bauen und die App starten, nur für die Person am Mac (Agenten prüfen mit `--selftest` und `make shots`) |
 | `make test` | Swift-Tests (`build/tests/run-tests`) und Python-Tests; `ONLY=<präfix>` führt nur passende Swift-Tests aus |
 | `make check` | Regeln, Texte, Design, Kit, Build und Tests, Warnungen als Fehler; vor jedem Push |
 | `make check-light` | alles aus `make check`, was ohne Mac läuft (Regeln, Texte, Design, Kit, Python-Tests); der Hook `pre-push` nutzt es außerhalb von macOS |
@@ -161,10 +161,10 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 
 ## Betrieb
 
-Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Dennoch öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert erlaubte Berechtigungen. Mit `signing.identity` in `starter.json` signiert `make dmg` mit Developer ID und Hardened Runtime; mit `signing.notarize: true` notarisiert es App und DMG mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
+Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Dennoch öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert die erlaubten Berechtigungen. Mit `signing.identity` in `starter.json` signiert `make dmg` mit Developer ID und Hardened Runtime; mit `signing.notarize: true` notarisiert es App und DMG mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
 
 ## Pflege
 
-Der Starter trägt Tags (`v1.0.0`) und `CHANGELOG.md` mit Inhalt, Migrationen und Hinweisen je Fassung; jedes Projekt speichert seinen Stand in `starter.lock.json`. `bin/starter sync --ziel <tag>` zieht Kit-Pfade per Drei-Wege-Zusammenführung nach, `make check-kit` meldet geänderte Kit-Pfade. Allgemeine Verbesserungen aus Projekten stehen dort in `docs/STARTER_FEEDBACK.md`; der Skill `starter-rueckfluss` macht daraus einen Pull Request im Starter.
+Der Starter trägt Tags (`v1.0.0`) und `CHANGELOG.md` mit Inhalt, Migrationen und Hinweisen je Fassung; jedes Projekt speichert seinen Stand in `starter.lock.json`. `bin/starter sync --ziel <tag>` zieht Kit-Pfade per Drei-Wege-Zusammenführung nach, `make check-kit` meldet geänderte Kit-Pfade. Verbesserungen, die auch anderen Projekten nützen, hält ein Projekt in `docs/STARTER_FEEDBACK.md` fest; der Skill `starter-rueckfluss` macht daraus einen Pull Request im Starter.
 
 Gestaltung und Teile des Codes stammen aus VoiceBud (MIT); die Hinweise stehen in `THIRD_PARTY_NOTICES.md`.
