@@ -400,3 +400,136 @@ Angesehen (Read): jede Szene `examples.*` (25) und `onboarding.*` (14) in en-lig
 - Die CI baut jetzt rund 27 Mac-Jobs je Pull Request und auf `main` (sechs mehr für das Beispiel).
 - Offen aus Strang I und nur interaktiv prüfbar: Fenster mit echter Seitenleiste und Suche, Editor mit Autosave und Esc, ⌥-Klick im Panel, die echte Insel bei Schnellnotiz und KI, der Kurzbefehl aus anderen Apps, die Aufgabe im echten Planer, „Im Finder zeigen“, `--demo examples`.
 - Kit-Kandidaten `ValueRow(capsule:)` und das Warten auf async in Tests ohne Modul `ai` sind nicht bearbeitet.
+
+## Prüfrunde und Korrekturen
+
+Stand: 2026-10-13, Branch `main`, Start `2133257`. Das Abschlussreview vor 1.0.0 ging an drei Fix-Stränge: F1 (Werkzeuge, CI, Regeln für Agenten, Sicherheit, Aufbau des README), F2 (App-Code, Laufzeit, Sicherheit in der App, Gestaltung), F3 (Texte, Textregeln, Wortlaut der Doku). Ihre Statusberichte stehen in `docs/bau/status/F1.md`, `F2.md` und `F3.md`. Hier: Merge, Abgleich zwischen den Strängen und die Prüfung mit beiden Toolchains. Nichts gepusht.
+
+### Was gefunden wurde und wer es behoben hat
+
+| Bereich | Befunde | Strang |
+|---|---|---|
+| Werkzeuge und CI | Hooks liefen nur mit zsh auf einem Mac (Cloud-Agenten konnten nicht pushen), jede Änderung baute auf Macs, eine Vorlagen-Kopie galt als Starter, falscher Bereich der Commit-Prüfung, Warnungen nicht als Fehler, der Starter trug eine Commit-Identität, Make-Variablen konnten Befehle ausführen, Allow-Regeln mit `*`, Reste des Starters in neuen Projekten, Renders zeigten nur Muster statt des Projekts | F1 |
+| Sicherheit der Werkzeuge | MLX-Pakete ohne Hashes, Actions nicht auf Commits festgelegt, Zertifikate und `.env` nicht in `.gitignore`, eingebetteter Code ohne eigene Entitlements, `com.example.*` mit Developer ID, Anweisungen von origin ungeprüft | F1 |
+| Laufzeit | „Zur Notiz hinzufügen“ und „Titel übernehmen“ gingen verloren, Zurücksetzen erreichte die Hintergrundaufgaben nicht, Papierkorb verwarf Getipptes, hängender MLX-Worker blockierte, Werkzeugläufe ohne `STARTER_HEADLESS` öffneten echte Daten, zwei Prozesse migrierten gleichzeitig, Einrichtung öffnete nach entzogener Berechtigung bei jedem Start | F2 |
+| Sicherheit in der App | Kopien aus Passwortmanagern gesichert, gelöschte Notizen in Datei und WAL lesbar, Protokoll mit Inhalten als `.public`, Modelle in Time Machine | F2 |
+| Gestaltung | Nebentext 3,55:1, Info-Hinweise im Akzent, Artwork als Lila-Fläche, fehlende Einleitungszeilen, abgeschnittene Fensterkanten und Karten, leere Zustände oben, Statusfarben uneinheitlich | F2 |
+| Texte | sechs Wörter für Berechtigung, Versprechen in Nutzungsbeschreibungen, Floskeln, uneinheitliche Begriffe (Einrichtung, Taste, Tastaturkurzbefehle, Statusmenü), Anführungszeichen, Einheiten, US-Englisch, Title Case, kurze Imperative (T1 bis T22); Regellücken R1 bis R5 (DMG-Texte, feste Begriffe, Anführungszeichen, Einheiten, Notices) | F3 |
+
+### Merge
+
+| Commit | Branch | Konflikte | danach |
+|---|---|---|---|
+| `a34cf3d` | `fix/F1` (28 Commits) | keine, `main` stand noch auf dem Abzweig | `make build` grün, `make test`: Swift 392 Tests, 0 Fehler; Python 248, 137, 28 OK |
+| `58343a2` | `fix/F2` (23 Commits) | keine, F1 und F2 teilen keine Datei | `make build`, `make test`: 408 Tests, 0 Fehler; Python 248, 137, 28 OK; `check-rules`, `check-texts`, `check-design`, `check-kit` grün |
+| `20ff541` | `fix/F3` (10 Commits) | 8 Dateien, unten | `make build`, `make test`: 408 Tests, 0 Fehler; Python 252, 137, 28 OK; `check_texts --streng` ohne Befund |
+
+Konflikte beim Merge von F3, gelöst mit beiden Absichten:
+
+- `README.md`: Aufbau von F1 (Bootstrap-Prompt und „Wann ein Projekt fertig ist“ in `docs/UEBERGABE.md`, Einleitung bis „Ein neues Projekt starten“ nur im Starter), Begriffe von F3.
+- `docs/UEBERGABE.md`: Text von F1 (init mit `--non-interactive`, Anrede Sie, Tabelle der Reste) mit F3s „Begrüßungsschritt“ und „Nutzungsbeschreibungen“ samt Hinweis auf `make check-texts`; in §9 „Einrichtung“ und „erlaubt“.
+- `App/Sources/Modules/Island/IslandText.swift`: F2s gemeinsame Schlüssel (`CommonText.islandAtNotch`, `CommonText.capsule`) und Hinweise mit höchstens drei Wörtern, F3s schmale Leerzeichen im langen Beispiel.
+- `docs/DESIGN.md`: Inhalt von F2 (`fg3` nur für Platzhalter, Einleitungszeile, neutrale Info-Hinweise, `footnoteReserve`, Artwork als vierte Verlaufsfläche) im Wortlaut von F3 (Einrichtung, Statusmenü, Taste, widerrufen, Tastaturkurzbefehl).
+- `docs/MODULE.md`, `docs/ARCHITEKTUR.md`, `tools/README.md`, Skill `neue-einstellung`: Inhalt von F1 (`.project`-Szenen, `#if`-Regel mit `check-design`, `tools/entitlements-map.json`, `order: 100`) im Wortlaut von F3.
+
+### Abgleich nach dem Merge
+
+| Punkt | Ergebnis | Commit |
+|---|---|---|
+| Neue und geänderte Texte von F2 gegen die Regeln von F3 | `SettingsText.generalIntro`, `IslandText.paneIntro`, `NotesText.clipboardConcealed`, `NotesText.clipboardEmpty`, `DesignText.failedBadge`, `CommonText.capsule` und die gekürzten Inselbeispiele bestehen jede Regel (`check_texts --streng` ohne Befund). Geändert: `CommonText.islandAtNotch` „Island at the notch“ (Kacheln in Satzschreibung wie „Ring and dot“, Entscheidung T14 von F3), Warnbeispiel „Only 2 GB free“ / „Nur 2 GB frei“ statt „Disk almost full“ (S-07: Zahl statt Adjektiv, weiter drei Wörter), `generalIntro` englisch „right away“ statt des doppeldeutigen „at once“ | `ce95642` |
+| `PermissionText.firstUse` (F3 an F2) | entfernt: das lokale Netzwerk hat keinen Einrichtungsschritt, der Text hatte keinen Aufrufer | `ce95642` |
+| Offene Punkte von F3 an F1 | `starter.manifest.json`: „im Stil von Musik“, Werkzeugleiste, Statusmenü, „Anmeldeobjekte & Erweiterungen“, Modultitel „Tastaturkurzbefehle“, „Einrichtungsschritt“; Bericht von init „Begrüßungsschritt“; Hinweis von check-kit „die Einrichtung zeigt noch keine Funktionskarte“; Tagline in `scripts/starter/tests/helpers.py` wie in `starter.json`; PR-Vorlage „Nutzungsbeschreibung“ | `649fc1c` |
+| Begriffe in Texten, die F1 neben F3 schrieb | Skills `kurzbefehl`, `neuer-onboarding-schritt`, `neues-feature`, `screenshots`, `docs/MODULE.md`, `docs/ARCHITEKTUR.md`, beide `PLAN.md`-Vorlagen, `THIRD_PARTY_NOTICES.md`. `CLAUDE.md` Teil B zeigte auf den Bootstrap-Abschnitt im README, den es in einem Projekt nicht mehr gibt; jetzt `docs/UEBERGABE.md`, Abschnitt 4 | `b4dfaea` |
+| F1 #8 Reihenfolge in der Registry | „Menüleiste“ 300 (geteilt mit „Modelle“) auf 250, „Hintergrund“ 310 auf 350, Beispiel in `SettingsKit` 100, wie `docs/MODULE.md`. `Registry.problems()` meldet zwei Einstellungsbereiche einer Gruppe oder zwei Einrichtungsschritte mit demselben `order`; Test in `RegistryTests`, wirkt im Selbsttest `kit.registry` jeder Modul-Kombination. Die Seitenleiste zeigt jetzt Insel und Kapsel, Menüleiste, Modelle, Hintergrund, Tastaturkurzbefehle | `041687b` |
+| F1 m6 FAIL-Zeilen im grünen `make check` | `SelfTestRunner.run(only:report:)` (Standard: Fehler nach stderr, Summe nach stdout) und `PermissionProbe.answer(_:refused:)`; die Negativtests sammeln die Zeilen und prüfen sie wörtlich. Die Ausgabe von `make check` hat keine Zeile „selftest FAIL“ oder „cannot be probed“ mehr | `bf85812` |
+| F1 m9 `Settings.inMemory()` | klein genug für Kit/Core: liest und schreibt nie eine Datei, startet mit den Standardwerten. Ersetzt die festen Temp-Dateien in `MenuBarScenes`, `BackgroundScenes` und der Notizen-KI-Szene (ein früherer Lauf hätte dort Werte hinterlassen können); Test, Hinweis im Skill `neue-einstellung` | `c7c7062` |
+| F1 #5 Allow-Liste | nicht angefasst, für die Leitung | |
+| F1 Anfrage 7 an F3 | Bezeichnung von `modul-bedingung`: „Modul-Bedingung, die T-03 nicht erlaubt“, `make rules` | `9825c7a` |
+| `Package.swift` mit Xcode 27 | `swift build` brach ab („defaultLocalization not set“): der Zielpfad ist die Wurzel, SwiftPM nahm `build/gen/Resources/*.lproj` als Ressourcen und warnte über 207 weitere Dateien. Das Manifest schließt jetzt jeden Eintrag aus, der weder Quellordner ist noch auf dem Weg zu einem liegt. `docs/ARCHITEKTUR.md` sagt, wie der Weg geprüft ist | `1bd4420`, `9f94e39` |
+| Render `island.pane` | F2s Einleitungszeile und die eigene Gruppe der Fußnote machten den deutschen Bereich rund 50 pt höher; die Szene (800 pt) schnitt die Gruppe „Vorschau“ ab, auch im README-Bild. Jetzt 850 pt | `3d61613` |
+| Mustertexte | die Musterszenen nannten hell/dunkel „Darstellung“, „Allgemein“ sagt „Erscheinungsbild“ (S-15); „Darstellung“ bleibt für die Form der Insel mit eigenem Schlüssel. Sieben Texte ohne Aufrufer entfernt (`PatternsSampleText.islandDetail`, `capsuleDetail`, `grantedHint`, `restartHint`, `appearanceSubtitle`, `appearanceFootnote`, `NotesText.galleryEditor`) | `9fe6c78` |
+| README | Wortlaut nach dem Umbau: Build mit Command Line Tools oder Xcode, was init mit den Bildern tut, was „Allgemein“ und „Modelle“ zeigen, `make run` nur für die Person am Mac, Datum 13.10.2026, kurze Sätze im Startabschnitt | `6fd44aa` |
+| README-Bilder | `make shots`, `make readme-shots`, jedes der zwölf Bilder angesehen (unten) | `1aa9cb1` |
+| CHANGELOG | 1.0.0 (13.10.2026) mit den Korrekturen der Prüfrunde in Inhalt und Hinweisen für Projekte, Begriffe wie in der App | `3efcfba` |
+
+### Prüfung (2026-10-13, auf `9fe6c78`)
+
+Command Line Tools (`DEVELOPER_DIR=/Library/Developer/CommandLineTools`, Swift 6.3.3, SDK 26.5; `pick-sdk` überspringt das 27.0-SDK dort, gebaut von Swift 6.4):
+
+```
+DEVELOPER_DIR=… make check        -> exit 0 (87 s), STRICT=1: rules_sync gültig (50 Regeln, 58 Begriffe);
+                                     check_texts 314 Dateien, check_design 208 Dateien ohne Befund; check-kit: Kit 303,
+                                     gemeinsam 65, Projekt 28, nur im Starter 18, 8 von 8 Modulen entfernbar;
+                                     Build ohne Warnung; Swift "410 tests, 0 failures"; Python 252, 137, 28 OK;
+                                     keine Zeile außer "ok …" und den Summen (kein "selftest FAIL")
+vtool -show-build …/Starter       -> minos 26.0, sdk 26.5
+STARTER_HEADLESS=1 STARTER_DATA_DIR=<leer> build/Starter.app/Contents/MacOS/Starter --selftest
+                                  -> "selftest: 30 checks, 0 failures", exit 0, Datenordner leer
+dasselbe ohne STARTER_HEADLESS    -> 30 checks, 0 failures, Datenordner leer (auf 9825c7a)
+codesign --verify --strict build/Starter.app -> ok
+DEVELOPER_DIR=… make typecheck    -> 15 Kombinationen ohne Fehler und Warnungen (94 s; auf 9825c7a ebenso, 107 s)
+DEVELOPER_DIR=… make probe        -> "Ran 7 tests … OK" (285 s, auf 9825c7a): init grün (48 s), make check nach init
+                                     exit 0 (93 s), remove je Modul exit 0, menubar nach window und ai vor mlx abgelehnt
+make check-texts / check-design CHECK_FLAGS=--ci und --streng -> ohne Befund
+DEVELOPER_DIR=… swift build       -> Absturz von swift-package (dyld: Symbol not found in BuildServerProtocol):
+                                     gemischte Installation der Command Line Tools, nicht der Starter
+```
+
+Xcode 27 (Standard, `/Applications/Xcode.app`, Swift 6.4, SDK 27.0):
+
+```
+make check                        -> exit 0 (94 s), dieselben Zahlen: 410 Swift-Tests, 0 Fehler; Python 252, 137, 28 OK
+vtool -show-build …/Starter       -> minos 26.0, sdk 27.0
+--selftest headless               -> 30 checks, 0 failures, Datenordner leer
+make typecheck                    -> 15 Kombinationen ohne Fehler und Warnungen (105 s)
+make dmg                          -> exit 0 (46 s): build/dmg/Starter-1.0.0.dmg (4,4 MB, ULMO, ad hoc, Hinweis auf
+                                     „Dennoch öffnen“, beide Sprachen); Warnungen wie vorgesehen: Bundle-ID
+                                     com.example.starter und SF Symbol im App-Symbol. dmgbuild 1.6.5, ds-store 1.3.1,
+                                     mac-alias 2.2.2 einmal mit --require-hashes in build/tools-venv installiert
+hdiutil verify                    -> VALID
+hdiutil attach -nobrowse -readonly -mountpoint <tmp> -> Inhalt: Starter.app, Applications -> /Applications,
+                                     .background.tiff, .VolumeIcon.icns, .DS_Store; codesign --verify --strict --deep
+                                     der App ok (adhoc, com.example.starter), Version 1.0.0, LSMinimumSystemVersion 26.0,
+                                     minos 26.0, sdk 27.0, Resources: AppIcon.icns, Notices, de.lproj, en.lproj;
+                                     hdiutil detach ok, danach kein Abbild des Starters eingehängt
+swift build (Kopie aus git archive, vorher python3 scripts/gen_config.py)
+                                  -> "Build complete!" ohne Warnung (9 s); swift build -c release ebenso (26 s);
+                                     .build/debug/App --selftest headless: 30 checks, 0 failures, Datenordner leer
+                                     (vor 1bd4420: Abbruch "defaultLocalization not set")
+make shots                        -> 756 PNGs + index.html (189 Szenen, 59 s); gegen den Lauf davor geprüft (md5):
+                                     nur menubar.project weicht ab (siehe Schwächen)
+make readme-shots                 -> 12 Bilder, je höchstens 1200 px, zusammen 4,1 MB
+```
+
+CI-Plan (`python3 .github/ci_plan.py` mit `GITHUB_REPOSITORY`, `GITHUB_EVENT_NAME`, `GITHUB_EVENT_PATH`):
+
+```
+Starter, Push auf main (2133257..HEAD)      -> state=starter starter=true check=true full=true probes=true docs=false
+Starter, Pull Request (kein Entwurf)        -> state=starter check=true full=false probes=false docs=false
+someone/new-app vor init, Push und PR       -> state=needs-init, check, full, probes aus
+initialisiertes Projekt (Kopie, init --non-interactive --name Probe --ohne-netz --ohne-build), Pull Request
+                                            -> state=project starter=false check=true full=false probes=false docs=false
+combos: 15 Kombinationen (14 aus COMBOS und alle Module), removals: je Modul, mlx vor ai, examples über strip-examples
+```
+
+Commit-Prüfung (`scripts/check_commit_msg.py`, mit `.github/commit-ausnahmen.txt`):
+
+```
+--bereich HEAD (ganze Geschichte von main)          -> "Das Format aller Commits in HEAD passt."
+--github, erster Push von main (before 000…)        -> "… (erster Push von main, ganze Geschichte) passt."
+--bereich 2133257..HEAD                             -> passt
+```
+
+Angesehen (Read): jedes der zwölf README-Bilder nach `make readme-shots` (Übersicht, Notizseite mit KI en-dunkel, aufgeklappte Inselkarte, Statusmenü, Begrüßungsschritt, Sprache, Neustart-Schritt, Einstellungen „Allgemein“ mit der neuen Reihenfolge, „Insel und Kapsel“ vor und nach `3d61613`, „Modelle“, DMG-Fenster, App-Symbol). Aus `build/shots` je en-hell und de-dunkel als Kontaktbögen: `onboarding.welcome`, `.features`, `.permission-missing`, `.done`, `.project`; `settings.window`, `.window-many`, `.general`, `.about`, `.notices`; `window.main`, `window.home`; `examples.overview`, `.trash`, `.detail-unavailable`, `.pane`, `.search-empty`, `.island-concealed`; `island.notice-warning`, `.done-hover`, `.tiles`, `.onboarding`, `.pane`, `.pane-narrow` (de-dunkel); `capsule.notice-info`; `menubar.panel`, `.pane`, `.project`; `background.pane`; `hotkeys.pane`, `.onboarding`; `ai.pane`, `ai.onboarding`; `design.badge`, `design.tokens`; `patterns.inline-notice`, `.confirm-row`, `.sample-pane`, `.onboarding-tile-picker` (de-dunkel); `gallery.light-stage`. Behoben nach dem Ansehen: abgeschnittenes `island.pane`, „Darstellung“ in `patterns.sample-pane`.
+
+Danach: `pgrep` nach `Starter.app`, `Probe.app`, `run-tests`, `fake_worker` und dem SwiftPM-Binary findet nichts; kein DMG eingehängt.
+
+### Bekannte Schwächen und Offenes
+
+- `menubar.project` ist nicht deterministisch: die Szene zeigt den echten Notizen-Store, dessen Beispiele beim Start in der Startsprache und mit der Uhrzeit des Laufs entstehen. Auf Deutsch stehen dort englische Titel, die Zeiten wechseln von Lauf zu Lauf. Einzige Szene, die zwischen zwei `make shots` abweicht.
+- KI-Texte sagen Lokalität zu („What you type stays on this device“, „Runs on this Mac, nothing is sent“, „Was du eingibst, geht nie ins Internet“). Apples Foundation Models laufen auf dem Gerät, ein Test des Starters belegt es nicht (S-06, S-07); die Muster von `zusage` erfassen diese Formen nicht. Entscheidung beim Auftraggeber.
+- Allow-Liste (F1, Anfrage 5): `make check-light`, `make test-python`, `make typecheck` fragen weiter nach.
+- `CommonText.openApp` hat keinen Aufrufer und bleibt als gemeinsames Wort für Projekte.
+- SwiftPM läuft nur mit Xcode; mit den Command Line Tools allein stürzt `swift-package` auf diesem Mac ab. Eine laufende Prüfung von `swift build` gibt es nicht, nur den Typecheck des Manifests in den Python-Tests.
+- `make probe` lief auf `9825c7a`; danach kamen nur `9fe6c78` (Mustertexte, entfernte Schlüssel) und dieser Bericht, geprüft mit `make check` und `make typecheck` beider Toolchains.
+- Weiter offen aus den Statusberichten: F1 (guard-git liest nur Shell-Text, Minuten der CI geschätzt, `requirements.lock` nur offline geprüft), F2 (Randauslauf nur in Renders, Info-Hinweis der Insel im Akzent, Artwork bei `graphit` grau), F3 (Unterzeile „Einrichtung“ in „Allgemein“ zweizeilig, „Standard verwenden“ breit, Prüfung der Standardtexte bei Anrede Sie).
