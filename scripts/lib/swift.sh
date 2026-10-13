@@ -50,16 +50,16 @@ swift_flags() {
 
 run_swiftc() {
   # swiftc "$@" with its output shown. Under STRICT=1 a "warning:" line fails the step even when swiftc succeeded.
-  local log status=0
+  local log rc=0
   log="$(mktemp "${TMPDIR:-/tmp}/starter-swiftc.XXXXXX")"
-  swiftc "$@" > "$log" 2>&1 || status=$?
+  swiftc "$@" > "$log" 2>&1 || rc=$?
   cat "$log"
-  if (( status == 0 )) && [[ "${STRICT:-}" == 1 ]] && grep -q "warning:" "$log"; then
+  if (( rc == 0 )) && [[ "${STRICT:-}" == 1 ]] && grep -q "warning:" "$log"; then
     print -u2 "swiftc: Warnungen gelten in make check als Fehler (A-02); die Stellen stehen oben."
-    status=1
+    rc=1
   fi
   rm -f "$log"
-  return $status
+  return $rc
 }
 
 require_value() {
