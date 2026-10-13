@@ -68,10 +68,16 @@ class RemoveTests(TempDirCase):
         recovery command, the lock notes the red build, and the next call builds again instead of saying done."""
         import contextlib
         import io
+        from unittest import mock
         from starter import cli
+        from starter import remove as remove_file
         from starter.manifest import PENDING
         from starter.remove import report
         root = self.repo()
+        # also on Linux: make build runs (and fails) instead of being skipped for a missing Swift compiler
+        patch = mock.patch.object(remove_file, "swift_missing", return_value=None)
+        patch.start()
+        self.addCleanup(patch.stop)
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             plan = remove_module(root, "background", build=True, check_origin=False)
         self.assertIs(plan.build_ok, False)

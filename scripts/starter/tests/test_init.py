@@ -157,8 +157,11 @@ class InitTests(TempDirCase):
     def test_red_build_keeps_the_report(self):
         from starter.manifest import PENDING
         from starter.project import report
+        from unittest import mock
+        from starter import project
         root = self.repo()
-        result = init(root, options(build=True))
+        with mock.patch.object(project, "swift_missing", return_value=None):  # also on Linux: make build runs and fails
+            result = init(root, options(build=True))
         self.assertIs(result.build_ok, False)
         self.assertEqual(read_lock(root)[PENDING], "bin/starter init")
         text = report(result, dry_run=False, build=True)
