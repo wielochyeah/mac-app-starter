@@ -267,6 +267,30 @@ final class MLXTests: TestSuite {
             expectEqual(client.starts, 1)
         }
 
+        test("a cancel the worker never confirms: the stuck worker is stopped, the next request starts fresh") {
+            let client = fakeClient(["--hang"])
+            client.cancelGrace = 1
+            defer { client.shutdown() }
+            let out = AIWait.run(timeout: 10) { () async throws -> AIError? in
+                let task = Task { @MainActor in
+                    try await client.generate(prompt: "x", system: nil, model: "/m", maxTokens: 10, timeout: 30)
+                }
+                try await Task.sleep(for: .milliseconds(800))
+                task.cancel()
+                do { _ = try await task.value } catch { return AIError.from(error) }
+                return nil
+            }
+            guard case .value(let e) = out else { return fail("\(out)") }
+            expectEqual(e, .cancelled)
+            expect(AIWait.until(timeout: 4) { !client.isRunning }, "the stuck worker was stopped")
+            expectEqual(client.crashes, 0, "our own kill is not a crash")
+            expectEqual(client.phase, .stopped, "no back-off before the next start")
+            let t = Date()
+            expectEqual(error(generate(client, timeout: 0.5, wait: 10)), .timeout)
+            expect(Date().timeIntervalSince(t) < 4, "the next request did not queue behind the stuck one")
+            expectEqual(client.starts, 2)
+        }
+
         test("timeout counts from started: a slow load is fine, a hang is killed") {
             let slowLoad = fakeClient(["--load", "1.0"])
             defer { slowLoad.shutdown() }
