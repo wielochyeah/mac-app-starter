@@ -9,6 +9,34 @@ word (test "notices: app files carry every licence text"). Fenced blocks are sho
 
 Diese App enthält Software anderer Autorinnen und Autoren. Deren Lizenzen verlangen, dass die folgenden Hinweise mit ihr weitergegeben werden.
 
+## mac-app-starter
+
+Diese App ist aus mac-app-starter entstanden, einer Vorlage für Mac-Apps, veröffentlicht unter der MIT-Lizenz. Der Lizenztext im englischen Original:
+
+```
+MIT License
+
+Copyright (c) 2026 nilswieloch
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ## VoiceBud
 
 Die Gestaltung dieser App und Teile ihres Codes (Einrichtung, Einstellungen und, wenn die App sie hat, Insel, Tastaturkurzbefehle, Menüleiste und lokale KI) beruhen auf VoiceBud, einer Diktier-App für macOS von Anas Riad, veröffentlicht unter der MIT-Lizenz. Der Lizenztext im englischen Original:

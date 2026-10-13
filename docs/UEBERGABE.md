@@ -72,6 +72,7 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
 | `docs/PROJECT.md` | Zweck, Zielgruppe, App-Formen, Ansichten, Daten, Berechtigungen, KI, Verteilung, offene Fragen |
 | `README.md` | `init` setzt eine kurze Einleitung mit dem Namen ein; Zweck und eigene Bilder ergänzen. Aufbau, Regeln, Module, Befehle, Betrieb und Pflege bleiben |
 | `docs/screenshots/` | `init` löscht die Bilder des Starters; eigene Bilder trägt `docs/screenshots/list.txt` ein, `make readme-shots` legt sie an |
+| `LICENSE` | die MIT-Lizenz des Starters mit seiner Copyright-Zeile; eigene Lizenz und eigenen Namen eintragen. Die Hinweise des Starters und von VoiceBud in `THIRD_PARTY_NOTICES.md` und `App/Resources/Notices/` bleiben stehen |
 | `CHANGELOG.md` | die Fassungen des Starters; durch die eigene Geschichte ersetzen oder als Herkunft behalten |
 | `CONTRIBUTING.md` | beschreibt den Ablauf mit Strängen und Integration; an die Arbeitsweise des Projekts anpassen |
 | `App/Resources/AppIcon.icns`, `tools/icon/Icon.swift` | `make icon` nach einer Änderung von Akzent oder Symbol; vor der ersten Weitergabe ein eigenes Motiv statt eines SF Symbols (`docs/VERTEILUNG.md`) |
@@ -111,7 +112,7 @@ Arbeite in Claude Code auf einem Mac: Bauen, Testen und Rendern laufen nur unter
 3. App/Resources/InfoPlist.json, docs/PROJECT.md und die Einleitung von README.md für das Projekt schreiben.
 4. Nicht benötigte Module mit bin/starter remove <modul> entfernen, je Modul ein Commit. Für eine größere App in docs/agents/PLAN.md Stufen und Stränge planen und docs/agents/straenge.json füllen; eine kleine App braucht keine Stränge.
 5. Jedes Feature mit dem Skill neues-feature bauen, Ansichten mit neue-ansicht, neue-einstellung und neuer-onboarding-schritt. Steht das erste eigene Feature, bin/starter strip-examples ausführen.
-6. Die Reste des Starters aus docs/UEBERGABE.md, Abschnitt 3, abarbeiten: CHANGELOG.md, CONTRIBUTING.md, Bilder in docs/screenshots, eigenes Motiv für das App-Symbol, Bundle-ID ohne com.example.
+6. Die Reste des Starters aus docs/UEBERGABE.md, Abschnitt 3, abarbeiten: LICENSE (Lizenz und Name nennt der Auftraggeber), CHANGELOG.md, CONTRIBUTING.md, Bilder in docs/screenshots, eigenes Motiv für das App-Symbol, Bundle-ID ohne com.example.
 7. Bei Anrede Sie: die du-Texte des Kits stehen als bekannte Befunde in rules/baseline/texte.json. Nach und nach umschreiben und die Liste mit python3 scripts/check_texts.py --baseline-aktualisieren verkleinern.
 8. Nicht ändern: Kit-Pfade aus starter.manifest.json und Teil A von CLAUDE.md. Eigene Regeln kommen nach rules/projekt/. Bedarf am Kit in docs/STARTER_FEEDBACK.md festhalten.
 9. Die App nie selbst starten, keine Berechtigung anfragen: prüfen mit make test, make shots ONLY=<präfix> und --selftest. Die Szenen ansehen, die eine Änderung betrifft, jede in en und de, hell und dunkel. Vor jedem Push make check. Jede Stufe mit dem Skill red-team prüfen lassen.

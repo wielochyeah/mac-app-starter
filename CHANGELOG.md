@@ -4,6 +4,16 @@ Jede Fassung des Starters hat einen Tag `v<Version>` und einen Abschnitt hier, m
 
 Ein Projekt führt darunter seine eigenen Fassungen (`app.version` in `starter.json`) mit denselben Abschnitten.
 
+## Unveröffentlicht
+
+### Inhalt
+
+- MIT-Lizenz in `LICENSE`; der Starter nennt sich in `THIRD_PARTY_NOTICES.md` und in den Hinweisen der App unter „Über“.
+
+### Hinweise für Projekte
+
+- `LICENSE` gehört dem Projekt, `sync` ändert sie nicht. Lizenz und Copyright-Zeile trägt das Projekt selbst ein; den Abschnitt „mac-app-starter“ in `App/Resources/Notices/` übernimmt es von Hand, weil diese Dateien dem Projekt gehören.
+
 ## 1.0.0 (13.10.2026)
 
 Die erste Fassung. Aus ihr entsteht jede neue Mac-App mit `bin/starter init`. Die Korrekturen der Prüfrunde vor der Veröffentlichung (Werkzeuge und CI, App-Code, Texte) sind eingearbeitet.

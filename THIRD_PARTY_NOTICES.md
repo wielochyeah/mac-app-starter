@@ -2,6 +2,38 @@
 
 Diese Datei nennt Code und Vorlagen, die der Starter von anderen übernommen hat, mit Quelle, Umfang und Lizenz. Sie gehört zum Kit und reist in jedes Projekt mit; sie ist für Entwickler. Die App zeigt nicht diese Datei, sondern die kurze Fassung für ihre Nutzerinnen aus `App/Resources/Notices/<lang>.md` (Einstellungen, Bereich „Über“, Zeile „Hinweise zu Drittanbietern“); `make build` legt sie ins Bundle, und ein Test prüft, dass jeder Lizenztext dieser Datei dort wörtlich steht. Wer weiteren Fremdcode übernimmt, ergänzt hier einen Abschnitt mit Quelle, Umfang und vollständigem Lizenztext und denselben Lizenztext in beiden Dateien unter `App/Resources/Notices/`.
 
+## mac-app-starter
+
+Quelle: mac-app-starter, die Vorlage, aus der dieses Repository stammt (`github.com/wielochyeah/mac-app-starter`). Lizenz: MIT.
+
+Ein Projekt, das mit `bin/starter init` aus dem Starter entsteht, enthält dessen Kit, Module, Werkzeuge, Regeln und Doku. Der Hinweis bleibt deshalb stehen, auch wenn das Projekt in `LICENSE` eine eigene Lizenz festlegt.
+
+Lizenztext:
+
+```
+MIT License
+
+Copyright (c) 2026 nilswieloch
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ## VoiceBud
 
 Quelle: VoiceBud, eine Diktier-App für macOS von Anas Riad. Lizenz: MIT.

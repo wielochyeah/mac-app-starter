@@ -64,7 +64,8 @@
     "docs/STARTER_FEEDBACK.md",
     "docs/agents/**",
     "docs/screenshots/**",
-    "./starter.lock.json"
+    "./starter.lock.json",
+    "./LICENSE"
   ],
   "starterOnly": {
     "description": "Bauunterlagen des Starters. bin/starter init löscht paths, schneidet in allen Textdateien die Abschnitte zwischen den blockMarkers heraus (Marker allein auf ihrer Zeile, in der Kommentarsyntax der Datei: <!-- nur-im-starter:anfang --> in Markdown, # nur-im-starter:anfang in Shell, Python, YAML und Makefile, // nur-im-starter:anfang in Swift), legt jede Datei aus move unter ihrem neuen Namen ab (die Entscheidungen des Starters als docs/STARTER_DECISIONS.md, die sync nachzieht) und ersetzt jede Datei aus replace durch ihre leere Vorlage. check-kit meldet in einem Projekt jeden Rest davon.",

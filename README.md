@@ -167,4 +167,8 @@ Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: 
 
 Der Starter trägt Tags (`v1.0.0`) und `CHANGELOG.md` mit Inhalt, Migrationen und Hinweisen je Fassung; jedes Projekt speichert seinen Stand in `starter.lock.json`. `bin/starter sync --ziel <tag>` zieht Kit-Pfade per Drei-Wege-Zusammenführung nach, `make check-kit` meldet geänderte Kit-Pfade. Verbesserungen, die auch anderen Projekten nützen, hält ein Projekt in `docs/STARTER_FEEDBACK.md` fest; der Skill `starter-rueckfluss` macht daraus einen Pull Request im Starter.
 
-Gestaltung und Teile des Codes stammen aus VoiceBud (MIT); die Hinweise stehen in `THIRD_PARTY_NOTICES.md`.
+## Lizenz
+
+Der Starter steht unter der MIT-Lizenz, der Text liegt in `LICENSE`. Gestaltung und Teile des Codes stammen aus VoiceBud von Anas Riad, ebenfalls unter MIT.
+
+Ein Projekt aus dem Starter legt in `LICENSE` seine eigene Lizenz und Copyright-Zeile fest. Die MIT-Hinweise des Starters und von VoiceBud bleiben in `THIRD_PARTY_NOTICES.md` und in `App/Resources/Notices/`, die App zeigt sie unter „Über“.

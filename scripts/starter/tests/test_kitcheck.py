@@ -46,8 +46,8 @@ class StarterFixtureTests(TempDirCase):
             self.assertEqual(f.problems, [], problems_text(f))
 
     def test_unclassified_file(self):
-        f = kitcheck.run(self.repo({"LICENSE": "MIT\n"}))
-        self.assertIn("LICENSE", problems_text(f))
+        f = kitcheck.run(self.repo({"NOTIZEN.txt": "frei\n"}))
+        self.assertIn("NOTIZEN.txt", problems_text(f))
 
     def test_unguarded_use_of_a_module_type(self):
         f = kitcheck.run(self.repo({
