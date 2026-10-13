@@ -243,7 +243,7 @@ private struct TilePickerSample: View {
                             TileOption(.capsule, title: CommonText.capsule)],
                            selection: $style, previewHeight: Metrics.tilePreviewLarge) { StylePreview(kind: $0) }
             }
-            SettingsSection(PatternsSampleText.appearance) {
+            SettingsSection(PatternsSampleText.displayStyle) {
                 TilePicker([TileOption(.island, title: CommonText.islandAtNotch),
                             TileOption(.capsule, title: CommonText.capsule),
                             TileOption(.off, title: PatternsSampleText.off, detail: PatternsSampleText.offDetail)],

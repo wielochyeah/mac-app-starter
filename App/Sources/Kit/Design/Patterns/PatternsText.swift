@@ -73,7 +73,7 @@ enum PatternsSampleText {
     static var language: String { tr(en: "Language", de: "Sprache") }
     static var interface: String { tr(en: "App language", de: "Sprache der App") }
     static var interfaceDetail: String { tr(en: "Windows, menus and notifications", de: "Fenster, Menüs und Mitteilungen") }
-    static var appearance: String { tr(en: "Appearance", de: "Darstellung") }
+    static var appearance: String { tr(en: "Appearance", de: "Erscheinungsbild") }
     static var appearanceDetail: String { tr(en: "Light, dark or automatic", de: "Hell, dunkel oder automatisch") }
     static var system: String { tr(en: "Automatic", de: "Automatisch") }
     static var light: String { tr(en: "Light", de: "Hell") }
@@ -147,8 +147,6 @@ enum PatternsSampleText {
          (tr(en: "Safari", de: "Safari"), tr(en: "Reads the page title", de: "Liest den Seitentitel"), "safari.fill", .sky),
          (tr(en: "Terminal", de: "Terminal"), tr(en: "Never reads", de: "Liest nie mit"), "terminal.fill", .black)]
     }
-    static var islandDetail: String { tr(en: "Grows out of the notch", de: "Wächst aus der Notch") }
-    static var capsuleDetail: String { tr(en: "Floats below the menu bar", de: "Schwebt unter der Menüleiste") }
     static var off: String { tr(en: "Off", de: "Aus") }
     static var offDetail: String { tr(en: "Only the menu bar", de: "Nur die Menüleiste") }
 
@@ -181,22 +179,16 @@ enum PatternsSampleText {
         tr(en: "Not in the list? Click [Show in Finder](app://reveal) and drag the app into it.",
            de: "Steht die App nicht in der Liste? Klicke auf [Im Finder zeigen](app://reveal) und ziehe sie hinein.")
     }
-    static var grantedHint: String { tr(en: "Next up: the models.", de: "Weiter geht es mit den Modellen.") }
     static var missingHint: String {
         tr(en: "macOS asks next whether \(AppInfo.displayName) may use the microphone.\nChoose “Allow”.",
            de: "macOS fragt gleich, ob \(AppInfo.displayName) dein Mikrofon nutzen darf.\nWähle „Erlauben“.")
-    }
-    static var restartHint: String {
-        tr(en: "The permission takes effect once \(AppInfo.displayName) restarts.\nThis window opens again afterwards.",
-           de: "Die Berechtigung greift erst, wenn \(AppInfo.displayName) neu startet.\nDanach öffnet sich dieses Fenster wieder.")
     }
     static var welcomeTitle: String { AppInfo.displayName }
     static var welcomeLede: String {
         tr(en: "Collects notes from any app in one list.", de: "Sammelt Notizen aus jeder App in einer Liste.")
     }
-    static var appearanceTitle: String { tr(en: "Appearance", de: "Darstellung") }
-    static var appearanceSubtitle: String { tr(en: "How the app shows up while it works.", de: "So zeigt sich die App, während sie arbeitet.") }
-    static var appearanceFootnote: String { tr(en: "You can change this later in Settings.", de: "Das kannst du später in den Einstellungen ändern.") }
+    /// The island's display style (tile picker sample), not light or dark.
+    static var displayStyle: String { tr(en: "Display", de: "Darstellung") }
     static var linkSample: String {
         tr(en: "Something missing? [Show setup again](app://setup) or [show the data folder](app://reveal).",
            de: "Fehlt etwas? [Einrichtung erneut zeigen](app://setup) oder [Datenordner zeigen](app://reveal).")

@@ -244,7 +244,6 @@ enum NotesText {
 
     // MARK: Gallery
     static var galleryTile: String { tr(en: "Note tile", de: "Notiz als Kachel") }
-    static var galleryEditor: String { tr(en: "Note editor", de: "Notiz-Editor") }
     static var galleryAI: String { tr(en: "Local AI for a note", de: "Lokale KI für eine Notiz") }
 }
 
