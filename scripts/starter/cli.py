@@ -189,10 +189,9 @@ def cmd_init(root: Path, a) -> int:
         config = cfg.read_config(root)
         present = remove.present_modules(root, manifest, working_files(root), config)
         defaults = project.with_flag_defaults(config, accent=a.accent, symbol=a.symbol, anrede=a.anrede)
-        opts = project.interactive_values(manifest, defaults, _ask, present, name=a.name)
+        opts = project.interactive_values(manifest, defaults, _ask, present, name=a.name, bundle_id=a.bundle_id,
+                                          symbol_check=lambda value: project.symbol_problem(root, value))
         opts.remove += _split_modules(a.module_aus)
-        if a.bundle_id:
-            opts.bundle_id = a.bundle_id
         print(project.summary(opts), end="")
         confirm = _ask("Fortfahren? j/n", "n")
         if not confirm.lower().startswith("j"):
