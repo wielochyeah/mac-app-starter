@@ -53,6 +53,9 @@ struct OnboardingAdvance: Equatable {
     @ObservationIgnored private(set) var isFinished = false
     /// Set when the app is about to relaunch: closing the window then is not leaving the setup.
     @ObservationIgnored var isRelaunching = false
+    /// Ids of the setup's permissions allowed right now. Recorded as `onboardingAllowed` on "Done"
+    /// and when a finished setup is closed, so a permission left off on purpose stops reopening it.
+    @ObservationIgnored var allowedNow: (() -> [String])?
 
     /// - settings: where the step and the done flag are saved; nil for renders (nothing written).
     init(steps: [OnboardingStep], monitor: PermissionMonitor = .shared, settings: Settings? = .shared,
@@ -146,11 +149,15 @@ struct OnboardingAdvance: Equatable {
     }
 
     /// The window was closed without "Done" (not by a relaunch): no reopen on the next launch,
-    /// and a setup shown again from Settings forgets its step. A first setup keeps its step.
+    /// and a setup shown again from Settings (or reopened for a lost permission) forgets its step
+    /// and records what is allowed now. A first setup keeps its step.
     func leave() {
         guard !isFinished, !isRelaunching, let settings else { return }
         settings.reset(.onboardingReopen)
-        if settings[.onboardingDone] { settings.reset(.onboardingResume) }
+        if settings[.onboardingDone] {
+            settings.reset(.onboardingResume)
+            if let allowed = allowedNow?() { settings[.onboardingAllowed] = allowed }
+        }
     }
 
     /// Marks onboarding done, forgets the step and calls `onFinish`.
@@ -158,6 +165,7 @@ struct OnboardingAdvance: Equatable {
         guard !isFinished else { return }
         isFinished = true
         if let settings {
+            if let allowed = allowedNow?() { settings[.onboardingAllowed] = allowed }
             settings[.onboardingDone] = true
             settings.reset(.onboardingResume)
             settings.reset(.onboardingReopen)

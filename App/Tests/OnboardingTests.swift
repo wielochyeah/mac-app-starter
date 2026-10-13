@@ -77,6 +77,32 @@ final class OnboardingTests: TestSuite {
             expectEqual(first[.onboardingResume].id, "permission.microphone", "a first setup continues there next time")
         }
 
+        test("lost permission: closing the reopened setup records what is allowed now, so it opens once") {
+            let store = settings()
+            store[.onboardingDone] = true
+            store[.onboardingAllowed] = [PermissionKind.microphone.id, PermissionKind.accessibility.id]
+            store[.onboardingReopen] = true   // what reopenIfPermissionLost sets
+            let flow = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: store)
+            flow.allowedNow = { [PermissionKind.microphone.id] }   // accessibility was revoked and stays off
+            flow.leave()
+            expectEqual(store[.onboardingAllowed], [PermissionKind.microphone.id])
+            expectEqual(OnboardingKit.lostPermission(allowed: store[.onboardingAllowed],
+                                                     now: [(.microphone, .granted), (.accessibility, .missing)]), nil,
+                        "the next launch does not reopen it")
+            // a first setup closed early records nothing (it was never finished)
+            let first = settings()
+            let firstFlow = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: first)
+            firstFlow.allowedNow = { [PermissionKind.microphone.id] }
+            firstFlow.leave()
+            expect(!first.hasValue(.onboardingAllowed))
+            // Done records it too
+            let done = settings()
+            let doneFlow = OnboardingFlow(steps: fiveSteps, monitor: .preview([:]), settings: done, startAt: 4)
+            doneFlow.allowedNow = { [PermissionKind.accessibility.id] }
+            doneFlow.finish()
+            expectEqual(done[.onboardingAllowed], [PermissionKind.accessibility.id])
+        }
+
         test("lost permission: allowed at Done and missing or denied now reopens the setup there") {
             let mic = PermissionKind.microphone, ax = PermissionKind.accessibility, cam = PermissionKind.camera
             let allowed = [mic.id, ax.id]

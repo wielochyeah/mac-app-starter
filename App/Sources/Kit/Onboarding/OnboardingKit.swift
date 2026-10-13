@@ -168,9 +168,12 @@ enum OnboardingWindow {
         let firstTime = !Settings.shared[.onboardingDone]
         let permissions = OnboardingKit.onboardingPermissions(PermissionsKit.configured)
         let flow = OnboardingFlow(steps: Registry.orderedOnboardingSteps, rules: OnboardingKit.advanceRules)
+        flow.allowedNow = { [weak flow] in
+            guard let flow else { return [] }
+            return permissions.filter { flow.monitor.status($0).isAllowed }.map(\.id)
+        }
         flow.onFinish = { [weak flow] in
             guard let flow else { return }
-            Settings.shared[.onboardingAllowed] = permissions.filter { flow.monitor.status($0).isAllowed }.map(\.id)
             finish(firstTime: firstTime, restart: OnboardingKit.restartPending(permissions, flow.monitor))
         }
         return flow
