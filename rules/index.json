@@ -89,7 +89,7 @@
       "pfad": "scripts/hooks"
     },
     {
-      "name": "Session-Hook: Werkzeuge, Git-Hooks und Git-Identität aus `starter.json` beim Start jeder Session",
+      "name": "Session-Hook: Werkzeuge, Git-Hooks und Git-Identität (nie überschrieben) beim Start jeder Session",
       "regeln": ["A-04"],
       "pfad": ".claude/hooks/session-start.py"
     },

@@ -15,6 +15,6 @@
   "modules": { "window": true, "menubar": true, "island": true, "background": true, "hotkeys": true, "ai": true, "mlx": false, "examples": true },
   "permissions": ["notifications"],
   "texts": { "languages": ["en", "de"], "anrede": "du" },
-  "commit": { "name": "nilswieloch", "email": "nils.wieloch@outlook.de" },
+  "commit": { "name": "", "email": "" },
   "signing": { "identity": "-", "teamId": "", "notarize": false }
 }

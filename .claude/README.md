@@ -17,7 +17,7 @@ Die Muster sperren die Form, die etwas einstellt, nicht das Wort: `grep hooksPat
 | Hook | Ereignis | Wirkung |
 |---|---|---|
 | `hooks/guard-git.py` | PreToolUse auf `Bash` | lehnt Git-Befehle ab, die die Hooks umgehen: `--no-verify` und Abkürzungen bei commit, merge, push, rebase, am, cherry-pick, revert, `git commit -n` auch in Gruppen wie `-anm`, jede Änderung von `core.hooksPath` (auch über `-c`, `-C` oder `GIT_CONFIG_*`), auch in `sh -c`; Lesen des Werts bleibt erlaubt |
-| `hooks/session-start.py` | SessionStart | `scripts/doctor.sh` als eine Zeile (installiert nie etwas; ohne das `SDKROOT`, das der `python3`-Shim der Command Line Tools setzt), `core.hooksPath` auf `scripts/hooks` (wie `make hooks`), Git-Identität aus `starter.json` (`commit`); leer heißt: beim Auftraggeber erfragen, nie erfinden |
+| `hooks/session-start.py` | SessionStart | `scripts/doctor.sh` als eine Zeile (installiert nie etwas; ohne das `SDKROOT`, das der `python3`-Shim der Command Line Tools setzt), `core.hooksPath` auf `scripts/hooks` (wie `make hooks`), Git-Identität (`scripts/git_setup.py`): in einem Projekt aus `starter.json` (`commit`), nur wenn Git noch keine kennt, eine abweichende wird gemeldet, nie überschrieben; leer heißt: beim Auftraggeber erfragen, nie erfinden; im Starter selbst keine, in einer Kopie vor `bin/starter init` nichts außer dem Hinweis auf `init` |
 | `hooks/announce-directives.py` | PostToolUse auf schreibende Werkzeuge | stellt jeden offenen Abschnitt aus `docs/agents/VORGABEN.md` jedem schreibenden Agenten genau einmal zu, unter 7 KB; liest auch die Fassung auf `origin` (ohne Abruf aus dem Netz) |
 
 Tests der Hooks: `scripts/tests/test_claude_harness.py` (läuft mit `make test`).

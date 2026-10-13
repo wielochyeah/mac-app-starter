@@ -27,6 +27,7 @@ def load(name, path):
 session_start = load("session_start", CLAUDE / "hooks" / "session-start.py")
 announce = load("announce_directives", CLAUDE / "hooks" / "announce-directives.py")
 guard = load("guard_git", CLAUDE / "hooks" / "guard-git.py")
+git_setup = load("git_setup", ROOT / "scripts" / "git_setup.py")
 ci_plan = load("ci_plan", ROOT / ".github" / "ci_plan.py")
 
 
@@ -225,27 +226,56 @@ class SessionStartTests(unittest.TestCase):
     def write_config(self, commit):
         (self.tmp / "starter.json").write_text(json.dumps({"app": {}, "commit": commit}), encoding="utf-8")
 
-    def test_identity_is_set_from_starter_json(self):
+    def test_identity_is_set_from_starter_json_only_when_git_has_none(self):
         self.write_config({"name": "Ada", "email": "ada@example.org"})
         config = {}
         git, _ = fake_git(config)
-        line = session_start.identity_line(str(self.tmp), git)
+        line = session_start.identity_line(str(self.tmp), git, state="project")
         self.assertIn("gesetzt", line)
         self.assertEqual(config, {"user.name": "Ada", "user.email": "ada@example.org"})
-        self.assertIn("passt", session_start.identity_line(str(self.tmp), git))
+        self.assertIn("passt", session_start.identity_line(str(self.tmp), git, state="project"))
+
+    def test_an_existing_identity_is_never_overwritten(self):
+        self.write_config({"name": "Ada", "email": "ada@example.org"})
+        config = {"user.name": "Bob", "user.email": "bob@example.org"}
+        git, calls = fake_git(config)
+        line = session_start.identity_line(str(self.tmp), git, state="project")
+        self.assertIn("nichts geändert", line)
+        self.assertIn('git config user.name "Ada"', line)
+        self.assertEqual(config, {"user.name": "Bob", "user.email": "bob@example.org"})
+        self.assertFalse([call for call in calls if call[:2] == ["git", "config"] and call[2] != "--get"])
 
     def test_empty_identity_sets_nothing_and_says_so(self):
         self.write_config({"name": "", "email": ""})
         config = {"user.name": "Someone"}
         git, _ = fake_git(config)
-        line = session_start.identity_line(str(self.tmp), git)
+        line = session_start.identity_line(str(self.tmp), git, state="project")
         self.assertIn("FEHLT", line)
         self.assertIn("nie erfinden", line)
         self.assertEqual(config, {"user.name": "Someone"})
 
+    def test_the_starter_ships_no_identity(self):
+        self.write_config({"name": "", "email": ""})
+        config = {"user.name": "Contributor", "user.email": "c@example.org"}
+        git, _ = fake_git(config)
+        line = session_start.identity_line(str(self.tmp), git, state="starter")
+        self.assertIn("nur das Format", line)
+        self.assertIn("Contributor <c@example.org>", line)
+        self.assertEqual(config, {"user.name": "Contributor", "user.email": "c@example.org"})
+
+    def test_a_copy_before_init_gets_nothing_and_the_init_hint(self):
+        self.write_config({"name": "Old Author", "email": "old@example.org"})
+        for state in ("needs-init", "unknown"):
+            config = {}
+            git, _ = fake_git(config)
+            line = session_start.identity_line(str(self.tmp), git, state=state)
+            self.assertIn("nichts gesetzt", line, state)
+            self.assertIn("bin/starter init", line, state)
+            self.assertEqual(config, {}, state)
+
     def test_broken_config_is_reported(self):
         (self.tmp / "starter.json").write_text("{", encoding="utf-8")
-        self.assertIsNone(session_start.read_identity(str(self.tmp)))
+        self.assertIsNone(git_setup.read_identity(str(self.tmp)))
         git, calls = fake_git({})
         self.assertIn("nichts gesetzt", session_start.identity_line(str(self.tmp), git))
         self.assertEqual(calls, [])

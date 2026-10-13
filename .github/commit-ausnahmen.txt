@@ -1,0 +1,5 @@
+# Commits, die scripts/check_commit_msg.py überspringt: eine Zeile je Commit, `<sha> <Grund>`.
+# Nur für Geschichte, die sich nicht mehr umschreiben lässt (veröffentlicht oder fremder Branch), nie für neue Commits.
+# nur-im-starter:anfang
+5288ec0 Betreff mit 102 Zeichen, Kopie eines Commits von strang/I aus Welle 2; fremder Branch, nicht umgeschrieben
+# nur-im-starter:ende

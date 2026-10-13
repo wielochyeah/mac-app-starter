@@ -40,7 +40,7 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
    ```
 
    `init` schreibt `starter.json` um, entfernt die Bauunterlagen des Starters, legt Plan, Vorgaben und Strang-Plan als leere Vorlagen an, verschiebt die Entscheidungen des Starters nach `docs/STARTER_DECISIONS.md`, leert die Commit-Identität, die Unterzeile des Starters (`app.tagline`) und die Namensliste `texts.personen`, schreibt `starter.lock.json` und führt `make rules` aus, damit `CLAUDE.md` Teil A und die Wortlisten zur Anrede passen. Ohne `--non-interactive` fragt es nach und bietet die angegebenen Schalter als Vorschlag an; mit `--non-interactive` nimmt es die Angaben nur aus den Schaltern (`--name` ist dann Pflicht). Mit `--module-aus <modul>` fallen Module gleich weg. `--anrede sie` wählt die förmliche Anrede: die Texte des Kits sind in der du-Form geschrieben, `make check-texts` listet danach jede Stelle, die umzuschreiben ist. Eine eigene Unterzeile für den Willkommensschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
-3. Commit-Identität in `starter.json` eintragen (`commit.name`, `commit.email`), dann `make hooks`. Bis die Identität gesetzt ist, nimmt der Hook `commit-msg` keinen Commit an.
+3. Commit-Identität des Projekts in `starter.json` eintragen (`commit.name`, `commit.email`; die Person, unter deren Namen das Projekt committet, nie eine erfundene), dann `make hooks`. `make hooks` setzt sie als Git-Identität dieses Repositorys, wenn Git noch keine kennt, und meldet eine abweichende, statt sie zu überschreiben. Bis die Identität in `starter.json` steht, nimmt der Hook `commit-msg` keinen Commit an.
 4. Prüfen und ansehen:
 
    ```sh
@@ -77,7 +77,7 @@ git add -A && git commit -m "chore(setup): remove the island module"
 
 Bauen, Testen und Rendern brauchen macOS; ein Linux-Container in der Cloud kann nur die Prüfskripte in Python ausführen. Deshalb:
 
-- **Claude Code auf dem Mac** (Terminal oder Desktop-App) für die Arbeit an der App. Der Hook `session-start` prüft die Werkzeuge, setzt `core.hooksPath` und die Git-Identität aus `starter.json`.
+- **Claude Code auf dem Mac** (Terminal oder Desktop-App) für die Arbeit an der App. Der Hook `session-start` prüft die Werkzeuge, setzt `core.hooksPath` und die Git-Identität aus `starter.json`, wenn Git noch keine kennt; eine vorhandene überschreibt er nie, er meldet nur, wenn sie abweicht.
 - **Claude Code in der Cloud** für Dokumente, Regeln und Werkzeuge; die CI auf `macos-26` führt bei jedem Push `make check` aus und baut, rendert und probt alle Module bei Pull Requests, auf `main` und bei Tags. Unter „Network access“ der Umgebung genügt `github.com`.
 
 Den Bootstrap-Prompt aus dem `README.md` mit Name, Zweck, Zielgruppe, App-Formen und Hauptansichten füllen und senden. Neue Wünsche während der Arbeit kommen in `docs/agents/VORGABEN.md`; der Agent arbeitet sie als Regel in `rules/projekt/` ein.
