@@ -156,14 +156,17 @@ enum RenderRunner {
         try? html.write(to: dir.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
     }
 
-    /// Areas of the kit; together with the module names they mark a scene as a sample of the starter.
+    /// Areas of the kit, and areas a module uses besides its own name (the island module's capsule); together with
+    /// the module names they mark a scene as a sample of the starter.
     static let kitAreas: Set<String> = ["design", "gallery", "onboarding", "patterns", "permissions", "settings"]
+    static let moduleAreas: [String: String] = ["capsule": "island"]
 
     /// A scene of the kit or a module with sample content. Scenes ending in ".project" show the project's own
     /// configuration (onboarding.project, menubar.project) and count as the project's.
     static func isStarterSample(_ scene: RenderScene) -> Bool {
         let area = String(scene.id.split(separator: ".").first ?? "")
-        return !scene.id.hasSuffix(".project") && (kitAreas.contains(area) || Modules.compiled.contains(area))
+        let module = moduleAreas[area] ?? area
+        return !scene.id.hasSuffix(".project") && (kitAreas.contains(area) || Modules.compiled.contains(module))
     }
 
     private static func sections(_ scenes: [RenderScene]) -> String {
