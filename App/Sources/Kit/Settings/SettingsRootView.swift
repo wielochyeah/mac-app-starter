@@ -59,6 +59,7 @@ struct SettingsDetail: View {
         }
         .environment(\.settingsHub, hub)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .renderEdgeFade()
         .background(Theme(scheme).windowBg)
     }
 }
@@ -108,6 +109,7 @@ struct SettingsSidebar: View {
                     withAnimation(Motion.adaptive(Motion.selection, reduce: reduceMotion)) { proxy.scrollTo(id) }
                 }
             }
+            .renderEdgeFade()
             if let footer {
                 footer()
                     .padding(.horizontal, Space.sidebarX)

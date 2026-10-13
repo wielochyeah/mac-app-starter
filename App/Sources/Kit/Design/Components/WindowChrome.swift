@@ -69,6 +69,32 @@ struct TrafficLights: View {
     }
 }
 
+extension View {
+    /// Renders only: content cut by the bottom of a window, a sheet or a sidebar list fades out over
+    /// the last `Metrics.renderEdgeFade` points, so a still never ends in half a line of text (the
+    /// real window scrolls there). Apply it to the scrolling content, not to its background.
+    /// Outside renders (`\.renderStatic` false) nothing changes.
+    func renderEdgeFade() -> some View { modifier(RenderEdgeFade()) }
+}
+
+private struct RenderEdgeFade: ViewModifier {
+    @Environment(\.renderStatic) private var renderStatic
+
+    func body(content: Content) -> some View {
+        if renderStatic {
+            content.mask {
+                VStack(spacing: 0) {
+                    Rectangle()
+                    LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+                        .frame(height: Metrics.renderEdgeFade)
+                }
+            }
+        } else {
+            content
+        }
+    }
+}
+
 /// Puts a window render on a neutral "desk" with a soft shadow (README screenshots, every window
 /// scene: VoiceBud's OnboardingBoard / hub renders).
 struct RenderBoard<Content: View>: View {

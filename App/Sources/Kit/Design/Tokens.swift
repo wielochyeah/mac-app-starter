@@ -141,6 +141,8 @@ enum Metrics {
     /// A disabled control or row is drawn at this opacity (buttons, switches, rows, artwork buttons).
     static let disabledOpacity: Double = 0.45
     static let rowMinHeight: CGFloat = 44
+    /// Renders: how far content cut by a window edge fades out (`renderEdgeFade()`).
+    static let renderEdgeFade: CGFloat = 28
     static let buttonMinWidth: CGFloat = 92
     static let buttonWideMinWidth: CGFloat = 104
     static let buttonHeight: CGFloat = 30

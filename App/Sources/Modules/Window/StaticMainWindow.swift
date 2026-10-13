@@ -33,6 +33,7 @@ struct StaticMainWindow<Detail: View>: View {
                     detail
                         .environment(\.windowSearch, query ?? "")
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .renderEdgeFade()
                 }
             }
         }

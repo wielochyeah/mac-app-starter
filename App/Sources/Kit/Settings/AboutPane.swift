@@ -186,6 +186,7 @@ struct NoticesSheet: View {
                 .padding(Space.pane)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .renderEdgeFade()
         }
         .frame(width: Metrics.noticesSheet.width, height: Metrics.noticesSheet.height)
         .background(t.windowBg)
