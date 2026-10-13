@@ -147,8 +147,6 @@ enum PatternsSampleText {
          (tr(en: "Safari", de: "Safari"), tr(en: "Reads the page title", de: "Liest den Seitentitel"), "safari.fill", .sky),
          (tr(en: "Terminal", de: "Terminal"), tr(en: "Never reads", de: "Liest nie mit"), "terminal.fill", .black)]
     }
-    static var island: String { tr(en: "Island at the notch", de: "Insel an der Notch") }
-    static var capsule: String { tr(en: "Capsule", de: "Kapsel") }
     static var islandDetail: String { tr(en: "Grows out of the notch", de: "Wächst aus der Notch") }
     static var capsuleDetail: String { tr(en: "Floats below the menu bar", de: "Schwebt unter der Menüleiste") }
     static var off: String { tr(en: "Off", de: "Aus") }

@@ -32,8 +32,8 @@ enum IslandText {
     static func style(_ style: IslandStyle) -> String {
         switch style {
         case .auto: tr(en: "Automatic", de: "Automatisch")
-        case .island: tr(en: "Island at the Notch", de: "Insel an der Notch")
-        case .capsule: tr(en: "Capsule", de: "Kapsel")
+        case .island: CommonText.islandAtNotch
+        case .capsule: CommonText.capsule
         }
     }
 
