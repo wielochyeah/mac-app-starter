@@ -229,13 +229,25 @@ final class Database {
         for migration in migrations where migration.version > current {
             do {
                 try transaction {
+                    // another process (a second copy of the app) may have migrated while this one
+                    // waited for the write lock: read the version again under the lock
+                    let now = try storedVersion()
+                    if now > known { throw Failure.newerSchema(found: now, known: known) }
+                    guard now < migration.version else { return }
                     try executeScript(migration.sql)
                     try executeScript("PRAGMA user_version = \(migration.version)")
                 }
+            } catch let failure as Failure {
+                if case .newerSchema = failure { throw failure }
+                throw Failure.migration(migration.version, "\(failure)")
             } catch {
                 throw Failure.migration(migration.version, "\(error)")
             }
         }
+    }
+
+    private func storedVersion() throws -> Int {
+        try query("PRAGMA user_version") { $0.int("user_version") ?? 0 }.first ?? 0
     }
 
     private var errorMessage: String {

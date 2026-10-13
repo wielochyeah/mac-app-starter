@@ -1,5 +1,6 @@
 #if TESTING
 import Foundation
+import SQLite3
 
 private struct Note: RowDecodable, Equatable {
     let id: Int
@@ -17,6 +18,17 @@ private struct Note: RowDecodable, Equatable {
         text = try row.require("text", SQLRow.string)
         pinned = row.bool("pinned") ?? false
     }
+}
+
+/// A second process in the middle of migration 1 of the same new file: it holds the write lock
+/// for `seconds`, then sets the version and lets go.
+private nonisolated func otherOpenerMigrating(_ path: String, holdFor seconds: Double) {
+    var db: OpaquePointer?
+    sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
+    sqlite3_exec(db, "BEGIN IMMEDIATE; CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT NOT NULL);", nil, nil, nil)
+    Thread.sleep(forTimeInterval: seconds)
+    sqlite3_exec(db, "PRAGMA user_version = 1; COMMIT;", nil, nil, nil)
+    sqlite3_close(db)
 }
 
 final class DatabaseTests: TestSuite {
@@ -78,6 +90,24 @@ final class DatabaseTests: TestSuite {
             expectEqual(row?.data("b"), Data([1, 2, 3]))
             expectEqual(row?["n"], SQLValue.null)
             expectEqual(db.lastInsertRowID, 1)
+        }
+
+        test("two openers migrating the same new file: the second sees the first's work") {
+            let path = tempDir().appendingPathComponent("race.sqlite").path
+            var setup: OpaquePointer?
+            sqlite3_open_v2(path, &setup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
+            sqlite3_exec(setup, "PRAGMA journal_mode = WAL;", nil, nil, nil)
+            sqlite3_close(setup)
+            let p = path
+            Thread.detachNewThread { otherOpenerMigrating(p, holdFor: 0.5) }
+            Thread.sleep(forTimeInterval: 0.1)   // it read version 0 and holds the lock now
+            do {
+                let db = try Database(url: URL(fileURLWithPath: path), migrations: [v1, v2])
+                expectEqual(db.userVersion, 2, "migration 1 skipped, migration 2 applied")
+                try db.execute("INSERT INTO notes(text, pinned) VALUES('a', 1)")
+            } catch {
+                fail("second opener failed: \(error)")
+            }
         }
 
         test("transactions roll back on error") {
