@@ -223,12 +223,12 @@ def report_range(spec: str, format_only: bool, label: str = "") -> int:
     state = repo_state()
     expected = read_identity()
     errors = check_range(spec, expected, ROOT, format_only, state, read_exceptions())
-    what = f"{label} {spec}".strip()
+    what = f"{spec} ({label})" if label else spec
     if errors:
         print(f"commit-msg: {len(errors)} Befunde in {what}\n  " + "\n  ".join(errors), file=sys.stderr)
         return 1
-    checked = "Format" if format_only or (state == "starter" and not has_identity(expected)) else "Autor und Format"
-    print(f"commit-msg: {checked} aller Commits in {what} {'passt' if checked == 'Format' else 'passen'}.")
+    checked = "Das Format" if format_only or (state == "starter" and not has_identity(expected)) else "Autor und Format"
+    print(f"commit-msg: {checked} aller Commits in {what} {'passt' if checked == 'Das Format' else 'passen'}.")
     return 0
 
 
