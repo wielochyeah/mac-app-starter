@@ -23,11 +23,11 @@ Ablauf eines Starts:
 
    | Flag | Wirkung |
    |---|---|
-   | `--demo` | ohne Onboarding; jeder Eintrag aus `Registry.demoDrivers` läuft (für die Person am Mac) |
-   | `--background` | ohne Onboarding und ohne Hauptfenster (`Launch.isBackground`); ein Start als Anmeldeobjekt zählt ebenso |
+   | `--demo` | ohne Einrichtung; jeder Eintrag aus `Registry.demoDrivers` läuft (für die Person am Mac) |
+   | `--background` | ohne Einrichtung und ohne Hauptfenster (`Launch.isBackground`); ein Start als Anmeldeobjekt zählt ebenso |
 3. Sonst startet `NSApplication` mit `AppDelegate`: `Modules.registerAll()` hat Kit und Module registriert, `AppForm.applyActivationPolicy()` setzt `.regular` (mit `window`) oder `.accessory`, `MainMenu.install()` legt das Hauptmenü an, alle `Registry.launchHooks` laufen.
-4. Mit `STARTER_HEADLESS=1` endet der Start hier: Aktivierungsrichtlinie `.prohibited`, kein Fenster, kein Onboarding. So laufen Tests und Werkzeuge auf Macs, auf denen nichts aufgehen soll.
-5. Beim ersten Start öffnet das Onboarding, später das Hauptfenster (mit `window`); mit `--background` und beim Start als Anmeldeobjekt keines von beiden. Menüleiste, Insel und Hintergrund laufen ohne Fenster weiter; die App endet nicht mit dem letzten Fenster.
+4. Mit `STARTER_HEADLESS=1` endet der Start hier: Aktivierungsrichtlinie `.prohibited`, kein Fenster, keine Einrichtung. So laufen Tests und Werkzeuge auf Macs, auf denen nichts aufgehen soll.
+5. Beim ersten Start öffnet die Einrichtung, später das Hauptfenster (mit `window`); mit `--background` und beim Start als Anmeldeobjekt keines von beiden. Menüleiste, Insel und Hintergrund laufen ohne Fenster weiter; die App endet nicht mit dem letzten Fenster.
 6. Beim Beenden laufen alle `Registry.terminateHooks` (Worker beenden, Daten schreiben).
 
 ## 2. Kit, Module, Features
@@ -50,7 +50,7 @@ App/Sources/
 ```
 
 - **Kit** kennt kein Modul. Es stellt Bausteine und die Registry bereit und liest daraus, was Module und Features beitragen.
-- **Module** nutzen nur das Kit, nie einander direkt. Was ein Modul von einem anderen braucht, steht in `#if MODUL_<NAME>` … `#endif`, damit `bin/starter remove` es sauber entfernen kann: genau ein Flag je `#if`, ohne `||`, `&&`, `!` und `#elseif`. Ein `#else`-Zweig bleibt nach dem Entfernen stehen. Braucht Code zwei Module, stehen zwei einfache Blöcke ineinander (`#if MODUL_AI` außen, `#if MODUL_WINDOW` innen); `bin/starter remove` und `make check-kit` lösen jeden für sich auf.
+- **Module** nutzen nur das Kit, nie einander direkt. Was ein Modul von einem anderen braucht, steht in `#if MODUL_<NAME>` … `#endif`, damit `bin/starter remove` es ohne Reste entfernen kann: genau ein Flag je `#if`, ohne `||`, `&&`, `!` und `#elseif`. Ein `#else`-Zweig bleibt nach dem Entfernen stehen. Braucht Code zwei Module, stehen zwei einfache Blöcke ineinander (`#if MODUL_AI` außen, `#if MODUL_WINDOW` innen); `bin/starter remove` und `make check-kit` lösen jeden für sich auf.
 - **Features** nutzen Kit und, in eigenen `#if`-Blöcken, Module. Jedes meldet sich mit einer Zeile in `Features.register()` an (`App/Sources/Features/Features.swift`); `Modules.registerAll()` ruft das nach dem Kit und allen Modulen auf.
 - `App/Sources/Kit/Main/Modules.swift` ist die einzige Stelle, die Module aufzählt.
 
@@ -62,14 +62,14 @@ App/Sources/
 |---|---|---|
 | `pages` | `AppPage` (id, `PageSection`, order, Titel, Symbol, Inhalt) | Hauptfenster (Modul `window`) |
 | `settingsPanes` | `SettingsPane` (id, `SettingsGroup` content oder settings, order, Titel, Symbol, Farbe, Inhalt) | Einstellungsfenster |
-| `onboardingSteps` | `OnboardingStep` (id, order, `isIncluded`, Inhalt mit `OnboardingContext`) | Onboarding |
+| `onboardingSteps` | `OnboardingStep` (id, order, `isIncluded`, Inhalt mit `OnboardingContext`) | Einrichtung |
 | `menuItems` | `MenuItemContribution` (id, order, Titel, Symbol, Tastenkürzel, Aktion) | Hauptmenü, Statusmenü |
 | `renderScenes` | `RenderScene` (id `<bereich>.<name>`, Größe, Inhalt) | `--render`, `make shots` |
 | `gallery` | `GalleryEntry` (id, Bereich, Titel, Inhalt) | Galerie in den Einstellungen (Debug-Builds oder `kit.showGallery`) |
 | `selfTests` | `SelfTestCheck` (id, Prüfung) | `--selftest` |
 | `launchHooks`, `terminateHooks`, `demoDrivers` | Funktionen | Start, Ende, `--demo` |
 | `welcomeArt` | `(() -> AnyView)?`, Bild 672 x 200 | Begrüßungsschritt der Einrichtung (ohne Eintrag: Akzentschein mit App-Symbol; mit Modul `island`: die echte Insel) |
-| `onboardingFinishedHooks` | Funktionen mit `firstTime` | nach „Fertig“ in der Einrichtung (nicht beim Neustart für eine Freigabe); das Fenster-Modul öffnet so das Hauptfenster, das Hintergrund-Modul wendet die Wahl „Beim Anmelden starten“ an |
+| `onboardingFinishedHooks` | Funktionen mit `firstTime` | nach „Fertig“ in der Einrichtung (nicht beim Neustart für eine Berechtigung); das Fenster-Modul öffnet so das Hauptfenster, das Hintergrund-Modul wendet die Wahl „Beim Anmelden starten“ an |
 
 `Registry.problems()` meldet doppelte Kennungen und Szenen ohne Bereichspräfix; ein Test prüft das.
 
@@ -79,7 +79,7 @@ App/Sources/
 
 ## 4. Sprache
 
-`Localizer.shared` (`@Observable`) hält die Sprache: sie folgt den bevorzugten Sprachen des Macs, bis die Nutzerin eine wählt (`choice`, gespeichert unter `app.language`); `STARTER_LANG=en|de` erzwingt eine (`forced`, nie gespeichert). `tr(en:de:)` liest `Localizer.shared.lang`, deshalb zeichnet SwiftUI bei einem Wechsel neu. `Format` formatiert Zahlen, Dauer und Datum in der Sprache der Oberfläche. Erklärtexte der Berechtigungen erzeugt der Build aus `App/Resources/InfoPlist.json` als `<lang>.lproj/InfoPlist.strings`.
+`Localizer.shared` (`@Observable`) hält die Sprache: sie folgt den bevorzugten Sprachen des Macs, bis die Nutzerin eine wählt (`choice`, gespeichert unter `app.language`); `STARTER_LANG=en|de` erzwingt eine (`forced`, nie gespeichert). `tr(en:de:)` liest `Localizer.shared.lang`, deshalb zeichnet SwiftUI bei einem Wechsel neu. `Format` formatiert Zahlen, Dauer und Datum in der Sprache der Oberfläche. Die Nutzungsbeschreibungen der Berechtigungen erzeugt der Build aus `App/Resources/InfoPlist.json` als `<lang>.lproj/InfoPlist.strings`.
 
 ## 5. Einstellungen
 

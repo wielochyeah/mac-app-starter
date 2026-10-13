@@ -9,7 +9,7 @@ Vorbild sind VoiceBud und die Apps von macOS 26 (Musik, Systemeinstellungen, Kon
 1. **In fünf Sekunden klar.** Der Titel ist der Name der Ansicht, die Zeile darunter beantwortet die Frage der Nutzerin. Genau eine Hauptaktion je Ansicht.
 2. **Nur Tokens und Muster.** Farben, Abstände, Radien, Schriftgrößen und Bewegung kommen aus `App/Sources/Kit/Design/`, Layouts aus den Mustern unter `Kit/Design/Patterns/`. `make check-design` findet Zahlen und Farben außerhalb des Kits.
 3. **Einmal sagen.** Jeder Hinweis steht einmal; Titel und Untertitel sagen Verschiedenes. Kein Kasten im Kasten, keine Deko ohne Aufgabe.
-4. **Ehrlich zeigen.** Was fehlt oder aus ist (keine Berechtigung, kein Modell, nichts eingerichtet), bleibt sichtbar und sagt in einem Satz, warum und was hilft.
+4. **Fehlendes zeigen.** Was fehlt oder aus ist (keine Berechtigung, kein Modell, nichts eingerichtet), bleibt sichtbar und sagt in einem Satz, warum und was hilft.
 5. **Beide Sprachen, beide Erscheinungsbilder.** Deutsch ist etwa 30 % länger; jede Ansicht passt in beiden Sprachen ohne Kürzung. Hell und dunkel sind beide entworfen, nicht abgeleitet.
 6. **Mac-typisch.** Tastatur zuerst (Fokus, ⌘-Kürzel, Pfeiltasten in Listen), Kontextmenüs, Fenster merken ihre Größe, nichts fragt, was macOS selbst weiß.
 
@@ -21,7 +21,7 @@ Vorbild sind VoiceBud und die Apps von macOS 26 (Musik, Systemeinstellungen, Kon
 |---|---|
 | Flächen | `windowBg`, `sidebarBg`, `sidebarPanel`, `card`, `field`, `chip`, `chipActive`, `segmentTrack`, `segmentSelected`, `capsuleBg` |
 | Linien | `separator` (Haarlinie 0,5 pt), `cardStroke`, `windowStroke`, `sidebarPanelStroke`, `capsuleStroke`, `tileEdge`, `squircleEdge` |
-| Text | `fg` (Haupttext), `fg2` (Nebentext), `fg3` (leise), `prose` (Fließtext im Onboarding), `sideGroup` (Gruppentitel der Seitenleiste) |
+| Text | `fg` (Haupttext), `fg2` (Nebentext), `fg3` (leise), `prose` (Fließtext in der Einrichtung), `sideGroup` (Gruppentitel der Seitenleiste) |
 | Akzent | `accent` (Bedienelemente), `accentText` (Text im Akzent, 4,5:1), `ring` (Fokus, Auswahl), `onAccent` (Schrift auf Akzent), `accentSoft`, `accentGradient` |
 | Zustand | `ok`, `warn`, `idle`, `okText`, `warnText`, `okSoft`, `warnSoft`; Fehler `strike` als Zeichen (Symbol, Punkt, Ring, mindestens 3:1) und `strikeText` als roter Text (mindestens 4,5:1) |
 | Bedienelemente | `switchOff`, `trackOff`, `knob`, `knobShadow`, `buttonSecondary`, `buttonSecondaryEdge`, `buttonPrimaryEdge`, `buttonShadow`, `rowHover`, `sideSel`, `detent` |
@@ -49,7 +49,7 @@ Der Akzent färbt Bedienelemente, Auswahl, Fokus und das App-Symbol, nie große 
 | `Space` | `hair` 2, `xxs` 4, `xs` 8, `iconGap` 9, `s` 12, `m` 16, `l` 24, `xl` 32, `xxl` 48, `pane` 20, `rowX` 12, `rowY` 9 |
 | `Radius` | `keyCap` und `segment` 6, `chip` 7, `button`, `field`, `segmentTrack` 8, `row` 10, `tile` 11, `card` 13, `hero` 14, `ring` 15, `window` 16, `panel` 18, `windowGlass` 26, `squircle(size)` |
 | `TypeScale` | `display` 34 fett, `intro` 28 fett, `title` 22 fett, `headline` 17 halbfett, `paneTitle` 15,5 fett, `lede` 15, `reading` 13,5, `body` 13 (auch Medium, Semibold), `preview` 12,5, `groupLabel` 12,5 halbfett, `secondary` 12, `subtitle` 11,5, `caption` 11, `badge` 10,5 halbfett, `micro` 9,5 fett |
-| `Metrics` | Zeilenhöhe 44, Schalter 36 x 21, Onboarding 720 x 560, Einstellungen 900 x 620, Seitenleiste 224 (200 bis 280, erste Zeile 44 unter dem Panel: `Metrics.Sidebar`), Spalte im Onboarding 560, schmale Karte 460 (`onboardingCard`), Gesperrtes mit 45 % Deckkraft (`disabledOpacity`) |
+| `Metrics` | Zeilenhöhe 44, Schalter 36 x 21, Einrichtung 720 x 560, Einstellungen 900 x 620, Seitenleiste 224 (200 bis 280, erste Zeile 44 unter dem Panel: `Metrics.Sidebar`), Spalte in der Einrichtung 560, schmale Karte 460 (`onboardingCard`), Gesperrtes mit 45 % Deckkraft (`disabledOpacity`) |
 
 Raster 8, 12, 16, 24, 32. Abstände zwischen Blöcken nur aus `Space`, nie als Zahl. Radien sind durchgehend (`style: .continuous`). Linien sind Haarlinien (0,5 pt), Rahmen um jede Zeile gibt es nicht: Zeilen in einer Karte trennt `SettingsSection` mit Haarlinien.
 
@@ -61,12 +61,12 @@ Unter `Kit/Design/Components/`, in der Galerie und als Szenen `design.*`:
 
 | Komponente | Zweck |
 |---|---|
-| `.buttonStyle(.primary)`, `.primary(minWidth:)`, `.secondary`, `.primary(_ isPrimary:)` | Knöpfe; genau ein primärer je Ansicht; `SwitchingButtonStyle` wechselt an Ort und Stelle |
+| `.buttonStyle(.primary)`, `.primary(minWidth:)`, `.secondary`, `.primary(_ isPrimary:)` | Tasten; genau eine primäre je Ansicht; `SwitchingButtonStyle` wechselt an Ort und Stelle |
 | `PressStyle`, `PlainStyle` | Druckzustand für eigene Flächen |
 | `Card { }` | Karte mit Rand und Fläche aus Tokens |
 | `Row(title, subtitle:, symbol:, tint:, dot:) { trailing }` | Zeile mit Symbol, Titel, Untertitel und Bedienelement rechts |
 | `GroupLabel`, `Separator`, `Footnote`, `SectionHeader` | Gruppentitel, Haarlinie, Fußnote, Kopf eines Abschnitts |
-| `SwitchToggle`, `Segmented`, `Chip`, `Badge`, `KeyCaps` | Schalter, Segmente, Chip, Marke, Tastenkappen (⌘ ⌥ ⌃ ⇧); gesperrt (`.disabled(true)`) dimmen Schalter, Chip und Knöpfe auf `Metrics.disabledOpacity` |
+| `SwitchToggle`, `Segmented`, `Chip`, `Badge`, `KeyCaps` | Schalter, Segmente, Chip, Marke, Tastenkappen (⌘ ⌥ ⌃ ⇧); gesperrt (`.disabled(true)`) dimmen Schalter, Chip und Tasten auf `Metrics.disabledOpacity` |
 | `SquircleIcon(symbol:, tint:, size:)` | farbiges Symbol wie in den Systemeinstellungen |
 | `SegmentedProgress`, `Spinner`, `StatusMark` | Schritte, laufend, Zustand mit Text |
 | `EmptyState` | Symbol, Titel, ein Satz, höchstens eine Aktion |
@@ -75,9 +75,9 @@ Unter `Kit/Design/Components/`, in der Galerie und als Szenen `design.*`:
 
 ## 5. Muster
 
-Unter `Kit/Design/Patterns/`, als Szenen `patterns.*`. Ein Onboarding-Schritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`; eigene Layouts nur, wenn kein Muster passt, und dann als Kandidat für das Kit gemeldet.
+Unter `Kit/Design/Patterns/`, als Szenen `patterns.*`. Ein Einrichtungsschritt beginnt mit `OnboardingPage`, ein Einstellungsbereich mit `PaneScaffold`; eigene Layouts nur, wenn kein Muster passt, und dann als Kandidat für das Kit gemeldet.
 
-### Onboarding-Schritt
+### Einrichtungsschritt
 
 ```swift
 OnboardingPage {
@@ -108,7 +108,7 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 ```
 
 - Kopfband 52 pt mit Squircle-Symbol und Titel, Spalte bis 640 pt links bündig, Gruppen 20 pt auseinander.
-- Zeilen: `ToggleRow`, `PickerRow` (Segmente oder Menü), `ValueRow` (mit `ValueCapsule`), `ButtonRow`, `ConfirmRow` (fragt an Ort und Stelle vor einer Aktion, die sich nicht rückgängig machen lässt: Abbrechen ist die Hauptaktion und liegt auf `Esc`, die Aktion steht rot auf einem ruhigen Knopf ohne Taste), `LinkRow`, `NavigationRow`; Hover über `HoverButton`.
+- Zeilen: `ToggleRow`, `PickerRow` (Segmente oder Menü), `ValueRow` (mit `ValueCapsule`), `ButtonRow`, `ConfirmRow` (fragt an Ort und Stelle vor einer Aktion, die sich nicht widerrufen lässt: Abbrechen ist die Hauptaktion und liegt auf `Esc`, die Aktion steht rot auf einer ruhigen Taste ohne Tastaturkurzbefehl), `LinkRow`, `NavigationRow`; Hover über `HoverButton`.
 - Hinweise: `InlineNotice` mit `info`, `success`, `warning`, `error` und höchstens einer Aktion.
 - Downloads und lange Arbeiten: `ProgressRow` mit Rolle, Name, Phase (wartet, läuft, pausiert, fertig) und Bytes über `ByteText` („1,4 von 3,0 GB“).
 - Listen mit Suche: `ListCard` mit `ListSearch.matches` (Groß- und Kleinschreibung und Akzente egal), leer mit Titel und einem Satz; Zähler in der Seitenleiste mit `CountBadge`.
@@ -120,8 +120,8 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 |---|---|
 | Hauptfenster (`window`) | `NavigationSplitView` mit Seitenleiste aus Systemglas und Gruppen (`PageSection`), Werkzeugleiste mit Suche, Seiten mit großem Titel; Bausteine wie in Musik: Kopf mit Bild (`HeroHeader`), Reihen von Kacheln (`Shelf`), Raster (`TileGrid`), Listen mit Index und Nebeninfo (`ItemList`), erzeugte Bilder aus Text und Symbol (`Artwork`), leere Seite (`EmptyPage`) |
 | Einstellungen (Kit) | eigenes Fenster 900 x 620 wie die Systemeinstellungen: Seitenleiste mit farbigen Squircle-Symbolen, oben Inhalte, darunter Einstellungen; Bereich nach dem Muster oben; die Pfeiltasten wechseln den Bereich |
-| Onboarding (Kit) | Fenster 720 x 560 mit durchsichtiger Titelleiste und nur dem Schließen-Knopf, Seiten gleiten 26 pt mit Feder, unter reduzierter Bewegung Überblendung |
-| Statusmenü (`menubar`) | Symbol als Vorlage, Zustände `idle`, `busy`, `attention`; Panel wie ein Modul im Kontrollzentrum: abgerundet, Glas, 340 pt (D-14 erlaubt 320 bis 360), Kopf mit App-Symbol und Statuszeile, Abschnitte, Fußzeile mit Einstellungen und Beenden |
+| Einrichtung (Kit) | Fenster 720 x 560 mit durchsichtiger Titelleiste und nur der Schließen-Taste, Seiten gleiten 26 pt mit Feder, unter reduzierter Bewegung Überblendung |
+| Statusmenü (`menubar`) | Symbol als Vorlage, Zustände `idle`, `busy`, `attention`; das Statusmenü wie ein Modul im Kontrollzentrum: abgerundet, Glas, 340 pt (D-14 erlaubt 320 bis 360), Kopf mit App-Symbol und Statuszeile, Abschnitte, Fußzeile mit Einstellungen und Beenden |
 | Insel (`island`) | wächst aus der Notch mit konkaven Ohren, schwarz (`IslandPalette`), Breite und Höhe mit getrennten Federn (`Motion.Island`); ohne Notch eine Kapsel unter der Menüleiste; Inhalte kurz: Symbol, höchstens drei Wörter Titel, eine Zeile Detail |
 
 ## 7. Bewegung
@@ -132,8 +132,8 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 
 ## 8. Glas und Tiefe
 
-- Glas nur, wo das System es liefert (Seitenleiste, Werkzeugleiste, Menüs) oder über `GlassSurface` für schwebende Flächen (Statusmenü-Panel). Kein Unschärfe-Leuchten, keine farbigen Lichthöfe, keine Verläufe als Hintergrund von Inhalten.
-- Gestaltete Flächen mit Verlauf gibt es an drei Stellen: Insel, Bild im Onboarding (`OnboardingHero`, Glanz im Akzent hinter dem App-Symbol) und App-Symbol. Sonst sind Flächen ruhig.
+- Glas nur, wo das System es liefert (Seitenleiste, Werkzeugleiste, Menüs) oder über `GlassSurface` für schwebende Flächen (Statusmenü). Kein Unschärfe-Leuchten, keine farbigen Lichthöfe, keine Verläufe als Hintergrund von Inhalten.
+- Gestaltete Flächen mit Verlauf gibt es an drei Stellen: Insel, Bild in der Einrichtung (`OnboardingHero`, Glanz im Akzent hinter dem App-Symbol) und App-Symbol. Sonst sind Flächen ruhig.
 - Schatten nur aus Tokens (`panelShadow`, `buttonShadow`, `knobShadow`), nie gestapelt.
 - In Renders zeichnet `GlassSurface` eine Fläche in `glassStandIn`; die echte Wirkung prüft die Person am Mac.
 
@@ -141,10 +141,29 @@ PaneScaffold(title: AlertsText.pane, symbol: "bell.badge.fill", tint: .red, subt
 
 - Jeder sichtbare Text steht in einer `*Text.swift`-Datei als `tr(en: "…", de: "…")`; Views enthalten keine Textliterale. Mehrzahl und Platzhalter sind `static func`.
 - Deutsch duzt (oder siezt, je nach `texts.anrede` in `starter.json`), Englisch spricht direkt an. Kurz und konkret: was passiert, was die Nutzerin tun kann.
-- Knöpfe sind Verben (`Erlauben`, `Exportieren`, `Weiter`, `Fertig`); `…` nur, wenn danach eine Eingabe oder ein Dialog folgt. Typografische Zeichen: „…“ im Deutschen, “…” im Englischen, `…` als ein Zeichen.
-- Keine Ausrufezeichen, keine Emoji, keine Floskeln (`nahtlos`, `mühelos`, `seamless`, `effortless`, `unlock`, `supercharge` und die anderen Wörter der Sprachpakete), keine Versprechen, keine erfundenen Zahlen.
+- Tasten und Menübefehle sagen mit einem Verb, was passiert (`Zugriff erlauben`, `Exportieren`, `In den Papierkorb legen`, `Standard verwenden`); nur die festen Wörter der Fußleiste der Einrichtung (`Weiter`, `Zurück`, `Fertig`) und von Dialogen (`OK`, `Abbrechen`) bleiben wie bei macOS. Der Imperativ im Fließtext steht in der langen Form (`Wähle`, `Klicke`, `Drücke`). `…` nur, wenn danach eine Eingabe oder ein Dialog folgt.
+- Typografische Zeichen: „…“ im Deutschen, “…” im Englischen, nie gerade Anführungszeichen; der Apostroph ist `’`; `…` als ein Zeichen. Namen von Tasten, Einträgen und Orten der Oberfläche stehen in Anführungszeichen („Datenschutz & Sicherheit“, “Use Default”), Pfade mit ` > ` ohne (Einstellungen > Allgemein). Zahl und Einheit mit schmalem geschütztem Leerzeichen (`Format`, `ByteText`, sonst `\u{202F}`). Englisch ist amerikanisch (`liter`, `vacation`), Überschriften, Titel und Tasten im Englischen in Title Case.
+- Keine Ausrufezeichen, keine Emoji, keine Floskeln (`nahtlos`, `mühelos`, `alles an einem Ort`, `seamless`, `one click away` und die anderen Wörter der Sprachpakete), keine Versprechen, keine erfundenen Zahlen. Beispieltexte des Kits sind die Vorlage für Projekte: sie sagen konkret, was die Funktion tut („Sichert Text aus jeder App in einer Liste, den neuesten zuerst.“).
 - Tastenkürzel mit den Zeichen von macOS: ⌘ ⌥ ⌃ ⇧ ⇥ ⇪ ⏎ ⌫, in der Reihenfolge ⌃⌥⇧⌘.
-- Berechtigungstexte (`App/Resources/InfoPlist.json`) sagen, wofür und was auf dem Mac bleibt.
+- Nutzungsbeschreibungen (`App/Resources/InfoPlist.json`) sagen, wofür die App den Zugriff nutzt („Die App nutzt das Mikrofon, um aufzunehmen, was du sagst.“). Eine Zusage (bleibt auf dem Mac, nichts wird hochgeladen) steht nur dabei, wenn das Projekt sie einhält und ein Test sie belegt. Die Texte des Starters sind Platzhalter: nach `bin/starter init` meldet `make check-texts` jede, die für eine Berechtigung aus `starter.json` noch unverändert ist.
+
+### Feste Begriffe der Oberfläche
+
+Ein Ding, ein Wort (S-15): Die Oberfläche nennt jedes Ding überall gleich, im Deutschen wie macOS 26. `make check-texts` meldet die Wörter der rechten Spalte in UI-Texten (Paket `begriffe`). Ein Projekt ergänzt die Tabelle um seine Fachbegriffe, trägt sie in `docs/PROJECT.md` ein und legt für die verbotenen Wörter ein Paket in `rules/projekt/pakete/` an.
+
+| Ding | Deutsch | Englisch | Nicht | Grund |
+|---|---|---|---|---|
+| Zugriff, den macOS erlaubt | Berechtigung, erlauben, erlaubt, abgelehnt | permission, allow, allowed, declined | Freigabe, erteilen, erteilt | „Freigabe“ heißt bei Apple Teilen; der Dialog von macOS sagt „Erlauben“. „Erlaubnis“ nur in „braucht deine Erlaubnis“. |
+| Fenster beim ersten Start | Einrichtung, Einrichtungsschritt | setup | Onboarding | So heißt das Fenster („Starter einrichten“). |
+| Bedienelement zum Klicken | Taste | button | Knopf | macOS nennt Schaltflächen Tasten. |
+| Gezeichnete Taste der Tastatur | Tastenkappe | key cap | Taste | trennt sie von den Tasten der Oberfläche |
+| Tastenkombination | Tastaturkurzbefehl; im Fließtext eines solchen Bereichs auch Kurzbefehl | keyboard shortcut, shortcut | Kurzbefehle als Name eines Bereichs oder Pfads | „Kurzbefehle“ ist Apples App. |
+| Menü am Statussymbol | Statusmenü | status menu | Panel, Menüleisten-Übersicht | So nennt macOS die Menüs rechts in der Menüleiste. |
+| Wahl, die dem Mac folgt | Automatisch | Automatic | System, Wie der Mac | wie Erscheinungsbild in den Systemeinstellungen |
+| Befehl Undo | Widerrufen, „Das lässt sich nicht widerrufen.“ | Undo, “This cannot be undone.” | rückgängig | Menü „Bearbeiten“ von macOS |
+| Internetauftritt | Website | website | Webseite | wie bei Apple |
+| Ort der Apps | Ordner „Programme“ (`/Applications`) | Applications folder | Programme-Ordner | So zeigt ihn der Finder. |
+| Bild im ersten Schritt | Begrüßungsschritt, Begrüßungsbild | welcome step, welcome art | Willkommensschritt | „Willkommen“ ist eine Floskel (S-04). |
 
 ## 10. Symbole
 
@@ -175,6 +194,6 @@ Renders zeigen kein echtes Glas, keine echten Fensterrahmen, keine Insel an der 
 
 - Lila Verläufe überall, Glühen, Blasen, Glas auf Glas, Schatten-Stapel.
 - Drei gleiche Karten nebeneinander ohne Aufgabe, große leere Heldenflächen, Kennzahlen-Mosaike.
-- Pillenförmige Knöpfe für alles, mehrere primäre Knöpfe, Knöpfe ohne klare Wirkung.
+- Pillenförmige Tasten für alles, mehrere primäre Tasten, Tasten ohne klare Wirkung.
 - Werbesprache (etwa `Willkommen in der Zukunft`), Emoji, Ausrufezeichen, Platzhaltertexte, erfundene Zahlen.
 - Eigene Schriften, eigene Symbolsätze, feste Farben im Code, Systemfarben (`.purple`, `.blue`) als Gestaltung.

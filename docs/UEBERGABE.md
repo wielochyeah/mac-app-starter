@@ -39,7 +39,7 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
    bin/starter init --name "<Name>" --bundle-id <com.firma.app> --accent <akzent> --symbol <sf.symbol> --anrede du
    ```
 
-   `init` schreibt `starter.json` um, entfernt die Bauunterlagen des Starters, legt Plan, Vorgaben und Strang-Plan als leere Vorlagen an, verschiebt die Entscheidungen des Starters nach `docs/STARTER_DECISIONS.md`, leert die Commit-Identität, die Unterzeile des Starters (`app.tagline`) und die Namensliste `texts.personen`, schreibt `starter.lock.json` und führt `make rules` aus, damit `CLAUDE.md` Teil A und die Wortlisten zur Anrede passen. Ohne `--non-interactive` fragt es nach und bietet die angegebenen Schalter als Vorschlag an; mit `--non-interactive` nimmt es die Angaben nur aus den Schaltern (`--name` ist dann Pflicht). Mit `--module-aus <modul>` fallen Module gleich weg. `--anrede sie` wählt die förmliche Anrede: die Texte des Kits sind in der du-Form geschrieben, `make check-texts` listet danach jede Stelle, die umzuschreiben ist. Eine eigene Unterzeile für den Willkommensschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
+   `init` schreibt `starter.json` um, entfernt die Bauunterlagen des Starters, legt Plan, Vorgaben und Strang-Plan als leere Vorlagen an, verschiebt die Entscheidungen des Starters nach `docs/STARTER_DECISIONS.md`, leert die Commit-Identität, die Unterzeile des Starters (`app.tagline`) und die Namensliste `texts.personen`, schreibt `starter.lock.json` und führt `make rules` aus, damit `CLAUDE.md` Teil A und die Wortlisten zur Anrede passen. Ohne `--non-interactive` fragt es nach und bietet die angegebenen Schalter als Vorschlag an; mit `--non-interactive` nimmt es die Angaben nur aus den Schaltern (`--name` ist dann Pflicht). Mit `--module-aus <modul>` fallen Module gleich weg. `--anrede sie` wählt die förmliche Anrede: die Texte des Kits sind in der du-Form geschrieben, `make check-texts` listet danach jede Stelle, die umzuschreiben ist. Eine eigene Unterzeile für den Begrüßungsschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
 3. Commit-Identität in `starter.json` eintragen (`commit.name`, `commit.email`), dann `make hooks`. Bis die Identität gesetzt ist, nimmt der Hook `commit-msg` keinen Commit an.
 4. Prüfen und ansehen:
 
@@ -49,7 +49,7 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
    make run              # die App einmal selbst starten
    ```
 
-   `build/shots/index.html` zeigt alle Szenen als Übersicht. Beim ersten `make run` öffnet das Onboarding.
+   `build/shots/index.html` zeigt alle Szenen als Übersicht. Beim ersten `make run` öffnet die Einrichtung.
 
 ## 3. Selbst festlegen
 
@@ -58,7 +58,7 @@ Vor dem ersten eigenen Commit:
 | Datei | Was |
 |---|---|
 | `starter.json` | Name, Bundle-ID, Anzeigename in beiden Sprachen, Akzent, Symbol, Copyright, Module, Berechtigungen, Anrede (`du` oder `sie`), Commit-Identität, Signatur |
-| `App/Resources/InfoPlist.json` | Erklärtexte der Berechtigungen, die das Projekt nutzt, konkret für diese App |
+| `App/Resources/InfoPlist.json` | Nutzungsbeschreibungen der Berechtigungen, die das Projekt nutzt, konkret für diese App (`make check-texts` meldet jede, die noch der Platzhalter des Starters ist) |
 | `docs/PROJECT.md` | Zweck, Zielgruppe, App-Formen, Ansichten, Daten, Berechtigungen, KI, Verteilung, offene Fragen |
 | `README.md` | Einleitung und „Ein neues Projekt starten“ beschreiben noch den Starter; beides durch Zweck und Einrichtung des Projekts ersetzen, Aufbau, Befehle und Module bleiben |
 | `App/Resources/AppIcon.icns` | `make icon` nach einer Änderung von Akzent oder Symbol; vor der ersten Weitergabe ein eigenes Motiv (`docs/VERTEILUNG.md`) |
@@ -82,7 +82,7 @@ Bauen, Testen und Rendern brauchen macOS; ein Linux-Container in der Cloud kann 
 
 Den Bootstrap-Prompt aus dem `README.md` mit Name, Zweck, Zielgruppe, App-Formen und Hauptansichten füllen und senden. Neue Wünsche während der Arbeit kommen in `docs/agents/VORGABEN.md`; der Agent arbeitet sie als Regel in `rules/projekt/` ein.
 
-Agenten starten die App beim Bauen nie selbst, fragen keine Berechtigung an und registrieren kein Anmeldeobjekt; sie prüfen mit `make test`, `make shots` und `--selftest`. Den Start der App, das Onboarding auf einem frischen Benutzer und die Berechtigungsdialoge prüft eine Person.
+Agenten starten die App beim Bauen nie selbst, fragen keine Berechtigung an und registrieren kein Anmeldeobjekt; sie prüfen mit `make test`, `make shots` und `--selftest`. Den Start der App, die Einrichtung auf einem frischen Benutzer und die Berechtigungsdialoge prüft eine Person.
 
 ## 5. Branchschutz
 

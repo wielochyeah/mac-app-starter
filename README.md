@@ -1,17 +1,17 @@
 # Mac-App-Starter
 
-Vorlage, aus der jede neue native Mac-App startet, auch eine fachlich völlig andere. Ein Agent baut ab dem ersten Auftrag Funktionen und muss Fenster, Einstellungen, Onboarding, Gestaltung, Sprachen und Verteilung nicht neu bauen. Gebaut wird ohne Xcode, mit den Command Line Tools allein.
+Vorlage, aus der jede neue native Mac-App startet, auch eine fachlich völlig andere. Ein Agent baut ab dem ersten Auftrag Funktionen und muss Fenster, Einstellungen, Einrichtung, Gestaltung, Sprachen und Verteilung nicht neu bauen. Gebaut wird ohne Xcode, mit den Command Line Tools allein.
 
 ![Übersicht im Hauptfenster mit dem Beispiel „Notizen“](docs/screenshots/de-light-examples.overview.png)
 
 Fertig verdrahtet sind:
 
-- vier App-Formen, frei kombinierbar: Fenster-App im Stil von Musik unter macOS 26, Menüleisten-App mit Statussymbol und Panel, Insel an der Notch (Kapsel auf Macs ohne Notch), Hintergrund mit geplanten Aufgaben und Start beim Anmelden
-- Gestaltung im Stil von VoiceBud: Tokens für Farben, Abstände, Radien, Schrift und Bewegung, sechs Akzente mit geprüften Kontrasten, Bausteine und Muster für Einstellungen und Onboarding, hell und dunkel
-- Onboarding mit Sprache, Funktionen, Berechtigungen (mit allen Zuständen bis zum Neustart) und Abschluss
+- vier App-Formen, frei kombinierbar: Fenster-App im Stil von Musik unter macOS 26, Menüleisten-App mit Statussymbol und Statusmenü, Insel an der Notch (Kapsel auf Macs ohne Notch), Hintergrund mit geplanten Aufgaben und Start beim Anmelden
+- Gestaltung im Stil von VoiceBud: Tokens für Farben, Abstände, Radien, Schrift und Bewegung, sechs Akzente mit geprüften Kontrasten, Bausteine und Muster für Einstellungen und Einrichtung, hell und dunkel
+- Einrichtung mit Sprache, Funktionen, Berechtigungen (mit allen Zuständen bis zum Neustart) und Abschluss
 - Einstellungsfenster wie die Systemeinstellungen, mit „Allgemein“, „Über“ und in Debug-Builds einer Galerie aller Bausteine
 - Englisch und Deutsch mit Wechsel ohne Neustart, deutsche Anrede einstellbar
-- globale Kurzbefehle mit Regeln gegen belegte und tippende Kombinationen
+- globale Tastaturkurzbefehle mit Regeln gegen belegte und tippende Kombinationen
 - lokale KI mit Apple Foundation Models, optional eigene Modelle über MLX mit Download und Fortschritt
 - Einstellungen als JSON, SQLite mit Migrationen, keine Netzaufrufe ohne Auftrag
 - Renders jeder Szene in beiden Sprachen und Erscheinungsbildern ohne Fenster, Selbsttest, Tests ohne XCTest
@@ -30,15 +30,15 @@ Eine Notiz öffnet sich über der Liste, aus der sie kommt, und daneben fasst Ap
 
 ### Insel
 
-Ergebnisse wachsen als Karte aus der Notch und klappen beim Überfahren mit dem ganzen Text, „Kopieren“ und einer eigenen Aktion auf.
+Ergebnisse wachsen als Karte aus der Notch und klappen unter dem Zeiger mit dem ganzen Text, „Kopieren“ und einer eigenen Aktion auf.
 
 ![Aufgeklappte Ergebniskarte der Insel](docs/screenshots/de-dark-island.done-hover.png)
 
 ### Menüleiste
 
-Das Panel unter dem Statussymbol zeigt die Abschnitte der Funktionen, hier die drei zuletzt bearbeiteten Notizen, und darunter die Befehle der App.
+Das Statusmenü unter dem Statussymbol zeigt die Abschnitte der Funktionen, hier die drei zuletzt bearbeiteten Notizen, und darunter die Befehle der App.
 
-![Panel der Menüleiste mit dem Abschnitt „Notizen“](docs/screenshots/de-light-examples.menubar.png)
+![Statusmenü mit dem Abschnitt „Notizen“](docs/screenshots/de-light-examples.menubar.png)
 
 ### Einrichtung
 
@@ -50,7 +50,7 @@ Danach wählst du die Sprache der App, Englisch oder Deutsch, und sie wechselt s
 
 ![Schritt „Sprache“](docs/screenshots/de-light-onboarding.language.png)
 
-Jede Berechtigung bekommt einen eigenen Schritt; braucht eine Freigabe einen Neustart, startet die App per Knopf neu und setzt die Einrichtung an dieser Stelle fort.
+Jede Berechtigung bekommt einen eigenen Schritt; braucht eine Berechtigung einen Neustart, startet die App mit einem Klick neu und setzt die Einrichtung an dieser Stelle fort.
 
 ![Schritt „Eingabeüberwachung“, der auf den Neustart wartet](docs/screenshots/de-dark-onboarding.permission-restart.png)
 
@@ -92,7 +92,7 @@ Schritt für Schritt in `docs/UEBERGABE.md`. Kurz:
 2. `make doctor` prüft die Werkzeuge (Command Line Tools genügen) und installiert nichts.
 3. `bin/starter init` legt Name, Bundle-ID, Akzent, Symbol und Anrede fest, entfernt die Bauunterlagen des Starters und leert die Commit-Identität; danach die eigene Identität in `starter.json` eintragen und `make hooks`.
 4. Nicht benötigte Module mit `bin/starter remove <modul>` entfernen, `docs/PROJECT.md` füllen.
-5. `make check`, `make shots`, dann `make run` und das Onboarding einmal selbst durchgehen.
+5. `make check`, `make shots`, dann `make run` und die Einrichtung einmal selbst durchgehen.
 6. Einen Agenten mit dem Prompt unten starten und die Renders der ersten Stufe ansehen; Rückmeldungen kommen in `docs/agents/VORGABEN.md`.
 
 ### Bootstrap-Prompt
@@ -117,8 +117,8 @@ Berechtigungen: <keine, Mitteilungen, Mikrofon …>. Lokale KI: <nein oder wofü
 
 - `make check` ist grün, die CI auf dem letzten Pull Request ebenso (Build-Matrix der genutzten Module, Tests, Renders).
 - Jede genutzte App-Form ist in Renders angesehen: jede Szene in en und de, hell und dunkel.
-- Das Onboarding ist einmal auf einem frischen Benutzer durchgegangen (`tccutil reset All <bundleId>` setzt nur diese App zurück).
-- Jede Berechtigung ist mit der installierten App aus dem DMG erteilt, abgelehnt und nach einem Neustart erkannt worden.
+- Die Einrichtung ist einmal auf einem frischen Benutzer durchgegangen (`tccutil reset All <bundleId>` setzt nur diese App zurück).
+- Jede Berechtigung ist mit der installierten App aus dem DMG erlaubt, abgelehnt und nach einem Neustart erkannt worden.
 - Die Insel ist an einem Mac mit und einem ohne Notch geprüft, falls sie genutzt wird.
 - Das DMG öffnet mit gestaltetem Fenster und installiert auf einem zweiten Mac oder Benutzer; bei Developer ID bestehen `codesign --verify --deep --strict`, `spctl -a -vv` und `xcrun stapler validate`.
 - Das App-Symbol ist ein eigenes Motiv, kein SF Symbol.
@@ -134,10 +134,10 @@ Berechtigungen: <keine, Mitteilungen, Mikrofon …>. Lokale KI: <nein oder wofü
 | `starter.json` | die eine Konfiguration: Name, Bundle-ID, Akzent, Symbol, Module, Berechtigungen, Sprachen, Commit-Identität, Signatur |
 | `starter.manifest.json` | Kit-, gemeinsame und Projekt-Pfade, Module mit ihren Pfaden und Abhängigkeiten |
 | `starter.lock.json` | Starter-Fassung und Prüfsummen der Kit-Dateien eines Projekts |
-| `App/Sources/Kit/` | immer dabei: Sprache, Einstellungen, Datenbank, Registry, Design, Onboarding, Einstellungsfenster, Berechtigungen, Galerie, Render, Start |
+| `App/Sources/Kit/` | immer dabei: Sprache, Einstellungen, Datenbank, Registry, Design, Einrichtung, Einstellungsfenster, Berechtigungen, Galerie, Render, Start |
 | `App/Sources/Modules/` | entfernbare Module, je Ordner eines |
 | `App/Sources/Features/` | Funktionen des Projekts |
-| `App/Resources/` | Erklärtexte der Berechtigungen (`InfoPlist.json`), App-Symbol, Hinweise zu Fremdcode für „Über“ (`Notices/`) |
+| `App/Resources/` | Nutzungsbeschreibungen der Berechtigungen (`InfoPlist.json`), App-Symbol, Hinweise zu Fremdcode für „Über“ (`Notices/`) |
 | `App/Tests/` | Swift-Tests mit eigenem Harness |
 | `ai-worker/` | Python-Worker für MLX (Modul `mlx`) | <!-- modul:mlx -->
 | `tools/` | App-Symbol und DMG-Hintergrund in Swift, Einstellungen für dmgbuild |
@@ -156,10 +156,10 @@ Die Regeln stehen einmal in `rules/` und werden mit `make rules` verteilt: nach 
 | Modul | Inhalt | Standard | Entfernen |
 |---|---|---|---|
 | `window` | Hauptfenster mit Seitenleiste, Suche und Bausteinen im Stil von Musik | an | `bin/starter remove window` |
-| `menubar` | Statussymbol mit Zuständen, Panel, Menü; ohne `window` ohne Dock-Symbol | an | `bin/starter remove menubar` |
+| `menubar` | Statussymbol mit Zuständen, Statusmenü, Kontextmenü; ohne `window` ohne Dock-Symbol | an | `bin/starter remove menubar` |
 | `island` | Insel an der Notch, Kapsel ohne Notch, alle Zustände bis zur Ergebniskarte | an | `bin/starter remove island` |
 | `background` | geplante Aufgaben, Start beim Anmelden | an | `bin/starter remove background` |
-| `hotkeys` | globale Kurzbefehle mit Aufnahme und Regeln | an | `bin/starter remove hotkeys` |
+| `hotkeys` | globale Tastaturkurzbefehle mit Aufnahme und Regeln | an | `bin/starter remove hotkeys` |
 | `ai` | lokale KI mit Apple Foundation Models | an | `bin/starter remove ai` |
 | `mlx` | eigene Modelle über MLX, Downloads mit Fortschritt (braucht `ai`) | aus | `bin/starter remove mlx` |
 | `examples` | Beispiel-Feature, das alle Module nutzt | an | `bin/starter strip-examples` |
@@ -190,7 +190,7 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 
 ## Betrieb
 
-Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Dennoch öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert erteilte Berechtigungen. Mit `signing.identity` in `starter.json` signiert `make dmg` mit Developer ID und Hardened Runtime; mit `signing.notarize: true` notarisiert es App und DMG mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
+Die App läuft auf Apple Silicon ab macOS 26. Standard ist die Ad-hoc-Signatur: Empfänger öffnen die App beim ersten Mal über „Dennoch öffnen“ in den Systemeinstellungen unter „Datenschutz & Sicherheit“, und jeder neue Build verliert erlaubte Berechtigungen. Mit `signing.identity` in `starter.json` signiert `make dmg` mit Developer ID und Hardened Runtime; mit `signing.notarize: true` notarisiert es App und DMG mit einem Profil aus dem Schlüsselbund. Das Anmeldeobjekt funktioniert nur aus einem installierten Ort wie `/Applications` (Finder: „Programme“). Einzelheiten in `docs/VERTEILUNG.md`.
 
 ## Pflege
 

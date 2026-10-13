@@ -14,8 +14,8 @@ Stand: `<TT.MM.JJJJ>`, geprüft auf Commit `<Hash>`
 
 | Kennung | Priorität | Kriterium | Prüfung | Strang | Ergebnis |
 |---|---|---|---|---|---|
-| AK-01 | MUSS | Das Onboarding öffnet beim ersten Start, jeder Schritt passt in beiden Sprachen ohne Abschneiden | `[Render] onboarding.*`, `[Klick]` nach `tccutil reset All <bundleId>` | | |
-| AK-02 | MUSS | Jede Berechtigung aus `starter.json` lässt sich erteilen, ablehnen und nach einem Neustart erkennen | `[Installiert]` | | |
+| AK-01 | MUSS | Die Einrichtung öffnet beim ersten Start, jeder Schritt passt in beiden Sprachen ohne Abschneiden | `[Render] onboarding.*`, `[Klick]` nach `tccutil reset All <bundleId>` | | |
+| AK-02 | MUSS | Jede Berechtigung aus `starter.json` lässt sich erlauben, ablehnen und nach einem Neustart erkennen | `[Installiert]` | | |
 
 ## 2. Hauptansichten
 
