@@ -206,7 +206,7 @@ def decide(event_name, event, state, committer="", changed=None):
         return off
     repository = event.get("repository") or {}
     default = repository.get("default_branch") or "main"
-    ref = event.get("ref") or os.environ.get("GITHUB_REF", "")
+    ref = event.get("ref") or ""
     tag = ref.startswith("refs/tags/v")
     if event_name == "pull_request":
         draft = bool((event.get("pull_request") or {}).get("draft"))
@@ -256,7 +256,12 @@ def plan(root, event_name="", event=None, env=None):
 def github_event():
     path = os.environ.get("GITHUB_EVENT_PATH")
     data = read_json(Path(path)) if path else None
-    return os.environ.get("GITHUB_EVENT_NAME", ""), data if isinstance(data, dict) else {}
+    data = data if isinstance(data, dict) else {}
+    # The ref comes from the event, or from the runner for events whose payload has none; decide() itself
+    # never reads the environment, so its tests give the same answer on a tag run as anywhere else.
+    if not data.get("ref") and os.environ.get("GITHUB_REF"):
+        data["ref"] = os.environ["GITHUB_REF"]
+    return os.environ.get("GITHUB_EVENT_NAME", ""), data
 
 
 def main(argv=None):

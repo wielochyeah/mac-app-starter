@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -943,6 +944,13 @@ class CiPlanTests(unittest.TestCase):
         self.assertEqual(jobs("pull_request", pr, changed=["README.md", "App/Sources/Kit/X.swift"]), "c--")
         self.assertEqual(jobs("pull_request", pr, changed=["THIRD_PARTY_NOTICES.md"]), "c--")
         self.assertEqual(jobs("push", main, changed=[".claude/skills/x/SKILL.md"]), "---")
+
+    def test_the_runner_ref_does_not_leak_into_decisions(self):
+        # A tag run sets GITHUB_REF to the tag; a pull request event without "ref" must still be judged as one.
+        pr = {"pull_request": {"draft": False}, "repository": {"default_branch": "main"}}
+        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/tags/v9.9.9"}):
+            plan = ci_plan.decide("pull_request", pr, "project", "", ["README.md"])
+        self.assertEqual((plan["check"], plan["docs"]), (False, True))
 
     def test_combinations_for_make_typecheck(self):
         root = self.make_tree(["MenuBar"], None)
