@@ -118,6 +118,17 @@ final class AppFormTests: TestSuite {
             expect(demo.demo && demo.errors.isEmpty && !demo.isTool)
             expect(!LaunchFlags.parse(["app", "--demo", "--selftest"]).errors.isEmpty)
         }
+
+        test("tool runs are headless without STARTER_HEADLESS; normal launches and --demo follow it") {
+            for args in [["app", "--render", "/x"], ["app", "--selftest"], ["app", "--permission-probe", "microphone"]] {
+                let flags = LaunchFlags.parse(args)
+                expect(flags.isTool, "\(args)")
+                expect(RenderMode.headless(environment: [:], tool: flags.isTool), "\(args) headless")
+            }
+            expect(!RenderMode.headless(environment: [:], tool: LaunchFlags.parse(["app", "--demo"]).isTool), "the demo is a real launch")
+            expect(!RenderMode.headless(environment: ["STARTER_HEADLESS": "0"], tool: false))
+            expect(RenderMode.headless(environment: ["STARTER_HEADLESS": "1"], tool: false))
+        }
     }
 }
 #endif
