@@ -38,6 +38,8 @@ extension Metrics {
     /// Leading icon of an inline notice.
     static let noticeIcon: CGFloat = 15
     static let noticeIconColumn: CGFloat = 18
+    /// Narrowest text column of a notice with its chip beside it; narrower puts the chip below.
+    static let noticeTextMin: CGFloat = 240
     /// Large status mark in the onboarding slot (check 15 pt).
     static let statusMarkLarge: CGFloat = 15
     /// Empty state inside a list card.
@@ -86,6 +88,9 @@ extension Theme {
     /// Inline notice fill and edge for a tone colour (VoiceBud speed hint: 10 % / 16 %, edge 35 %).
     func noticeFill(_ tone: Color) -> Color { tone.opacity(dark ? 0.16 : 0.10) }
     func noticeEdge(_ tone: Color) -> Color { tone.opacity(0.35) }
+    /// An info notice is neutral: no colour, so it never reads like an error, a success or a
+    /// warning in an app whose accent is red, green or orange.
+    var noticeNeutralFill: Color { dark ? .white.opacity(ThemeHex.noticeNeutralDark) : .black.opacity(ThemeHex.noticeNeutralLight) }
 }
 
 // MARK: Onboarding steps

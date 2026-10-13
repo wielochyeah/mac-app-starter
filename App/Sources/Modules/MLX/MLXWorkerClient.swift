@@ -12,6 +12,8 @@ import Observation
 /// - a crash fails the open requests; the next start waits per `RestartPolicy` (0, 5, 30, 300 s
 ///   for crashes in a row) and a request that died in the first crash is sent once more.
 /// - cancel: cancelling the calling Task sends "cancel"; the worker stops after the next token.
+///   A worker that has not confirmed it within `cancelGrace` is stuck and is killed (our own kill,
+///   so the next request starts a fresh worker at once).
 /// - stderr goes to `MLXPaths.logFile`, stdout is the protocol only.
 @Observable final class MLXWorkerClient {
     /// How to start the worker.
@@ -246,7 +248,7 @@ import Observation
         starts += 1
         phase = .starting
         startTicker()
-        Log.info("mlx: worker started (pid \(p.processIdentifier))", "mlx")
+        Log.info("mlx: worker started (pid \(public: p.processIdentifier))", "mlx")
     }
 
     @discardableResult
@@ -282,7 +284,7 @@ import Observation
             }
         case .error(let id, let kind, let message):
             lastProblem = "\(kind): \(message)"
-            Log.warn("mlx: worker error \(kind): \(message)", "mlx")
+            Log.warn("mlx: worker error \(public: kind): \(message)", "mlx")
             if let id { finish(id, .failure(kind == "mlx-missing" ? AIError.unavailable(.notInstalled) : AIError.failed(lastProblem ?? kind))) }
         case .exit(let reason):
             idleExit = reason == "idle"
@@ -309,14 +311,14 @@ import Observation
         loadedModel = nil
         if planned {
             phase = .stopped
-            Log.info("mlx: worker ended (\(idleExit ? "idle" : ownKill ? "stopped" : "exit \(code)"))", "mlx")
+            Log.info("mlx: worker ended (\(public: idleExit ? "idle" : ownKill ? "stopped" : "exit \(code)"))", "mlx")
         } else {
             crashes += 1
             lastCrash = now()
             lastProblem = "worker exited with \(code)"
             let wait = policy.delay(afterCrashes: crashes)
             phase = wait > 0 ? .waiting(until: now().addingTimeInterval(wait)) : .stopped
-            Log.error("mlx: worker crashed (exit \(code), \(crashes) in a row, next start in \(Int(wait)) s)", "mlx")
+            Log.error("mlx: worker crashed (exit \(public: code), \(public: crashes) in a row, next start in \(public: Int(wait)) s)", "mlx")
         }
         for p in open { finish(p.id, .failure(p.id == timedOutID ? AIError.timeout : AIError.workerCrashed)) }
         timedOutID = nil
@@ -332,7 +334,7 @@ import Observation
     private func killWorker(_ why: String) {
         guard let p = process else { return }
         lastProblem = why
-        Log.warn("mlx: \(why); stopping the worker", "mlx")
+        Log.warn("mlx: \(public: why); stopping the worker", "mlx")
         p.terminate()
         let pid = p.processIdentifier
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { if p.isRunning { kill(pid, SIGKILL) } }
@@ -363,6 +365,12 @@ import Observation
         for p in pending.values {
             if let c = p.cancelAt, t.timeIntervalSince(c) > cancelGrace {
                 finish(p.id, .failure(AIError.cancelled))
+                // a worker that ignores a cancel is stuck in the generation: it would never go
+                // idle and every later request would queue behind it until its timeout
+                if p.process == generation, process != nil, p.started != nil {
+                    ownKill = true
+                    killWorker("request \(p.id) did not stop within \(Int(cancelGrace)) s of its cancel")
+                }
                 continue
             }
             let deadline = p.started.map { $0.addingTimeInterval(p.timeout) } ?? p.sent.addingTimeInterval(p.timeout + queueGrace)

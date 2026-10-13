@@ -79,8 +79,8 @@ struct JobRow: View {
                 Text(job.title()).font(TypeScale.body).foregroundStyle(isEnabled ? t.fg : t.fg2)
                 summary(record).font(TypeScale.subtitle).foregroundStyle(t.fg2)
                 if case .failed(let message) = record.outcome, !running {
-                    // the same warning tone as the badge, text-grade (>= 4.5:1)
-                    Text(message).font(TypeScale.subtitle).foregroundStyle(t.warnText)
+                    // the same error red as the badge and every other failure, text-grade (>= 4.5:1)
+                    Text(message).font(TypeScale.subtitle).foregroundStyle(t.strikeText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -132,13 +132,13 @@ struct JobRow: View {
         }
     }
 
-    /// One tone per state: done green, failed the warning tone (badge and message), nothing to do
+    /// One tone per state: done green, failed red like errors everywhere (badge and message), nothing to do
     /// or not run grey; a switched-off job's badge is grey whatever its last outcome.
     static func tone(_ outcome: JobOutcome?, enabled: Bool = true) -> Badge.Tone {
         guard enabled else { return .neutral }
         return switch outcome {
         case .done: .ok
-        case .failed: .warn
+        case .failed: .error
         case .nothingToDo, nil: .neutral
         }
     }

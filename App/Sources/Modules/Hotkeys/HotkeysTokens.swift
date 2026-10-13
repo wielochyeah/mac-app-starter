@@ -22,9 +22,10 @@ extension Metrics {
         static let recordingRingLine: CGFloat = 1
         /// The "Press keys …" placeholder while recording.
         static let recordingPlaceholderHeight: CGFloat = 22
-        /// Reserved height of the onboarding step's card and footnote, so the page does not move
-        /// when a refusal makes the row taller.
-        static let stepCardArea: CGFloat = 170
+        /// Height the onboarding step's card and footnote count with when the page is centred
+        /// (the row with a two-line footnote). A refusal makes the row taller below it, into the
+        /// free space under the centred page, so nothing above moves.
+        static let stepCardArea: CGFloat = 110
     }
 }
 

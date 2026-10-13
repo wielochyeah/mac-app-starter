@@ -12,13 +12,18 @@ struct IslandPane: View {
     var body: some View {
         let dodges = Island.shared.notchBusy != nil
         let style = (IslandStyle(rawValue: settings[.islandStyle]) ?? .auto).shown(dodges: dodges)
-        PaneScaffold(title: IslandText.pane, symbol: Self.symbol, tint: .black) {
+        let offered = IslandStyle.offered(dodges: dodges)
+        PaneScaffold(title: IslandText.pane, symbol: Self.symbol, tint: .black, subtitle: IslandText.paneIntro) {
             IslandStyleStage(style: style)
-            SettingsSection(footnote: IslandText.styleNote(style, dodges: dodges), footnoteLines: 2) {
-                TilePicker(IslandStyle.offered(dodges: dodges).map { TileOption($0, title: IslandText.style($0)) },
+            // the note explains the chosen shape, so it sits right under the tiles
+            SettingsSection(footnote: IslandText.styleNote(style, dodges: dodges),
+                            footnoteReserve: offered.map { IslandText.styleNote($0, dodges: dodges) }) {
+                TilePicker(offered.map { TileOption($0, title: IslandText.style($0)) },
                            selection: binding(.islandStyle, map: { (IslandStyle(rawValue: $0) ?? .auto).shown(dodges: dodges) },
                                               back: \.rawValue),
                            tone: .settings) { IslandStyleTile(style: $0) }
+            }
+            SettingsSection {
                 PickerRow(IslandText.confirmation, subtitle: IslandText.confirmationDetail,
                           options: IslandPrefs.confirmChoices.map { ($0, IslandText.confirmChoice($0)) },
                           selection: binding(.islandConfirmSeconds, map: Self.nearestChoice, back: { $0 }))

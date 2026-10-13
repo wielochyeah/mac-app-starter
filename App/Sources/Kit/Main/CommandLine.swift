@@ -112,9 +112,11 @@ enum Launch {
             for e in flags.errors { FileHandle.standardError.write(Data("\(AppConfig.name): \(e)\n".utf8)) }
             exit(2)
         }
+        // tool runs never touch the person's data or screen, also without STARTER_HEADLESS=1
+        if flags.isTool { RenderMode.enterHeadless() }
         if let probe = flags.permissionProbe { exit(PermissionProbe.answer(probe)) }
         let app = NSApplication.shared
-        if flags.isTool || RenderMode.isHeadless {
+        if RenderMode.isHeadless {
             // no Dock icon, no menu bar, never activates; windows are never ordered front
             app.setActivationPolicy(.prohibited)
             HeadlessWindows.install()

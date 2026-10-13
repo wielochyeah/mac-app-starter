@@ -137,7 +137,8 @@ final class Database {
             throw Failure.open(message)
         }
         sqlite3_busy_timeout(handle, 3000)
-        try executeScript("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL;")
+        // secure_delete: deleted rows are overwritten in the file, not left in free pages
+        try executeScript("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL; PRAGMA secure_delete = ON;")
         try migrate(migrations)
     }
 
@@ -229,13 +230,33 @@ final class Database {
         for migration in migrations where migration.version > current {
             do {
                 try transaction {
+                    // another process (a second copy of the app) may have migrated while this one
+                    // waited for the write lock: read the version again under the lock
+                    let now = try storedVersion()
+                    if now > known { throw Failure.newerSchema(found: now, known: known) }
+                    guard now < migration.version else { return }
                     try executeScript(migration.sql)
                     try executeScript("PRAGMA user_version = \(migration.version)")
                 }
+            } catch let failure as Failure {
+                if case .newerSchema = failure { throw failure }
+                throw Failure.migration(migration.version, "\(failure)")
             } catch {
                 throw Failure.migration(migration.version, "\(error)")
             }
         }
+    }
+
+    private func storedVersion() throws -> Int {
+        try query("PRAGMA user_version") { $0.int("user_version") ?? 0 }.first ?? 0
+    }
+
+    /// Rewrites the full-text index `table` in one piece and empties the write-ahead log, so text
+    /// that was deleted is no longer in the file (FTS5 keeps old index segments until they are
+    /// merged, the WAL keeps old pages until a checkpoint). Call after deleting for good.
+    func compact(fullText table: String? = nil) throws {
+        if let table { try execute("INSERT INTO \(table)(\(table)) VALUES('optimize')") }
+        try executeScript("PRAGMA wal_checkpoint(TRUNCATE)")
     }
 
     private var errorMessage: String {

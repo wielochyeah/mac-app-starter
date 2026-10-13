@@ -95,7 +95,7 @@ struct GeneralPane: View {
                                set: { localizer.choice = Lang(rawValue: $0) })
         let appearance = Binding(get: { AppAppearance(stored: settings[.appAppearance]).rawValue },
                                  set: { settings[.appAppearance] = $0; AppAppearance.apply() })
-        PaneScaffold(title: SettingsText.general, symbol: "gearshape.fill", tint: .graphite) {
+        PaneScaffold(title: SettingsText.general, symbol: "gearshape.fill", tint: .graphite, subtitle: SettingsText.generalIntro) {
             SettingsSection(SettingsText.language, footnote: SettingsText.languageNote) {
                 // each language in its own name, so it can be found in either language
                 PickerRow(SettingsText.interface, subtitle: SettingsText.interfaceDetail,

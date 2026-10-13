@@ -41,7 +41,7 @@ final class CarbonHotkeyBackend: HotkeyBackend {
         var specs = [EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed)),
                      EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))]
         let status = InstallEventHandler(GetApplicationEventTarget(), carbonHotkeyHandler, specs.count, &specs, nil, nil)
-        if status != noErr { Log.error("hotkeys: InstallEventHandler failed (\(status))", "hotkeys") }
+        if status != noErr { Log.error("hotkeys: InstallEventHandler failed (\(public: status))", "hotkeys") }
     }
 
     /// Exclusive first: another app on the same keys stays silent while this app holds them,

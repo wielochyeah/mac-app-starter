@@ -74,6 +74,24 @@ nonisolated enum ThemeHex {
     static let cardDark: UInt32 = 0x2A2A2D
     static let fgLight: UInt32 = 0x1D1D1F
     static let fgDark: UInt32 = 0xF5F5F7
+    /// Secondary text colours, used at the opacities below. `fg2`, `prose` and `sideGroup` are
+    /// text (>= 4.5:1 on window, card and sidebar panel); `fg3` is for placeholders, disabled
+    /// states and decorative glyphs only (chevrons, a search loupe), never for text people read.
+    static let secondaryLight: UInt32 = 0x3C3C43
+    static let secondaryDark: UInt32 = 0xEBEBF5
+    static let fg2Light = 0.74
+    static let fg2Dark = 0.6
+    static let fg3Light = 0.42
+    static let fg3Dark = 0.36
+    static let proseLight = 0.80
+    static let sideGroupLight = 0.74
+    static let sideGroupDark = 0.54
+    /// The floating sidebar panel (macOS 26) and the renders' stand-in for it.
+    static let sidebarPanelLight: UInt32 = 0xF1F1F2
+    static let sidebarPanelDark: UInt32 = 0x2A2A2B
+    /// Neutral fill of an info notice: black (light) / white (dark) at these opacities.
+    static let noticeNeutralLight = 0.05
+    static let noticeNeutralDark = 0.06
     /// Switch off (light opaque; dark white at `switchOffDarkAlpha`, sits on cards).
     static let switchOffLight: UInt32 = 0xD4D4D9
     static let switchOffDarkAlpha = 0.17
@@ -92,7 +110,11 @@ nonisolated enum ThemeHex {
     /// Errors: the mark (symbols, dots, rings; >= 3:1) and the text-grade red (>= 4.5:1).
     static let strikeLight: UInt32 = 0xD9363E
     static let strikeDark: UInt32 = 0xFF6B6B
-    static let strikeTextLight: UInt32 = 0xC4162E
+    static let strikeTextLight: UInt32 = 0xB5122A
+    static let strikeTextDark: UInt32 = 0xFF8A8A
+    /// Error badge tint: the mark at these opacities.
+    static let strikeSoftLight = 0.10
+    static let strikeSoftDark = 0.14
     static let warnSoftLight = 0.16
     static let warnSoftDark = 0.2
     /// Chip and neutral badge: black (light) / white (dark) at these opacities.
@@ -141,7 +163,7 @@ struct Theme {
     /// Sidebar before macOS 26 (flush), and the static stand-in for the sidebar column.
     var sidebarBg: Color { dark ? Color(hex: 0x262628) : Color(hex: 0xE2E2E5) }
     /// The floating sidebar panel drawn by macOS 26 (renders imitate it with this).
-    var sidebarPanel: Color { dark ? Color(hex: 0x2A2A2B) : Color(hex: 0xF1F1F2) }
+    var sidebarPanel: Color { Color(hex: dark ? ThemeHex.sidebarPanelDark : ThemeHex.sidebarPanelLight) }
     var sidebarPanelStroke: Color { dark ? .white.opacity(0.1) : .black.opacity(0.06) }
     var card: Color { Color(hex: dark ? ThemeHex.cardDark : ThemeHex.cardLight) }
     var cardStroke: Color { dark ? .white.opacity(0.075) : .black.opacity(0.09) }
@@ -154,11 +176,18 @@ struct Theme {
 
     // MARK: Text
     var fg: Color { Color(hex: dark ? ThemeHex.fgDark : ThemeHex.fgLight) }
-    var fg2: Color { dark ? Color(hex: 0xEBEBF5, opacity: 0.6) : Color(hex: 0x3C3C43, opacity: 0.64) }
-    var fg3: Color { dark ? Color(hex: 0xEBEBF5, opacity: 0.36) : Color(hex: 0x3C3C43, opacity: 0.42) }
-    /// Running sentences (onboarding, explanations): about 5.5:1 on the window in light mode.
-    var prose: Color { dark ? fg2 : Color(hex: 0x3C3C43, opacity: 0.80) }
-    var sideGroup: Color { dark ? Color(hex: 0xEBEBF5, opacity: 0.42) : Color(hex: 0x3C3C43, opacity: 0.55) }
+    /// Secondary text: subtitles, values, times, counts, hints (>= 4.5:1).
+    var fg2: Color { secondary(dark ? ThemeHex.fg2Dark : ThemeHex.fg2Light) }
+    /// Placeholders, disabled states and decorative glyphs only; never text people have to read.
+    var fg3: Color { secondary(dark ? ThemeHex.fg3Dark : ThemeHex.fg3Light) }
+    /// Running sentences (onboarding, explanations): about 5.4:1 on the window in light mode.
+    var prose: Color { dark ? fg2 : secondary(ThemeHex.proseLight) }
+    /// Group titles of a sidebar (>= 4.5:1 on the sidebar panel).
+    var sideGroup: Color { secondary(dark ? ThemeHex.sideGroupDark : ThemeHex.sideGroupLight) }
+
+    private func secondary(_ opacity: Double) -> Color {
+        Color(hex: dark ? ThemeHex.secondaryDark : ThemeHex.secondaryLight, opacity: opacity)
+    }
 
     // MARK: Interaction
     var sideSel: Color { dark ? .white.opacity(0.09) : .black.opacity(0.075) }
@@ -209,10 +238,11 @@ struct Theme {
     /// Status colours as text on window/card backgrounds and on their badge tints (>= 4.5:1).
     var okText: Color { dark ? ok : Color(hex: ThemeHex.okTextLight) }
     var warnText: Color { dark ? warn : Color(hex: ThemeHex.warnTextLight) }
-    var strikeText: Color { dark ? strike : Color(hex: ThemeHex.strikeTextLight) }
+    var strikeText: Color { Color(hex: dark ? ThemeHex.strikeTextDark : ThemeHex.strikeTextLight) }
     /// Badge tints (`Badge`): the tone's colour at a low opacity.
     var okSoft: Color { ok.opacity(dark ? ThemeHex.okSoftDark : ThemeHex.okSoftLight) }
     var warnSoft: Color { warn.opacity(dark ? ThemeHex.warnSoftDark : ThemeHex.warnSoftLight) }
+    var strikeSoft: Color { strike.opacity(dark ? ThemeHex.strikeSoftDark : ThemeHex.strikeSoftLight) }
 
     // MARK: Window chrome in renders
     var trafficRed: Color { Color(hex: 0xFF5F57) }

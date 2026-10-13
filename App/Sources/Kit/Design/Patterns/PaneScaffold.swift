@@ -132,7 +132,8 @@ struct SettingsColumn<Content: View>: View {
 
 /// A group of settings: label above (12.5 semibold `fg2`), the rows in one `Card` with hairlines
 /// between them (added automatically, also around rows that appear conditionally), and an optional
-/// footnote below. `footnoteLines` reserves height when the footnote text changes with a choice.
+/// footnote below. When the footnote changes with a choice, `footnoteReserve` lists every text it
+/// can show, so the section keeps the height of the longest one (`footnoteLines`: fixed lines).
 ///
 ///     SettingsSection(MyText.language, footnote: MyText.languageNote) {
 ///         PickerRow(MyText.interface, options: …, selection: $lang)
@@ -142,14 +143,16 @@ struct SettingsSection<Content: View>: View {
     var title: String?
     var footnote: String?
     var footnoteLines: Int
+    var footnoteReserve: [String]
     var tone: TextTone
     let content: Content
 
-    init(_ title: String? = nil, footnote: String? = nil, footnoteLines: Int = 0, tone: TextTone = .settings,
-         @ViewBuilder content: () -> Content) {
+    init(_ title: String? = nil, footnote: String? = nil, footnoteLines: Int = 0, footnoteReserve: [String] = [],
+         tone: TextTone = .settings, @ViewBuilder content: () -> Content) {
         self.title = title
         self.footnote = footnote
         self.footnoteLines = footnoteLines
+        self.footnoteReserve = footnoteReserve
         self.tone = tone
         self.content = content()
     }
@@ -166,7 +169,7 @@ struct SettingsSection<Content: View>: View {
                 }
             }
             if let footnote {
-                Footnote(footnote, lines: footnoteLines, tone: tone)
+                Footnote(footnote, lines: footnoteLines, reserve: footnoteReserve, tone: tone)
                     .transaction { $0.animation = nil }   // swaps, never animates (VoiceBud)
             }
         }

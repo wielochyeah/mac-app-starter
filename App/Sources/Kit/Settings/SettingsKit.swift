@@ -50,7 +50,12 @@ enum SettingsScenes {
             RenderScene(id: "settings.about-full", size: CGSize(width: paneSize.width, height: Metrics.aboutFullRender)) { AnyView(AboutPane(info: sampleAbout, copied: true)) },
             // the bundled file of the render language; the sample only when the build has none
             RenderScene(id: "settings.notices", size: .zero) {
-                AnyView(RenderBoard { NoticesSheet(text: AboutInfo.bundledNotices(Localizer.shared.lang) ?? SettingsSampleText.notices) {} })
+                // a sheet has the rounded corners of a window and no lights
+                AnyView(RenderBoard {
+                    StaticWindow(size: Metrics.noticesSheet, lights: WindowLights.none) {
+                        NoticesSheet(text: AboutInfo.bundledNotices(Localizer.shared.lang) ?? SettingsSampleText.notices) {}
+                    }
+                })
             },
         ]
         Registry.gallery += [

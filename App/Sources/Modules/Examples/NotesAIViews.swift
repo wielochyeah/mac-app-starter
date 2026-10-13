@@ -57,7 +57,7 @@ struct NotesAISection: View {
         case .running(let partial):
             result(t) {
                 Text(partial.isEmpty ? NotesText.writing : partial)
-                    .foregroundStyle(partial.isEmpty ? t.fg3 : t.prose)
+                    .foregroundStyle(partial.isEmpty ? t.fg2 : t.prose)
             }
         case .done(let text):
             result(t) {

@@ -21,7 +21,7 @@ enum HeadlessWindows {
         for (original, replacement) in pairs {
             guard let a = class_getInstanceMethod(NSWindow.self, original),
                   let b = class_getInstanceMethod(NSWindow.self, replacement) else {
-                Log.error("headless: cannot swizzle \(original)", "app")
+                Log.error("headless: cannot swizzle \(public: original)", "app")
                 continue
             }
             method_exchangeImplementations(a, b)

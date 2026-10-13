@@ -11,11 +11,16 @@ import FoundationModels
 /// A clipboard for tests: never touches the system pasteboard.
 final class NotesTestPasteboard: NotesPasteboard {
     var value: String?
+    var marks: [String]
     var written: [String] = []
 
-    init(_ value: String?) { self.value = value }
+    init(_ value: String?, marks: [String] = []) {
+        self.value = value
+        self.marks = marks
+    }
 
     func text() -> String? { value }
+    func types() -> [String] { ["public.utf8-plain-text"] + marks }
     func write(_ text: String) { written.append(text) }
 }
 
@@ -88,6 +93,78 @@ final class ExamplesTests: TestSuite {
             expectEqual(store.note(note.id)?.body, "Line edited")
             store.append(note.id, "Summary")
             expectEqual(store.note(note.id)?.body, "Line edited\n\nSummary")
+        }
+
+        test("the open editor keeps Add to Note and Use Title through the next keystrokes") {
+            let store = emptyStore()
+            guard let note = store.add(title: "Trip", body: "Passport") else { return fail("no note") }
+            var editor = NoteEditorText()
+            editor.load(note, draft: store.draft(note.id))
+            // what the view does: every keystroke goes to the store, every store change to follow()
+            @MainActor func type(_ more: String) {
+                editor.body += more
+                store.edit(note.id, title: editor.title, body: editor.body)
+            }
+            @MainActor func storeChanged() {
+                if let stored = store.note(note.id) { editor.follow(stored, draft: store.draft(note.id)) }
+            }
+            type(" and charger")
+            store.append(note.id, "Summary: bring the passport.")
+            storeChanged()
+            expectEqual(editor.body, "Passport and charger\n\nSummary: bring the passport.", "the editor shows the summary")
+            type("!")
+            store.flush()
+            storeChanged()
+            expectEqual(store.note(note.id)?.body, "Passport and charger\n\nSummary: bring the passport.!", "summary kept")
+            store.rename(note.id, to: "Passport reminder")
+            storeChanged()
+            expectEqual(editor.title, "Passport reminder")
+            type("?")
+            store.flush()
+            expectEqual(store.note(note.id)?.title, "Passport reminder", "taken title kept")
+        }
+
+        test("the editor loads a waiting edit and does not follow the store while one waits") {
+            let store = emptyStore()
+            guard let note = store.add(title: "A", body: "one") else { return fail("no note") }
+            store.edit(note.id, title: "A", body: "one two")
+            var editor = NoteEditorText()
+            editor.load(note, draft: store.draft(note.id))
+            expectEqual(editor.body, "one two", "the edit not written yet wins")
+            editor.load(NoteItem.with(note, title: "X", body: "X"), draft: nil)
+            expectEqual(editor.body, "one two", "loaded once")
+            editor.body = "one two three"
+            store.edit(note.id, title: editor.title, body: editor.body)
+            editor.follow(note, draft: store.draft(note.id))
+            expectEqual(editor.body, "one two three", "typing waits to be written: the editor stays")
+        }
+
+        test("Move to Trash right after typing keeps the typed text") {
+            let store = emptyStore()
+            guard let note = store.add(title: "Draft", body: "first") else { return fail("no note") }
+            store.edit(note.id, title: "Draft", body: "first and second")
+            store.trash(note.id)
+            expect(!store.isSaving, "nothing waits after the trash")
+            store.restore(note.id)
+            expectEqual(store.note(note.id)?.body, "first and second")
+        }
+
+        test("a note deleted for good leaves no text in the file, its index or its log") {
+            let url = tempDir().appendingPathComponent("notes.sqlite")
+            let store = NotesStore(url: url, now: { NotesSamples.now }, seed: false)
+            guard let gone = store.add(title: "Zebrafinch", body: "quokkaword secret") else { return fail("no note") }
+            for i in 0..<20 { store.add(title: "Keep \(i)", body: "other words \(i)") }
+            expectEqual(store.search("quokkaword").map(\.id), [gone.id])
+            store.trash(gone.id)
+            store.delete(gone.id)
+            expect(store.search("quokkaword").isEmpty)
+            var bytes = Data()
+            for suffix in ["", "-wal"] {
+                bytes.append((try? Data(contentsOf: URL(fileURLWithPath: url.path + suffix))) ?? Data())
+            }
+            expect(!bytes.isEmpty, "the file exists")
+            expect(bytes.range(of: Data("quokkaword".utf8)) == nil, "body text left in the file")
+            expect(bytes.range(of: Data("Zebrafinch".utf8)) == nil, "title left in the file")
         }
 
         test("an edit is written after the autosave pause") {
@@ -208,6 +285,17 @@ final class ExamplesTests: TestSuite {
             expectEqual(NotesCapture.capture(from: NotesTestPasteboard(nil), into: store), .empty)
             expectEqual(NotesCapture.capture(from: NotesTestPasteboard(" \n\t "), into: store), .empty)
             expect(store.notes.isEmpty)
+        }
+
+        test("capture: a copy marked as a password or one-time code is never saved") {
+            let store = emptyStore()
+            for mark in NotesCapture.concealedTypes.sorted() {
+                expectEqual(NotesCapture.capture(from: NotesTestPasteboard("hunter2", marks: [mark]), into: store), .concealed, mark)
+            }
+            expect(store.notes.isEmpty)
+            guard case .saved = NotesCapture.capture(from: NotesTestPasteboard("Gate B12", marks: ["public.html"]), into: store) else {
+                return fail("ordinary text not saved")
+            }
         }
 
         test("capture: long first lines are cut at a word, spaces collapsed") {

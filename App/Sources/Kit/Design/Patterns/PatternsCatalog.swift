@@ -239,13 +239,13 @@ private struct TilePickerSample: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.l) {
             Card {
-                TilePicker([TileOption(.island, title: PatternsSampleText.island, badge: DesignText.recommended),
-                            TileOption(.capsule, title: PatternsSampleText.capsule)],
+                TilePicker([TileOption(.island, title: CommonText.islandAtNotch, badge: DesignText.recommended),
+                            TileOption(.capsule, title: CommonText.capsule)],
                            selection: $style, previewHeight: Metrics.tilePreviewLarge) { StylePreview(kind: $0) }
             }
             SettingsSection(PatternsSampleText.appearance) {
-                TilePicker([TileOption(.island, title: PatternsSampleText.island),
-                            TileOption(.capsule, title: PatternsSampleText.capsule),
+                TilePicker([TileOption(.island, title: CommonText.islandAtNotch),
+                            TileOption(.capsule, title: CommonText.capsule),
                             TileOption(.off, title: PatternsSampleText.off, detail: PatternsSampleText.offDetail)],
                            selection: $settingsStyle, tone: .settings) { StylePreview(kind: $0) }
                 ToggleRow(PatternsSampleText.sounds, subtitle: PatternsSampleText.soundsDetail, isOn: .constant(false))

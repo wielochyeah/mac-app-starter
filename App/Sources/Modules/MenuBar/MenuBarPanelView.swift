@@ -55,33 +55,27 @@ struct MenuBarPanelView: View {
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }, action: { onHeight?($0) })
     }
 
-    /// Settings, Open window and Quit, always with their names: when the names do not fit with
-    /// symbols (German), every chip drops its symbol, so both languages keep the same footer.
+    /// Settings, Open window and Quit as named chips without symbols, the same in every language
+    /// (German names leave no room for symbols at 340 pt, and one footer must not change its style
+    /// with the language).
     private var footer: some View {
-        ViewThatFits(in: .horizontal) {
-            footerRow(symbols: true)
-            footerRow(symbols: false)
-        }
-        .padding(.top, Space.xxs)
-    }
-
-    private func footerRow(symbols: Bool) -> some View {
         HStack(spacing: Space.xs) {
-            Chip(CommonText.settings, symbol: symbols ? "gearshape.fill" : nil) {
+            Chip(CommonText.settings) {
                 close()
                 AppActions.openSettings()
             }
             .fixedSize()
             if showsWindowAction {
-                Chip(MenuBarText.openWindow, symbol: symbols ? "macwindow" : nil) {
+                Chip(MenuBarText.openWindow) {
                     close()
                     AppActions.openMainWindow()
                 }
                 .fixedSize()
             }
             Spacer(minLength: Space.xs)
-            Chip(MenuBarText.quit, symbol: symbols ? "power" : nil) { AppActions.quit() }.fixedSize()
+            Chip(MenuBarText.quit) { AppActions.quit() }.fixedSize()
         }
+        .padding(.top, Space.xxs)
     }
 }
 
@@ -204,7 +198,7 @@ struct MenuBarActionRow: View {
                 Text(title).font(TypeScale.body).foregroundStyle(t.fg).lineLimit(1)
                 Spacer(minLength: Space.xs)
                 if let shortcut, !shortcut.isEmpty {
-                    Text(shortcut).font(TypeScale.secondary).foregroundStyle(t.fg3)
+                    Text(shortcut).font(TypeScale.secondary).foregroundStyle(t.fg2)
                 }
             }
             .padding(.horizontal, Space.xs)

@@ -13,6 +13,7 @@ enum NotesIslandScenes {
         })
         add("capsule-saved", kind: .capsule) { saved() }
         add("island-empty", kind: .notch) { NotesIsland.clipboardEmpty }
+        add("island-concealed", kind: .notch) { NotesIsland.clipboardConcealed }
         add("island-summarizing", kind: .notch, sample: IslandScenes.Sample(id: "", content: {
             NotesIsland.progress(NotesText.summarizing) {}
         }) {

@@ -7,9 +7,19 @@ enum RenderMode {
     /// where they can; this flag is for code outside a view tree.
     static var isStatic = false
 
-    /// `STARTER_HEADLESS=1`: activation policy `.prohibited`, windows are never ordered front,
-    /// no status item. Used by tests, renders and `--selftest`.
-    static let isHeadless: Bool = ProcessInfo.processInfo.environment["STARTER_HEADLESS"] == "1"
+    /// Activation policy `.prohibited`, windows are never ordered front, no status item, and no
+    /// file of the person's is opened (notes stay in memory). Set by `STARTER_HEADLESS=1` (tests)
+    /// and for every tool run (`--render`, `--selftest`, `--permission-probe`) whatever the
+    /// environment says, in `Launch.run`.
+    private(set) static var isHeadless: Bool = headless(environment: ProcessInfo.processInfo.environment, tool: false)
+
+    /// Whether a process runs headless (pure, tested).
+    nonisolated static func headless(environment: [String: String], tool: Bool) -> Bool {
+        tool || environment["STARTER_HEADLESS"] == "1"
+    }
+
+    /// Makes this process headless before anything opens a window or a file (tool runs).
+    static func enterHeadless() { isHeadless = true }
 }
 
 private nonisolated struct RenderStaticKey: EnvironmentKey {

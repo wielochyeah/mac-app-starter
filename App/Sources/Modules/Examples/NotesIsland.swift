@@ -46,6 +46,9 @@ enum NotesIsland {
 
     static var clipboardEmpty: IslandContent { .notice(text: NotesText.clipboardEmpty, kind: .warning) }
 
+    /// A copy marked as a password or one-time code: nothing was saved.
+    static var clipboardConcealed: IslandContent { .notice(text: NotesText.clipboardConcealed, kind: .info) }
+
     static func progress(_ title: String, cancel: @escaping () -> Void) -> IslandContent {
         .progress(title: title, symbol: "sparkles", tint: .sky,
                   cancel: IslandAction(id: "notes.cancel", title: CommonText.cancel, perform: cancel))
@@ -64,6 +67,8 @@ enum NotesIsland {
         switch outcome {
         case .empty:
             content = clipboardEmpty
+        case .concealed:
+            content = clipboardConcealed
         case .saved(let note):
             content = saved(note, collection: store.collection(note.collectionID)?.name,
                             hoverExpands: Settings.shared[.islandHoverExpand],

@@ -60,18 +60,17 @@ struct HotkeysOnboardingStep: View {
                                  subtitle: combo == nil ? HotkeysText.stepSubtitleNoKeys(hotkey.title())
                                                         : HotkeysText.stepSubtitle(hotkey.title()))
                     .padding(.bottom, Space.l)
-                Group {
-                    if let combo {
-                        let _ = center.layoutRevision
-                        BigKeyCaps(keys: center.layout.caps(combo), pressed: center.pressed.contains(hotkey.id))
-                    } else {
-                        Color.clear
-                    }
+                // without keys there are no caps: the status line says what to do instead
+                if let combo {
+                    let _ = center.layoutRevision
+                    BigKeyCaps(keys: center.layout.caps(combo), pressed: center.pressed.contains(hotkey.id))
+                        .frame(height: Metrics.Hotkeys.bigKey.height)
+                        .padding(.bottom, Space.l)
                 }
-                .frame(height: Metrics.Hotkeys.bigKey.height)
-                .padding(.bottom, Space.l)
                 StatusLine(kind: line.kind, text: line.text)
                     .padding(.bottom, Space.l)
+                // centred by its usual height; a refusal makes the row taller downwards into the
+                // free space, so the page above it never moves
                 VStack(alignment: .leading, spacing: 0) {
                     SettingsSection(tone: .onboarding) {
                         ShortcutRecorderRow(hotkey.id, center: center, recorder: recorder)
@@ -79,7 +78,8 @@ struct HotkeysOnboardingStep: View {
                     OnboardingFootnote(HotkeysText.stepFootnote)
                 }
                 .frame(width: Metrics.onboardingColumn)
-                .frame(minHeight: Metrics.Hotkeys.stepCardArea, alignment: .top)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(height: Metrics.Hotkeys.stepCardArea, alignment: .top)
             }
             .onAppear { if pressesAtStart == nil { pressesAtStart = presses } }
             .onChange(of: combo) { pressesAtStart = presses }

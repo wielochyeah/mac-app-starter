@@ -43,6 +43,7 @@ enum DesignText {
     static var allowed: String { tr(en: "Allowed", de: "Erlaubt") }
     static var notAllowed: String { tr(en: "Not allowed yet", de: "Noch nicht erlaubt") }
     static var waiting: String { tr(en: "Waiting", de: "Wartet") }
+    static var failedBadge: String { tr(en: "Failed", de: "Fehlgeschlagen") }
     static var checking: String { tr(en: "Checking", de: "Wird geprüft") }
     static var failed: String { tr(en: "Download stopped", de: "Download abgebrochen") }
     static var emptyTitle: String { tr(en: "No notes yet", de: "Noch keine Notizen") }

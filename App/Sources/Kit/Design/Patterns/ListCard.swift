@@ -168,7 +168,7 @@ struct SearchField: View {
     }
 }
 
-/// A count next to a title: plain (sidebar, VoiceBud 11.5 monospaced `fg3`) or as a small pill
+/// A count next to a title: plain (sidebar, VoiceBud 11.5 monospaced, `fg2` for 4.5:1) or as a small pill
 /// (list headers). Nothing is drawn for nil.
 struct CountBadge: View {
     enum Style { case plain, pill }
@@ -186,7 +186,7 @@ struct CountBadge: View {
             let t = Theme(scheme)
             switch style {
             case .plain:
-                Text(Format.number(count)).font(TypeScale.count).foregroundStyle(t.fg3)
+                Text(Format.number(count)).font(TypeScale.count).foregroundStyle(t.fg2)
                     .contentTransition(.numericText())
             case .pill:
                 Text(Format.number(count))

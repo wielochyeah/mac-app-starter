@@ -7,6 +7,9 @@ enum CommonText {
     static var done: String { tr(en: "Done", de: "Fertig") }
     static var close: String { tr(en: "Close", de: "Schließen") }
     static var back: String { tr(en: "Back", de: "Zurück") }
+    /// The two shapes of the island (module island and the kit's tile picker sample use the same words).
+    static var islandAtNotch: String { tr(en: "Island at the Notch", de: "Insel an der Notch") }
+    static var capsule: String { tr(en: "Capsule", de: "Kapsel") }
     static var `continue`: String { tr(en: "Continue", de: "Weiter") }
     static var skip: String { tr(en: "Skip", de: "Überspringen") }
     static var retry: String { tr(en: "Try Again", de: "Erneut versuchen") }

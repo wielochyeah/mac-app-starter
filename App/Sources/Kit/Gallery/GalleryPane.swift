@@ -102,7 +102,7 @@ struct GalleryEntryView: View {
                 // verbatim: the entry id is a code identifier (what to search for in the source)
                 Text(verbatim: entry.id)
                     .font(TypeScale.caption.monospaced())
-                    .foregroundStyle(t.fg3)
+                    .foregroundStyle(t.fg2)
                     .lineLimit(1)
                     .textSelection(.enabled)
             }

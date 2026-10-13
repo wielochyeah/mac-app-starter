@@ -50,6 +50,7 @@ import Observation
     static func standard() -> ModelDownloads {
         ModelDownloads(catalog: .current, hub: MLXPaths.hub) { model in
             guard let dir = MLXPaths.workerDir, let python = MLXPaths.python(workerDir: dir) else { return nil }
+            MLXPaths.prepareModelsFolder()
             let catalog = ModelCatalog.current
             var args = ["-u", dir.appendingPathComponent("download.py").path, "--repo", model.repo, "--total", String(model.bytes),
                         "--hf-home", MLXPaths.hfHome.path, "--watch-stdin"]
@@ -179,7 +180,7 @@ import Observation
             return pump()
         }
         active = (id, p, gen)
-        Log.info("mlx: downloading \(model.repo)", "mlx")
+        Log.info("mlx: downloading \(public: model.repo)", "mlx")
     }
 
     private func received(_ line: String, gen: Int) {
@@ -194,13 +195,13 @@ import Observation
         case .done:
             terminal[gen] = true
             states[id] = .done
-            Log.info("mlx: download of \(id) finished", "mlx")
+            Log.info("mlx: download of \(public: id) finished", "mlx")
         case .error(let kind, let message, let done, let total):
             terminal[gen] = true
             states[id] = .paused(done: done, total: total, problem: kind)
             if kind != "cancelled" {
                 lastProblem = message
-                Log.warn("mlx: download of \(id) stopped (\(kind)): \(message)", "mlx")
+                Log.warn("mlx: download of \(public: id) stopped (\(public: kind)): \(message)", "mlx")
             }
         case .unknown(let text):
             Log.debug("mlx: download line ignored: \(text.prefix(120))", "mlx")

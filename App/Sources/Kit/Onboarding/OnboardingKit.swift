@@ -129,7 +129,7 @@ enum OnboardingKit {
             await monitor.refresh(permissions)
             guard let lost = lostPermission(allowed: settings[.onboardingAllowed], now: permissions.map { ($0, monitor.status($0)) }),
                   let step = Registry.orderedOnboardingSteps.first(where: { $0.id == StepID.permission(lost) }) else { return }
-            Log.info("permission \(lost.id) was allowed and is gone: setup reopens", "onboarding")
+            Log.info("permission \(public: lost.id) was allowed and is gone: setup reopens", "onboarding")
             settings[.onboardingResume] = OnboardingResumePoint(id: step.id, order: step.order)
             settings[.onboardingReopen] = true
             AppActions.openOnboarding()
@@ -168,9 +168,12 @@ enum OnboardingWindow {
         let firstTime = !Settings.shared[.onboardingDone]
         let permissions = OnboardingKit.onboardingPermissions(PermissionsKit.configured)
         let flow = OnboardingFlow(steps: Registry.orderedOnboardingSteps, rules: OnboardingKit.advanceRules)
+        flow.allowedNow = { [weak flow] in
+            guard let flow else { return [] }
+            return permissions.filter { flow.monitor.status($0).isAllowed }.map(\.id)
+        }
         flow.onFinish = { [weak flow] in
             guard let flow else { return }
-            Settings.shared[.onboardingAllowed] = permissions.filter { flow.monitor.status($0).isAllowed }.map(\.id)
             finish(firstTime: firstTime, restart: OnboardingKit.restartPending(permissions, flow.monitor))
         }
         return flow

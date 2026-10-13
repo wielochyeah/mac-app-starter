@@ -76,7 +76,7 @@ extension SettingKey {
         do {
             db = try Database(url: url, migrations: Self.migrations)
         } catch {
-            Log.error("notes: opening \(url?.lastPathComponent ?? "memory") failed: \(error)", "notes")
+            Log.error("notes: opening \(public: url?.lastPathComponent ?? "memory") failed: \(error)", "notes")
             problem = NotesText.storeProblem
             db = try? Database(url: nil, migrations: Self.migrations)
         }
@@ -277,8 +277,10 @@ extension SettingKey {
         }
     }
 
+    /// Moves a note to the trash; what was typed into it last is written first, so a restore
+    /// brings it back as it was.
     func trash(_ id: Int64) {
-        pending[id] = nil
+        flush()
         write("trash") { try $0.execute("UPDATE notes SET trashed_at = ?, pinned = 0 WHERE id = ?", [.of(self.now()), .int(id)]) }
     }
 
@@ -286,9 +288,10 @@ extension SettingKey {
         write("restore") { try $0.execute("UPDATE notes SET trashed_at = NULL WHERE id = ?", [.int(id)]) }
     }
 
+    /// Deletes a note for good, also from the search index and the write-ahead log.
     func delete(_ id: Int64) {
         pending[id] = nil
-        write("delete") { try $0.execute("DELETE FROM notes WHERE id = ?", [.int(id)]) }
+        if write("delete", { try $0.execute("DELETE FROM notes WHERE id = ?", [.int(id)]) }) { compact() }
     }
 
     /// Deletes notes that have been in the trash longer than `keep`; returns how many.
@@ -300,6 +303,7 @@ extension SettingKey {
             try db.execute("DELETE FROM notes WHERE trashed_at IS NOT NULL AND trashed_at < ?", [.of(cutoff)])
             removed = db.changes
         }
+        if removed > 0 { compact() }
         return removed
     }
 
@@ -310,6 +314,7 @@ extension SettingKey {
             try db.execute("DELETE FROM notes")
             try db.execute("DELETE FROM collections")
         }
+        compact()
         insertSamples()
         reload()
     }
@@ -325,9 +330,19 @@ extension SettingKey {
             reload()
             return true
         } catch {
-            Log.error("notes: \(what) failed: \(error)", "notes")
+            Log.error("notes: \(public: what) failed: \(error)", "notes")
             problem = NotesText.storeProblem
             return false
+        }
+    }
+
+    /// After deleting for good: no trace of the deleted text stays in index segments or the log.
+    private func compact() {
+        guard let db, url != nil else { return }
+        do {
+            try db.compact(fullText: fullText ? "notes_fts" : nil)
+        } catch {
+            Log.warn("notes: compacting after a delete failed (\(error))", "notes")
         }
     }
 

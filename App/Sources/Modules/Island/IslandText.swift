@@ -24,12 +24,16 @@ enum IslandText {
     // MARK: Settings pane
 
     static var pane: String { tr(en: "Island & Capsule", de: "Insel und Kapsel") }
+    static var paneIntro: String {
+        tr(en: "While the app works, it shows progress and results at the top of the screen.",
+           de: "Während die App arbeitet, zeigt sie Fortschritt und Ergebnis oben am Bildschirm.")
+    }
 
     static func style(_ style: IslandStyle) -> String {
         switch style {
         case .auto: tr(en: "Automatic", de: "Automatisch")
-        case .island: tr(en: "Island at the Notch", de: "Insel an der Notch")
-        case .capsule: tr(en: "Capsule", de: "Kapsel")
+        case .island: CommonText.islandAtNotch
+        case .capsule: CommonText.capsule
         }
     }
 
@@ -132,29 +136,30 @@ enum IslandSampleText {
         tr(en: """
             Quarterly report.pdf, the slides and the chart sheet are in Documents/Reports. The originals stay in the project folder.
 
-            The report has 14 pages. Charts 3 and 5 now use the new colors, the table on page 9 is split in two so it fits the page again.
+            The report has 14 pages. Charts 3 and 5 use the new colors, and the table on page 9 fits the page again.
 
             Two notes are still open: the source for the market figures on page 4, and whether the appendix should list every interview. Both are marked yellow in the slides.
 
             The export ran at full quality. The PDF is 4.2 MB, the slides 18 MB.
 
-            Next week the numbers for the third quarter come in. The report then gets a second chart sheet, and the slides move the outlook to the end.
+            Next week the numbers for the third quarter come in, with a second chart sheet.
             """,
            de: """
             Quartalsbericht.pdf, die Folien und das Diagrammblatt liegen in Dokumente/Berichte. Die Originale bleiben im Projektordner.
 
-            Der Bericht hat 14 Seiten. Die Diagramme 3 und 5 nutzen jetzt die neuen Farben, die Tabelle auf Seite 9 ist zweigeteilt und passt wieder auf die Seite.
+            Der Bericht hat 14 Seiten. Die Diagramme 3 und 5 nutzen die neuen Farben, und die Tabelle auf Seite 9 passt wieder auf die Seite.
 
             Zwei Punkte sind noch offen: die Quelle für die Marktzahlen auf Seite 4 und ob der Anhang jedes Interview aufführen soll. Beide sind in den Folien gelb markiert.
 
             Der Export lief in voller Qualität. Das PDF hat 4,2 MB, die Folien 18 MB.
 
-            Nächste Woche kommen die Zahlen für das dritte Quartal. Der Bericht bekommt dann ein zweites Diagrammblatt, und in den Folien rückt der Ausblick ans Ende.
+            Nächste Woche kommen die Zahlen für das dritte Quartal, mit einem zweiten Diagrammblatt.
             """)
     }
     static var showInFinder: String { tr(en: "Show in Finder", de: "Im Finder zeigen") }
-    static var noticeInfo: String { tr(en: "Sync continues at 9:00", de: "Abgleich läuft um 9:00 weiter") }
-    static var noticeSuccess: String { tr(en: "Copied to the clipboard", de: "In die Zwischenablage kopiert") }
-    static var noticeWarning: String { tr(en: "Less than 2 GB of disk space left", de: "Weniger als 2 GB Speicherplatz frei") }
-    static var noticeError: String { tr(en: "The file could not be saved", de: "Die Datei konnte nicht gesichert werden") }
+    // notices are one short line: at most three words (DESIGN §6)
+    static var noticeInfo: String { tr(en: "Sync at 9:00", de: "Abgleich um 9:00") }
+    static var noticeSuccess: String { tr(en: "Link copied", de: "Link kopiert") }
+    static var noticeWarning: String { tr(en: "Disk almost full", de: "Speicher fast voll") }
+    static var noticeError: String { tr(en: "File not saved", de: "Datei nicht gesichert") }
 }

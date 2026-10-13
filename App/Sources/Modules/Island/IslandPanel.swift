@@ -132,7 +132,7 @@ final class IslandPanelHost: IslandSurfaceHost {
 
     func rebuild() {
         if let panel {
-            Log.warn("island: panel rebuilt (behavior \(panel.collectionBehavior.rawValue), level \(panel.level.rawValue))", "island")
+            Log.warn("island: panel rebuilt (behavior \(public: panel.collectionBehavior.rawValue), level \(public: panel.level.rawValue))", "island")
         }
         panel?.orderOut(nil)
         panel = nil

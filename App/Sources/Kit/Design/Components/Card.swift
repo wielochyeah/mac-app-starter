@@ -53,28 +53,42 @@ struct GroupLabel: View {
     }
 }
 
-/// Small print under a card (11.5 `fg2`; 12 `prose` with `tone: .onboarding`). `lines` reserves
-/// height so swapping texts never moves the layout.
+/// Small print under a card (11.5 `fg2`; 12 `prose` with `tone: .onboarding`). When the text
+/// changes with a choice, `reserve` lists every text it can show: the footnote keeps the height of
+/// the tallest in the current language and width, so swapping texts never moves the layout and no
+/// empty line is left. `lines` reserves a fixed number of lines instead.
 struct Footnote: View {
     let text: String
     var lines: Int = 0
+    var reserve: [String] = []
     var tone: TextTone = .settings
     @Environment(\.colorScheme) private var scheme
 
-    init(_ text: String, lines: Int = 0, tone: TextTone = .settings) {
+    init(_ text: String, lines: Int = 0, reserve: [String] = [], tone: TextTone = .settings) {
         self.text = text
         self.lines = lines
+        self.reserve = reserve
         self.tone = tone
     }
 
     var body: some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(Array(reserve.enumerated()), id: \.offset) { _, other in
+                styled(other).hidden().accessibilityHidden(true)
+            }
+            styled(text)
+        }
+        .frame(maxWidth: .infinity, minHeight: lines > 0 ? CGFloat(lines) * 16 : nil, alignment: .topLeading)
+        .padding(.horizontal, 6)
+        .padding(.top, Space.xs)
+    }
+
+    private func styled(_ text: String) -> some View {
         Text(text)
             .font(tone.small)
             .foregroundStyle(tone.smallColor(Theme(scheme)))
             .lineSpacing(tone == .settings ? TypeScale.footnoteLineSpacing : TypeScale.noteLineSpacing)
             .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, minHeight: lines > 0 ? CGFloat(lines) * 16 : nil, alignment: .topLeading)
-            .padding(.horizontal, 6)
-            .padding(.top, Space.xs)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 }
