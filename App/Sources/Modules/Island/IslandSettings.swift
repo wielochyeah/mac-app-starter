@@ -12,7 +12,7 @@ nonisolated enum IslandStyle: String, CaseIterable, Sendable {
     /// Always the capsule below the menu bar.
     case capsule
 
-    /// The styles settings offer: "Island at the Notch" only when the app reports a busy notch
+    /// The styles settings offer: "Island at the notch" only when the app reports a busy notch
     /// (`dodges`); otherwise it would look and behave exactly like Automatic.
     static func offered(dodges: Bool) -> [IslandStyle] {
         dodges ? allCases : [.auto, .capsule]

@@ -215,6 +215,4 @@ enum PermissionText {
     static func waiting(_ kind: PermissionKind) -> String {
         kind.prompt == .settingsSwitch ? PatternsText.waitingForSwitch : PatternsText.waitingForAnswer
     }
-
-    static var firstUse: String { tr(en: "Asked on first use", de: "Abfrage bei der ersten Nutzung") }
 }

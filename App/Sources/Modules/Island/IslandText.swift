@@ -160,6 +160,6 @@ enum IslandSampleText {
     // notices are one short line: at most three words (DESIGN §6)
     static var noticeInfo: String { tr(en: "Sync at 9:00", de: "Abgleich um 9:00") }
     static var noticeSuccess: String { tr(en: "Link copied", de: "Link kopiert") }
-    static var noticeWarning: String { tr(en: "Disk almost full", de: "Speicher fast voll") }
+    static var noticeWarning: String { tr(en: "Only 2\u{202F}GB free", de: "Nur 2\u{202F}GB frei") }
     static var noticeError: String { tr(en: "File not saved", de: "Datei nicht gesichert") }
 }

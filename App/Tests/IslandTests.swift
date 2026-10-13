@@ -257,7 +257,7 @@ final class IslandLayoutTests: TestSuite {
             expectEqual(IslandLook.fullTextMaxLines, IslandCappedHeightLayout.maxLines)
         }
 
-        test("styles: Island at the Notch is offered only when the app reports a busy notch") {
+        test("styles: Island at the notch is offered only when the app reports a busy notch") {
             expectEqual(IslandStyle.offered(dodges: false), [.auto, .capsule])
             expectEqual(IslandStyle.offered(dodges: true), [.auto, .island, .capsule])
             expectEqual(IslandStyle.island.shown(dodges: false), .auto)
