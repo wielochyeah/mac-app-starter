@@ -1,5 +1,5 @@
 {
-  "starter": { "version": "1.0.0" },
+  "starter": { "version": "1.0.1" },
   "app": {
     "name": "Starter",
     "bundleId": "com.example.starter",

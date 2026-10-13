@@ -4,11 +4,12 @@ Jede Fassung des Starters hat einen Tag `v<Version>` und einen Abschnitt hier, m
 
 Ein Projekt führt darunter seine eigenen Fassungen (`app.version` in `starter.json`) mit denselben Abschnitten.
 
-## Unveröffentlicht
+## 1.0.1 (13.10.2026)
 
 ### Inhalt
 
 - MIT-Lizenz in `LICENSE`; der Starter nennt sich in `THIRD_PARTY_NOTICES.md` und in den Hinweisen der App unter „Über“.
+- CI: `ci_plan.py` liest die Referenz nur noch aus dem Ereignis, nicht aus `GITHUB_REF` des Runners. Auf dem Tag-Lauf von 1.0.0 hat das einen Test der Planung rot gemacht; ein Regressionstest hält es fest.
 
 ### Hinweise für Projekte
 
