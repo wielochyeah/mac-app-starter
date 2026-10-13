@@ -58,7 +58,14 @@ while IFS= read -r line; do
     print -u2 "readme-shots: unknown tool picture $line (tools/icon.png or tools/dmg.png)"; missing=1; continue
   fi
   if [[ ! -f "$src" ]]; then
-    print -u2 "readme-shots: missing $src (make shots)"; missing=1; continue
+    if [[ "$src" == build/shots/* && -f build/shots/index.html ]]; then
+      # a full render ran (index.html) and has no such scene
+      scene="${${line#*/}%.png}"
+      print -u2 "readme-shots: Szene $scene gibt es nicht (Modul entfernt? Die Zeile aus $LIST nehmen; alle Szenen: build/shots/index.html)"
+    else
+      print -u2 "readme-shots: $src fehlt: zuerst make shots (oder NO_BUILD=1 make shots ONLY=${${line#*/}%.png})"
+    fi
+    missing=1; continue
   fi
   dest="docs/screenshots/${line//\//-}"
   width="$(sips -g pixelWidth "$src" | awk '/pixelWidth/ { print $2 }')"

@@ -1,11 +1,23 @@
-#!/bin/zsh
-# Runs `make check` before every push (rule A-02): rules, texts, design, kit, build and tests.
-# Installed with `make hooks`. Git passes the remote and the refs on stdin; the check covers the whole tree.
-set -euo pipefail
+#!/bin/sh
+# Runs the checks before every push (rule A-02). Installed with `make hooks`. Git passes the remote and the refs on
+# stdin; the checks cover the whole tree.
+# On a Mac: make check (rules, texts, design, kit, build and tests). Elsewhere there is no Swift compiler: make
+# check-light runs every check that needs no Mac and says so; build, Swift tests and renders follow in a session on a
+# Mac and in the Mac jobs of the CI. POSIX sh, so a Linux container without zsh can push too.
+set -eu
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-print "pre-push: make check"
-if ! make check; then
-  print -u2 "pre-push: make check ist rot, Push abgebrochen. Befunde beheben, dann erneut pushen."
-  exit 1
+if [ "$(uname -s)" = Darwin ]; then
+  echo "pre-push: make check"
+  if ! make check; then
+    echo "pre-push: make check ist rot, Push abgebrochen. Befunde beheben, dann erneut pushen." >&2
+    exit 1
+  fi
+else
+  echo "pre-push: kein Mac ($(uname -s)): make check-light (Regeln, Texte, Design, Kit, Python-Tests)."
+  echo "pre-push: Build, Swift-Tests und Renders laufen nur auf einem Mac; Swift-Änderungen dort prüfen."
+  if ! make check-light; then
+    echo "pre-push: make check-light ist rot, Push abgebrochen. Befunde beheben, dann erneut pushen." >&2
+    exit 1
+  fi
 fi

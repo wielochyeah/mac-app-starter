@@ -12,21 +12,24 @@ and builds. Running it again changes nothing.
 from __future__ import annotations
 
 import datetime
+import json
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, cut_blocks, git, has_block, inside, is_text_file, remove_empty_dirs, working_files,
-                     write_text)
+from . import pictures as pics
+from .common import (StarterError, build_env, cut_blocks, git, has_block, inside, is_text_file, remove_empty_dirs,
+                     working_files, write_text)
 from .manifest import Manifest, is_project, kit_checksums, read_lock, read_manifest, set_pending_build, write_lock
 from .remove import (apply_removal, dangling_report, plan_removal, present_modules, read_texts, refuse_in_starter,
-                     run_make, simulate, uncommitted)
+                     run_make, simulate, swift_missing, uncommitted)
 
 NEW_VERSION = "0.1.0"
 
@@ -62,9 +65,13 @@ class InitResult:
     checksums: int = 0
     notes: List[str] = field(default_factory=list)
     tagline_cleared: bool = False
+    readme_intro: bool = False                          # README.md got the project's short introduction
+    pictures_removed: List[str] = field(default_factory=list)  # starter pictures no text names any more
     anrede: str = "du"
+    anrede_findings: Optional[int] = None               # du texts recorded in rules/baseline/texte.json (anrede sie)
     rules_synced: bool = False
     build_ok: Optional[bool] = None                     # None: not built
+    build_skipped: Optional[str] = None                 # why make build could not run here
     dirty: List[str] = field(default_factory=list)      # uncommitted changes before init
 
 
@@ -171,6 +178,10 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
     today = opts.today or datetime.date.today().isoformat()
     config = cfg.read_config(root)
     check_options(opts)
+    if opts.symbol:
+        problem = symbol_problem(root, opts.symbol)
+        if problem:
+            raise StarterError(f"--symbol „{opts.symbol}“: {problem}")
     new_config = project_config(config, opts, today)
     cfg.validate_config(new_config)
 
@@ -193,9 +204,12 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
     result = InitResult(project=opts.name, version=lock["version"], modules_removed=order,
                         tagline_cleared="tagline" in (config.get("app") or {}),
                         anrede=(new_config.get("texts") or {}).get("anrede", "du"))
-    if opts.bundle_id_defaulted:
-        result.notes.append(f"keine --bundle-id angegeben, gesetzt ist {opts.bundle_id}; vor dem ersten Release in "
-                            "starter.json (app.bundleId) ändern")
+    if opts.bundle_id.startswith("com.example."):
+        given = "keine --bundle-id angegeben, gesetzt ist" if opts.bundle_id_defaulted else "Bundle-ID"
+        result.notes.append(f"{given} {opts.bundle_id}: com.example. ist ein Platzhalter. macOS ordnet Berechtigungen, "
+                            "Einstellungen und das Anmeldeobjekt der Bundle-ID zu; vor der ersten Weitergabe in "
+                            "starter.json (app.bundleId) die eigene umgekehrte Domain eintragen. make dmg mit Developer ID "
+                            "lehnt den Platzhalter ab")
     result.identity_cleared = bool((config.get("commit") or {}).get("name") or (config.get("commit") or {}).get("email"))
     result.removed = [f for f in files if globs.matches(f, manifest.starter_only_paths) and f not in manifest.replace]
     moves = [(src, dst) for src, dst in manifest.move.items() if (root / src).is_file()]
@@ -217,9 +231,19 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
     replaced = set(result.replaced)
     result.blocks = sorted({f for f in block_texts if f not in replaced}
                            | {dst for src, dst in moves if src in block_texts})
+    # The starter's title, introduction and tour are starter-only; the project's README starts with its own name.
+    readme = block_texts.get("README.md")
+    if readme is None and (root / "README.md").is_file():
+        readme = (root / "README.md").read_text(encoding="utf-8", errors="replace")
+    if readme is not None and not readme.lstrip().startswith("# "):
+        block_texts["README.md"] = readme_intro(opts.name) + readme.lstrip("\n")
+        result.readme_intro = True
     result.commit = opts.starter_commit if opts.starter_commit is not None else \
         starter_commit_for(root, manifest.repository, lock["version"], opts.offline)
     if opts.dry_run:
+        texts = {f: block_texts.get(f) or (root / f).read_text(encoding="utf-8", errors="replace")
+                 for f in files if f.endswith(".md") or f == pics.LIST}
+        result.pictures_removed = unused_pictures(files, texts)
         return result
 
     result.dirty = uncommitted(root)
@@ -258,20 +282,45 @@ def init(root: Path, opts: InitOptions, check_origin: bool = True) -> Optional[I
             raise StarterError(dangling_report(plan).rstrip())
         apply_removal(root, plan, manifest)
     result.checksums = len(read_lock(root)["checksums"])
+    now = working_files(root)
+    texts = {f: (root / f).read_text(encoding="utf-8", errors="replace") for f in now
+             if f.endswith(".md") or f == pics.LIST}
+    result.pictures_removed = unused_pictures(now, texts)
+    for f in result.pictures_removed:
+        inside(root, f).unlink()
     failed = sync_rules(root)
     if failed is not None:
         result.notes.append("make rules ist gescheitert; von Hand ausführen, sonst ist make check rot:\n    "
                             + "\n    ".join(failed.strip().splitlines()))
     else:
         result.rules_synced = (root / "scripts" / "rules_sync.py").is_file()
+        if result.anrede == "sie":
+            result.anrede_findings = record_text_findings(root)
 
     if opts.build:
+        result.build_skipped = swift_missing()
+        if result.build_skipped:
+            set_pending_build(root, "bin/starter init")
+            return result
         if (root / "scripts" / "icon.sh").exists():
             if not run_make(root, "icon"):
                 result.notes.append("make icon ist gescheitert; später von Hand ausführen")
         result.build_ok = run_make(root, "build")
         set_pending_build(root, None if result.build_ok else "bin/starter init")
     return result
+
+
+def readme_intro(name: str) -> str:
+    """The head of README.md in a new project; the starter's title, introduction and tour are starter-only."""
+    return (f"# {name}\n\n{name} ist eine native Mac-App, entstanden aus dem mac-app-starter. Zweck, Zielgruppe und "
+            "offene Fragen stehen in `docs/PROJECT.md`, Einrichtung und Weiterbau in `docs/UEBERGABE.md`.\n\n")
+
+
+def unused_pictures(files: List[str], texts: dict) -> List[str]:
+    """PNGs in docs/screenshots that no Markdown file names and docs/screenshots/list.txt does not list: the
+    starter's tour pictures once its README section and list block are cut."""
+    kept = pics.referenced(texts)
+    return sorted(f for f in files if f.startswith(pics.FOLDER) and f.endswith(".png") and f not in kept)
 
 
 def sync_rules(root: Path) -> Optional[str]:
@@ -283,6 +332,88 @@ def sync_rules(root: Path) -> Optional[str]:
     res = subprocess.run([sys.executable, str(script)], cwd=str(root), stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, universal_newlines=True)
     return None if res.returncode == 0 else res.stdout
+
+
+BASELINE = "rules/baseline/texte.json"
+
+
+def record_text_findings(root: Path) -> Optional[int]:
+    """With the formal address (anrede sie) the kit's German texts, written with du, become findings of check-texts.
+    They go into rules/baseline/texte.json as known findings, so make check stays green and the list stays visible
+    as the to-do; the baseline may only shrink from here (check_texts.py --baseline-aktualisieren). Returns how many,
+    or None when scripts/check_texts.py is missing or fails."""
+    script = root / "scripts" / "check_texts.py"
+    if not script.is_file():
+        return None
+    scripts = str(root / "scripts")
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    import rules_lib  # noqa: E402  (scripts/rules_lib.py: Finding and its fingerprint)
+    with tempfile.TemporaryDirectory(prefix="starter-init-") as tmp:
+        out = Path(tmp) / "befunde.json"
+        subprocess.run([sys.executable, str(script), "--json", str(out)], cwd=str(root), stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+        try:
+            found = json.loads(out.read_text(encoding="utf-8")).get("neu") or []
+        except (OSError, ValueError):
+            return None
+    if not found:
+        return 0
+    path = root / BASELINE
+    try:
+        baseline = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    except ValueError:
+        return None
+    for item in sorted(found, key=lambda f: (f["path"], f["line"], f["column"])):
+        baseline.setdefault(item["path"], []).append(rules_lib.Finding(**item).fingerprint())
+    write_text(path, json.dumps(dict(sorted(baseline.items())), ensure_ascii=False, indent=2) + "\n")
+    return len(found)
+
+
+SYMBOL_CHECK = """// Written by bin/starter init (scripts/starter/project.py): exit 1 and the names that are no SF Symbol on this Mac.
+import AppKit
+var missing = 0
+for name in CommandLine.arguments.dropFirst() where NSImage(systemSymbolName: name, accessibilityDescription: nil) == nil {
+    print(name)
+    missing += 1
+}
+exit(missing == 0 ? 0 : 1)
+"""
+
+
+def symbol_problem(root: Path, name: str) -> Optional[str]:
+    """Why `name` is no SF Symbol on this Mac, or None. Without a Swift compiler (Linux) nothing is checked here; on a
+    Mac a small tool in build/tools asks AppKit, compiled once in about a second, never the app itself."""
+    if swift_missing():
+        return None
+    tools = root / "build" / "tools"
+    source, tool = tools / "symbol-check.swift", tools / "symbol-check"
+    env = build_env()
+    try:
+        if not tool.is_file() or not source.is_file() or source.read_text(encoding="utf-8") != SYMBOL_CHECK:
+            tools.mkdir(parents=True, exist_ok=True)
+            source.write_text(SYMBOL_CHECK, encoding="utf-8")
+            sdk = subprocess.run([str(root / "scripts" / "pick-sdk.sh")], cwd=str(root), env=env, stdout=subprocess.PIPE,
+                                 stderr=subprocess.DEVNULL, timeout=60).stdout.decode().strip()
+            if not sdk:
+                return None
+            built = subprocess.run(["swiftc", "-sdk", sdk, "-O", "-o", str(tool), str(source)], cwd=str(root),
+                                   env=dict(env, SDKROOT=sdk), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   timeout=120)
+            if built.returncode != 0:
+                return None
+        checked = subprocess.run([str(tool), name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if checked.returncode == 0:
+        return None
+    return ("gibt es auf diesem Mac nicht als SF Symbol; die Namen zeigt Apples App „SF Symbols“, etwa sparkles, "
+            "note.text oder waveform.circle")
+
+
+UNKNOWN_COMMIT = ("unbekannt: der Tag v{version} ist weder in dieser Kopie noch auf GitHub zu finden (noch nicht "
+                  "veröffentlicht, --ohne-netz oder kein Lesezugriff auf den Starter). Das ist kein Fehler: "
+                  "bin/starter sync nimmt dann den Tag v{version} als Basis, sobald es ihn gibt, oder --basis <commit>")
 
 
 def report(result: InitResult, dry_run: bool, build: bool) -> str:
@@ -297,15 +428,21 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
         f"  als Nachschlagewerk des Starters angelegt: {names(result.moved)}",
         f"  durch leere Vorlagen ersetzt: {names(result.replaced)}",
         f"  Abschnitte „nur im Starter“ entfernt in: {names(result.blocks)}",
+        f"  Bilder des Starters aus docs/screenshots gelöscht: {len(result.pictures_removed)}"
+        + (" (eigene über docs/screenshots/list.txt und make readme-shots)" if result.pictures_removed else ""),
         f"  Module entfernt: {names(result.modules_removed)}",
-        f"  Starter-Commit: {result.commit or 'unbekannt (Tag nicht gefunden); sync nutzt dann den Tag selbst'}",
+        f"  Starter-Commit: {result.commit or UNKNOWN_COMMIT.format(version=result.version)}",
     ]
+    if result.readme_intro:
+        lines.append(f"  README.md: Titel, Einleitung und Rundgang des Starters entfernt, eine kurze Einleitung für "
+                     f"{result.project} eingesetzt; Zweck und eigene Bilder ergänzen")
     if result.missing_templates:
         lines.append(f"  Vorlage fehlt, Datei unverändert: {names(result.missing_templates)}")
     if not dry_run:
         lines.append(f"  {result.checksums} Prüfsummen der Kit-Dateien in starter.lock.json")
-    lines.append(f"  starter.json: Name, Bundle-ID, Version {NEW_VERSION}; Commit-Identität {cleared} "
-                 "(commit.name und commit.email eintragen, sonst lehnt der Hook commit-msg jeden Commit ab)")
+    identity = f"Commit-Identität {cleared}" if result.identity_cleared else "Commit-Identität leer"
+    lines.append(f"  starter.json: Name, Bundle-ID, Version {NEW_VERSION}; {identity} "
+                 "(commit.name und commit.email des Projekts eintragen, sonst lehnt der Hook commit-msg jeden Commit ab)")
     if result.tagline_cleared:
         lines.append("  starter.json: app.tagline des Starters entfernt; einen eigenen Satz als "
                      "app.tagline {\"en\": …, \"de\": …} eintragen, sonst zeigt der Willkommensschritt nur den Namen")
@@ -313,9 +450,16 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
         lines.append(f"  make rules: CLAUDE.md Teil A und die Wortlisten der Prüfungen neu geschrieben (Anrede "
                      f"{result.anrede})")
     if result.anrede == "sie":
-        lines.append("  Anrede Sie: die deutschen Texte des Kits sind in der du-Form geschrieben; make check-texts "
-                     "listet jede Stelle in den *Text.swift-Dateien und in App/Resources/InfoPlist.json, die "
-                     "umzuschreiben ist (S-05)")
+        if result.anrede_findings:
+            lines.append(f"  Anrede Sie: die deutschen Texte des Kits sind in der du-Form geschrieben. {result.anrede_findings} "
+                         f"Stellen in den *Text.swift-Dateien und in App/Resources/InfoPlist.json stehen jetzt als "
+                         f"bekannte Befunde in {BASELINE}, damit make check grün bleibt; diese Liste ist die Aufgabe "
+                         "(S-05). Alle zeigen: python3 scripts/check_texts.py --streng. Nach dem Umschreiben: python3 "
+                         "scripts/check_texts.py --baseline-aktualisieren (die Liste darf nur schrumpfen)")
+        else:
+            lines.append("  Anrede Sie: die deutschen Texte des Kits sind in der du-Form geschrieben; make check-texts "
+                         "listet jede Stelle in den *Text.swift-Dateien und in App/Resources/InfoPlist.json, die "
+                         "umzuschreiben ist (S-05)")
     lines += [f"  Hinweis: {n}" for n in result.notes]
     if result.dirty:
         lines.append(f"  Hinweis: {len(result.dirty)} Datei(en) hatten schon vorher nicht committete Änderungen.")
@@ -325,6 +469,10 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
                          "#if MODUL_<NAME> … #endif umschließen) und bin/starter init erneut aufrufen: es baut dann "
                          "noch einmal. Oder zurück zur unveränderten Kopie (verwirft alle nicht committeten "
                          "Änderungen): git restore --source=HEAD --staged --worktree -- .")
+        elif result.build_skipped:
+            lines.append(f"  {result.build_skipped}: make icon und make build übersprungen. Auf einem Mac bin/starter "
+                         "init erneut aufrufen, dann baut es (Vermerk pendingBuild in starter.lock.json); --ohne-build "
+                         "überspringt den Build ausdrücklich.")
         elif not build:
             lines.append("  Danach: make icon und make build (mit --ohne-build übersprungen)")
         lines.append("Danach: commit.name und commit.email in starter.json eintragen, make hooks, make check, "
@@ -373,20 +521,24 @@ def with_flag_defaults(config: dict, accent: Optional[str] = None, symbol: Optio
 
 
 def interactive_values(manifest: Manifest, config: dict, ask, present: List[str],
-                       name: Optional[str] = None, say=print) -> InitOptions:
+                       name: Optional[str] = None, say=print, bundle_id: Optional[str] = None,
+                       symbol_check=None) -> InitOptions:
     """Asks for name (unless given), bundle id, accent, symbol, address form and the modules to keep;
     `ask(prompt, default, check)` returns the answer (default on empty input) and asks again while
-    `check(answer)` returns a reason. The module rules are checked with each answer: a module whose
+    `check(answer)` returns a reason. A value given as a flag (--bundle-id) is the default of its
+    question, the answer wins. The module rules are checked with each answer: a module whose
     dependency goes is removed with it (no question), and the last module of an atLeastOne group
-    cannot be answered away. A module that is off in starter.json defaults to "n"."""
+    cannot be answered away. Enter keeps every module as it is, also one that is off in starter.json;
+    only "n" removes it. symbol_check(name) adds a reason for a symbol this Mac does not know."""
     accents = cfg.gen_config().ACCENTS
     app = config.get("app") or {}
     switches = config.get("modules") or {}
     name = name or ask("Name der App (A–Z, a–z, Ziffern, Leerzeichen)", None, check_name)
-    bundle = ask("Bundle-ID", default_bundle_id(name), check_bundle_id)
+    bundle = ask("Bundle-ID", bundle_id or default_bundle_id(name), check_bundle_id)
     accent = ask(f"Akzentfarbe ({', '.join(accents)})", app.get("accent", "violett"),
                  lambda v: None if v in accents else "eine der genannten Farben")
-    symbol = ask("SF Symbol für das App-Icon", app.get("symbol", "sparkles"), check_symbol)
+    symbol = ask("SF Symbol für das App-Icon", app.get("symbol", "sparkles"),
+                 lambda v: check_symbol(v) or (symbol_check(v) if symbol_check else None))
     anrede = ask("Anrede der deutschen Texte (du oder sie)", (config.get("texts") or {}).get("anrede", "du"),
                  check_anrede)
     remove: List[str] = []
@@ -411,8 +563,7 @@ def interactive_values(manifest: Manifest, config: dict, ask, present: List[str]
             return None
 
         on = switches.get(m.name) is True
-        keep = ask(f"Modul {m.name} ({m.title}, in starter.json {'an' if on else 'aus'}) behalten? j/n",
-                   "j" if on else "n", check)
+        keep = ask(f"Modul {m.name} ({m.title}, in starter.json {'an' if on else 'aus'}) behalten? j/n", "j", check)
         if keep.lower().startswith("n"):
             remove.append(m.name)
     return InitOptions(name=name, bundle_id=bundle, accent=accent, symbol=symbol, remove=remove, anrede=anrede)

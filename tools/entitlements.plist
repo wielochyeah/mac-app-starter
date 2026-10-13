@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Extra hardened-runtime entitlements for the distributable app (make dmg / make notarize with a
-  Developer ID). The permission entitlements (microphone, camera, contacts …) are generated from
-  starter.json "permissions" into build/gen/App.entitlements; scripts/dmg.sh merges this file on
-  top (keys here win). Add only what the app really needs and say why next to the key, e.g.
-    <key>com.apple.security.cs.disable-library-validation</key><true/>
-      (loads a Python runtime or plug-ins not signed by your team)
+  Extra hardened-runtime entitlements for the app itself (make dmg / make notarize with a Developer ID).
+  The permission entitlements (microphone, camera, contacts …) are generated from starter.json
+  "permissions" into build/gen/App.entitlements; scripts/dmg.sh merges this file on top (keys here
+  win). Add only what the app really needs and say why next to the key. Exceptions for nested code
+  (a bundled Python interpreter, a helper) never go here: tools/entitlements-map.json gives each such
+  program its own plist, so the app keeps library validation (docs/VERTEILUNG.md).
   Ad-hoc builds ignore entitlements that need the hardened runtime.
 -->
 <plist version="1.0">

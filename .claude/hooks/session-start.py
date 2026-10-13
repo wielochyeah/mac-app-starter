@@ -2,10 +2,12 @@
 """SessionStart hook (see .claude/settings.json).
 
 Every session, local or in a fresh cloud clone, prepares the same things before its first command:
-  1. toolchain: scripts/doctor.sh (never installs anything) reduced to one line, with the fix when it fails
-  2. git hooks: core.hooksPath points at scripts/hooks (commit-msg checks author and format, pre-push runs make check)
-  3. git identity from starter.json (commit.name, commit.email); bin/starter init empties it in a new project, and until
-     the project enters its own the hook sets nothing and says so, and the commit-msg hook refuses every commit
+  1. toolchain: scripts/doctor.sh (never installs anything) reduced to one line, with the fix when it fails; off macOS
+     a line that says what runs here and what waits for a Mac
+  2. git hooks: core.hooksPath points at scripts/hooks (commit-msg checks author and format, pre-push runs the checks)
+  3. git identity (scripts/git_setup.py): never overwritten. In a project, commit.name and commit.email from
+     starter.json are set only when git has none, a different identity is reported. The starter ships none (the
+     hook checks only the format there); a copy that has not run init gets nothing and the bin/starter init hint.
 Each step is idempotent and reports one line; the summary reaches the session as additional context.
 
 Python 3.9 standard library only, so the system python3 of the Command Line Tools runs it. That python3 is an xcrun
@@ -18,6 +20,12 @@ import os
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "scripts"))
+try:
+    import git_setup
+except ImportError:  # scripts/ missing: report it instead of failing the session start
+    git_setup = None
+
 HOOKS_DIR = "scripts/hooks"
 
 
@@ -29,53 +37,16 @@ def run(args, cwd, timeout=10, env=None):
     return result.returncode, (result.stdout or "") + (result.stderr or "")
 
 
-def read_identity(root):
-    """Returns (name, email) from starter.json, or None when the file or the commit block is missing or broken."""
-    try:
-        with open(os.path.join(root, "starter.json"), encoding="utf-8") as handle:
-            config = json.load(handle)
-    except (OSError, ValueError):
-        return None
-    commit = config.get("commit") if isinstance(config, dict) else None
-    if not isinstance(commit, dict):
-        return None
-    name, email = commit.get("name"), commit.get("email")
-    if not isinstance(name, str) or not isinstance(email, str):
-        return None
-    return name.strip(), email.strip()
-
-
-def identity_line(root, git=run):
-    identity = read_identity(root)
-    if identity is None:
-        return "Git-Identität: starter.json ohne Block commit; nichts gesetzt."
-    name, email = identity
-    if not name or not email:
-        return (
-            "Git-Identität: FEHLT. commit.name und commit.email in starter.json sind leer; der Hook commit-msg nimmt "
-            "keinen Commit an. Die Identität beim Auftraggeber erfragen, nie erfinden."
-        )
-    changed = []
-    for key, value in (("user.name", name), ("user.email", email)):
-        code, current = git(["git", "config", "--get", key], root)
-        if code != 0 or current.strip() != value:
-            git(["git", "config", key, value], root)
-            changed.append(key)
-    if changed:
-        return "Git-Identität: aus starter.json gesetzt ({} <{}>).".format(name, email)
-    return "Git-Identität: passt zu starter.json."
+def identity_line(root, git=run, state=None):
+    if git_setup is None:
+        return "Git-Identität: scripts/git_setup.py fehlt; nichts gesetzt."
+    return git_setup.identity_line(root, git, state)
 
 
 def hooks_line(root, git=run):
-    if not os.path.isdir(os.path.join(root, HOOKS_DIR)):
-        return "Git-Hooks: {} fehlt, nichts eingerichtet.".format(HOOKS_DIR)
-    code, current = git(["git", "config", "--get", "core.hooksPath"], root)
-    if code == 0 and current.strip() == HOOKS_DIR:
-        return "Git-Hooks: {} aktiv.".format(HOOKS_DIR)
-    code, output = git(["git", "config", "core.hooksPath", HOOKS_DIR], root)
-    if code == 0:
-        return "Git-Hooks: {} eingerichtet (wie make hooks).".format(HOOKS_DIR)
-    return "Git-Hooks: Einrichten gescheitert ({}). make hooks ausführen.".format(output.strip()[:200])
+    if git_setup is None:
+        return "Git-Hooks: scripts/git_setup.py fehlt; make hooks ausführen."
+    return git_setup.hooks_line(root, git)
 
 
 def summarize_doctor(code, output):
@@ -126,8 +97,10 @@ def doctor_env(environ=None, default_sdk=xcrun_default_sdk):
 def doctor_line(root, platform=sys.platform, runner=run, environ=None, default_sdk=xcrun_default_sdk):
     if platform != "darwin":
         return (
-            "Werkzeuge: kein Mac. make build, make test und make shots laufen nur unter macOS; "
-            "die Prüfskripte in Python (make check-rules, check-texts, check-design, check-kit) laufen hier."
+            "Werkzeuge: kein Mac. Bauen, Testen und Rendern (make build, make test, make shots) brauchen Claude Code auf "
+            "einem Mac; hier laufen nur Doku, Regeln und die Prüfskripte in Python (make check-rules, check-texts, "
+            "check-design, check-kit). Änderungen an Swift-Code nicht ungeprüft committen, sondern für eine Sitzung "
+            "auf dem Mac liegen lassen; git push führt hier nur die Prüfungen ohne Mac aus."
         )
     script = os.path.join(root, "scripts", "doctor.sh")
     if not os.path.isfile(script):

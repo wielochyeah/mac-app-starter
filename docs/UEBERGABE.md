@@ -32,15 +32,25 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
 
 ## 2. Einrichten
 
-1. Werkzeuge prüfen: `make doctor`. Nötig sind die Command Line Tools (`xcode-select --install`), Xcode ist es nicht. Das Skript installiert nichts; meldet es eine gemischte Installation der Command Line Tools, nennt es die zwei Befehle zur Reparatur. `make build` funktioniert trotzdem, nur der zweite Weg über `Package.swift` nicht.
+1. Werkzeuge prüfen: `make doctor`. Nötig sind die Command Line Tools (`xcode-select --install`), Xcode ist es nicht. Das Skript installiert nichts; meldet es eine gemischte Installation der Command Line Tools, nennt es die zwei Befehle zur Reparatur. `make build` funktioniert trotzdem, nur der zweite Weg über `Package.swift` nicht. Antwortet schon `make` nur mit einem Hinweis auf die Xcode-Lizenz, ist ein Xcode ausgewählt, dessen Lizenz noch nicht bestätigt ist: einmal `sudo xcodebuild -license` (Person, im eigenen Terminal) oder ohne Xcode bauen mit `export DEVELOPER_DIR=/Library/Developer/CommandLineTools`.
 2. Projekt anlegen, einmal:
 
    ```sh
    bin/starter init --name "<Name>" --bundle-id <com.firma.app> --accent <akzent> --symbol <sf.symbol> --anrede du
    ```
 
-   `init` schreibt `starter.json` um, entfernt die Bauunterlagen des Starters, legt Plan, Vorgaben und Strang-Plan als leere Vorlagen an, verschiebt die Entscheidungen des Starters nach `docs/STARTER_DECISIONS.md`, leert die Commit-Identität, die Unterzeile des Starters (`app.tagline`) und die Namensliste `texts.personen`, schreibt `starter.lock.json` und führt `make rules` aus, damit `CLAUDE.md` Teil A und die Wortlisten zur Anrede passen. Ohne `--non-interactive` fragt es nach und bietet die angegebenen Schalter als Vorschlag an; mit `--non-interactive` nimmt es die Angaben nur aus den Schaltern (`--name` ist dann Pflicht). Mit `--module-aus <modul>` fallen Module gleich weg. `--anrede sie` wählt die förmliche Anrede: die Texte des Kits sind in der du-Form geschrieben, `make check-texts` listet danach jede Stelle, die umzuschreiben ist. Eine eigene Unterzeile für den Willkommensschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
-3. Commit-Identität in `starter.json` eintragen (`commit.name`, `commit.email`), dann `make hooks`. Bis die Identität gesetzt ist, nimmt der Hook `commit-msg` keinen Commit an.
+   `init` schreibt `starter.json` um, entfernt die Bauunterlagen des Starters, legt Plan, Vorgaben und Strang-Plan als leere Vorlagen an, verschiebt die Entscheidungen des Starters nach `docs/STARTER_DECISIONS.md`, leert die Commit-Identität, die Unterzeile des Starters (`app.tagline`) und die Namensliste `texts.personen`, setzt über `README.md` eine kurze Einleitung mit dem Namen der App, löscht die Bilder des Starters aus `docs/screenshots/`, schreibt `starter.lock.json` und führt `make rules` aus, damit `CLAUDE.md` Teil A und die Wortlisten zur Anrede passen. Ein unbekanntes SF Symbol lehnt es ab, bevor es etwas schreibt.
+
+   Ohne `--non-interactive` fragt es nach; angegebene Schalter (auch `--bundle-id`) sind dann der Vorschlag, die Antwort gilt. Bei den Modulen behält Enter jedes Modul, wie es ist, auch eines, das in `starter.json` aus ist (`mlx`); nur `n` entfernt es. Mit `--module-aus <modul>` fallen Module gleich weg. Ein Agent ruft `init` nie mit Fragen auf, sondern mit allen Angaben, die die Person genannt hat, und die Person bestätigt den Befehl:
+
+   ```sh
+   bin/starter init --non-interactive --name "<Name>" --bundle-id <com.firma.app> --accent <akzent> --symbol <sf.symbol> --anrede <du|sie> --module-aus <modul,modul>
+   ```
+
+   `--anrede sie` wählt die förmliche Anrede. Die Texte des Kits sind in der du-Form geschrieben, im Starter rund 130 Stellen in den `*Text.swift`-Dateien und in `App/Resources/InfoPlist.json`. `init` trägt sie als bekannte Befunde in `rules/baseline/texte.json` ein, damit `make check` und der Hook `pre-push` grün bleiben; die Liste ist die Aufgabe. `python3 scripts/check_texts.py --streng` zeigt jede Stelle; nach dem Umschreiben verkleinert `python3 scripts/check_texts.py --baseline-aktualisieren` die Liste, wachsen darf sie nicht. Eine eigene Unterzeile für den Willkommensschritt steht danach in `starter.json` als `app.tagline` mit `en` und `de`.
+
+   Steht im Bericht „Starter-Commit: unbekannt“, gibt es den Tag `v<Version>` des Starters noch nicht oder `--ohne-netz` war gesetzt. Das ist kein Fehler: `bin/starter sync` nimmt dann den Tag selbst als Basis, sobald es ihn gibt, oder `--basis <commit>`.
+3. Commit-Identität des Projekts in `starter.json` eintragen (`commit.name`, `commit.email`; die Person, unter deren Namen das Projekt committet, nie eine erfundene), dann `make hooks`. `make hooks` setzt sie als Git-Identität dieses Repositorys, wenn Git noch keine kennt, und meldet eine abweichende, statt sie zu überschreiben. Bis die Identität in `starter.json` steht, nimmt der Hook `commit-msg` keinen Commit an.
 4. Prüfen und ansehen:
 
    ```sh
@@ -51,17 +61,22 @@ git -c user.name="<Name>" -c user.email="<E-Mail>" commit -m "chore: copy mac-ap
 
    `build/shots/index.html` zeigt alle Szenen als Übersicht. Beim ersten `make run` öffnet das Onboarding.
 
-## 3. Selbst festlegen
+## 3. Was vom Starter übrig ist
 
-Vor dem ersten eigenen Commit:
+`init` räumt auf, was sicher nur der Starter braucht. Was danach noch vom Starter stammt, entscheidet das Projekt selbst, vor der ersten Weitergabe:
 
 | Datei | Was |
 |---|---|
-| `starter.json` | Name, Bundle-ID, Anzeigename in beiden Sprachen, Akzent, Symbol, Copyright, Module, Berechtigungen, Anrede (`du` oder `sie`), Commit-Identität, Signatur |
+| `starter.json` | `app.displayName` (heißt wie `app.name`, Umlaute hier), `app.tagline` (leer, sonst zeigt der Willkommensschritt nur den Namen), Akzent, Symbol, Copyright, Module, Berechtigungen, Anrede, Commit-Identität, Signatur. Tagline, Anzeigename und Identität nennt der Auftraggeber, sie werden nie erfunden |
 | `App/Resources/InfoPlist.json` | Erklärtexte der Berechtigungen, die das Projekt nutzt, konkret für diese App |
 | `docs/PROJECT.md` | Zweck, Zielgruppe, App-Formen, Ansichten, Daten, Berechtigungen, KI, Verteilung, offene Fragen |
-| `README.md` | Einleitung und „Ein neues Projekt starten“ beschreiben noch den Starter; beides durch Zweck und Einrichtung des Projekts ersetzen, Aufbau, Befehle und Module bleiben |
-| `App/Resources/AppIcon.icns` | `make icon` nach einer Änderung von Akzent oder Symbol; vor der ersten Weitergabe ein eigenes Motiv (`docs/VERTEILUNG.md`) |
+| `README.md` | `init` setzt eine kurze Einleitung mit dem Namen ein; Zweck und eigene Bilder ergänzen. Aufbau, Regeln, Module, Befehle, Betrieb und Pflege bleiben |
+| `docs/screenshots/` | `init` löscht die Bilder des Starters; eigene Bilder trägt `docs/screenshots/list.txt` ein, `make readme-shots` legt sie an |
+| `CHANGELOG.md` | die Fassungen des Starters; durch die eigene Geschichte ersetzen oder als Herkunft behalten |
+| `CONTRIBUTING.md` | beschreibt den Ablauf mit Strängen und Integration; an die Arbeitsweise des Projekts anpassen |
+| `App/Resources/AppIcon.icns`, `tools/icon/Icon.swift` | `make icon` nach einer Änderung von Akzent oder Symbol; vor der ersten Weitergabe ein eigenes Motiv statt eines SF Symbols (`docs/VERTEILUNG.md`) |
+| `app.bundleId` | `com.example.*` ist ein Platzhalter; vor der ersten Weitergabe die eigene umgekehrte Domain |
+| Beispiele | `bin/starter strip-examples`, sobald das erste eigene Feature steht (bis dahin ist das Beispiel seine Vorlage) |
 
 Nicht benötigte Module entfernen, jedes mit eigenem Commit:
 
@@ -71,16 +86,39 @@ bin/starter remove island
 git add -A && git commit -m "chore(setup): remove the island module"
 ```
 
-`mlx` vor `ai`; mindestens `window` oder `menubar` bleibt. Die Beispiele entfernt `bin/starter strip-examples`, sobald das erste eigene Feature steht.
+`mlx` vor `ai`; mindestens `window` oder `menubar` bleibt. `remove` nimmt auch die Zeilen des Moduls aus `docs/screenshots/list.txt` und löscht ihre Bilder; `make check-kit` meldet Bilder in Anleitungen und in `list.txt`, die es nicht mehr gibt.
 
 ## 4. Agenten einrichten
 
-Bauen, Testen und Rendern brauchen macOS; ein Linux-Container in der Cloud kann nur die Prüfskripte in Python ausführen. Deshalb:
+Bauen, Testen und Rendern brauchen macOS. Deshalb:
 
-- **Claude Code auf dem Mac** (Terminal oder Desktop-App) für die Arbeit an der App. Der Hook `session-start` prüft die Werkzeuge, setzt `core.hooksPath` und die Git-Identität aus `starter.json`.
-- **Claude Code in der Cloud** für Dokumente, Regeln und Werkzeuge; die CI auf `macos-26` führt bei jedem Push `make check` aus und baut, rendert und probt alle Module bei Pull Requests, auf `main` und bei Tags. Unter „Network access“ der Umgebung genügt `github.com`.
+- **Claude Code auf dem Mac** (Desktop-App oder Terminal) für die Arbeit an der App. Der Hook `session-start` prüft die Werkzeuge, setzt `core.hooksPath` und die Git-Identität aus `starter.json`, wenn Git noch keine kennt; eine vorhandene überschreibt er nie, er meldet nur, wenn sie abweicht.
+- **Claude Code in der Cloud** (Linux-Container) nur für Dokumente, Regeln und die Python-Werkzeuge. Swift-Änderungen bleiben für eine Sitzung auf dem Mac liegen: der Hook `pre-push` führt dort nur `make check-light` aus, Build, Swift-Tests und Renders laufen erst auf dem Mac und in den Mac-Jobs der CI. Unter „Network access“ der Umgebung genügt `github.com`.
 
-Den Bootstrap-Prompt aus dem `README.md` mit Name, Zweck, Zielgruppe, App-Formen und Hauptansichten füllen und senden. Neue Wünsche während der Arbeit kommen in `docs/agents/VORGABEN.md`; der Agent arbeitet sie als Regel in `rules/projekt/` ein.
+Die Person richtet ein (Abschnitte 1 bis 3: Repository, `make doctor`, `bin/starter init`, Commit-Identität, `make hooks`, erster Commit), der Agent übernimmt danach. Den Bootstrap-Prompt mit Name, Zweck, Zielgruppe, App-Formen und Hauptansichten füllen und in einer Sitzung auf dem Mac senden:
+
+```
+Neues Projekt auf Basis von mac-app-starter.
+Projekt: <Name>. Zweck: <ein bis zwei Sätze>. Zielgruppe: <wer, welches Vorwissen>.
+App-Formen: <Fenster, Menüleiste, Insel, Hintergrund>. Hauptansichten: <drei bis fünf>. Daten: <z. B. Notiz, Projekt>.
+Berechtigungen: <keine, Mitteilungen, Mikrofon …>. Lokale KI: <nein oder wofür>. Sprachen: Englisch und Deutsch, Anrede <du oder Sie>.
+
+Arbeite in Claude Code auf einem Mac: Bauen, Testen und Rendern laufen nur unter macOS. Eine Sitzung in einem Linux-Container ändert nur Doku, Regeln und Python-Werkzeuge und lässt Swift-Änderungen für den Mac liegen.
+
+0. Prüfen, ob die Person eingerichtet hat: starter.lock.json nennt das Projekt, starter.json hat commit.name und commit.email, make doctor ist grün. Fehlt etwas, anhalten und nachfragen; bin/starter init und die Commit-Identität sind ihre Schritte, eine Identität wird nie erfunden.
+1. CLAUDE.md, docs/UEBERGABE.md, docs/DESIGN.md, docs/ARCHITEKTUR.md und docs/agents/VORGABEN.md lesen.
+2. make check ausführen. Was in starter.json noch fehlt, beim Auftraggeber erfragen statt raten: app.tagline (en und de), app.displayName mit Umlauten, Akzent nur aus der Palette in docs/DESIGN.md.
+3. App/Resources/InfoPlist.json, docs/PROJECT.md und die Einleitung von README.md für das Projekt schreiben.
+4. Nicht benötigte Module mit bin/starter remove <modul> entfernen, je Modul ein Commit. Für eine größere App in docs/agents/PLAN.md Stufen und Stränge planen und docs/agents/straenge.json füllen; eine kleine App braucht keine Stränge.
+5. Jedes Feature mit dem Skill neues-feature bauen, Ansichten mit neue-ansicht, neue-einstellung und neuer-onboarding-schritt. Steht das erste eigene Feature, bin/starter strip-examples ausführen.
+6. Die Reste des Starters aus docs/UEBERGABE.md, Abschnitt 3, abarbeiten: CHANGELOG.md, CONTRIBUTING.md, Bilder in docs/screenshots, eigenes Motiv für das App-Symbol, Bundle-ID ohne com.example.
+7. Bei Anrede Sie: die du-Texte des Kits stehen als bekannte Befunde in rules/baseline/texte.json. Nach und nach umschreiben und die Liste mit python3 scripts/check_texts.py --baseline-aktualisieren verkleinern.
+8. Nicht ändern: Kit-Pfade aus starter.manifest.json und Teil A von CLAUDE.md. Eigene Regeln kommen nach rules/projekt/. Bedarf am Kit in docs/STARTER_FEEDBACK.md festhalten.
+9. Die App nie selbst starten, keine Berechtigung anfragen: prüfen mit make test, make shots ONLY=<präfix> und --selftest. Die Szenen ansehen, die eine Änderung betrifft, jede in en und de, hell und dunkel. Vor jedem Push make check. Jede Stufe mit dem Skill red-team prüfen lassen.
+10. Eigener Branch, kleine Commits, mindestens stündlich pushen, nie auf main. Offene Fragen an den Auftraggeber in docs/PROJECT.md sammeln statt raten.
+```
+
+Neue Wünsche während der Arbeit kommen in `docs/agents/VORGABEN.md`; der Agent arbeitet sie als Regel in `rules/projekt/` ein.
 
 Agenten starten die App beim Bauen nie selbst, fragen keine Berechtigung an und registrieren kein Anmeldeobjekt; sie prüfen mit `make test`, `make shots` und `--selftest`. Den Start der App, das Onboarding auf einem frischen Benutzer und die Berechtigungsdialoge prüft eine Person.
 
@@ -96,16 +134,24 @@ gh api -X PUT repos/<owner>/<repo>/branches/main/protection \
   -F "enforce_admins=true" -F "required_pull_request_reviews=null" -F "restrictions=null"
 ```
 
-Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. Was wann läuft:
+Die Namen der Prüfungen sind die Namen der Jobs in `.github/workflows/ci.yml`. `strict=true` ist nötig: nur dann hat der Pull Request genau den Stand geprüft, der auf `main` landet, und der Merge braucht keinen zweiten `make check`.
 
-| Jobs | wann |
-|---|---|
-| `Regeln, Texte, Design, Kit, Commits` (Linux), `make check (starter.json)` (Mac, mit Selbsttest und den Python-Werkzeugen unter `/usr/bin/python3` 3.9) | jeder Push |
-| `Build (<module>)` je Kombination, `Release-Build`, `Renders (en, de, hell, dunkel)` | Pull Requests, Standard-Branch, Tags `v*` |
-| `Template-Probe`, `Modul entfernen (<modul>)` | dazu nur im Starter selbst |
-| `DMG` | Tags `v*` |
+Minuten auf macOS-Runnern zählen in privaten Repositorys zehnfach, Linux-Minuten einfach. Deshalb entscheidet der Job `Plan` (`.github/ci_plan.py`), welche Mac-Jobs ein Ereignis braucht:
 
-Der Job `Plan` (`.github/ci_plan.py`) liest aus den Ordnern unter `App/Sources/Modules/`, welche Module es noch gibt: Kombinationen mit einem entfernten Modul fallen weg, und die Proben des Starters laufen in einem Projekt nicht. Die stündlichen Sicherungs-Pushes eines Arbeits-Branches kosten so einen Mac-Job statt rund 27 (im Starter; ein Projekt ohne Beispiele und mit weniger Modulen hat weniger); Minuten auf macOS-Runnern zählen in privaten Repositorys mehrfach. Wer weiter sparen muss, kürzt `COMBOS` in `.github/ci_plan.py`, nie die Prüfungen.
+| Ereignis | Jobs | Mac-Minuten, geschätzt |
+|---|---|---|
+| Push auf einen Arbeits-Branch | `Regeln, Texte, Design, Kit, Commits` (Linux, mit den Python-Tests) | 0 |
+| Pull Request, kein Entwurf, jede Aktualisierung | dazu `make check (starter.json)`: `make check` mit Warnungen als Fehler, Selbsttest, Release-Build, Python-Werkzeuge unter `/usr/bin/python3` 3.9 | etwa 10 |
+| Pull Request als Entwurf, oder nur Doku geändert (`*.md` außerhalb von `App/`, `docs/`) | nur Linux | 0 |
+| Merge über GitHub auf `main` | `Modul-Kombinationen (typecheck)`: jede Kombination aus `.github/ci_plan.py` in einem Job geprüft, ohne zu bauen; `Renders (en, de, hell, dunkel)` | etwa 15 |
+| direkter Push auf `main`, wöchentlich montags, `gh workflow run ci.yml --ref <branch>` | dazu `make check (starter.json)` | etwa 25 |
+| Tag `v*` | alles davon und `DMG` | etwa 30 |
+| im Starter selbst: `main`, Tags, Lauf von Hand | dazu `Template-Probe` und `Modul entfernen (<modul>)` je Modul | etwa 60 mehr |
+| Kopie aus „Use this template“ vor `bin/starter init` | nur `Einrichten (bin/starter init)` (Linux), schlägt mit dem Hinweis auf `bin/starter init` fehl | 0 |
+
+Die Schätzung beruht auf etwa dem Dreifachen der Zeiten auf einem Mac mit Apple Silicon (`make check` 2,5 Minuten, `make typecheck` 3 Minuten). Ein Pull Request mit fünf Aktualisierungen kostet so etwa 50 Mac-Minuten, abgerechnet 500; vorher liefen je Aktualisierung bis zu 27 Mac-Jobs. Renders behalten die CI drei Tage: bei Grün nur die Bilder aus `docs/screenshots/list.txt` und die Übersicht, bei Rot alle. Wer weiter sparen muss, kürzt `COMBOS` in `.github/ci_plan.py`, nie die Prüfungen.
+
+Der Plan liest aus den Ordnern unter `App/Sources/Modules/`, welche Module es noch gibt: Kombinationen mit einem entfernten Modul fallen weg. Ein Repository gilt nur als der Starter, wenn es `repository` aus `starter.manifest.json` ist (Groß- und Kleinschreibung zählen nicht); jede andere Kopie ohne `bin/starter init` bekommt keinen Mac-Job.
 
 ## 6. Verteilen
 
@@ -135,3 +181,16 @@ Der Probelauf zeigt, was sich ändert. Der echte Lauf übernimmt Kit-Pfade, füh
 - Mit einer anderen Git-Identität committen als der aus `starter.json`, Hooks mit `--no-verify` umgehen oder auf `main` force-pushen.
 - Unter der Bundle-ID oder Signatur eines anderen Projekts verteilen.
 - Renders, DMGs, Modelle oder Daten unter echten Namen ins Repository legen; nur die Auswahl in `docs/screenshots/` über `make readme-shots`.
+
+## 9. Wann ein Projekt fertig ist
+
+- `make check` ist grün, die CI auf dem letzten Pull Request und auf `main` ebenso (`make check`, Typecheck jeder Modul-Kombination, Renders).
+- Die Reste des Starters aus Abschnitt 3 sind abgearbeitet.
+- Jede genutzte App-Form ist in Renders angesehen: jede Szene in en und de, hell und dunkel.
+- Das Onboarding ist einmal auf einem frischen Benutzer durchgegangen (`tccutil reset All <bundleId>` setzt nur diese App zurück).
+- Jede Berechtigung ist mit der installierten App aus dem DMG erteilt, abgelehnt und nach einem Neustart erkannt worden.
+- Die Insel ist an einem Mac mit und einem ohne Notch geprüft, falls sie genutzt wird.
+- Das DMG öffnet mit gestaltetem Fenster und installiert auf einem zweiten Mac oder Benutzer; bei Developer ID bestehen `codesign --verify --deep --strict`, `spctl -a -vv` und `xcrun stapler validate`.
+- Das App-Symbol ist ein eigenes Motiv, kein SF Symbol.
+- Es gibt keine Reste der Beispiele mehr.
+- `docs/PROJECT.md` ist gefüllt, Zugangsdaten liegen nur im Schlüsselbund oder in den Geheimnissen der CI.

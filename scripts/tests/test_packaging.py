@@ -108,6 +108,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(pkg.settings(c, environ={})["NOTARY_PROFILE"], "from-config")
         self.assertEqual(pkg.settings(c, environ={"NOTARY_PROFILE": "env"})["NOTARY_PROFILE"], "env")
 
+    @unittest.skipUnless(Path("/bin/zsh").exists(), "needs zsh (macOS)")
     def test_shell_env_is_quoted(self):
         out = pkg.shell_env({"NAME": "My App", "X": "it's"})
         res = subprocess.run(["/bin/zsh", "-c", out + 'print -r -- "$PKG_NAME|$PKG_X"'], capture_output=True, text=True)
@@ -193,6 +194,28 @@ class EntitlementTests(unittest.TestCase):
     def test_missing_files_are_empty(self):
         self.assertEqual(pkg.merged_entitlements(self.tmp / "no.plist", self.tmp / "none.plist"), {})
 
+    def test_entitlement_map_gives_nested_programs_their_own(self):
+        root = self.tmp
+        (root / "tools").mkdir()
+        plist = self.write("tools/python.plist", {"com.apple.security.cs.disable-library-validation": True})
+        mapping = root / "tools" / "entitlements-map.json"
+        mapping.write_text(json.dumps({"Contents/Resources/python/bin/python3*": "tools/python.plist"}), encoding="utf-8")
+        self.assertEqual(pkg.entitlement_map(mapping, root),
+                         [("Contents/Resources/python/bin/python3*", "tools/python.plist")])
+        self.assertTrue(plist.is_file())
+        self.assertEqual(pkg.entitlement_map(root / "missing.json", root), [])
+        for bad in [{"Contents/MacOS/App": "tools/python.plist"}, {"Contents/../x": "tools/python.plist"},
+                    {"/etc/x": "tools/python.plist"}, {"Contents/Resources/x": "../outside.plist"},
+                    {"Contents/Resources/x": "tools/missing.plist"}, ["x"]]:
+            mapping.write_text(json.dumps(bad), encoding="utf-8")
+            with self.assertRaises(pkg.PackagingError, msg=bad):
+                pkg.entitlement_map(mapping, root)
+
+    def test_shipped_entitlements_say_no_library_validation_exception_for_the_app(self):
+        text = (ROOT / "tools" / "entitlements.plist").read_text(encoding="utf-8")
+        self.assertNotIn("<key>com.apple.security.cs.disable-library-validation</key>", text)
+        self.assertIn("entitlements-map.json", text)
+
     def test_shipped_extra_file_is_an_empty_dictionary(self):
         with open(ROOT / "tools" / "entitlements.plist", "rb") as f:
             self.assertEqual(plistlib.load(f), {})
@@ -242,6 +265,61 @@ class NotaryTests(unittest.TestCase):
             pkg.notary_plan("x.zip", self.ID, "p")
 
 
+@unittest.skipUnless(Path("/bin/zsh").exists(), "tools/lib/packaging.sh is a zsh library (macOS)")
+class SignAppTests(unittest.TestCase):
+    """sign_app with a stand-in for codesign that records its arguments: the app's entitlements go to the app, a
+    nested program listed in the map gets its own, nothing else gets any."""
+
+    def test_nested_program_gets_its_own_entitlements(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            app = tmp / "A.app" / "Contents"
+            for rel in ("MacOS/A", "Resources/python/bin/python3.12", "Resources/lib/x.dylib"):
+                (app / rel).parent.mkdir(parents=True, exist_ok=True)
+                (app / rel).write_bytes(b"\xcf\xfa\xed\xfe" + b"\0" * 12)
+            fake = tmp / "bin"
+            fake.mkdir()
+            log = tmp / "codesign.log"
+            (fake / "codesign").write_text('#!/bin/sh\necho "$@" >> "{}"\n'.format(log), encoding="utf-8")
+            os.chmod(fake / "codesign", 0o755)
+            mapping = tmp / "map.json"
+            mapping.write_text(json.dumps({"Contents/Resources/python/bin/python3*": "tools/entitlements.plist"}),
+                               encoding="utf-8")
+            script = ('ROOT="$1"; source "$ROOT/tools/lib/packaging.sh"; '
+                      'sign_app "$2" "Developer ID Application: Example (AB12CD34EF)" "$3" "$4"')
+            env = dict(os.environ, PATH=str(fake) + os.pathsep + os.environ["PATH"])
+            res = subprocess.run(["/bin/zsh", "-c", script, "zsh", str(ROOT), str(tmp / "A.app"), "/x/app.plist",
+                                  str(mapping)], capture_output=True, text=True, env=env)
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            lines = log.read_text(encoding="utf-8").splitlines()
+            python = [line for line in lines if line.endswith("python3.12")]
+            dylib = [line for line in lines if line.endswith("x.dylib")]
+            main = [line for line in lines if line.endswith("A.app") and "--sign" in line]
+            self.assertIn("--entitlements " + str(ROOT / "tools" / "entitlements.plist"), python[0])
+            self.assertNotIn("--entitlements", dylib[0])
+            self.assertIn("--entitlements /x/app.plist", main[0])
+
+
+@unittest.skipUnless(sys.platform == "darwin", "scripts/dmg.sh runs on macOS")
+class PlaceholderBundleIdTests(unittest.TestCase):
+    """make dmg refuses com.example.* with a Developer ID before it builds anything (a copy with only the scripts it
+    reads first)."""
+
+    def test_developer_id_refuses_the_placeholder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            for rel in ("scripts/dmg.sh", "tools/lib/packaging.sh", "tools/packaging/pkg.py"):
+                (tmp / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / rel, tmp / rel)
+            (tmp / "starter.json").write_text(json.dumps(config()), encoding="utf-8")
+            env = dict(os.environ, SIGN_IDENTITY="Developer ID Application: Example (AB12CD34EF)")
+            res = subprocess.run([str(tmp / "scripts" / "dmg.sh")], capture_output=True, text=True, env=env, cwd=tmp)
+            self.assertEqual(res.returncode, 1, res.stdout + res.stderr)
+            self.assertIn("placeholder (com.example.*)", res.stderr)
+            self.assertFalse((tmp / "build").exists(), "nothing was built")
+
+
+@unittest.skipUnless(Path("/bin/zsh").exists(), "scripts/notarize.sh is a zsh script (macOS)")
 class NotarizeScriptTests(unittest.TestCase):
     def run_dry(self, stamp):
         with tempfile.TemporaryDirectory() as tmp:
@@ -312,6 +390,7 @@ class PinTests(unittest.TestCase):
         self.assertEqual(names, {"dmgbuild", "ds-store", "mac-alias"})
 
 
+@unittest.skipUnless(sys.platform == "darwin" and shutil.which("swiftc"), "builds Swift tools (macOS with swiftc)")
 class ToolBuildTests(unittest.TestCase):
     """Builds the icon and DMG tools (they compile against Kit/Design/Theme.swift and Tokens.swift)
     and runs them, so a Kit change that breaks them fails make test, not the next release.
@@ -353,6 +432,39 @@ class ToolBuildTests(unittest.TestCase):
                               "--layout", "y", "--anrede", "ihr"], capture_output=True, text=True)
         self.assertNotEqual(res.returncode, 0)
         self.assertIn("du|sie", res.stderr)
+
+
+def manifest_api():
+    """The PackageDescription module of the selected developer dir, or None."""
+    dev = subprocess.run(["xcode-select", "-p"], capture_output=True, text=True).stdout.strip() if shutil.which("xcode-select") else ""
+    dev = os.environ.get("DEVELOPER_DIR") or dev
+    for path in (Path(dev) / "usr/lib/swift/pm/ManifestAPI",
+                 Path(dev) / "Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/pm/ManifestAPI"):
+        if (path / "PackageDescription.swiftmodule").exists():
+            return path
+    return None
+
+
+class PackageManifestTests(unittest.TestCase):
+    """Package.swift (the second build path) follows starter.json: modules and app.minimumMacOS, and stops on a
+    starter.json it cannot read instead of building another module set."""
+
+    def test_reads_the_minimum_macos_and_never_defaults_modules(self):
+        text = (ROOT / "Package.swift").read_text(encoding="utf-8")
+        self.assertIn(".macOS(minimumMacOS)", text)
+        self.assertNotIn(".v26", text)
+        self.assertIn('fatalError("Package.swift: starter.json has no modules")', text)
+        self.assertNotIn('var enabled: Set<String> = ["window", "menubar"]', text)
+
+    @unittest.skipUnless(sys.platform == "darwin" and shutil.which("swiftc") and manifest_api(),
+                         "type-checks against PackageDescription (macOS)")
+    def test_type_checks(self):
+        env = {k: v for k, v in os.environ.items() if k != "SDKROOT"}
+        sdk = subprocess.run([str(ROOT / "scripts" / "pick-sdk.sh")], capture_output=True, text=True, env=env).stdout.strip()
+        res = subprocess.run(["swiftc", "-typecheck", "-sdk", sdk, "-I", str(manifest_api()), "-swift-version", "6",
+                              "-package-description-version", "6.2", str(ROOT / "Package.swift")],
+                             capture_output=True, text=True, env=dict(env, SDKROOT=sdk))
+        self.assertEqual(res.returncode, 0, res.stderr)
 
 
 if __name__ == "__main__":

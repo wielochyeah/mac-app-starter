@@ -148,10 +148,15 @@ def finish_pending_build(root: Path, label: str, build: bool) -> Optional[int]:
     if not pending:
         return None
     if not build:
-        sys.stderr.write(f"{label}: nach „{pending}“ war make build rot; ohne --ohne-build erneut aufrufen, "
-                         "dann baut es noch einmal.\n")
+        sys.stderr.write(f"{label}: nach „{pending}“ ist make build noch nicht grün gelaufen; ohne --ohne-build erneut "
+                         "aufrufen, dann baut es noch einmal.\n")
         return 1
-    print(f"{label}: nach „{pending}“ war make build rot, baue noch einmal.")
+    missing = remove.swift_missing()
+    if missing:
+        sys.stderr.write(f"{label}: nach „{pending}“ steht make build noch aus; {missing}. Auf einem Mac erneut "
+                         "aufrufen, dann baut es.\n")
+        return 1
+    print(f"{label}: nach „{pending}“ ist make build noch nicht grün gelaufen, baue noch einmal.")
     if remove.run_make(root, "build"):
         set_pending_build(root, None)
         print(f"{label}: make build ist grün, „{pending}“ ist fertig. Danach: make check und committen.")
@@ -184,10 +189,9 @@ def cmd_init(root: Path, a) -> int:
         config = cfg.read_config(root)
         present = remove.present_modules(root, manifest, working_files(root), config)
         defaults = project.with_flag_defaults(config, accent=a.accent, symbol=a.symbol, anrede=a.anrede)
-        opts = project.interactive_values(manifest, defaults, _ask, present, name=a.name)
+        opts = project.interactive_values(manifest, defaults, _ask, present, name=a.name, bundle_id=a.bundle_id,
+                                          symbol_check=lambda value: project.symbol_problem(root, value))
         opts.remove += _split_modules(a.module_aus)
-        if a.bundle_id:
-            opts.bundle_id = a.bundle_id
         print(project.summary(opts), end="")
         confirm = _ask("Fortfahren? j/n", "n")
         if not confirm.lower().startswith("j"):
@@ -287,7 +291,8 @@ def cmd_doctor(root: Path) -> int:
     if lock.get("removedModules"):
         print(f"starter: entfernte Module: {', '.join(lock['removedModules'])}")
     if lock.get(PENDING):
-        print(f"starter: nach „{lock[PENDING]}“ war make build rot; nach der Korrektur {lock[PENDING]} erneut aufrufen")
+        print(f"starter: nach „{lock[PENDING]}“ ist make build noch nicht grün gelaufen (rot oder ohne Swift-Compiler "
+              f"übersprungen); auf einem Mac {lock[PENDING]} erneut aufrufen")
         code = code or 1
     return code
 

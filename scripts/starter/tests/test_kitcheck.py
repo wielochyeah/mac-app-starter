@@ -30,6 +30,21 @@ class StarterFixtureTests(TempDirCase):
         f = kitcheck.run(self.repo())
         self.assertEqual(f.problems, [], problems_text(f))
 
+    def test_a_picture_of_a_module_scene_must_go_with_the_module(self):
+        """After init and remove island, README.md would still show the island's picture: marked or starter-only."""
+        files = {"README.md": "# Starter\n\n![Insel](docs/screenshots/de-dark-island.pane.png)\n",
+                 "docs/screenshots/de-dark-island.pane.png": "png"}
+        text = problems_text(kitcheck.run(self.repo(files)))
+        self.assertIn("remove island: README.md:3 zeigt docs/screenshots/de-dark-island.pane.png", text)
+        for fixed in ("![Insel](docs/screenshots/de-dark-island.pane.png) <!-- modul:island -->\n",
+                      "<!-- nur-im-starter:anfang -->\n![Insel](docs/screenshots/de-dark-island.pane.png)\n"
+                      "<!-- nur-im-starter:ende -->\n"):
+            root = self.tmp / ("r" + str(len(fixed)))
+            repo_files = dict(base_files(), **files)
+            repo_files["README.md"] = "# Starter\n\n" + fixed
+            f = kitcheck.run(make_repo(root, repo_files))
+            self.assertEqual(f.problems, [], problems_text(f))
+
     def test_unclassified_file(self):
         f = kitcheck.run(self.repo({"LICENSE": "MIT\n"}))
         self.assertIn("LICENSE", problems_text(f))
@@ -85,10 +100,33 @@ class StateTests(TempDirCase):
             (None, {"GITHUB_REPOSITORY": "wielochyeah/mac-app-starter"}, "starter"),
             ("https://github.com/wielochyeah/mac-app-starter.git", {"GITHUB_REPOSITORY": "beispiel/notizen"},
              "needs-init"),
+            ("https://github.com/WielochYeah/Mac-App-Starter.git", {}, "starter"),
+            (None, {"GITHUB_REPOSITORY": "WielochYeah/MAC-APP-STARTER"}, "starter"),
+            # a copy the CI job made elsewhere (the template probe) is not the checked-out repository
+            (None, {"GITHUB_REPOSITORY": "wielochyeah/mac-app-starter", "GITHUB_WORKSPACE": "/elsewhere"}, "unknown"),
         ]
         for i, (origin, env, state) in enumerate(cases):
             root = make_repo(self.tmp / f"r{i}", base_files(), origin)
             self.assertEqual(repo_state(root, read_manifest(root), read_lock(root), env), state, (origin, env))
+        root = self.tmp / "r0"
+        self.assertEqual(repo_state(root, read_manifest(root), read_lock(root),
+                                    {"GITHUB_REPOSITORY": "wielochyeah/mac-app-starter", "GITHUB_WORKSPACE": str(root)}),
+                         "starter")
+
+    def test_detect_state_never_fails(self):
+        from starter.manifest import detect_state
+        self.assertEqual(detect_state(self.tmp, {}), "unknown")
+        root = self.repo("https://github.com/someone/new-app.git")
+        self.assertEqual(detect_state(root, {}), "needs-init")
+
+    def test_init_and_remove_refuse_a_differently_cased_starter_clone(self):
+        from starter.common import StarterError
+        from starter.remove import remove_module
+        root = self.repo("https://github.com/WielochYeah/Mac-App-Starter.git")
+        with self.assertRaises(StarterError):
+            init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
+        with self.assertRaises(StarterError):
+            remove_module(root, "island", build=False)
 
     def test_copy_without_init_fails_check_kit(self):
         root = self.repo("https://github.com/beispiel/notizen.git")
@@ -113,6 +151,35 @@ class ProjectTests(TempDirCase):
         root = make_repo(self.tmp / "p", files)
         init(root, InitOptions(name="Notizen", bundle_id="de.beispiel.notizen", build=False, offline=True))
         return root
+
+    def test_a_project_without_own_feature_cards_gets_a_hint(self):
+        root = self.project()
+        self.assertTrue(any("noch keine Funktionskarte" in w for w in kitcheck.run(root).warnings))
+        write_files(root, {"App/Sources/Features/Notes/NotesFeature.swift":
+                           "enum NotesFeature {\n    static func register() {\n        OnboardingFeatures.items.append(x)\n"
+                           "    }\n}\n"})
+        f = kitcheck.run(root)
+        self.assertFalse(any("Funktionskarte" in w for w in f.warnings), f.warnings)
+        self.assertEqual(f.problems, [], problems_text(f))
+
+    def test_pictures_that_are_not_there(self):
+        root = self.project({"docs/PROJECT.md": "![x](docs/screenshots/de-light-own.png)\n",
+                             "docs/screenshots/list.txt": "de-light/settings.window.png\n"})
+        f = kitcheck.run(root)
+        self.assertIn("docs/PROJECT.md:1 zeigt docs/screenshots/de-light-own.png, das es nicht gibt", problems_text(f))
+        self.assertTrue(any("de-light-settings.window.png fehlt noch" in w for w in f.warnings), f.warnings)
+
+    def test_a_list_line_of_a_removed_module(self):
+        from starter.remove import remove_module
+        root = self.project()
+        remove_module(root, "island", build=False, check_origin=False)
+        write_files(root, {"docs/screenshots/list.txt": "de-dark/island.pane.png\n",
+                           "docs/screenshots/de-dark-island.pane.png": "png",
+                           "docs/PROJECT.md": "![x](docs/screenshots/de-dark-island.pane.png)\n"})
+        text = problems_text(kitcheck.run(root))
+        self.assertIn("nennt die Szene island.pane des entfernten Moduls island", text)
+        self.assertIn("docs/PROJECT.md:1 zeigt docs/screenshots/de-dark-island.pane.png, eine Szene des entfernten "
+                      "Moduls island", text)
 
     def test_clean_project(self):
         f = kitcheck.run(self.project())

@@ -23,6 +23,15 @@ done
 step() { print -r -- "dmg: $*"; }
 fail() { print -u2 -r -- "dmg: $*"; exit 1; }
 
+# com.example.* is a placeholder: macOS keys permissions, settings and the login item to the bundle id, and a
+# second project with the same placeholder would share them. A Developer ID build refuses it.
+if [[ "$PKG_BUNDLE_ID" == com.example.* ]]; then
+  if [[ "$PKG_IDENTITY" != "-" ]]; then
+    fail "bundle id $PKG_BUNDLE_ID is a placeholder (com.example.*); set app.bundleId in starter.json to your own reverse domain before signing with a Developer ID"
+  fi
+  print -u2 -r -- "dmg: WARNING: bundle id $PKG_BUNDLE_ID is a placeholder (com.example.*); every app with it shares permissions and settings on a Mac. Set app.bundleId in starter.json before handing this DMG out."
+fi
+
 OUT="$ROOT/build/dmg"
 # ".noindex": Spotlight, Launchpad and the Apps view never list the staged copy as a second app.
 WORK="$OUT/work.noindex"
@@ -117,7 +126,7 @@ if [[ "$PKG_IDENTITY" == "-" ]]; then
   signed="ad hoc"
 else
   python3 tools/packaging/pkg.py entitlements "$WORK/entitlements.plist" >/dev/null
-  sign_app "$APP" "$PKG_IDENTITY" "$WORK/entitlements.plist"
+  sign_app "$APP" "$PKG_IDENTITY" "$WORK/entitlements.plist" "$ROOT/tools/entitlements-map.json"
   signed="$PKG_IDENTITY"
 fi
 python3 tools/packaging/pkg.py minos "$APP"

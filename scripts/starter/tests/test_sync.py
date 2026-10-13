@@ -123,6 +123,14 @@ class SyncTests(TempDirCase):
         result = self.run_sync()
         self.assertEqual(result.executable, ["Makefile", "scripts/build.sh"])
 
+    def test_files_that_instruct_agents_are_listed_too(self):
+        self.release({".claude/skills/x/SKILL.md": "# x\n", ".claude/agents/y.md": "# y\n", "CLAUDE.md": "# Regeln\nneu\n",
+                      "AGENTS.md": "# Agenten\n", ".github/workflows/ci.yml": "name: CI\n",
+                      "ai-worker/models.json": "{}\n", "docs/DESIGN.md": "# Design\nneu\n"})
+        result = self.run_sync(dry_run=True)
+        self.assertEqual(result.executable, [".claude/agents/y.md", ".claude/skills/x/SKILL.md", ".github/workflows/ci.yml",
+                                             "AGENTS.md", "CLAUDE.md", "ai-worker/models.json"])
+
     def test_base_from_lock_commit(self):
         lock = read_lock(self.project)
         lock["commit"] = self.base_commit

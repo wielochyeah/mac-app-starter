@@ -9,6 +9,8 @@ Commands (python3 tools/packaging/pkg.py <command> ...):
   entitlements <out.plist>    hardened-runtime entitlements for the distributable: the generated
                               build/gen/App.entitlements (from the listed permissions) plus
                               tools/entitlements.plist (project additions; they win)
+  entitlement-map <map.json>  the per-program entitlements of nested code (tools/entitlements-map.json): one line
+                              per entry, "<glob inside the app>\t<plist>"; paths are checked, nothing is signed here
   notary <file> [--identity X] [--profile P] [--team T]
                               checks the signing setup and prints the notarization commands for an
                               .app or .dmg, one per line, tab-separated arguments
@@ -192,6 +194,34 @@ def merged_entitlements(generated_path, extra_path):
     return merged
 
 
+def entitlement_map(path, root=ROOT):
+    """[(glob inside the app, plist path relative to root)] from a JSON object {"Contents/…": "tools/….plist"}.
+
+    Nested programs that need an exception of the hardened runtime (a bundled Python interpreter, a helper) get it
+    here, each for itself; the app's own entitlements stay without it."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError as e:
+        raise PackagingError(f"{path} is not valid JSON: {e}")
+    if not isinstance(data, dict):
+        raise PackagingError(f"{path} must map paths inside the app to entitlement files")
+    out = []
+    for pattern, plist in data.items():
+        if not isinstance(plist, str) or not pattern.startswith("Contents/") or ".." in pattern.split("/") \
+                or "\t" in pattern or "\n" in pattern:
+            raise PackagingError(f"{path}: {pattern!r} must be a path inside the app (Contents/…) without ..")
+        target = (Path(root) / plist).resolve()
+        if Path(root).resolve() not in target.parents or not target.is_file():
+            raise PackagingError(f"{path}: {plist} must be an existing plist inside the repository")
+        if pattern in ("Contents/MacOS/*", "Contents/MacOS") or re.fullmatch(r"Contents/MacOS/[^/]*", pattern):
+            raise PackagingError(f"{path}: {pattern} is the app itself; its entitlements come from tools/entitlements.plist")
+        out.append((pattern, str(Path(plist))))
+    return out
+
+
 # MARK: notarization
 
 def notary_plan(path, identity, profile, team_id="", bundle_id=""):
@@ -257,6 +287,9 @@ def main(argv=None):
             with open(rest[0], "wb") as f:
                 plistlib.dump(data, f, sort_keys=True)
             print(f"entitlements: {len(data)} key(s) -> {rest[0]}")
+        elif cmd == "entitlement-map" and len(rest) == 1:
+            for pattern, plist in entitlement_map(rest[0]):
+                print(f"{pattern}\t{plist}")
         elif cmd == "notary" and rest:
             s = settings(load_config())
             opts = {"--identity": s["IDENTITY"], "--profile": s["NOTARY_PROFILE"], "--team": s["TEAM_ID"]}

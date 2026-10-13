@@ -55,6 +55,9 @@ STARTER_LOCK = json.dumps({
 }, indent=2) + "\n"
 
 
+PRE_PUSH = ('#!/bin/sh\nif [ "$(uname -s)" = Darwin ]; then\n  make check\nelse\n  make check-light\nfi\n')
+
+
 def real_manifest() -> dict:
     return json.loads((ROOT / "starter.manifest.json").read_text(encoding="utf-8"))
 
@@ -74,12 +77,14 @@ def base_files() -> Dict[str, str]:
         "starter.lock.json": STARTER_LOCK,
         "starter.json": STARTER_JSON,
         "Makefile": "check: check-rules check-texts check-design check-kit build test\n\n"
+                    "check-light: check-rules check-texts check-design check-kit test-python\n\n"
                     "check-rules:\n\t@python3 scripts/rules_sync.py --check\n"
                     "check-texts:\n\t@python3 scripts/check_texts.py\n"
                     "check-design:\n\t@python3 scripts/check_design.py\n"
                     "check-kit:\n\t@python3 scripts/check_kit.py\n"
                     "build:\n\t@scripts/build.sh\n"
-                    "test:\n\t@scripts/test.sh\n",
+                    "test:\n\t@scripts/test.sh\n"
+                    "test-python:\n\t@python3 scripts/test_python.py\n",
         ".gitignore": "/build/\n",
         "README.md": "# Starter\n\nIntro.\n\n<!-- nur-im-starter:anfang -->\n## Stand\nBau läuft.\n"
                      "<!-- nur-im-starter:ende -->\n\n## Module\n\n| Modul | Pfad |\n|---|---|\n"
@@ -101,11 +106,13 @@ def base_files() -> Dict[str, str]:
         "scripts/check_texts.py": "print('ok')\n",
         "scripts/check_design.py": "print('ok')\n",
         "scripts/check_commit_msg.py": "print('ok')\n",
-        "scripts/hooks/commit-msg": "#!/bin/zsh\npython3 scripts/check_commit_msg.py \"$1\"\n",
-        "scripts/hooks/pre-push": "#!/bin/zsh\nexec make check\n",
-        ".github/workflows/ci.yml": "jobs:\n  check:\n    steps:\n      - run: make check\n",
+        "scripts/hooks/commit-msg": "#!/bin/sh\npython3 scripts/check_commit_msg.py \"$1\"\n",
+        "scripts/hooks/pre-push": PRE_PUSH,
+        ".github/workflows/ci.yml": "jobs:\n  check:\n    steps:\n      - run: python3 scripts/check_commit_msg.py --github\n"
+                                    "      - run: make check-kit\n      - run: make check\n",
         "scripts/build.sh": "#!/bin/zsh\n",
         "scripts/test.sh": "#!/bin/zsh\n",
+        "scripts/test_python.py": "print('ok')\n",
         "ai-worker/worker.py": "print('worker')\n",
     }
     for name, m in manifest["modules"].items():

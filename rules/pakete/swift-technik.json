@@ -216,8 +216,8 @@
     },
     {
       "id": "modul-bedingung",
-      "label": "Modul-Bedingung, die bin/starter remove nicht auflösen kann",
-      "hinweis": "ein Flag je #if, ohne ||, && und !; braucht Code zwei Module, zwei einfache Blöcke ineinander",
+      "label": "Modul-Bedingung außerhalb von T-03",
+      "hinweis": "genau ein Flag je #if, ohne ||, &&, ! und #elseif; braucht Code zwei Module, zwei einfache Blöcke ineinander; der Code ohne das Modul steht im #else-Zweig",
       "regeln": [
         "T-03"
       ],

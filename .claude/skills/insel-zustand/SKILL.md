@@ -52,6 +52,6 @@ Gehört zum Modul `island`; `bin/starter remove island` entfernt diesen Skill mi
 
 ## Prüfen
 
-- `make check`, `make build MODULES=window,island` und `make build MODULES=window` (ohne Insel muss der Code weiter bauen).
+- `make check`, `make build MODULES=<form>,island` und `make build MODULES=<form>` (ohne Insel muss der Code weiter bauen); `<form>` ist die App-Form des Projekts, `window` oder `menubar`, wie sie in `starter.json` steht.
 - `make shots ONLY=<feature>.` (eigene Zustände) und `make shots ONLY=island.` (Zustände des Moduls), alle vier Fassungen jeder Szene mit dem Werkzeug Read ansehen.
 - Die echte Insel an einer Notch und die Kapsel auf einem Bildschirm ohne Notch sind nur in der laufenden App prüfbar (`--demo island` durchläuft alle Zustände); das bleibt eine Abnahme der Integration und steht bis dahin unter „Bekannte Schwächen“.

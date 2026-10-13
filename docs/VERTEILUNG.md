@@ -30,7 +30,9 @@ Wie aus dem Quellcode eine App wird, die jemand auf einem anderen Mac installier
 
 **Ad hoc und Berechtigungen.** macOS verknüpft erteilte Berechtigungen (Mikrofon, Bedienungshilfen, Eingabeüberwachung, Bildschirmaufnahme) mit der Signatur des Builds. Ein ad hoc signierter neuer Build ist für macOS eine andere App: erteilte Berechtigungen gelten nicht mehr, die App fragt erneut oder zeigt sie als fehlend. Das betrifft die Entwicklung (jedes `make build`) und jede neue Fassung beim Empfänger. Abhilfe ist eine Developer ID; zum Testen setzt `tccutil reset All <bundleId>` den Stand nur dieser App zurück.
 
-**Developer ID.** Das Zertifikat liegt im Schlüsselbund des Build-Macs, nie im Repository. Unter der Hardened Runtime braucht jede Berechtigung ihr Entitlement; `scripts/gen_config.py` schreibt sie aus `permissions`. Ausnahmen der Hardened Runtime (etwa nicht signierter ausführbarer Speicher) brauchen einen Eintrag in `docs/DECISIONS.md`.
+**Developer ID.** Das Zertifikat liegt im Schlüsselbund des Build-Macs, nie im Repository. Unter der Hardened Runtime braucht jede Berechtigung ihr Entitlement; `scripts/gen_config.py` schreibt sie aus `permissions`, `tools/entitlements.plist` ergänzt die App. Ausnahmen der Hardened Runtime (etwa nicht signierter ausführbarer Speicher) brauchen einen Eintrag in `docs/DECISIONS.md`. Braucht eingebetteter Code eine Ausnahme (ein mitgelieferter Python-Interpreter, ein Hilfsprogramm), bekommt nur dieses Programm sie: `tools/entitlements-map.json` ordnet einem Pfad im Bundle (Glob, relativ zur App, etwa `Contents/Resources/python/bin/python3*`) eine eigene Plist zu. Die App selbst bekommt `com.apple.security.cs.disable-library-validation` nie, sonst lädt sie jede Bibliothek.
+
+**Bundle-ID.** `com.example.*` ist ein Platzhalter: macOS ordnet Berechtigungen, Einstellungen und das Anmeldeobjekt der Bundle-ID zu, und zwei Projekte mit demselben Platzhalter teilen sie. `bin/starter init` und `make dmg` warnen davor, `make dmg` mit Developer ID bricht ab. Vor der ersten Weitergabe `app.bundleId` in `starter.json` auf die eigene umgekehrte Domain setzen.
 
 ## 3. DMG
 

@@ -58,6 +58,6 @@ Gehört zum Modul `background`; `bin/starter remove background` entfernt diesen 
 
 ## Prüfen
 
-- `make check`, `make build MODULES=menubar,background` und mit allen Modulen.
+- `make check`, `make build MODULES=<form>,background` und mit allen Modulen; `<form>` ist die App-Form des Projekts, `window` oder `menubar`, wie sie in `starter.json` steht.
 - `make shots ONLY=background.` und alle vier Fassungen mit dem Werkzeug Read ansehen.
 - Beim Bauen nie ein Anmeldeobjekt registrieren. Ob die Aufgabe nach dem Anmelden startet, prüft die installierte App aus dem DMG (`docs/VERTEILUNG.md`).

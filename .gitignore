@@ -15,3 +15,14 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Secrets never belong in the repository: certificates, keys, provisioning profiles, notary uploads, env files
+*.p12
+*.p8
+*.cer
+*.mobileprovision
+*.provisionprofile
+*.notarize.zip
+AuthKey_*
+.env
+.env.*

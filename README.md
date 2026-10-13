@@ -1,3 +1,4 @@
+<!-- nur-im-starter:anfang -->
 # Mac-App-Starter
 
 Vorlage, aus der jede neue native Mac-App startet, auch eine fachlich völlig andere. Ein Agent baut ab dem ersten Auftrag Funktionen und muss Fenster, Einstellungen, Onboarding, Gestaltung, Sprachen und Verteilung nicht neu bauen. Gebaut wird ohne Xcode, mit den Command Line Tools allein.
@@ -78,52 +79,20 @@ Das Einstellungsfenster ist wie die Systemeinstellungen aufgebaut: oben die Bere
 
 ![App-Symbol auf hellem und dunklem Grund](docs/screenshots/tools-icon.png)
 
-<!-- nur-im-starter:anfang -->
 ## Stand
 
 Fassung 1.0.0 vom 12.10.2026, die Änderungen stehen in `CHANGELOG.md`. Die Bauunterlagen (Statusberichte der Stränge und der Integration) liegen unter `docs/bau/`; `bin/starter init` entfernt sie in einem Projekt. Ein neues Projekt richtet sich nach `docs/UEBERGABE.md`.
-<!-- nur-im-starter:ende -->
 
 ## Ein neues Projekt starten
 
-Schritt für Schritt in `docs/UEBERGABE.md`. Kurz:
+Bauen, Testen und Rendern brauchen einen Mac mit Apple Silicon und macOS 26, für Agenten Claude Code auf diesem Mac (Desktop-App oder Terminal); eine Sitzung in einem Linux-Container kann nur an Doku, Regeln und den Python-Werkzeugen arbeiten. Schritt für Schritt in `docs/UEBERGABE.md`. Kurz:
 
-1. Auf GitHub beim Repository `mac-app-starter` „Use this template“ wählen, privat anlegen und auf einem Mac mit Apple Silicon und macOS 26 klonen.
+1. Auf GitHub beim Repository `mac-app-starter` „Use this template“ wählen, privat anlegen und auf dem Mac klonen.
 2. `make doctor` prüft die Werkzeuge (Command Line Tools genügen) und installiert nichts.
-3. `bin/starter init` legt Name, Bundle-ID, Akzent, Symbol und Anrede fest, entfernt die Bauunterlagen des Starters und leert die Commit-Identität; danach die eigene Identität in `starter.json` eintragen und `make hooks`.
-4. Nicht benötigte Module mit `bin/starter remove <modul>` entfernen, `docs/PROJECT.md` füllen.
-5. `make check`, `make shots`, dann `make run` und das Onboarding einmal selbst durchgehen.
-6. Einen Agenten mit dem Prompt unten starten und die Renders der ersten Stufe ansehen; Rückmeldungen kommen in `docs/agents/VORGABEN.md`.
-
-### Bootstrap-Prompt
-
-```
-Neues Projekt auf Basis von mac-app-starter.
-Projekt: <Name>. Zweck: <ein bis zwei Sätze>. Zielgruppe: <wer, welches Vorwissen>.
-App-Formen: <Fenster, Menüleiste, Insel, Hintergrund>. Hauptansichten: <drei bis fünf>. Daten: <z. B. Notiz, Projekt>.
-Berechtigungen: <keine, Mitteilungen, Mikrofon …>. Lokale KI: <nein oder wofür>. Sprachen: Englisch und Deutsch, Anrede <du oder Sie>.
-
-1. CLAUDE.md, docs/DESIGN.md, docs/ARCHITEKTUR.md und docs/agents/VORGABEN.md lesen.
-2. make doctor und make check ausführen; make shots und die Szenen in build/shots ansehen.
-3. starter.json, App/Resources/InfoPlist.json und docs/PROJECT.md füllen. Akzent nur aus der Palette in docs/DESIGN.md.
-4. In docs/agents/PLAN.md Stufen und Stränge planen und die Datei-Zuständigkeit in docs/agents/straenge.json eintragen. Nicht benötigte Module mit bin/starter remove <modul> entfernen, je Modul ein Commit.
-5. Jedes Feature mit dem Skill neues-feature bauen, Ansichten mit neue-ansicht, neue-einstellung und neuer-onboarding-schritt. Sobald das erste eigene Feature steht, bin/starter strip-examples ausführen.
-6. Nicht ändern: Kit-Pfade aus starter.manifest.json und Teil A von CLAUDE.md. Eigene Regeln kommen nach rules/projekt/. Bedarf am Kit in docs/STARTER_FEEDBACK.md festhalten.
-7. Die App nie selbst starten, keine Berechtigung anfragen: prüfen mit make test, make shots und --selftest. Jede Szene in en und de, hell und dunkel ansehen. Vor jedem Push make check. Jede Stufe mit dem Skill red-team prüfen lassen.
-8. Eigener Branch, kleine Commits, mindestens stündlich pushen, nie auf main. Offene Fragen an den Auftraggeber in docs/PROJECT.md sammeln statt raten.
-```
-
-### Wann ein Projekt fertig ist
-
-- `make check` ist grün, die CI auf dem letzten Pull Request ebenso (Build-Matrix der genutzten Module, Tests, Renders).
-- Jede genutzte App-Form ist in Renders angesehen: jede Szene in en und de, hell und dunkel.
-- Das Onboarding ist einmal auf einem frischen Benutzer durchgegangen (`tccutil reset All <bundleId>` setzt nur diese App zurück).
-- Jede Berechtigung ist mit der installierten App aus dem DMG erteilt, abgelehnt und nach einem Neustart erkannt worden.
-- Die Insel ist an einem Mac mit und einem ohne Notch geprüft, falls sie genutzt wird.
-- Das DMG öffnet mit gestaltetem Fenster und installiert auf einem zweiten Mac oder Benutzer; bei Developer ID bestehen `codesign --verify --deep --strict`, `spctl -a -vv` und `xcrun stapler validate`.
-- Das App-Symbol ist ein eigenes Motiv, kein SF Symbol.
-- Es gibt keine Reste der Beispiele mehr.
-- `docs/PROJECT.md` ist gefüllt, Zugangsdaten liegen nur im Schlüsselbund oder in den Geheimnissen der CI.
+3. `bin/starter init` legt Name, Bundle-ID, Akzent, Symbol, Anrede und Module fest und entfernt, was nur der Starter braucht. Danach die eigene Commit-Identität in `starter.json` eintragen, `make hooks`, `make check` und alles committen.
+4. `make run` und das Onboarding einmal selbst durchgehen.
+5. Einen Agenten mit dem Bootstrap-Prompt aus `docs/UEBERGABE.md` (Abschnitt 4) starten. Er räumt die Reste des Starters auf, entfernt nicht benötigte Module und baut die Funktionen; Rückmeldungen kommen in `docs/agents/VORGABEN.md`.
+<!-- nur-im-starter:ende -->
 
 ## Aufbau
 
@@ -174,14 +143,16 @@ Mindestens `window` oder `menubar` bleibt. Einzelheiten je Modul in `docs/MODULE
 | `make build` | Debug-Build nach `build/<Name>.app`; `MODULES=a,b` wählt andere Module, `CONFIG=release` optimiert |
 | `make run` | bauen und die App starten |
 | `make test` | Swift-Tests (`build/tests/run-tests`) und Python-Tests; `ONLY=<präfix>` führt nur passende Swift-Tests aus |
-| `make check` | Regeln, Texte, Design, Kit, Build und Tests; vor jedem Push |
+| `make check` | Regeln, Texte, Design, Kit, Build und Tests, Warnungen als Fehler; vor jedem Push |
+| `make check-light` | alles aus `make check`, was ohne Mac läuft (Regeln, Texte, Design, Kit, Python-Tests); der Hook `pre-push` nutzt es außerhalb von macOS |
+| `make typecheck` | jede Modul-Kombination der CI prüfen, ohne zu bauen; `MODULES=a,b` für eine |
 | `make shots` | jede Szene in en und de, hell und dunkel nach `build/shots/` mit `index.html`; `ONLY=<präfix>` |
 | `make readme-shots` | Bilder aus `docs/screenshots/list.txt` nach `docs/screenshots/`, höchstens 1200 Pixel breit, dazu App-Symbol und DMG-Fenster |
 | `make icon` | App-Symbol aus Akzent und SF Symbol nach `App/Resources/AppIcon.icns`, nur für die Entwicklung (vor der Weitergabe ein eigenes Motiv, `docs/VERTEILUNG.md`) |
 | `make dmg` | Release-Build und DMG nach `build/dmg/` |
 | `make notarize` | ein DMG aus `make dmg` mit Developer ID erneut einreichen; der Weg zur Notarisierung ist `signing.notarize: true` und `make dmg` (`docs/VERTEILUNG.md`) |
 | `make rules` | `CLAUDE.md` Teil A und Wortlisten aus `rules/` schreiben |
-| `make hooks` | `scripts/hooks` als Git-Hooks einrichten |
+| `make hooks` | `scripts/hooks` als Git-Hooks einrichten; die Commit-Identität aus `starter.json` setzen, wenn Git keine kennt |
 | `bin/starter init` | eine Kopie des Starters zum Projekt machen |
 | `bin/starter remove <modul> [--probelauf] [--ohne-build]` | ein Modul mit seinen Dateien und Markierungen entfernen |
 | `bin/starter strip-examples` | die Beispiele entfernen |

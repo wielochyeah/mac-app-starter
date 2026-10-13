@@ -79,7 +79,7 @@
       "pfad": "scripts/check_design.py"
     },
     {
-      "name": "Prüfung der Commit-Nachricht und des Autors, in CI mit `--bereich origin/main..HEAD`",
+      "name": "Prüfung der Commit-Nachricht und des Autors, in CI mit `--github` (die Commits des Pushs oder Pull Requests)",
       "regeln": ["S-01", "S-02", "S-03", "S-04", "A-03", "A-04"],
       "pfad": "scripts/check_commit_msg.py"
     },
@@ -89,7 +89,7 @@
       "pfad": "scripts/hooks"
     },
     {
-      "name": "Session-Hook: Werkzeuge, Git-Hooks und Git-Identität aus `starter.json` beim Start jeder Session",
+      "name": "Session-Hook: Werkzeuge, Git-Hooks und Git-Identität (nie überschrieben) beim Start jeder Session",
       "regeln": ["A-04"],
       "pfad": ".claude/hooks/session-start.py"
     },

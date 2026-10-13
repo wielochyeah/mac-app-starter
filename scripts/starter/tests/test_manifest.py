@@ -44,6 +44,13 @@ class CommonTests(unittest.TestCase):
         self.assertFalse(is_starter_origin("https://github.com/x/my-mac-app-starter.git", repo))
         self.assertFalse(is_starter_origin("", repo))
 
+    def test_starter_origin_ignores_case(self):
+        """GitHub names are case-insensitive; a clone of WielochYeah/Mac-App-Starter is still the starter."""
+        repo = "wielochyeah/mac-app-starter"
+        self.assertTrue(is_starter_origin("https://github.com/WielochYeah/Mac-App-Starter.git", repo))
+        self.assertTrue(is_starter_origin("git@github.com:WIELOCHYEAH/mac-app-starter", "WielochYeah/Mac-App-Starter"))
+        self.assertFalse(is_starter_origin("https://github.com/WielochYeah/Mac-App-Starter2.git", repo))
+
     def test_checksum_ignores_line_endings_of_text_only(self):
         self.assertEqual(checksum_bytes(b"a\r\nb\n"), checksum_bytes(b"a\nb\n"))
         self.assertNotEqual(checksum_bytes(b"\0a\r\n"), checksum_bytes(b"\0a\n"))

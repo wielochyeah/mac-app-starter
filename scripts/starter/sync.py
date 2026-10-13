@@ -12,8 +12,8 @@ comparison sees what the project really got.
   shared paths   three-way merge with `git merge-file`; conflicts keep the markers, exit code 2
   project paths  untouched, like the starter's build documents (starterOnly)
   starter.json   merged by key (config.merge_config), never by text; starter.lock.json is rewritten
-Files that run by themselves (hooks, CI, scripts, Makefile, Package.swift) are listed loudly. Nothing
-is committed.
+Files that run by themselves or instruct agents (hooks, .claude, CI, scripts, ai-worker, Makefile, Package.swift,
+CLAUDE.md, AGENTS.md) are listed loudly. Nothing is committed.
 """
 from __future__ import annotations
 
@@ -39,9 +39,11 @@ BASE_REF = "refs/starter/basis"
 NO_PROMPT = {"GIT_TERMINAL_PROMPT": "0"}
 TARGET_REF = "refs/starter/ziel"
 NEVER_MERGED = {LOCK, cfg.CONFIG}
+# Files that run by themselves or tell an agent what to run: hooks, settings, skills and agents of Claude Code, CI,
+# scripts, the worker and the files an agent reads first. A sync lists every one of them before anything runs.
 EXECUTABLE = [
-    ".claude/hooks/**", ".claude/settings.json", ".github/workflows/**", "scripts/**", "bin/**", "tools/**",
-    "./Makefile", "./Package.swift", "ai-worker/**/*.sh", "ai-worker/**/*.py", "ai-worker/requirements*.txt",
+    ".claude/**", ".github/**", "scripts/**", "bin/**", "tools/**", "ai-worker/**",
+    "./Makefile", "./Package.swift", "./CLAUDE.md", "./AGENTS.md",
     "*.sh", "*.entitlements",
 ]
 
@@ -322,9 +324,9 @@ def report(result: SyncResult, dry_run: bool) -> str:
         row("neu im Starter, im Projekt schon vorhanden und behalten; von Hand vergleichen",
             result.existing_in_project),
         row("starter.json", result.config_notes),
-        row("DAVON AUSFÜHRBARER CODE (Hooks, CI, Skripte, Makefile, Package.swift), vor jedem weiteren Befehl lesen",
-            result.executable),
-        "Danach: zuerst git diff lesen, vor allem den ausführbaren Code; dann Konflikte lösen, make rules, make check "
+        row("DAVON CODE UND ANWEISUNGEN FÜR AGENTEN (Hooks, .claude, CI, Skripte, ai-worker, Makefile, Package.swift, "
+            "CLAUDE.md, AGENTS.md), vor jedem weiteren Befehl lesen", result.executable),
+        "Danach: zuerst git diff lesen, vor allem diese Dateien; dann Konflikte lösen, make rules, make check "
         "und make build, dann committen.",
     ]
     return "\n".join(lines) + "\n"

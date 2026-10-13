@@ -28,7 +28,7 @@ Ein Ordner `App/Sources/Features/<Name>/`, Namen auf Englisch in UpperCamelCase:
 - `<Name>View.swift` und weitere Views: nur Tokens und Bausteine des Kits.
 - `App/Tests/Features/<Name>Tests.swift`: Tests für jede Logik, in `#if TESTING`.
 
-Features nutzen nur das Kit. Braucht ein Feature ein Modul (Insel, Statusmenü, Hintergrund, Kurzbefehle, KI), steht jeder Bezug in einem eigenen `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `||`, `&&`, `!` und `#elseif`. Ein `#else`-Zweig ist erlaubt und bleibt ohne das Modul stehen (etwa: mit Fenster öffnet eine Aktion die Seite, sonst den Einstellungsbereich). Braucht ein Teil zwei Module (eine KI-Spalte auf einer Fensterseite), stehen zwei einfache Blöcke ineinander:
+Features nutzen nur das Kit. Braucht ein Feature ein Modul (Insel, Statusmenü, Hintergrund, Kurzbefehle, KI), steht jeder Bezug in einem eigenen `#if MODUL_<NAME>` … `#endif` (T-03: genau ein Flag je `#if`, ohne `||`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander; ein `#else`-Zweig bleibt beim Entfernen stehen). Der `#else`-Zweig ist der Ort für den Code ohne das Modul (etwa: mit Fenster öffnet eine Aktion die Seite, sonst den Einstellungsbereich). Braucht ein Teil zwei Module (eine KI-Spalte auf einer Fensterseite), stehen zwei einfache Blöcke ineinander:
 
 ```swift
 #if MODUL_AI
@@ -60,7 +60,7 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
 5. In `register()` für jeden sichtbaren Zustand eine `RenderScene` mit Kennung `<feature>.<zustand>` und Beispieldaten anlegen, die echt wirken, aber erfunden sind. Neue allgemeine Bausteine zusätzlich als `GalleryEntry`.
 6. Was beim Start laufen muss, in `Registry.launchHooks`; was beim Beenden aufräumen muss, in `Registry.terminateHooks`; was nach „Fertig“ in der Einrichtung geschehen soll, in `Registry.onboardingFinishedHooks` (`{ firstTime in … }`). Nichts startet Fenster oder fragt Berechtigungen an, wenn `RenderMode.isHeadless` gilt.
 
-   Headless entsteht auch keine Datei: Tests, Renders und `--selftest` laufen mit `STARTER_HEADLESS=1`, und der Selbsttest `window.chrome` baut das echte Hauptfenster und zeichnet seine erste Seite. Ein geteilter Speicher, den eine Seite beim ersten Zeichnen öffnet, bleibt deshalb headless im Speicher:
+   Headless entsteht auch keine Datei: Tests, Renders und `--selftest` laufen mit `STARTER_HEADLESS=1`. Ein geteilter Speicher, den eine Seite beim ersten Zeichnen öffnet, bleibt deshalb headless im Speicher:
 
    ```swift
    static var shared: TasksStore {
@@ -72,8 +72,11 @@ Solange das Modul `examples` enthalten ist, zeigt `App/Sources/Modules/Examples/
    ```
 
    Was beim Start eine Datei öffnet (Seiten aus der Datenbank, Anmelden einer Hintergrund-Aufgabe), steht in einem Start-Hook mit `guard !RenderMode.isHeadless, !RenderMode.isStatic else { return }`.
+
+   Der Selbsttest `window.chrome` baut headless das echte Hauptfenster und zeichnet seine erste Seite; auch dabei entsteht keine Datei. <!-- modul:window -->
 7. Prüfbare Annahmen zur Laufzeit (Datei lesbar, Migration aktuell) als `SelfTestCheck` eintragen.
-8. Sobald das erste eigene Feature steht: `bin/starter strip-examples`. <!-- modul:examples -->
+8. Eine Karte für den Onboarding-Schritt „Funktionen“: `OnboardingFeatures.items.append(OnboardingFeature(id: "<feature>.<punkt>", order: 10, symbol: "<sf.symbol>", title: { <Name>Text.featureTitle }, detail: { <Name>Text.featureDetail }))` im `register()`. Der Schritt zeigt die ersten drei Karten nach `order` und fehlt, solange es keine gibt; die Szene `onboarding.features` zeigt Beispielkarten des Starters, nicht die des Projekts.
+9. Sobald das erste eigene Feature steht: `bin/starter strip-examples`. <!-- modul:examples -->
 
 ## Prüfen
 

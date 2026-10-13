@@ -79,7 +79,7 @@
     "blockMarkers": { "start": "<!-- nur-im-starter:anfang -->", "end": "<!-- nur-im-starter:ende -->" }
   },
   "markers": {
-    "description": "Code eines Moduls außerhalb seines Ordners steht in Swift in #if MODUL_<NAME> … #endif (ein Flag je #if, für zwei Module zwei Blöcke verschachteln; ein #else-Zweig bleibt beim Entfernen stehen, #if !MODUL_<NAME> behält seinen Inhalt). Tests eines Moduls stehen ganz in #if MODUL_<NAME> oder unter App/Tests/Modules/<Ordner>/; eine Swift-Datei, in der nach dem Entfernen nur Kommentare, Importe und Direktiven bleiben, löscht remove. In allen anderen Textdateien gelten Kommentar-Markierungen in der Syntax der Datei: am Zeilenende // modul:<name> (Swift, C), # modul:<name> (Shell, Python, YAML, Makefile, requirements, Skripte ohne Endung mit #!-Zeile wie die Git-Hooks), <!-- modul:<name> --> (Markdown, HTML); mehrzeilig zwischen modul:<name>:anfang und modul:<name>:ende. Eine Zeile mit zwei Modulen nennt beide (// modul:ai,mlx) und geht mit jedem. JSON hat keine Kommentare: starter.json ändert remove über den Schlüssel.",
+    "description": "Code eines Moduls außerhalb seines Ordners steht in Swift in #if MODUL_<NAME> … #endif (T-03: genau ein Flag je #if, ohne ||, &&, ! und #elseif; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander; ein #else-Zweig bleibt beim Entfernen stehen). Tests eines Moduls stehen ganz in #if MODUL_<NAME> oder unter App/Tests/Modules/<Ordner>/; eine Swift-Datei, in der nach dem Entfernen nur Kommentare, Importe und Direktiven bleiben, löscht remove. In allen anderen Textdateien gelten Kommentar-Markierungen in der Syntax der Datei: am Zeilenende // modul:<name> (Swift, C), # modul:<name> (Shell, Python, YAML, Makefile, requirements, Skripte ohne Endung mit #!-Zeile wie die Git-Hooks), <!-- modul:<name> --> (Markdown, HTML); mehrzeilig zwischen modul:<name>:anfang und modul:<name>:ende. Eine Zeile mit zwei Modulen nennt beide (// modul:ai,mlx) und geht mit jedem. JSON hat keine Kommentare: starter.json ändert remove über den Schlüssel.",
     "swift": "#if MODUL_<NAME>",
     "line": "// modul:<name>",
     "start": "// modul:<name>:anfang",
@@ -160,6 +160,7 @@
     "files": [
       "scripts/build.sh",
       "scripts/test.sh",
+      "scripts/test_python.py",
       "scripts/check_kit.py",
       "scripts/rules_sync.py",
       "scripts/check_texts.py",
@@ -172,21 +173,23 @@
       "file": "Makefile",
       "targets": {
         "check": ["check-rules", "check-texts", "check-design", "check-kit", "build", "test"],
+        "check-light": ["check-rules", "check-texts", "check-design", "check-kit", "test-python"],
         "check-rules": ["scripts/rules_sync.py"],
         "check-texts": ["scripts/check_texts.py"],
         "check-design": ["scripts/check_design.py"],
         "check-kit": ["scripts/check_kit.py"],
         "build": ["scripts/build.sh"],
-        "test": ["scripts/test.sh"]
+        "test": ["scripts/test.sh"],
+        "test-python": ["scripts/test_python.py"]
       }
     },
     "hooks": {
       "scripts/hooks/commit-msg": ["scripts/check_commit_msg.py"],
-      "scripts/hooks/pre-push": ["make check"]
+      "scripts/hooks/pre-push": ["make check", "make check-light"]
     },
     "ci": {
       "file": ".github/workflows/ci.yml",
-      "steps": [["make check"]]
+      "steps": [["make check"], ["make check-kit"], ["scripts/check_commit_msg.py"]]
     }
   }
 }

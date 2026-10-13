@@ -1,7 +1,7 @@
 """bin/starter init on fixture repositories (no build, no network)."""
 import unittest
 
-from starter.tests.helpers import TempDirCase, base_files, git, make_repo
+from starter.tests.helpers import ROOT, TempDirCase, base_files, git, make_repo
 from starter.common import StarterError, checksum
 from starter.manifest import read_lock
 from starter.project import InitOptions, default_bundle_id, init, interactive_values, removal_order
@@ -114,6 +114,7 @@ class InitTests(TempDirCase):
         root = self.repo({"starter.json": jsonlib.dumps(config, ensure_ascii=False, indent=2) + "\n",
                           "scripts/rules_sync.py": sync})
         result = init(root, options(anrede="sie"))
+        self.assertIsNone(result.anrede_findings, "the fixture's check_texts.py writes no JSON")
         written = self.json(root, "starter.json")
         self.assertEqual(written["texts"]["anrede"], "sie")
         self.assertNotIn("personen", written["texts"])
@@ -125,6 +126,28 @@ class InitTests(TempDirCase):
         self.assertIn("Anrede Sie", text)
         self.assertIn("make rules: CLAUDE.md Teil A", text)
 
+    def test_anrede_sie_records_the_du_texts_as_known_findings(self):
+        """The kit's du texts become findings with anrede sie: they go into the baseline, so make check stays green and
+        the list stays as the to-do."""
+        import json as jsonlib
+        from starter.project import report
+        finding = {"path": "App/Sources/Kit/Texts/CommonText.swift", "line": 3, "column": 5, "term_id": "anrede-du",
+                   "label": "du", "rules": ["S-05"], "hint": "Sie", "match": "du  kannst", "context": "x"}
+        fake = ("import json, sys\n"
+                "out = sys.argv[sys.argv.index('--json') + 1]\n"
+                f"json.dump({{'dateien': 1, 'neu': [{finding!r}, {dict(finding, line=9, match='dein')!r}], "
+                "'bekannt': [], 'veraltet': []}, open(out, 'w'))\n")
+        root = self.repo({"scripts/check_texts.py": fake,
+                          "rules/baseline/texte.json": jsonlib.dumps({"README.md": ["x | y"]}) + "\n"})
+        result = init(root, options(anrede="sie"))
+        self.assertEqual(result.anrede_findings, 2)
+        self.assertEqual(self.json(root, "rules/baseline/texte.json"),
+                         {"App/Sources/Kit/Texts/CommonText.swift": ["anrede-du | du kannst", "anrede-du | dein"],
+                          "README.md": ["x | y"]})
+        text = report(result, dry_run=False, build=False)
+        self.assertIn("2 Stellen", text)
+        self.assertIn("--baseline-aktualisieren", text)
+
     def test_failed_rules_sync_is_a_note(self):
         root = self.repo({"scripts/rules_sync.py": "import sys\nprint('texts.anrede kaputt')\nsys.exit(1)\n"})
         result = init(root, options())
@@ -134,8 +157,11 @@ class InitTests(TempDirCase):
     def test_red_build_keeps_the_report(self):
         from starter.manifest import PENDING
         from starter.project import report
+        from unittest import mock
+        from starter import project
         root = self.repo()
-        result = init(root, options(build=True))
+        with mock.patch.object(project, "swift_missing", return_value=None):  # also on Linux: make build runs and fails
+            result = init(root, options(build=True))
         self.assertIs(result.build_ok, False)
         self.assertEqual(read_lock(root)[PENDING], "bin/starter init")
         text = report(result, dry_run=False, build=True)
@@ -215,7 +241,7 @@ class InitTests(TempDirCase):
         opts = interactive_values(m, {"app": {"accent": "violett", "symbol": "sparkles"}}, ask, list(m.modules))
         self.assertEqual((opts.name, opts.bundle_id, opts.accent, opts.symbol, opts.anrede),
                          ("Mein Tool", "com.example.meintool", "rot", "hammer", "sie"))
-        self.assertEqual(opts.remove, ["island", "mlx", "examples"], "mlx is off in starter.json: default n")
+        self.assertEqual(opts.remove, ["island", "examples"], "Enter keeps mlx, also while it is off in starter.json")
         self.assertEqual(sum(1 for p in asked if p.startswith("Name")), 2)
 
     def scripted(self, answers, config=None):
@@ -244,7 +270,7 @@ class InitTests(TempDirCase):
 
     def test_interactive_keeps_the_last_app_form(self):
         opts, asked, said = self.scripted(["App", "", "", "", "", "n", "n", "j", "j", "j", "j", "j", "", "j"])
-        self.assertEqual(opts.remove, ["window", "mlx"])
+        self.assertEqual(opts.remove, ["window"])
         self.assertEqual(sum(1 for p in asked if p.startswith("Modul menubar")), 2)
         self.assertTrue(any("window, menubar" in s for s in said))
 
@@ -256,6 +282,86 @@ class InitTests(TempDirCase):
                                   lambda prompt, default, check: next(answers) or default, list(manifest_obj().modules))
         self.assertEqual((opts.accent, opts.symbol, opts.anrede), ("blau", "note.text", "sie"))
         self.assertEqual(config["app"]["accent"], "violett", "the read config stays as it was")
+
+    def test_a_bundle_id_flag_is_the_default_and_the_answer_wins(self):
+        m = manifest_obj()
+        for answer, expected in [("", "de.firma.notizen"), ("de.firma.anders", "de.firma.anders")]:
+            answers = iter(["Notizen", answer, "", "", ""] + ["j"] * len(m.modules))
+            opts = interactive_values(m, {"app": {}}, lambda prompt, default, check: next(answers) or default,
+                                      list(m.modules), bundle_id="de.firma.notizen")
+            self.assertEqual(opts.bundle_id, expected, answer)
+
+    def test_an_unknown_sf_symbol_stops_init_before_any_write(self):
+        from unittest import mock
+        from starter import project
+        root = self.repo()
+        with mock.patch.object(project, "symbol_problem", return_value="gibt es auf diesem Mac nicht als SF Symbol"):
+            with self.assertRaises(StarterError) as caught:
+                init(root, options(symbol="kein.symbol"))
+        self.assertIn("--symbol „kein.symbol“", str(caught.exception))
+        self.assertIsNone(read_lock(root)["project"])
+        self.assertTrue((root / "docs/bau").exists())
+
+    def test_interactive_symbol_question_asks_again_for_an_unknown_symbol(self):
+        m = manifest_obj()
+        answers = iter(["Notizen", "", "", "kein.symbol", "note.text", ""] + ["j"] * len(m.modules))
+        asked = []
+
+        def ask(prompt, default, check):
+            while True:
+                answer = next(answers) or (default or "")
+                asked.append(prompt)
+                if check(answer) is None:
+                    return answer
+
+        opts = interactive_values(m, {"app": {}}, ask, list(m.modules),
+                                  symbol_check=lambda v: None if v == "note.text" else "unbekannt")
+        self.assertEqual(opts.symbol, "note.text")
+        self.assertEqual(sum(1 for p in asked if p.startswith("SF Symbol")), 2)
+
+    @unittest.skipUnless(__import__("sys").platform == "darwin" and __import__("shutil").which("swiftc"),
+                         "asks AppKit through a small Swift tool (macOS)")
+    def test_real_sf_symbols(self):
+        from starter.project import symbol_problem
+        root = self.repo()
+        (root / "scripts" / "pick-sdk.sh").write_bytes((ROOT / "scripts" / "pick-sdk.sh").read_bytes())
+        (root / "scripts" / "pick-sdk.sh").chmod(0o755)
+        self.assertIsNone(symbol_problem(root, "sparkles"))
+        self.assertIn("SF Symbol", symbol_problem(root, "kein.symbol.xyz"))
+
+    def test_placeholder_bundle_id_and_unknown_starter_commit_are_explained(self):
+        from starter.project import report
+        root = self.repo()
+        result = init(root, options(bundle_id="com.example.notizen"))
+        text = report(result, dry_run=False, build=False)
+        self.assertIn("com.example. ist ein Platzhalter", text)
+        self.assertIn("Starter-Commit: unbekannt: der Tag v1.0.0", text)
+        self.assertIn("kein Fehler", text)
+
+    def test_the_starter_tour_goes_and_the_readme_starts_with_the_project(self):
+        tour = ("<!-- nur-im-starter:anfang -->\n# Mac-App-Starter\n\nVorlage.\n\n"
+                "![Insel](docs/screenshots/de-dark-island.pane.png)\n<!-- nur-im-starter:ende -->\n\n## Aufbau\n\nText.\n")
+        listing = ("# Bilder\n# nur-im-starter:anfang\nde-dark/island.pane.png  # modul:island\n# nur-im-starter:ende\n"
+                   "de-light/settings.window.png\n")
+        root = self.repo({"README.md": tour, "docs/screenshots/list.txt": listing,
+                          "docs/screenshots/de-dark-island.pane.png": "png",
+                          "docs/screenshots/de-light-settings.window.png": "png",
+                          "docs/screenshots/de-light-own.png": "png",
+                          "docs/PROJECT.md": "![eigenes](docs/screenshots/de-light-own.png)\n"})
+        dry = init(root, options(dry_run=True))
+        self.assertEqual(dry.pictures_removed, ["docs/screenshots/de-dark-island.pane.png"])
+        self.assertTrue((root / "docs/screenshots/de-dark-island.pane.png").exists())
+        result = init(root, options())
+        readme = self.read(root, "README.md")
+        self.assertTrue(readme.startswith("# Notizen\n\nNotizen ist eine native Mac-App"), readme)
+        self.assertNotIn("Mac-App-Starter", readme)
+        self.assertIn("## Aufbau", readme)
+        self.assertTrue(result.readme_intro)
+        self.assertEqual(result.pictures_removed, ["docs/screenshots/de-dark-island.pane.png"])
+        self.assertFalse((root / "docs/screenshots/de-dark-island.pane.png").exists())
+        self.assertTrue((root / "docs/screenshots/de-light-settings.window.png").exists(), "still listed")
+        self.assertTrue((root / "docs/screenshots/de-light-own.png").exists(), "named by a guide")
+        self.assertEqual(self.read(root, "docs/screenshots/list.txt"), "# Bilder\nde-light/settings.window.png\n")
 
     def test_default_bundle_id(self):
         self.assertEqual(default_bundle_id("Meine App 2"), "com.example.meineapp2")

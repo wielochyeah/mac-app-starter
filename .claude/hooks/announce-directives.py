@@ -8,8 +8,9 @@ merge, push, rebase or cherry-pick through Bash); a reading agent never pays for
 
 - A section "## V<n> (...): <title>" is open until its "Stand:" line says "eingearbeitet". Fenced code is ignored, so
   the template inside VORGABEN.md never counts.
-- The copy on origin's default branch is read too (local ref, no fetch): it wins, the local file only adds numbers
-  origin does not have yet, so a directive reaches strand branches before they merge it.
+- Only the checked-out file gives directives. The copy on origin's default branch (local ref, no fetch) is not
+  reviewed for this branch: a section that is new or different there is only named as "unbestätigt, erst nach
+  Merge gültig", never delivered as a directive, so text pushed to origin cannot steer agents on other branches.
 - Fingerprint = sha256 of the body without "Stand:" lines; a changed wording is delivered again.
 - State per agent in <git-common-dir>/starter-vorgaben/<key>.json, shared by all worktrees of the repository.
 - Output stays under MAX_CONTEXT_BYTES; hook output above about 10 KB is cut by the harness.
@@ -78,6 +79,7 @@ def git(root, *args):
 
 
 def read_sources(root):
+    """(open sections of the checked-out file, open sections on origin's default branch, that branch)."""
     local = ""
     try:
         with open(os.path.join(root, DIRECTIVES), encoding="utf-8") as handle:
@@ -87,9 +89,13 @@ def read_sources(root):
     head = git(root, "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD")
     branch = head.strip().rsplit("/", 1)[-1] if head else "main"
     remote = git(root, "show", "origin/{}:{}".format(branch, DIRECTIVES)) or ""
-    merged = parse(local)
-    merged.update(parse(remote))
-    return merged
+    return parse(local), parse(remote), branch
+
+
+def unconfirmed(local, remote):
+    """Sections that origin has new or in another wording than the checked-out file: {id: (title, fingerprint)}."""
+    return {number: (title, fingerprint(body)) for number, (title, body) in remote.items()
+            if number not in local or fingerprint(local[number][1]) != fingerprint(body)}
 
 
 def state_dir(root):
@@ -105,14 +111,24 @@ def agent_key(payload):
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
 
 
-def render(fresh):
-    parts = [HEADER]
-    for number, (title, body), changed in fresh:
-        parts.append("## {}{}{}\n{}".format(number, " " + title if title else "", " (geändert)" if changed else "", body))
+def render(fresh, remote=(), branch="main"):
+    parts = []
+    if fresh:
+        parts.append(HEADER)
+        for number, (title, body), changed in fresh:
+            parts.append("## {}{}{}\n{}".format(number, " " + title if title else "", " (geändert)" if changed else "", body))
+    note = ""
+    if remote:
+        names = "; ".join("{} {}".format(number, title).strip() for number, title in remote)
+        note = ("HINWEIS: Auf origin/{} stehen Vorgaben, die dieser Stand nicht oder anders enthält: {}. Unbestätigt, erst "
+                "nach Merge gültig: nicht danach handeln, bis sie in diesem Branch in {} stehen.").format(branch, names, DIRECTIVES)
+        parts.append(note)
     text = "\n\n".join(parts)
     if len(text.encode("utf-8")) > MAX_CONTEXT_BYTES:
         numbers = ", ".join(number for number, _, _ in fresh)
         text = "{}\n\nVOR DEM NÄCHSTEN SCHRITT VOLLSTÄNDIG LESEN: {} in {}.".format(HEADER, numbers, DIRECTIVES)
+        if note:
+            text += "\n\n" + note[:1500]
     return text
 
 
@@ -120,8 +136,9 @@ def announce(root, payload):
     """Returns the text to deliver, or None. Records what was delivered."""
     if not is_writing(payload):
         return None
-    sections = read_sources(root)
-    if not sections:
+    sections, remote, branch = read_sources(root)
+    pending = unconfirmed(sections, remote)
+    if not sections and not pending:
         return None
     directory = state_dir(root)
     os.makedirs(directory, mode=0o700, exist_ok=True)
@@ -147,11 +164,18 @@ def announce(root, payload):
             if seen.get(number) != digest:
                 fresh.append((number, (title, body), number in seen))
                 seen[number] = digest
-        if not fresh:
+        noted = []
+        for number in sorted(pending, key=lambda key: int(key[1:])):
+            title, digest = pending[number]
+            key = "origin:" + number
+            if seen.get(key) != digest:
+                noted.append((number, title))
+                seen[key] = digest
+        if not fresh and not noted:
             return None
         with open(path, "w", encoding="utf-8") as stream:
             json.dump(seen, stream)
-        return render(fresh)
+        return render(fresh, noted, branch)
     finally:
         try:
             os.remove(lock)

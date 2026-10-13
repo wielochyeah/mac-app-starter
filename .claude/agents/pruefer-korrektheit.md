@@ -17,7 +17,7 @@ Der Auftrag nennt Branch, Basis und Paket. Ohne Angabe gilt `git diff origin/mai
 - Abbruch und Aufräumen: Fenster geben ihre Views beim Schließen frei, Beobachter (`Observing.track`) enden, Kindprozesse (MLX-Worker) werden beendet, temporäre Dateien gelöscht.
 - Kein `!`, `try!` und `as!` außerhalb der Tests; kein leeres `catch`, das einen Fehler versteckt; kein Standardwert, der einen fehlenden Wert als echten Wert ausgibt.
 - Einstellungen: jeder Schlüssel über `SettingKey`, Standardwert sinnvoll, kaputte Werte fallen auf den Standard zurück, eigene Werttypen sind `nonisolated struct …: Codable, Sendable`.
-- Modulgrenzen: Code eines Moduls nutzt nur das Kit; Querbezüge stehen in je einem eigenen `#if MODUL_<NAME>`-Block ohne `||`, `&&` oder Verschachtelung.
+- Modulgrenzen: Code eines Moduls nutzt nur das Kit; Querbezüge stehen in je einem eigenen `#if MODUL_<NAME>` … `#endif` (T-03: genau ein Flag je `#if`, ohne `||`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander; ein `#else`-Zweig bleibt beim Entfernen stehen).
 - Tests: prüfen sie das Verhalten oder nur die Ausgabe des Codes? Erwartungswerte aus der Anforderung oder einer Handrechnung? Fehlt ein Test für Logik (Zustandsmaschine, Geometrie, Regelwerk, Parser, Protokoll)? Warten Tests echte Zeit ab, statt eine Uhr einzuspeisen?
 - Doku, Kommentare und Statusdatei: stimmen sie mit Code und Befehlsausgaben überein? Was die Statusdatei als geprüft nennt, muss sich nachvollziehen lassen.
 

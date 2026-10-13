@@ -16,7 +16,7 @@
     {
       "id": "A-02",
       "schluessel": "pruefen",
-      "text": "Vor jedem Push ist `make check` grün (Regeln, Texte, Gestaltung, Kit, Build, Tests; der Hook `pre-push` führt es aus), für geänderte Module zusätzlich `make build MODULES=…` der betroffenen Kombinationen. Warnungen gelten als Fehler. Nach dem Prüfen läuft kein Prozess der App mehr.",
+      "text": "Vor jedem Push ist `make check` grün (Regeln, Texte, Gestaltung, Kit, Build, Tests; der Hook `pre-push` führt es aus, ohne Mac nur `make check-light`), für geänderte Module zusätzlich `make typecheck` oder `make build MODULES=…` der betroffenen Kombinationen. Warnungen gelten als Fehler, `make check` bricht bei jeder ab. Nach dem Prüfen läuft kein Prozess der App mehr.",
       "pakete": [],
       "durchsetzung": ["scripts/hooks/pre-push", "CI"],
       "ki": false
@@ -32,7 +32,7 @@
     {
       "id": "A-04",
       "schluessel": "identitaet",
-      "text": "Die Commit-Identität steht in `starter.json` (`commit`) und wird vor dem ersten Commit gesetzt (`git config user.name`, `git config user.email`, der Hook `session-start` tut es). Nach `bin/starter init` ist sie leer, und `commit-msg` nimmt keinen Commit an, bis das Projekt seine eigene einträgt. Die Identität nennt der Auftraggeber, sie wird nie erfunden.",
+      "text": "Jede Person committet unter ihrer eigenen Identität, nie unter der einer anderen. Ein Projekt trägt seine Commit-Identität in `starter.json` (`commit`) ein; bis dahin, und in einer Kopie vor `bin/starter init`, nimmt `commit-msg` keinen Commit an, danach nur Commits unter dieser Identität. Die Identität nennt der Auftraggeber, sie wird nie erfunden. Der Hook `session-start` und `make hooks` setzen sie nur, wenn Git noch keine kennt, und überschreiben nie eine vorhandene. Der Starter selbst trägt keine; dort prüft `commit-msg` nur das Format.",
       "pakete": [],
       "durchsetzung": ["scripts/hooks/commit-msg"],
       "ki": false

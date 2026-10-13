@@ -10,17 +10,21 @@ then `make build` unless --ohne-build. When the guard finds a use of a module ty
 from __future__ import annotations
 
 import json
+import platform
 import shlex
+import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from . import config as cfg
 from . import globs
-from .common import (StarterError, build_env, checksum, git, inside, is_starter_origin, is_text_file, origin_url, remove_empty_dirs,
+from . import pictures as pics
+from .common import (StarterError, build_env, checksum, git_bytes, inside, is_text_file, remove_empty_dirs,
                      working_files, write_text)
-from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, set_pending_build, write_lock
+from .manifest import LOCK, Manifest, is_project, read_lock, read_manifest, repo_state, set_pending_build, write_lock
 from .markers import dangling_references, transform
 
 
@@ -30,17 +34,20 @@ class RemovalPlan:
     deleted: List[str] = field(default_factory=list)
     edited: Dict[str, str] = field(default_factory=dict)       # path -> new text
     emptied: List[str] = field(default_factory=list)           # Swift files with nothing left
+    pictures: List[str] = field(default_factory=list)          # README pictures of the module's scenes
+    picture_refs: List[str] = field(default_factory=list)      # guide lines that still show one of them
     dangling: List[str] = field(default_factory=list)
     config: Optional[dict] = None                              # new starter.json
     config_notes: List[str] = field(default_factory=list)
     next_steps: List[str] = field(default_factory=list)
     already_removed: bool = False
     build_ok: Optional[bool] = None                            # None: not built
+    build_skipped: Optional[str] = None                        # why make build could not run here
     dirty: List[str] = field(default_factory=list)             # uncommitted changes before the removal
 
     @property
     def touched(self) -> List[str]:
-        return self.deleted + self.emptied + sorted(self.edited) + [cfg.CONFIG, LOCK]
+        return self.deleted + self.emptied + self.pictures + sorted(self.edited) + [cfg.CONFIG, LOCK]
 
 
 def module_present(root: Path, manifest: Manifest, name: str, files: List[str], config: dict) -> bool:
@@ -101,6 +108,20 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
             if new != text:
                 plan.edited[path] = new
 
+    gone: set = set()
+    if pics.LIST in remaining:
+        before = remaining[pics.LIST]
+        after = pics.drop_module_lines(before, name)
+        if after != before:
+            remaining[pics.LIST] = plan.edited[pics.LIST] = after
+        original = (root / pics.LIST).read_text(encoding="utf-8", errors="replace")
+        gone = {pics.picture(e) for e in set(pics.entries(original)) - set(pics.entries(after))}
+    # The pictures of the module's scenes are generated (make readme-shots) and go with it, listed or not.
+    plan.pictures = sorted(p for p in files if p in gone or (
+        p.startswith(pics.FOLDER) and pics.module_of(pics.scene_of_picture(p), [name]) == name))
+    plan.picture_refs = sorted(f"{path}:{no}" for path, text in remaining.items() if path.endswith(".md")
+                               for no, line in enumerate(text.split("\n"), 1)
+                               if any(ref in plan.pictures for ref in pics.references(line)))
     prune_baselines(plan, remaining)
     gone = {p: (root / p).read_text(encoding="utf-8", errors="replace") for p in plan.deleted + plan.emptied
             if p.endswith(".swift")}
@@ -172,7 +193,7 @@ def simulate(manifest: Manifest, modules: List[str], files: List[str], texts: Di
 
 
 def refuse_in_starter(root: Path, manifest: Manifest, command: str) -> None:
-    if is_starter_origin(origin_url(root), manifest.repository):
+    if repo_state(root, manifest, read_lock(root)) == "starter":
         raise StarterError(f"Das Repository {manifest.repository} ist der Starter selbst; {command} läuft nur "
                            "in einer Kopie („Use this template“, dann bin/starter init).")
 
@@ -184,7 +205,7 @@ def apply_removal(root: Path, plan: RemovalPlan, manifest: Manifest) -> None:
     # the project had left unchanged, so earlier project changes stay visible to check-kit.
     before = {p: checksum(root, p) for p in plan.edited
               if in_project and manifest.classify(p) == "kit" and (root / p).is_file()}
-    for path in plan.deleted + plan.emptied:
+    for path in plan.deleted + plan.emptied + plan.pictures:
         full = inside(root, path)
         if full.exists():
             full.unlink()
@@ -207,15 +228,35 @@ def apply_removal(root: Path, plan: RemovalPlan, manifest: Manifest) -> None:
         write_lock(root, lock)
 
 
+def swift_missing() -> Optional[str]:
+    """Why make build cannot run here (a Linux container of a cloud agent, a Mac without the Command Line Tools),
+    or None. The tools then write their changes, skip the build and note it as pendingBuild in the lock."""
+    if sys.platform != "darwin":
+        return f"kein Swift-Compiler (kein Mac, {platform.system() or sys.platform})"
+    if shutil.which("swiftc") is None:
+        return "kein Swift-Compiler (swiftc fehlt, xcode-select --install)"
+    return None
+
+
 def run_make(root: Path, target: str) -> bool:
     res = subprocess.run(["make", target], cwd=str(root), env=build_env())
     return res.returncode == 0
 
 
 def uncommitted(root: Path) -> List[str]:
-    """Paths with changes that are not committed (git status), for the warning before a write."""
-    out = git(root, ["status", "--porcelain", "-z"], check=False)
-    return [entry[3:] for entry in out.split("\0") if len(entry) > 3]
+    """Paths with changes that are not committed (git status), for the warning before a write. The
+    porcelain output is read unstripped: its first entry starts with a space (" M file")."""
+    out = (git_bytes(root, ["status", "--porcelain", "-z"]) or b"").decode("utf-8", "replace")
+    paths, entries = [], out.split("\0")
+    index = 0
+    while index < len(entries):
+        entry = entries[index]
+        index += 1
+        if len(entry) > 3:
+            paths.append(entry[3:])
+            if entry[0] in "RC":
+                index += 1  # a rename or copy names its source in the next field
+    return paths
 
 
 def remove_module(root: Path, name: str, dry_run: bool = False, build: bool = True,
@@ -231,8 +272,12 @@ def remove_module(root: Path, name: str, dry_run: bool = False, build: bool = Tr
     plan.dirty = uncommitted(root)
     apply_removal(root, plan, manifest)
     if build:
-        plan.build_ok = run_make(root, "build")
-        set_pending_build(root, None if plan.build_ok else f"bin/starter remove {name}")
+        plan.build_skipped = swift_missing()
+        if plan.build_skipped:
+            set_pending_build(root, f"bin/starter remove {name}")
+        else:
+            plan.build_ok = run_make(root, "build")
+            set_pending_build(root, None if plan.build_ok else f"bin/starter remove {name}")
     return plan
 
 
@@ -256,6 +301,7 @@ def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
                  f"  {_count(len(plan.deleted), 'Datei', 'Dateien')} löschen: {names(plan.deleted)}",
                  f"  Modul-Blöcke und Markierungen entfernen in: {names(sorted(plan.edited))}",
                  f"  danach leer und löschen: {names(plan.emptied)}",
+                 f"  Bilder der Szenen des Moduls löschen: {names(plan.pictures)}",
                  f"  starter.json: {names(plan.config_notes)}"]
         lines += [f"  Danach: {s}" for s in plan.next_steps]
         return "\n".join(lines) + "\n"
@@ -263,7 +309,10 @@ def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
              f"  {_count(len(plan.deleted), 'Datei', 'Dateien')}: {names(plan.deleted)}",
              f"  Modul-Blöcke und Markierungen entfernt in: {names(sorted(plan.edited))}",
              f"  leer geworden und gelöscht: {names(plan.emptied)}",
+             f"  Bilder der Szenen des Moduls gelöscht: {names(plan.pictures)}",
              f"  starter.json: {names(plan.config_notes)}"]
+    if plan.picture_refs:
+        lines.append(f"  Diese Stellen zeigen noch ein gelöschtes Bild, bitte anpassen: {names(plan.picture_refs)}")
     if plan.dirty:
         lines.append(f"  Hinweis: {_count(len(plan.dirty), 'Datei hatte', 'Dateien hatten')} schon vorher nicht "
                      f"committete Änderungen ({names(plan.dirty[:5])}{', …' if len(plan.dirty) > 5 else ''}).")
@@ -275,10 +324,14 @@ def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
         lines.append(f"  Oder zurück zum Stand vor remove (setzt auch frühere, nicht committete Änderungen dieser "
                      f"Dateien zurück): {restore_command(plan.touched)}")
         return "\n".join(lines) + "\n"
-    if not build:
+    if plan.build_skipped:
+        lines.append(f"  {plan.build_skipped}: Build übersprungen. Auf einem Mac bin/starter remove {plan.module} "
+                     "erneut aufrufen, dann baut es (Vermerk pendingBuild in starter.lock.json); --ohne-build "
+                     "überspringt den Build ausdrücklich.")
+    elif not build:
         lines.append("  Danach: make build (mit --ohne-build übersprungen)")
     lines.append(f"  Danach: make check, dann ein Commit nur für dieses Modul, etwa "
-                 f"„chore(starter): remove module {plan.module}“")
+                 f"„chore(setup): remove module {plan.module}“")
     return "\n".join(lines) + "\n"
 
 

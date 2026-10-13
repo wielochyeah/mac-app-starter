@@ -68,10 +68,16 @@ class RemoveTests(TempDirCase):
         recovery command, the lock notes the red build, and the next call builds again instead of saying done."""
         import contextlib
         import io
+        from unittest import mock
         from starter import cli
+        from starter import remove as remove_file
         from starter.manifest import PENDING
         from starter.remove import report
         root = self.repo()
+        # also on Linux: make build runs (and fails) instead of being skipped for a missing Swift compiler
+        patch = mock.patch.object(remove_file, "swift_missing", return_value=None)
+        patch.start()
+        self.addCleanup(patch.stop)
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             plan = remove_module(root, "background", build=True, check_origin=False)
         self.assertIs(plan.build_ok, False)
@@ -90,6 +96,58 @@ class RemoveTests(TempDirCase):
             self.assertEqual(cli.finish_pending_build(root, "bin/starter remove background", True), 0)
         self.assertNotIn(PENDING, read_lock(root))
         self.assertIsNone(cli.finish_pending_build(root, "bin/starter remove background", True))
+
+    def test_uncommitted_files_keep_their_whole_name(self):
+        from starter.remove import uncommitted
+        root = self.repo()
+        write_files(root, {"README.md": "changed\n", "App/Sources/Features/New.swift": "enum New {}\n"})
+        git(root, "mv", "docs/DESIGN.md", "docs/GESTALTUNG.md")
+        self.assertEqual(sorted(uncommitted(root)), ["App/Sources/Features/New.swift", "README.md", "docs/GESTALTUNG.md"])
+        plan = self.remove(root, "island")
+        self.assertIn("README.md", plan.dirty)
+
+    def test_without_a_swift_compiler_the_build_is_skipped_and_noted(self):
+        """A cloud agent on Linux: remove writes its changes, skips make build, says so and notes pendingBuild."""
+        import contextlib
+        import io
+        from unittest import mock
+        from starter import cli, remove as remove_module_file
+        from starter.manifest import PENDING
+        root = self.repo()
+        with mock.patch.object(remove_module_file, "swift_missing", return_value="kein Swift-Compiler (kein Mac, Linux)"), \
+                mock.patch.object(remove_module_file, "run_make", side_effect=AssertionError("built")):
+            plan = remove_module(root, "island", build=True, check_origin=False)
+            text = remove_module_file.report(plan, dry_run=False, build=True)
+            self.assertIsNone(plan.build_ok)
+            self.assertIn("kein Swift-Compiler (kein Mac, Linux): Build übersprungen", text)
+            self.assertIn("--ohne-build", text)
+            self.assertEqual(read_lock(root)[PENDING], "bin/starter remove island")
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                self.assertEqual(cli.finish_pending_build(root, "bin/starter remove island", True), 1)
+            self.assertIn("steht make build noch aus", err.getvalue())
+
+    def test_lines_and_pictures_of_the_module_scenes_go(self):
+        listing = ("# Bilder\nde-dark/island.pane.png\nde-light/examples.menubar.png  # modul:examples,island\n"
+                   "de-light/settings.window.png\ntools/icon.png\n")
+        root = self.repo({"docs/screenshots/list.txt": listing,
+                          "docs/screenshots/de-dark-island.pane.png": "png",
+                          "docs/screenshots/de-light-examples.menubar.png": "png",
+                          "docs/screenshots/de-light-settings.window.png": "png",
+                          "docs/screenshots/en-dark-island.done.png": "png",
+                          "docs/PROJECT.md": "# Projekt\n\n![Insel](docs/screenshots/en-dark-island.done.png)\n"})
+        plan = self.remove(root, "island")
+        self.assertEqual(plan.pictures, ["docs/screenshots/de-dark-island.pane.png",
+                                         "docs/screenshots/de-light-examples.menubar.png",
+                                         "docs/screenshots/en-dark-island.done.png"])
+        self.assertEqual(plan.picture_refs, ["docs/PROJECT.md:3"])
+        from starter.remove import report
+        self.assertIn("Diese Stellen zeigen noch ein gelöschtes Bild, bitte anpassen: docs/PROJECT.md:3",
+                      report(plan, dry_run=False, build=False))
+        self.assertEqual(self.read(root, "docs/screenshots/list.txt"),
+                         "# Bilder\nde-light/settings.window.png\ntools/icon.png\n")
+        self.assertFalse((root / "docs/screenshots/de-dark-island.pane.png").exists())
+        self.assertTrue((root / "docs/screenshots/de-light-settings.window.png").exists())
 
     def test_dry_run_report_speaks_of_what_would_happen(self):
         from starter.remove import report

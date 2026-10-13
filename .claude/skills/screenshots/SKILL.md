@@ -20,16 +20,18 @@ description: Rendert jede Szene der App ohne Fenster auf dem Bildschirm in Engli
 
 ```bash
 make shots                                  # alles: build/shots/<sprache>-<erscheinung>/<szene>.png und build/shots/index.html
-make shots ONLY=island.                     # nur Szenen, deren Kennung so beginnt
+make shots ONLY=onboarding.                 # nur Szenen, deren Kennung so beginnt
 make shots ONLY=settings. SHOTS_LANG=de     # nur Deutsch
-make shots ONLY=window. SHOTS_APPEARANCE=dark   # nur dunkel
+make shots ONLY=design. SHOTS_APPEARANCE=dark   # nur dunkel
 NO_BUILD=1 make shots ONLY=onboarding.      # vorhandenen Build nutzen
 make readme-shots                           # Bilder aus docs/screenshots/list.txt nach docs/screenshots/, höchstens 1200 px breit
 ```
 
 Es öffnet sich kein Fenster, es bleibt kein Prozess zurück, es wird keine Berechtigung angefragt. Daten liegen dabei unter `build/render-data`, nie unter `~/Library`.
 
-`build/shots/index.html` zeigt alle Bilder als Übersicht; zum Prüfen zählen die einzelnen PNGs.
+`build/shots/index.html` zeigt alle Bilder als Übersicht, zuerst die Szenen des Projekts, danach die Muster des Starters; zum Prüfen zählen die einzelnen PNGs.
+
+Muster und eigene Konfiguration: Die Szenen des Kits und der Module (`onboarding.*`, `settings.*`, `menubar.*`, `island.*` …) zeigen Beispieldaten, etwa drei Beispiel-Berechtigungen und Beispielkarten im Onboarding. Wie das Projekt selbst aussieht, zeigen die Szenen mit der Endung `.project`: `onboarding.project` (jeder Schritt des echten Onboardings mit den Berechtigungen aus `starter.json`, den eigenen Funktionskarten und den Schritten der Module) und `menubar.project` (das Panel mit den eigenen Abschnitten und Menüeinträgen). Urteile über das Projekt stützen sich auf diese Szenen und die Szenen der eigenen Funktionen.
 
 ## Ansehen
 

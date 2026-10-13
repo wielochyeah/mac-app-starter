@@ -215,13 +215,17 @@ def is_project(lock: dict) -> bool:
 
 
 def repo_state(root: Path, manifest: Manifest, lock: dict, env: Optional[Mapping[str, str]] = None) -> str:
-    """"project" (the lock names one), "starter" (origin, or GITHUB_REPOSITORY in CI, is the starter's
-    repository), "needs-init" (a copy with another origin or repository that has not run init) or
-    "unknown" (no origin: a copy and the starter look the same, port of app-starter's project-state)."""
+    """One rule for every tool (check-kit, init, the hooks, CI): "project" when the lock names one;
+    "starter" only when GITHUB_REPOSITORY (in CI, for the checked-out GITHUB_WORKSPACE) or else origin is
+    the manifest's repository, compared without case; "needs-init" for a copy with another repository that has not run init; "unknown"
+    without origin and outside CI (a copy and the starter look the same)."""
     if is_project(lock):
         return "project"
     env = os.environ if env is None else env
     github = (env.get("GITHUB_REPOSITORY") or "").strip()
+    workspace = (env.get("GITHUB_WORKSPACE") or "").strip()
+    if workspace and Path(workspace).resolve() != Path(root).resolve():
+        github = ""  # a copy the job made elsewhere (the template probe) is not the checked-out repository
     if github:
         return "starter" if github.lower() == manifest.repository.lower() else "needs-init"
     url = origin_url(root)
@@ -230,9 +234,18 @@ def repo_state(root: Path, manifest: Manifest, lock: dict, env: Optional[Mapping
     return "starter" if is_starter_origin(url, manifest.repository) else "needs-init"
 
 
+def detect_state(root: Path, env: Optional[Mapping[str, str]] = None) -> str:
+    """repo_state without a parsed manifest and lock at hand; "unknown" when either is missing or broken,
+    so hooks and CI never fail on it."""
+    try:
+        return repo_state(root, read_manifest(root), read_lock(root), env)
+    except (StarterError, OSError):
+        return "unknown"
+
+
 NEEDS_INIT = ("Kopie des Starters, noch nicht eingerichtet (starter.lock.json nennt kein Projekt, origin ist ein "
-              "anderes Repository): zuerst bin/starter init. Bis dahin trägt starter.json die Commit-Identität des "
-              "Starters, und jeder Commit liefe unter seinem Namen.")
+              "anderes Repository): zuerst bin/starter init. Bis dahin fehlen Name, Bundle-ID und die "
+              "Commit-Identität des Projekts, und der Hook commit-msg nimmt keinen Commit an.")
 
 
 def kit_checksums(root: Path, manifest: Manifest, files: Sequence[str]) -> Dict[str, str]:

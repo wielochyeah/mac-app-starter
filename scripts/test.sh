@@ -1,15 +1,17 @@
 #!/bin/zsh
 # Builds build/tests/run-tests (all app sources + App/Tests with -D TESTING) and runs it, then the
-# Python tests of scripts/ (and ai-worker/ when present). MODULES=… tests another module set.
+# Python tests (scripts/test_python.py). MODULES=… tests another module set; STRICT=1 (make check): warnings are errors.
 #   ONLY=Settings      run only Swift tests whose "Suite/test" name starts with this
 # Nothing is shown on screen: STARTER_HEADLESS=1, settings and data in a temp dir.
 set -euo pipefail
 ROOT="${0:A:h:h}"
 cd "$ROOT"
 
+source scripts/lib/swift.sh
+require_value MODULES "${MODULES:-}" '^[a-z0-9_]+(,[a-z0-9_]+)*$' window,menubar
+require_value ONLY "${ONLY:-}" '^[A-Za-z0-9 ._/:-]+$' Settings
 python3 scripts/gen_config.py --out build/gen >/dev/null
 source build/gen/app.env
-source scripts/lib/swift.sh
 use_sdk
 
 sources=("${(@f)$(swift_sources)}")
@@ -20,7 +22,7 @@ mkdir -p build/tests
 TMP="$(mktemp -d "$ROOT/build/.tmp.XXXXXX")"
 DATA="$(mktemp -d "$ROOT/build/.testdata.XXXXXX")"
 trap 'rm -rf "$TMP" "$DATA"' EXIT
-swiftc "${flags[@]}" -D TESTING -o "$TMP/run-tests" "${sources[@]}" "${tests[@]}"
+run_swiftc "${flags[@]}" -D TESTING -o "$TMP/run-tests" "${sources[@]}" "${tests[@]}"
 mv -f "$TMP/run-tests" build/tests/run-tests
 
 args=()
@@ -28,17 +30,5 @@ args=()
 STARTER_ROOT="$ROOT" STARTER_HEADLESS=1 STARTER_DATA_DIR="$DATA" STARTER_LANG=en build/tests/run-tests "${args[@]}"
 
 if [[ -z "${ONLY:-}" ]]; then
-  python3 -m unittest discover -s scripts/tests -t . -p 'test_*.py' 2>&1 | tail -3
-  if [[ -d scripts/starter/tests ]]; then
-    # bin/starter and check-kit; the full output only when something fails.
-    if ! out="$(python3 -m unittest discover -s scripts/starter/tests -t scripts -p 'test_*.py' 2>&1)"; then
-      print -r -- "$out"; exit 1
-    fi
-    print -r -- "$out" | tail -3
-  fi
-  if [[ -d ai-worker/tests ]]; then
-    PY=python3
-    [[ -x "$ROOT/ai-worker/.venv/bin/python" ]] && PY="$ROOT/ai-worker/.venv/bin/python"
-    (cd ai-worker && "$PY" -m unittest discover -s tests -p 'test_*.py' 2>&1 | tail -3)
-  fi
+  python3 scripts/test_python.py
 fi

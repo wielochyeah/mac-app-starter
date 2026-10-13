@@ -19,6 +19,23 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 
 `make build MODULES=a,b` baut eine andere Auswahl, ohne `starter.json` zu ändern.
 
+## Reihenfolge in der Registry
+
+Jedes Modul hat für seine Einstellungsbereiche und Onboarding-Schritte einen eigenen Bereich von `order`-Werten; zwei Beiträge teilen sich nie einen Wert. Eigene Funktionen des Projekts nehmen die freien Bereiche, in Zehnerschritten.
+
+| `order` | Einstellungsbereich (Gruppe `.settings`, unter den Inhalten) |
+|---|---|
+| 0 | Allgemein (Kit) |
+| 100 bis 199 | Funktionen des Projekts |
+| 200 bis 249 | Insel und Kapsel (`island`, 200) | <!-- modul:island -->
+| 250 bis 299 | Menüleiste (`menubar`, 250) | <!-- modul:menubar -->
+| 300 bis 349 | Modelle (`ai`, 300; `mlx` ist ein Abschnitt darin) | <!-- modul:ai -->
+| 350 bis 399 | Hintergrund (`background`, 350) | <!-- modul:background -->
+| 400 bis 449 | Kurzbefehle (`hotkeys`, 400) | <!-- modul:hotkeys -->
+| 1000 | Über (Kit) |
+
+Die Gruppe `.content` steht oben; dort beginnen Bereiche der Funktionen bei 100 (Beispiel „Notizen“), die Galerie des Kits (nur in Debug-Builds) hat 900. Die Reihenfolge der Onboarding-Schritte steht im Skill `neuer-onboarding-schritt`: Kit 0 bis 20, Funktionen 30 bis 299, Berechtigungen 300 bis 399, dann `ai` 400, `island` 500, `hotkeys` 600, `background` 900, Fertig 1000.
+
 <!-- modul:window:anfang -->
 ## window: Fenster-App
 
@@ -39,7 +56,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 - **Dateien:** `MenuBarController`, `MenuBarStatus.shared.state`, `MenuBarPanel.sections` (Abschnitte mit Kennung, Reihenfolge und View).
 - **Einstellungen:** Bereich „Menüleiste“ mit Statustext und Stil des Symbols (Präfix `menubar.`).
 - **Onboarding:** keiner.
-- **Szenen:** `menubar.panel`, `menubar.icon-states`. Eigene Abschnitte rendern Features auf `MenuBarPanelStage` (Menüleiste, Schreibtisch, Panel).
+- **Szenen:** `menubar.panel`, `menubar.icon-states` mit Beispieldaten; `menubar.project` zeigt das Panel des Projekts mit seinen eigenen Abschnitten und Menüeinträgen. Eigene Abschnitte rendern Features auf `MenuBarPanelStage` (Menüleiste, Schreibtisch, Panel).
 - **Skill:** `menueleisten-app`.
 <!-- modul:menubar:ende -->
 
@@ -133,7 +150,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 | Core | `Kit/Core/` | Sprache, Einstellungen, Datenbank, Registry, Render-Modus, Pfade, Protokoll |
 | Design | `Kit/Design/` | Tokens, Komponenten, Muster (`docs/DESIGN.md`) |
 | Texte | `Kit/Texts/` | gemeinsame Wörter (`CommonText`, `KitText`) |
-| Onboarding | `Kit/Onboarding/` | Fenster 720 x 560, Ablauf, Schritte Begrüßung (0, Bild über `Registry.welcomeArt` ersetzbar), Sprache (10), Funktionen (20), Berechtigungen (300 und folgende), Fertig (1000) |
+| Onboarding | `Kit/Onboarding/` | Fenster 720 x 560, Ablauf, Schritte Begrüßung (0, Bild über `Registry.welcomeArt` ersetzbar), Sprache (10), Funktionen (20), Berechtigungen (300 und folgende), Fertig (1000); Szenen `onboarding.*` mit Beispieldaten, `onboarding.project` mit jedem Schritt des Projekts |
 | Berechtigungen | `Kit/Permissions/` | Arten, Status, Anfrage, Links in die Systemeinstellungen, Abfrage während jemand hinsieht, Neustart |
 | Einstellungen | `Kit/Settings/` | Fenster 900 x 620 mit Seitenleiste (Gruppen Inhalt und Einstellungen), Bereiche „Allgemein“ (Sprache, Erscheinungsbild, Einrichtung erneut zeigen, zurücksetzen) und „Über“ |
 | Galerie | `Kit/Gallery/` | jeder Baustein aus `Registry.gallery`, in Debug-Builds oder mit `kit.showGallery` |

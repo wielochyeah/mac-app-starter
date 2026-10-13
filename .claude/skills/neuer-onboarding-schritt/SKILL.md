@@ -21,11 +21,12 @@ description: Fügt dem Onboarding einen Schritt hinzu (OnboardingStep mit Reihen
 | 0 | Begrüßung mit App-Symbol und Zweck (Kit) |
 | 10 | Sprache (Kit) |
 | 20 | Funktionen (Kit, bis zu drei Karten aus `OnboardingFeatures`) |
+| 30 bis 299 | Schritte der Funktionen des Projekts, in Zehnerschritten |
 | 300 bis 399 | Berechtigungen (Kit, je Eintrag in `permissions`) |
-| 400 | Lokale KI (Modul `ai`) |
-| 500 | Darstellung Insel oder Kapsel (Modul `island`) |
-| 600 | Kurzbefehl (Modul `hotkeys`) |
-| 900 | Beim Anmelden starten (Modul `background`) |
+| 400 | Lokale KI (Modul `ai`) | <!-- modul:ai -->
+| 500 | Darstellung Insel oder Kapsel (Modul `island`) | <!-- modul:island -->
+| 600 | Kurzbefehl (Modul `hotkeys`) | <!-- modul:hotkeys -->
+| 900 | Beim Anmelden starten (Modul `background`) | <!-- modul:background -->
 | 1000 | Fertig (Kit) |
 
 Eigene Schritte nutzen freie Werte dazwischen, etwa 30 bis 290 für Erklärungen und Auswahl vor den Berechtigungen.

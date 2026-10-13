@@ -43,7 +43,7 @@ Die App hält diese Zusagen ein; jede Funktion mit KI erbt sie:
 - Katalog: `ai-worker/models.json` mit Name, Rolle, Hugging-Face-Adresse und Größe; mindestens ein kleines Standardmodell (unter 1 GB, 4 Bit) und eine größere Wahl für bessere Antworten.
 - Download: nur auf Knopfdruck in den Einstellungen oder im Onboarding, mit Größe vorher, Fortschritt „x von y GB“, Pause und erneutem Versuch. Der Download läuft in einem eigenen Prozess (`ai-worker/download.py`) und misst den Fortschritt am Cache gegen die Gesamtgröße.
 - Ablage: unter `~/Library/Application Support/<bundleId>/Models/huggingface` (`MLXPaths.hfHome`, mit `STARTER_DATA_DIR` in dessen Ordner); Modelle kommen nie ins Repository und lassen sich in den Einstellungen löschen.
-- Umgebung: `ai-worker/setup.sh` legt `ai-worker/.venv` mit Python 3.12 an (aus Homebrew, sonst 3.11 oder 3.13, sonst über uv) und installiert die festen Versionen aus `ai-worker/requirements.lock`, ohne diese Datei aus `ai-worker/requirements.txt`; `ai-worker/setup.sh --check` prüft nur, `--lock` schreibt die Sperrdatei neu. Das Skript installiert nie Homebrew oder uv selbst; fehlt beides, sagt es, welcher Befehl fehlt.
+- Umgebung: `ai-worker/setup.sh` legt `ai-worker/.venv` mit Python 3.12 an (aus Homebrew, sonst 3.11 oder 3.13, sonst über uv) und installiert die festen Versionen aus `ai-worker/requirements.lock`: jedes Paket nur als Wheel und nur mit der Prüfsumme aus der Sperrdatei (`--require-hashes --only-binary :all:`), `pip` selbst bleibt, wie die venv es mitbringt. `ai-worker/setup.sh --check` prüft nur; nach einer Änderung an `ai-worker/requirements.txt` schreibt `--lock` die Sperrdatei mit Prüfsummen neu (`ai-worker/lock.py`). Das Skript installiert nie Homebrew oder uv selbst; fehlt beides, sagt es, welcher Befehl fehlt.
 
 ## Der MLX-Worker
 
@@ -62,7 +62,7 @@ Noch nicht gebaut: `mlx` läuft nur in Entwickler-Builds aus dem Projekt (`make 
 Was für die Weitergabe fehlt, ist ein Skript `ai-worker/package.sh <Pfad zur .app>`, das `make dmg` aufruft, sobald es existiert:
 
 - ein eigenständiges Python 3.12 (etwa python-build-standalone) mit den festen Versionen aus `ai-worker/requirements.lock` nach `Contents/Resources/python`, die Dateien des Workers nach `Contents/Resources/ai-worker`;
-- jede `.so` und `.dylib` darin signieren, bevor `make dmg` die App signiert; mit Developer ID braucht die Hardened Runtime dann `com.apple.security.cs.disable-library-validation` in `tools/entitlements.plist` und einen Eintrag in `docs/DECISIONS.md`;
+- jede `.so` und `.dylib` darin mit derselben Developer ID signieren wie die App (`make dmg` signiert von innen nach außen). Bibliotheken desselben Teams bestehen die Bibliotheksprüfung der Hardened Runtime ohne Ausnahme. Braucht der Interpreter trotzdem eine (etwa `com.apple.security.cs.disable-library-validation`), bekommt nur er sie: eine eigene Plist unter `tools/` und ein Eintrag in `tools/entitlements-map.json` (`{"Contents/Resources/python/bin/python3*": "tools/python.entitlements.plist"}`), dazu ein Eintrag in `docs/DECISIONS.md`. Die App selbst behält ihre Bibliotheksprüfung; `tools/entitlements.plist` bekommt diese Ausnahme nie;
 - `LSMinimumSystemVersion` an die Mindestversion der Binaries von MLX anpassen (`make dmg` prüft `minos` und bricht sonst ab; MLX 0.32 braucht macOS 26.2).
 
 Bis dahin ist ein DMG mit `mlx` kein Fehler, aber für Empfänger ohne MLX.

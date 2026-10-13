@@ -65,12 +65,15 @@ def origin_url(root: Path) -> str:
 
 
 def is_starter_origin(url: str, repository: str) -> bool:
-    """True when the origin URL points at the starter repository itself (https or ssh form)."""
-    remote = url.strip()
+    """True when the origin URL points at the starter repository itself (https or ssh form). GitHub
+    names are case-insensitive, so a clone of WielochYeah/Mac-App-Starter is the starter too."""
+    remote = url.strip().lower()
+    repository = repository.strip().lower()
     if remote.endswith(".git"):
         remote = remote[:-4]
     remote = remote.rstrip("/")
-    return bool(remote) and (remote.endswith("/" + repository) or remote.endswith(":" + repository))
+    return bool(remote) and bool(repository) and (remote.endswith("/" + repository)
+                                                  or remote.endswith(":" + repository))
 
 
 def working_files(root: Path) -> List[str]:

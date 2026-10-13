@@ -19,11 +19,12 @@ from typing import Dict, List, Mapping, Optional, Sequence
 
 from . import config as cfg
 from . import globs
+from . import pictures as pics
 from .common import StarterError, cut_blocks, has_block, is_text_file, working_files
 from .manifest import (CLASS_NAMES, NEEDS_INIT, PENDING, Manifest, is_project, kit_checksums, read_lock, read_manifest,
                        repo_state)
 from .markers import swift_flag_problems, transform
-from .remove import read_texts, simulate
+from .remove import present_modules, read_texts, simulate
 
 SKIP_GUIDES = ["./CHANGELOG.md", "./THIRD_PARTY_NOTICES.md", "docs/DECISIONS.md", "docs/STARTER_DECISIONS.md"]
 
@@ -83,6 +84,64 @@ def check_project(root: Path, manifest: Manifest, lock: dict, files: Sequence[st
     if leftovers:
         f.problems.append("Bauunterlagen des Starters sind noch da; bin/starter init ausführen oder entfernen: "
                           + ", ".join(leftovers))
+
+
+def picture_problems(manifest: Manifest, files: Sequence[str], texts: Dict[str, str],
+                     present: Sequence[str]) -> List[List[str]]:
+    """[problems, warnings] for the README pictures: a guide that shows a picture that is not there, a line of
+    docs/screenshots/list.txt with a scene of a removed module, a listed picture that make readme-shots has not
+    written yet (a hint)."""
+    fileset = set(files)
+    problems: List[str] = []
+    warnings: List[str] = []
+    skip = SKIP_GUIDES + manifest.starter_only_paths
+    for path in sorted(texts):
+        if not path.endswith(".md") or globs.matches(path, skip):
+            continue
+        for no, line in enumerate(texts[path].split("\n"), 1):
+            for ref in pics.references(line):
+                module = pics.module_of(pics.scene_of_picture(ref), manifest.modules)
+                if module and module not in present:
+                    problems.append(f"{path}:{no} zeigt {ref}, eine Szene des entfernten Moduls {module}; die Stelle "
+                                    "anpassen")
+                elif ref not in fileset:
+                    problems.append(f"{path}:{no} zeigt {ref}, das es nicht gibt (make shots und make readme-shots, "
+                                    "oder die Zeile anpassen)")
+    listing = texts.get(pics.LIST)
+    for no, line in enumerate((listing or "").split("\n"), 1):
+        entry = pics.entry_of(line)
+        if not entry:
+            continue
+        scene = pics.scene_of(entry)
+        module = pics.module_of(scene, manifest.modules)
+        if module and module not in present:
+            problems.append(f"{pics.LIST}:{no} nennt die Szene {scene} des entfernten Moduls {module}; Zeile löschen")
+        elif pics.picture(entry) not in fileset:
+            warnings.append(f"{pics.LIST}:{no}: {pics.picture(entry)} fehlt noch (make shots, dann make readme-shots)")
+    return [problems, warnings]
+
+
+def removed_picture_problems(manifest: Manifest, name: str, closure: List[str], texts: Dict[str, str]) -> List[str]:
+    """In the starter: guides that, after bin/starter init and removing `closure`, would still show a picture of one
+    of those modules' scenes. Starter-only blocks are cut first, as init does."""
+    out = []
+    skip = SKIP_GUIDES + manifest.starter_only_paths
+    for path in sorted(texts):
+        if not path.endswith(".md") or globs.matches(path, skip):
+            continue
+        text = texts[path]
+        if has_block(text, manifest.block_start):
+            try:
+                text = cut_blocks(text, manifest.block_start, manifest.block_end)
+            except StarterError:
+                continue
+        text = transform(path, text, closure) or ""
+        for no, line in enumerate(text.split("\n"), 1):
+            for ref in pics.references(line):
+                if pics.module_of(pics.scene_of_picture(ref), manifest.modules) in closure:
+                    out.append(f"remove {name}: {path}:{no} zeigt {ref}; die Stelle mit <!-- modul:{name} --> "
+                               "markieren oder in einen Block nur-im-starter setzen")
+    return out
 
 
 # --- part 1: starter ------------------------------------------------------------------------------
@@ -192,6 +251,7 @@ def check_starter(root: Path, manifest: Manifest, lock: dict, files: Sequence[st
             f.problems.append(f"remove {name}: {e}")
             continue
         guides = guide_problems(root, manifest, closure, files, texts)
+        f.problems += removed_picture_problems(manifest, name, closure, texts)
         for d in dangling:
             f.problems.append(f"remove {name}: {d}; mit #if MODUL_{name.upper()} umschließen")
         for g in guides:
@@ -372,8 +432,20 @@ def run(root: Path, env: Optional[Mapping[str, str]] = None) -> Findings:
                               "bin/starter init")
         check_starter(root, manifest, lock, files, f)
     if lock.get(PENDING):
-        f.warnings.append(f"nach „{lock[PENDING]}“ war make build rot; nach der Korrektur {lock[PENDING]} erneut "
-                          "aufrufen (baut noch einmal und löscht den Vermerk pendingBuild in starter.lock.json)")
+        f.warnings.append(f"nach „{lock[PENDING]}“ ist make build noch nicht grün gelaufen (rot oder ohne "
+                          f"Swift-Compiler übersprungen); auf einem Mac {lock[PENDING]} erneut aufrufen (baut noch "
+                          "einmal und löscht den Vermerk pendingBuild in starter.lock.json)")
+    if state == "project" and not any(
+            p.startswith("App/Sources/Features/") and p.endswith(".swift")
+            and "OnboardingFeatures.items.append" in (_read(root, p) or "") for p in files):
+        f.warnings.append("das Onboarding zeigt noch keine Funktionskarte des Projekts (nur die der Module, mit "
+                          "strip-examples keine); eine Karte je Funktion: Skill neues-feature, Schritt 8")
+    if state in ("project", "starter", "unknown"):
+        config = cfg.read_config(root)
+        texts = {p: t for p, t in read_texts(root, [p for p in files if p.endswith(".md") or p == pics.LIST]).items()}
+        problems, warnings = picture_problems(manifest, files, texts, present_modules(root, manifest, list(files), config))
+        f.problems += problems
+        f.warnings += warnings
     check_switches(root, manifest, is_project(lock), f)
     return f
 

@@ -53,6 +53,6 @@ Technisch läuft das über Carbon `RegisterEventHotKey`; das braucht keine Berec
 
 ## Prüfen
 
-- `make check`, `make test ONLY=Hotkey` (Regelwerk), `make build MODULES=window,hotkeys` und `make build MODULES=window`.
+- `make check`, `make test ONLY=Hotkey` (Regelwerk), `make build MODULES=<form>,hotkeys` und `make build MODULES=<form>`; `<form>` ist die App-Form des Projekts, `window` oder `menubar`, wie sie in `starter.json` steht.
 - `make shots ONLY=hotkeys.` und alle vier Fassungen mit dem Werkzeug Read ansehen.
 - Ob der Kurzbefehl aus anderen Apps auslöst, ist nur in der laufenden App prüfbar.
