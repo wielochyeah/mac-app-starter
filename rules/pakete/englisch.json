@@ -6,7 +6,7 @@
   "standardAktiv": true,
   "abschaltbar": false,
   "sprachen": ["de"],
-  "beschreibung": "Englische Wendungen und Befehlswörter, die in einem deutschen Text stehen geblieben sind, meist weil eine Übersetzung fehlt oder die Argumente von tr(en:de:) vertauscht sind. Mehrwort-Phrasen gelten ohne Rücksicht auf Groß- und Kleinschreibung; einzelne Wörter nur großgeschrieben und nur Befehle auf Knöpfen und in Menüs (nicht Login, Dock oder Finder).",
+  "beschreibung": "Englische Wendungen, Befehlswörter und Anführungszeichen, die in einem deutschen Text stehen geblieben sind, meist weil eine Übersetzung fehlt oder die Argumente von tr(en:de:) vertauscht sind. Mehrwort-Phrasen gelten ohne Rücksicht auf Groß- und Kleinschreibung; einzelne Wörter nur großgeschrieben und nur Befehle auf Knöpfen und in Menüs (nicht Login, Dock oder Finder).",
   "begriffe": [
     {
       "id": "englisch-phrase",
@@ -130,6 +130,21 @@
           "Login-Objekte",
           "Editor"
         ]
+      }
+    },
+    {
+      "id": "anfuehrung-de",
+      "label": "Englisches Anführungszeichen im Deutschen",
+      "hinweis": "deutsche Anführungszeichen „…“, etwa „Erlauben“",
+      "regeln": ["S-11"],
+      "art": "regex",
+      "muster": ["”", "(?<![^\\s(\\[/])“(?=\\S)"],
+      "flags": "",
+      "bereiche": ["ui", "ki"],
+      "umsetzung": "Ein “ zählt nur am Anfang eines Worts, wo es ein Zitat öffnet; als schließendes deutsches Zeichen nach „ bleibt es erlaubt.",
+      "beispiele": {
+        "treffer": ["Klicke auf “Ändern”", "Wähle “Erlauben”.", "unter “Mitteilungen”"],
+        "erlaubt": ["Klicke auf „Ändern“", "Wähle „Erlauben“.", "„Kairos“ von Jenny Erpenbeck"]
       }
     }
   ]

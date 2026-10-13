@@ -45,6 +45,32 @@
         ],
         "erlaubt": ["sortiert nach Datum", "nach bestem Wissen"]
       }
+    },
+    {
+      "id": "zusage",
+      "label": "Zusage ohne Beleg",
+      "hinweis": "sagen, was die App tut („Die Notizen liegen in einer Datei auf diesem Mac“); eine Zusage nur, wenn das Projekt sie einhält und ein Test sie belegt, dann mit // text-ausnahme: Grund",
+      "regeln": ["S-06"],
+      "art": "woerter",
+      "muster": [
+        "verlass\\w*\\s+(?:\\w+\\s+){0,3}nie",
+        "(?:sind|ist)\\s+sicher"
+      ],
+      "flags": "i",
+      "bereiche": ["ui", "ki"],
+      "umsetzung": "Nur in Oberfläche und KI-Texten: die Doku beschreibt, was das Kit einhält und welcher Test es belegt.",
+      "beispiele": {
+        "treffer": [
+          "Deine Daten verlassen diesen Mac nie.",
+          "Die Notizen verlassen ihn nie",
+          "Deine Einträge sind sicher"
+        ],
+        "erlaubt": [
+          "Die Notizen liegen in einer Datei auf diesem Mac.",
+          "Verlasse die Ansicht mit Esc",
+          "Bist du sicher?"
+        ]
+      }
     }
   ]
 }

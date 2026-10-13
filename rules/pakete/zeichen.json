@@ -320,6 +320,72 @@
           "origin/main..HEAD"
         ]
       }
+    },
+    {
+      "id": "gerade-anfuehrung",
+      "label": "Gerades Anführungszeichen oder gerader Apostroph",
+      "hinweis": "„…“ im Deutschen, “…” im Englischen, Apostroph als ’ (U+2019), etwa „Andreas’ Notizen“ und “you won’t”",
+      "regeln": [
+        "S-11"
+      ],
+      "art": "regex",
+      "muster": [
+        "\"",
+        "(?!’)['’]"
+      ],
+      "flags": "",
+      "bereiche": [
+        "ui"
+      ],
+      "umsetzung": "Nur in UI-Texten: Doku, Kommentare und Commits zeigen Code mit geraden Zeichen. Im Literal steht ein Anführungszeichen als \\\" und zählt ebenso.",
+      "beispiele": {
+        "treffer": [
+          "You won't need it",
+          "runs Safari’s 'Search With Google' service",
+          "Klicke auf \"Ändern\"",
+          "Choose \"Allow\""
+        ],
+        "erlaubt": [
+          "You won’t need it",
+          "Andreas’ Notizen",
+          "Klicke auf „Ändern“",
+          "Choose “Allow”"
+        ]
+      }
+    },
+    {
+      "id": "einheit-leerzeichen",
+      "label": "Einheit mit normalem Leerzeichen",
+      "hinweis": "Zahl und Einheit über Format oder ByteText, sonst ein schmales geschütztes Leerzeichen \\u{202F} zwischen Zahl und Einheit",
+      "regeln": [
+        "S-11"
+      ],
+      "art": "regex",
+      "muster": [
+        "(?:(?<=\\d)|(?<=\\WX)|(?<=^X))[ \\t\\u00A0](?:ms|min|s|h|KB|MB|GB|TB|km|%)(?!\\w)"
+      ],
+      "flags": "",
+      "bereiche": [
+        "ui"
+      ],
+      "umsetzung": "Gilt für eine Ziffer oder eine Einsetzung \\(…) vor dem Leerzeichen (im geprüften Text steht eine Einsetzung als X) und die Einheiten s, ms, min, h, KB, MB, GB, TB, km und %.",
+      "beispiele": {
+        "treffer": [
+          "Weniger als 2 GB frei",
+          "Next try in X s.",
+          "Das PDF hat 4,2 MB",
+          "42 %",
+          "Needs about X GB of memory"
+        ],
+        "erlaubt": [
+          "Weniger als 2\u202fGB frei",
+          "Next try in X\u202fs.",
+          "250 g rote Linsen",
+          "in 2 Sekunden",
+          "Version X",
+          "Raum 3.12 ist ab 10 Uhr frei"
+        ]
+      }
     }
   ]
 }

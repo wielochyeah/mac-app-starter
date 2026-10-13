@@ -45,7 +45,10 @@
         "ups",
         "hoppla",
         "oh\\s+nein",
-        "Superkr(?:a|ä)ft\\w*"
+        "Superkr(?:a|ä)ft\\w*",
+        "alles\\s+an\\s+einem\\s+Ort",
+        "(?:einen?|ein)\\s+(?:Klick|Kurzbefehl|Tastendruck)\\s+entfernt",
+        "ein(?:en)?\\s+ruhige[nr]?\\s+Ort"
       ],
       "flags": "i",
       "bereiche": ["ui", "doku", "ki"],
@@ -74,9 +77,21 @@
           "Einblicke in die Nutzung",
           "Los geht’s",
           "Los geht's",
-          "Ups, das ging schief"
+          "Ups, das ging schief",
+          "Alles an einem Ort",
+          "Einen Kurzbefehl entfernt",
+          "Nur einen Klick entfernt",
+          "Ein ruhiger Ort für deine Arbeit"
         ],
-        "erlaubt": ["Notiz anlegen", "Einblick", "Willkommen", "Dann taucht ein Hinweis auf"]
+        "erlaubt": [
+          "Notiz anlegen",
+          "Einblick",
+          "Willkommen",
+          "Dann taucht ein Hinweis auf",
+          "Alle Notizen in einer Liste",
+          "Mit einem Klick entfernt",
+          "Ein ruhiger Ton"
+        ]
       }
     },
     {

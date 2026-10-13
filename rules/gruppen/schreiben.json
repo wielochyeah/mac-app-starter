@@ -35,7 +35,7 @@
     {
       "id": "S-04",
       "schluessel": "floskeln",
-      "text": "Keine Floskeln und Schmuckwörter, weder deutsch (`nahtlos`, `mühelos`, `revolutionär`, `innovativ`, `leistungsstark`, `smart`, `intelligent` als Schmuck, `Entdecke`, `Tauche ein`, `auf einen Blick`, `Magie`, `Reise`, `Lass uns`, `Willkommen bei`, `Mehr erfahren`, `Los geht’s`) noch englisch (`seamless`, `effortless`, `leverage`, `unlock`, `elevate`, `empower`, `delve`, `robust`, `cutting-edge`, `game-changer`, `revolutionize`, `supercharge`, `harness`, `streamline`, `in today’s …`, `whether you’re …`, `dive into`, `Let’s`, `Oops`). Stattdessen sagt der Text konkret, was passiert.",
+      "text": "Keine Floskeln und Schmuckwörter, weder deutsch (`nahtlos`, `mühelos`, `revolutionär`, `innovativ`, `leistungsstark`, `smart`, `intelligent` als Schmuck, `Entdecke`, `Tauche ein`, `auf einen Blick`, `Magie`, `Reise`, `Lass uns`, `Willkommen bei`, `Mehr erfahren`, `Los geht’s`, `alles an einem Ort`, `einen Klick entfernt`) noch englisch (`seamless`, `effortless`, `leverage`, `unlock`, `elevate`, `empower`, `delve`, `robust`, `cutting-edge`, `game-changer`, `revolutionize`, `supercharge`, `harness`, `streamline`, `in today’s …`, `whether you’re …`, `dive into`, `Let’s`, `Oops`, `everything in one place`, `one click away`). Stattdessen sagt der Text konkret, was passiert.",
       "pakete": ["floskeln", "floskeln-en"],
       "durchsetzung": ["make check-texts", "scripts/hooks/commit-msg (englische Liste)"],
       "ki": true
@@ -43,7 +43,7 @@
     {
       "id": "S-05",
       "schluessel": "anrede",
-      "text": "Deutsche Texte nutzen genau eine Anrede: die aus `starter.json` (`texts.anrede`), Standard `du` wie bei Apple und VoiceBud, sonst `Sie`. Die andere Form ist ein Fehler. Die Texte des Kits sind in der du-Form geschrieben; wer `sie` wählt, schreibt die deutschen Texte der `*Text.swift`-Dateien und der `App/Resources/InfoPlist.json` um (gemeinsame Pfade, die ein Projekt ändern darf), `make check-texts` listet jede Stelle. Knöpfe und Menübefehle stehen im Infinitiv (`Einstellungen öffnen`, `Freigabe erteilen`), englische im Imperativ (`Open Settings`).",
+      "text": "Deutsche Texte nutzen genau eine Anrede: die aus `starter.json` (`texts.anrede`), Standard `du` wie bei Apple und VoiceBud, sonst `Sie`. Die andere Form ist ein Fehler. Die Texte des Kits sind in der du-Form geschrieben; wer `sie` wählt, schreibt die deutschen Texte der `*Text.swift`-Dateien und der `App/Resources/InfoPlist.json` um (gemeinsame Pfade, die ein Projekt ändern darf), `make check-texts` listet jede Stelle. Der Imperativ der du-Form steht in der langen Form wie bei Apple (`Wähle`, `Klicke`, `Drücke`, `Ziehe`, nicht `Wähl`, `Klick`, `Drück`, `Zieh`). Tasten und Menübefehle stehen im Infinitiv (`Einstellungen öffnen`, `Zugriff erlauben`), englische im Imperativ (`Open Settings`).",
       "pakete": ["anrede"],
       "durchsetzung": ["make check-texts", "Review (pruefer-laie-ux)"],
       "ki": true
@@ -51,7 +51,7 @@
     {
       "id": "S-06",
       "schluessel": "neutral",
-      "text": "Neutral beschreiben statt werben oder versprechen: keine Superlative und Versprechen (`die beste`, `perfekt`, `garantiert`, `the best`, `perfect`, `ultimate`), keine Wertung ohne Maßstab. Fachliche Neutralitätsregeln eines Projekts kommen als eigenes Sprachpaket in `rules/projekt/pakete/` dazu.",
+      "text": "Neutral beschreiben statt werben oder versprechen: keine Superlative und Versprechen (`die beste`, `perfekt`, `garantiert`, `the best`, `perfect`, `ultimate`), keine Zusage, die kein Test belegt (`verlässt deinen Mac nie`, `never leaves`, `are safe`), keine Wertung ohne Maßstab. Fachliche Neutralitätsregeln eines Projekts kommen als eigenes Sprachpaket in `rules/projekt/pakete/` dazu.",
       "pakete": ["neutral", "neutral-en"],
       "durchsetzung": ["make check-texts", "Review"],
       "ki": true
@@ -59,9 +59,9 @@
     {
       "id": "S-07",
       "schluessel": "konkret",
-      "text": "Kurz und konkret: ein Gedanke je Satz, eine Zahl mit Einheit statt eines Adjektivs, der Grund einer Bitte steht dabei (`Das Mikrofon läuft nur, während du aufnimmst`). Jede Zeile muss sich rechtfertigen, jeder Hinweis steht einmal je Ansicht, Fachbegriffe bekommen einen erklärenden Satz in der Fußnote oder eine Ebene tiefer.",
+      "text": "Kurz und konkret: ein Gedanke je Satz, eine Zahl mit Einheit statt eines Adjektivs, der Grund einer Bitte steht dabei. Eine Nutzungsbeschreibung sagt, wofür die App den Zugriff nutzt (`Die App nutzt das Mikrofon, um aufzunehmen, was du sagst`); eine Zusage (`bleibt auf deinem Mac`) steht nur dabei, wenn das Projekt sie einhält und ein Test sie belegt. Jede Zeile muss sich rechtfertigen, jeder Hinweis steht einmal je Ansicht, Fachbegriffe bekommen einen erklärenden Satz in der Fußnote oder eine Ebene tiefer.",
       "pakete": [],
-      "durchsetzung": ["Review (pruefer-laie-ux)"],
+      "durchsetzung": ["make check-texts (unveränderte Nutzungsbeschreibungen des Starters in einem Projekt)", "Review (pruefer-laie-ux)"],
       "ki": true
     },
     {
@@ -83,7 +83,7 @@
     {
       "id": "S-10",
       "schluessel": "zwei-sprachen",
-      "text": "Jeder UI-Text steht in beiden Sprachen als `tr(en: \"…\", de: \"…\")` in einer Datei `*Text.swift` (`enum <Bereich>Text`), nie als Literal in einer Ansicht (`Text(\"…\")`, `Button(\"…\")`, `.help(\"…\")`, `NSMenuItem(title: \"…\")`). Einsetzungen und Mehrzahl sind `static func`. Beide Texte tragen dieselben Einsetzungen und dasselbe Auslassungszeichen; im englischen Text steht kein Deutsch, im deutschen kein Englisch. `Text(verbatim:)` mit Literal nur mit Kommentar `// verbatim: Grund`, eine begründete Ausnahme einer Sprachregel mit `// text-ausnahme: Grund`. Nutzungsbeschreibungen der Berechtigungen stehen zweisprachig in `App/Resources/InfoPlist.json`.",
+      "text": "Jeder UI-Text steht in beiden Sprachen als `tr(en: \"…\", de: \"…\")` in einer Datei `*Text.swift` (`enum <Bereich>Text`), nie als Literal in einer Ansicht (`Text(\"…\")`, `Button(\"…\")`, `.help(\"…\")`, `NSMenuItem(title: \"…\")`). Einsetzungen und Mehrzahl sind `static func`. Beide Texte tragen dieselben Einsetzungen und dasselbe Auslassungszeichen; im englischen Text steht kein Deutsch, im deutschen kein Englisch. `Text(verbatim:)` mit Literal nur mit Kommentar `// verbatim: Grund`, eine begründete Ausnahme einer Sprachregel mit `// text-ausnahme: Grund`. Nutzungsbeschreibungen der Berechtigungen stehen zweisprachig in `App/Resources/InfoPlist.json`. Die Texte des DMG-Fensters stehen ebenso als `DMGCopy(en:de:)` in `tools/dmg/DMGText.swift`.",
       "pakete": ["englisch", "deutsch"],
       "durchsetzung": [
         "make check-texts (Literale in Ansichten, beide Sprachen, Einsetzungen, Auslassungszeichen)",
@@ -94,7 +94,7 @@
     {
       "id": "S-11",
       "schluessel": "typografie",
-      "text": "Auslassungszeichen `…` statt drei Punkten; ein Menübefehl, der einen Dialog öffnet, endet damit, englisch direkt angehängt (`Settings…`), deutsch mit Leerzeichen wie bei Apple (`Einstellungen …`). Deutsche Anführungszeichen `„…“`, englische `“…”`. Keine Verkürzungen mit Apostroph im Deutschen (`geht’s`, `gibt’s`). Zahlen, Daten, Dauern und Größen nur über `Format` und `ByteText` in der UI-Sprache, Einheit mit schmalem geschütztem Leerzeichen.",
+      "text": "Auslassungszeichen `…` statt drei Punkten; ein Menübefehl, der einen Dialog öffnet, endet damit, englisch direkt angehängt (`Settings…`), deutsch mit Leerzeichen wie bei Apple (`Einstellungen …`). Deutsche Anführungszeichen `„…“`, englische `“…”`, nie gerade (`\"`, `'`); der Apostroph ist in beiden Sprachen `’`. Namen von Tasten, Einträgen und Orten der Oberfläche stehen in Anführungszeichen (`„Datenschutz & Sicherheit“`), Pfade mit ` > ` ohne (`Einstellungen > Allgemein`). Keine Verkürzungen mit Apostroph im Deutschen (`geht’s`, `gibt’s`). Zahlen, Daten, Dauern und Größen nur über `Format` und `ByteText` in der UI-Sprache, Einheit mit schmalem geschütztem Leerzeichen (`\\u{202F}`).",
       "pakete": ["floskeln", "zeichen"],
       "durchsetzung": ["make check-texts"],
       "ki": true
@@ -122,6 +122,14 @@
       "pakete": ["zeitwoerter"],
       "durchsetzung": ["make check-texts (mit Paket zeitwoerter)", "Review"],
       "ki": true
+    },
+    {
+      "id": "S-15",
+      "schluessel": "begriffe",
+      "text": "Ein Ding, ein Wort: Die Oberfläche nennt jedes Ding überall gleich, im Deutschen mit dem Wort von macOS 26. Feste Begriffe des Kits: `Berechtigung` als Nomen und `erlauben` als Verb (`Erlaubnis` nur in `braucht deine Erlaubnis`, nie `Freigabe` oder `erteilt`), `Einrichtung` für das Onboarding, `Taste` für jedes Bedienelement zum Klicken (nie `Knopf`), `Tastenkappe` für eine gezeichnete Taste der Tastatur, `Tastaturkurzbefehle` als Name eines Bereichs oder Pfads, `Widerrufen` für Undo, `Website`, `Statusmenü` für das Menü am Statussymbol, `Automatisch` für die Wahl, die dem Mac folgt. Die Tabelle „Feste Begriffe der Oberfläche“ in `docs/DESIGN.md` nennt sie mit Grund; ein Projekt ergänzt seine Fachbegriffe dort, in `docs/PROJECT.md` und als Paket in `rules/projekt/pakete/`.",
+      "pakete": ["begriffe"],
+      "durchsetzung": ["make check-texts", "Review (pruefer-laie-ux)"],
+      "ki": false
     }
   ]
 }
