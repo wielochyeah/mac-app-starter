@@ -216,7 +216,7 @@ private struct SegmentedSamples: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.m) {
-            Segmented([("system", CommonText.systemLanguage), ("de", Lang.de.nativeName), ("en", Lang.en.nativeName)], selection: $lang)
+            Segmented([("system", CommonText.systemLanguage), ("en", Lang.en.nativeName), ("de", Lang.de.nativeName)], selection: $lang)
             Segmented([(1, CommonText.on), (2, CommonText.off)], selection: $pick)
         }
     }

@@ -34,8 +34,8 @@ enum DesignText {
     static var openAtLoginDetail: String { tr(en: "Starts quietly in the menu bar", de: "Startet leise in der Menüleiste") }
     static var sounds: String { tr(en: "Sounds", de: "Töne") }
     static var footnoteSample: String {
-        tr(en: "Changes apply right away. You can change them later in Settings under General.",
-           de: "Änderungen gelten sofort. Du kannst sie später in den Einstellungen unter Allgemein ändern.")
+        tr(en: "Changes apply right away. You can change them later in Settings > General.",
+           de: "Änderungen gelten sofort. Du kannst sie später unter Einstellungen > Allgemein ändern.")
     }
     static var recommended: String { tr(en: "Recommended", de: "Empfohlen") }
     static var new: String { tr(en: "New", de: "Neu") }
@@ -49,14 +49,14 @@ enum DesignText {
     static var emptyMessage: String { tr(en: "Notes you save appear here, newest first.", de: "Notizen, die du sicherst, erscheinen hier, die neueste zuerst.") }
     static var newNote: String { tr(en: "New Note", de: "Neue Notiz") }
     static var glassSample: String { tr(en: "Floats above the content", de: "Schwebt über dem Inhalt") }
-    static var typeSample: String { tr(en: "Calm, precise, local", de: "Ruhig, genau, lokal") }
+    static var typeSample: String { tr(en: "3 notes in Work", de: "3 Notizen in Arbeit") }
     static var islandDone: String { tr(en: "Copied", de: "Kopiert") }
     static var islandMeta: String { tr(en: "Notes\u{2002}\u{2009}0.7\u{202F}s", de: "Notizen\u{2002}\u{2009}0,7\u{202F}s") }
     static var islandPreview: String {
         tr(en: "Pick up the printed plans before Friday and bring them to the site meeting.",
-           de: "Hol die gedruckten Pläne vor Freitag ab und bring sie zur Baubesprechung mit.")
+           de: "Hole die gedruckten Pläne vor Freitag ab und bringe sie zur Baubesprechung mit.")
     }
-    static var islandHint: String { tr(en: "Hover to read everything", de: "Zeigen, um alles zu lesen") }
+    static var islandHint: String { tr(en: "Hover to read everything", de: "Zeiger darauf bewegen, um alles zu lesen") }
     static func accentName(_ accent: AccentName) -> String {
         switch accent {
         case .violett: tr(en: "Violet", de: "Violett")

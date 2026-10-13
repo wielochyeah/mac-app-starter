@@ -3,12 +3,12 @@
 
 enum PatternsText {
     // Status slot (permission steps)
-    static var allowAccess: String { tr(en: "Allow Access", de: "Freigabe erteilen") }
+    static var allowAccess: String { tr(en: "Allow Access", de: "Zugriff erlauben") }
     static var openSystemSettings: String { tr(en: "Open System Settings", de: "Systemeinstellungen öffnen") }
-    static var granted: String { tr(en: "Allowed", de: "Erteilt") }
-    static var denied: String { tr(en: "Not allowed", de: "Abgelehnt") }
+    static var granted: String { tr(en: "Allowed", de: "Erlaubt") }
+    static var denied: String { tr(en: "Declined", de: "Abgelehnt") }
     static var waitingForAnswer: String { tr(en: "Waiting for your answer", de: "Wartet auf deine Antwort") }
-    static var waitingForSwitch: String { tr(en: "Waiting for the switch", de: "Wartet auf deinen Schalter") }
+    static var waitingForSwitch: String { tr(en: "Waiting for the switch in System Settings", de: "Wartet auf den Schalter in den Systemeinstellungen") }
     static var afterRestart: String { tr(en: "Takes effect after a restart", de: "Wirkt nach Neustart") }
     static var restartApp: String { tr(en: "Restart \(AppInfo.displayName)", de: "\(AppInfo.displayName) neu starten") }
 
@@ -32,7 +32,7 @@ enum PatternsText {
     static var info: String { tr(en: "Note", de: "Hinweis") }
     static var warning: String { tr(en: "Warning", de: "Warnung") }
     static var error: String { tr(en: "Error", de: "Fehler") }
-    static var opensOutside: String { tr(en: "Opens in another app", de: "Öffnet in einer anderen App") }
+    static var opensOutside: String { tr(en: "Opens in another app", de: "Öffnet sich in einer anderen App") }
 
     // Gallery titles
     static var onboardingPage: String { tr(en: "Setup page", de: "Einrichtungsseite") }
@@ -58,9 +58,9 @@ enum PatternsText {
     static var listCard: String { tr(en: "List card", de: "Listenkarte") }
     static var countBadge: String { tr(en: "Count", de: "Anzahl") }
     static var searchField: String { tr(en: "Search field", de: "Suchfeld") }
-    static var samplePane: String { tr(en: "Sample settings pane", de: "Beispiel Einstellungsbereich") }
-    static var sampleStep: String { tr(en: "Sample setup step", de: "Beispiel Einrichtungsschritt") }
-    static var samplePermission: String { tr(en: "Sample permission step", de: "Beispiel Berechtigungsschritt") }
+    static var samplePane: String { tr(en: "Sample: settings pane", de: "Beispiel: Einstellungsbereich") }
+    static var sampleStep: String { tr(en: "Sample: setup step", de: "Beispiel: Einrichtungsschritt") }
+    static var samplePermission: String { tr(en: "Sample: permission step", de: "Beispiel: Schritt für eine Berechtigung") }
 }
 
 /// Copy of the patterns.* sample scenes (fixed, so renders are deterministic).
@@ -71,11 +71,11 @@ enum PatternsSampleText {
            de: "Wie die App aussieht und sich verhält. Änderungen gelten sofort.")
     }
     static var language: String { tr(en: "Language", de: "Sprache") }
-    static var interface: String { tr(en: "Interface", de: "Oberfläche") }
+    static var interface: String { tr(en: "App language", de: "Sprache der App") }
     static var interfaceDetail: String { tr(en: "Windows, menus and notifications", de: "Fenster, Menüs und Mitteilungen") }
     static var appearance: String { tr(en: "Appearance", de: "Darstellung") }
-    static var appearanceDetail: String { tr(en: "Light, dark or like the Mac", de: "Hell, dunkel oder wie der Mac") }
-    static var system: String { tr(en: "System", de: "System") }
+    static var appearanceDetail: String { tr(en: "Light, dark or automatic", de: "Hell, dunkel oder automatisch") }
+    static var system: String { tr(en: "Automatic", de: "Automatisch") }
     static var light: String { tr(en: "Light", de: "Hell") }
     static var dark: String { tr(en: "Dark", de: "Dunkel") }
     static var behavior: String { tr(en: "Behavior", de: "Verhalten") }
@@ -100,8 +100,8 @@ enum PatternsSampleText {
            de: "Keine Verbindung zum Internet. Der Download geht weiter, sobald du wieder online bist.")
     }
     static var noWaitNote: String {
-        tr(en: "You don’t have to wait, the download runs in the background.",
-           de: "Du musst nicht warten, der Download läuft im Hintergrund.")
+        tr(en: "You don’t have to wait. The download runs in the background.",
+           de: "Du musst nicht warten. Der Download läuft im Hintergrund.")
     }
     static var storage: String { tr(en: "Storage", de: "Speicher") }
     static var dataFolder: String { tr(en: "Data folder", de: "Datenordner") }
@@ -114,10 +114,10 @@ enum PatternsSampleText {
     static var deleteHistoryConfirm: String { tr(en: "Delete the whole history?", de: "Den ganzen Verlauf löschen?") }
     static var deleteHistoryConfirmText: String {
         tr(en: "Every saved entry is removed from this Mac. This cannot be undone.",
-           de: "Jeder gesicherte Eintrag wird von diesem Mac entfernt. Das lässt sich nicht rückgängig machen.")
+           de: "Jeder gesicherte Eintrag wird von diesem Mac entfernt. Das lässt sich nicht widerrufen.")
     }
     static var deleteNow: String { tr(en: "Delete", de: "Löschen") }
-    static var shortcuts: String { tr(en: "Keyboard shortcuts", de: "Kurzbefehle") }
+    static var shortcuts: String { tr(en: "Keyboard shortcuts", de: "Tastaturkurzbefehle") }
     static var shortcutsDetail: String { tr(en: "4 shortcuts", de: "4 Kurzbefehle") }
     static var privacy: String { tr(en: "Privacy & Security", de: "Datenschutz & Sicherheit") }
     static var privacyDetail: String { tr(en: "Microphone, Accessibility", de: "Mikrofon, Bedienungshilfen") }
@@ -129,12 +129,12 @@ enum PatternsSampleText {
     }
     static var noticeInfoTitle: String { tr(en: "Local models unavailable", de: "Lokale Modelle nicht verfügbar") }
     static var noticeWarn: String {
-        tr(en: "Less than 2 GB free. Downloads pause until there is room.",
-           de: "Weniger als 2 GB frei. Downloads pausieren, bis wieder Platz ist.")
+        tr(en: "Less than 2\u{202F}GB free. Downloads pause until there is room.",
+           de: "Weniger als 2\u{202F}GB frei. Downloads pausieren, bis wieder Platz ist.")
     }
     static var noticeError: String {
-        tr(en: "The history could not be opened. Your entries are safe, try again after a restart.",
-           de: "Der Verlauf ließ sich nicht öffnen. Deine Einträge sind sicher, versuch es nach einem Neustart.")
+        tr(en: "The history could not be opened. Restart the app and try again.",
+           de: "Der Verlauf ließ sich nicht öffnen. Starte die App neu und versuche es noch einmal.")
     }
     static var turnOn: String { tr(en: "Turn On…", de: "Einschalten …") }
     static var apps: String { tr(en: "Apps", de: "Apps") }
@@ -161,13 +161,13 @@ enum PatternsSampleText {
     /// In the other language on purpose: the way to the switch for whoever needs it (VoiceBud).
     static var languageCrossHint: String {
         // text-ausnahme: the hint is written in the other language so whoever needs it can read it
-        tr(en: "Lieber auf Deutsch? Unten bei App „Deutsch“ wählen.", de: "Prefer English? Choose English next to App below.")
+        tr(en: "Lieber auf Deutsch? Wähle unten „Deutsch“.", de: "Prefer English? Choose “English” below.")
     }
-    static var app: String { tr(en: "App", de: "App") }
-    static var appDetail: String { tr(en: "Texts in windows, menus and the island", de: "Texte in Fenstern, Menüs und Insel") }
+    static var app: String { tr(en: "App language", de: "Sprache der App") }
+    static var appDetail: String { tr(en: "Texts in windows, menus and the island", de: "Texte in Fenstern, Menüs und der Insel") }
     static var languageFootnote: String {
-        tr(en: "Follows the Mac until you pick one. You can change it later in Settings under General.",
-           de: "Folgt dem Mac, bis du eine wählst. Du kannst sie später in den Einstellungen unter Allgemein ändern.")
+        tr(en: "Follows the Mac until you pick one. You can change it later in Settings > General.",
+           de: "Folgt dem Mac, bis du eine wählst. Du kannst sie später unter Einstellungen > Allgemein ändern.")
     }
     static var accessibility: String { tr(en: "Accessibility", de: "Bedienungshilfen") }
     static var accessibilitySubtitle: String {
@@ -181,7 +181,7 @@ enum PatternsSampleText {
     }
     static var accessibilityRevealHint: String {
         tr(en: "Not in the list? Click [Show in Finder](app://reveal) and drag the app into it.",
-           de: "Steht die App nicht in der Liste? Klick auf [Im Finder zeigen](app://reveal) und zieh sie hinein.")
+           de: "Steht die App nicht in der Liste? Klicke auf [Im Finder zeigen](app://reveal) und ziehe sie hinein.")
     }
     static var grantedHint: String { tr(en: "Next up: the models.", de: "Weiter geht es mit den Modellen.") }
     static var missingHint: String {
@@ -189,18 +189,18 @@ enum PatternsSampleText {
            de: "macOS fragt gleich, ob \(AppInfo.displayName) dein Mikrofon nutzen darf.\nWähle „Erlauben“.")
     }
     static var restartHint: String {
-        tr(en: "The permission works once \(AppInfo.displayName) restarts.\nThat takes two seconds, this window stays open.",
-           de: "Die Freigabe greift erst, wenn \(AppInfo.displayName) neu startet.\nDas dauert zwei Sekunden, dieses Fenster bleibt offen.")
+        tr(en: "The permission takes effect once \(AppInfo.displayName) restarts.\nThis window opens again afterwards.",
+           de: "Die Berechtigung greift erst, wenn \(AppInfo.displayName) neu startet.\nDanach öffnet sich dieses Fenster wieder.")
     }
     static var welcomeTitle: String { AppInfo.displayName }
     static var welcomeLede: String {
-        tr(en: "A calm place for your work.\nEverything stays on your Mac.", de: "Ein ruhiger Ort für deine Arbeit.\nAlles bleibt auf deinem Mac.")
+        tr(en: "Collects notes from any app in one list.", de: "Sammelt Notizen aus jeder App in einer Liste.")
     }
     static var appearanceTitle: String { tr(en: "Appearance", de: "Darstellung") }
     static var appearanceSubtitle: String { tr(en: "How the app shows up while it works.", de: "So zeigt sich die App, während sie arbeitet.") }
     static var appearanceFootnote: String { tr(en: "You can change this later in Settings.", de: "Das kannst du später in den Einstellungen ändern.") }
     static var linkSample: String {
-        tr(en: "Something missing? [Open the setup again](app://setup) or [show the data folder](app://reveal).",
+        tr(en: "Something missing? [Show setup again](app://setup) or [show the data folder](app://reveal).",
            de: "Fehlt etwas? [Einrichtung erneut zeigen](app://setup) oder [Datenordner zeigen](app://reveal).")
     }
 }

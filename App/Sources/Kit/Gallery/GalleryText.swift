@@ -5,7 +5,7 @@ enum GalleryText {
     static var searchPrompt: String { tr(en: "Search components", de: "Bausteine suchen") }
     static var allAreas: String { tr(en: "All areas", de: "Alle Bereiche") }
     /// The stage follows the window's appearance.
-    static var schemeWindow: String { tr(en: "Auto", de: "Automatisch") }
+    static var schemeWindow: String { tr(en: "Automatic", de: "Automatisch") }
     static var schemeLight: String { tr(en: "Light", de: "Hell") }
     static var schemeDark: String { tr(en: "Dark", de: "Dunkel") }
     static var previewLabel: String { tr(en: "Preview appearance", de: "Erscheinungsbild der Vorschau") }
@@ -29,13 +29,13 @@ enum GalleryText {
         case "patterns": tr(en: "Patterns", de: "Muster")
         case "settings": tr(en: "Settings", de: "Einstellungen")
         case "onboarding": tr(en: "Setup", de: "Einrichtung")
-        case "permissions": tr(en: "Permissions", de: "Freigaben")
+        case "permissions": tr(en: "Permissions", de: "Berechtigungen")
         case "gallery": tr(en: "Gallery", de: "Galerie")
         case "window": tr(en: "Main window", de: "Hauptfenster")
         case "menubar": tr(en: "Menu bar", de: "Menüleiste")
         case "island": tr(en: "Island", de: "Insel")
         case "background": tr(en: "Background", de: "Hintergrund")
-        case "hotkeys": tr(en: "Shortcuts", de: "Kurzbefehle")
+        case "hotkeys": tr(en: "Keyboard shortcuts", de: "Tastaturkurzbefehle")
         case "ai": tr(en: "Local AI", de: "Lokale KI")
         case "mlx": tr(en: "MLX models", de: "MLX-Modelle")
         case "examples": tr(en: "Examples", de: "Beispiele")

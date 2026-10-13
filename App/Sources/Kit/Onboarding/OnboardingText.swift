@@ -28,9 +28,9 @@ enum OnboardingText {
     /// In the other language on purpose: the way to the switch for whoever needs it (VoiceBud).
     static var languageCrossHint: String {
         // text-ausnahme: the hint is written in the other language so whoever needs it can read it
-        tr(en: "Lieber auf Deutsch? Wähle unten bei App „Deutsch“.", de: "Prefer English? Choose English next to App below.")
+        tr(en: "Lieber auf Deutsch? Wähle unten „Deutsch“.", de: "Prefer English? Choose “English” below.")
     }
-    static var languageApp: String { tr(en: "App", de: "App") }
+    static var languageApp: String { tr(en: "App language", de: "Sprache der App") }
     static var languageAppDetail: String { tr(en: "Windows, menus and notifications", de: "Fenster, Menüs und Mitteilungen") }
     /// A language's name in the UI language ("German" / "Deutsch").
     static func languageName(_ lang: Lang) -> String {
@@ -39,12 +39,12 @@ enum OnboardingText {
         case .de: tr(en: "German", de: "Deutsch")
         }
     }
-    static var followMac: String { tr(en: "Same as the Mac", de: "Wie der Mac") }
+    static var followMac: String { tr(en: "Automatic", de: "Automatisch") }
     /// - offered: the Mac's first language is one the app has; else `language` is the fallback.
     static func followMacDetail(_ language: String, offered: Bool) -> String {
         offered ? tr(en: "Your Mac uses \(language)", de: "Dein Mac nutzt \(language)")
-            : tr(en: "\(language), because your Mac's language is not offered",
-                 de: "\(language), weil die Sprache deines Macs fehlt")
+            : tr(en: "\(language), because the app does not offer your Mac’s language",
+                 de: "\(language), weil die App die Sprache deines Macs nicht anbietet")
     }
     static var languageFootnote: String {
         tr(en: "The language switches right away.\nYou can also change it later in Settings > General.",
@@ -68,10 +68,10 @@ enum OnboardingText {
     /// - names: the titles of the missing permissions; collapsed: they share one summary row.
     static func doneMissing(_ names: [String], collapsed: Bool) -> String {
         let consequence = names.count == 1
-            ? tr(en: "\(names[0]) is not allowed yet. What needs it stays off.",
-                 de: "\(names[0]) ist noch nicht erteilt. Was davon abhängt, bleibt aus.")
-            : tr(en: "\(names.count) permissions are not allowed yet. What needs them stays off.",
-                 de: "\(names.count) Freigaben fehlen noch. Was davon abhängt, bleibt aus.")
+            ? tr(en: "Permission for \(names[0]) is still missing. What needs it stays off.",
+                 de: "Die Berechtigung für \(names[0]) fehlt noch. Was davon abhängt, bleibt aus.")
+            : tr(en: "\(names.count) permissions are still missing. What needs them stays off.",
+                 de: "\(names.count) Berechtigungen fehlen noch. Was davon abhängt, bleibt aus.")
         let way = collapsed
             ? tr(en: "Click the row to go back to the first one.", de: "Ein Klick auf die Zeile führt zurück zur ersten.")
             : names.count == 1
@@ -82,25 +82,26 @@ enum OnboardingText {
     static var doneLanguage: String { tr(en: "Language", de: "Sprache") }
     /// - sameAsMac: follows the Mac and the Mac's first language is offered.
     static func doneLanguageValue(_ language: String, sameAsMac: Bool) -> String {
-        sameAsMac ? tr(en: "\(language), same as the Mac", de: "\(language), wie der Mac") : language
+        sameAsMac ? tr(en: "Automatic (\(language))", de: "Automatisch (\(language))") : language
     }
     static func donePermissions(granted: Int, of total: Int) -> String {
-        tr(en: "\(granted) of \(total) allowed", de: "\(granted) von \(total) erteilt")
+        tr(en: "\(granted) of \(total) allowed", de: "\(granted) von \(total) erlaubt")
     }
-    static var donePermissionsTitle: String { tr(en: "Permissions", de: "Freigaben") }
+    static var donePermissionsTitle: String { tr(en: "Permissions", de: "Berechtigungen") }
     static var doneSettings: String { tr(en: "Settings", de: "Einstellungen") }
     /// Next to the ⌘, key cap.
-    static var doneSettingsWindow: String { tr(en: "In the app menu or with the shortcut", de: "Im App-Menü oder per Kurzbefehl") }
+    static var doneSettingsWindow: String { tr(en: "In the app menu or with the keyboard shortcut", de: "Im App-Menü oder mit dem Tastaturkurzbefehl") }
     static var doneSettingsMenuBar: String {
-        tr(en: "Click the icon in the menu bar", de: "Klick auf das Symbol in der Menüleiste")
+        tr(en: "Click the icon in the menu bar", de: "Klicke auf das Symbol in der Menüleiste")
     }
+    /// One line under the card: where each of the two settings lives later.
     static var doneFootnote: String {
-        tr(en: "You can change all of this later in Settings under General.",
-           de: "Alles lässt sich später unter Einstellungen > Allgemein ändern.")
+        tr(en: "Language: Settings > General. Permissions: System Settings.",
+           de: "Sprache: Einstellungen > Allgemein. Berechtigungen: Systemeinstellungen.")
     }
     static var doneRestartNote: String {
         tr(en: "\(AppInfo.displayName) restarts once at the end so the new permissions take effect.",
-           de: "\(AppInfo.displayName) startet am Ende einmal neu, damit die neuen Freigaben wirken.")
+           de: "\(AppInfo.displayName) startet am Ende einmal neu, damit die neuen Berechtigungen greifen.")
     }
 
     // MARK: Gallery
@@ -112,19 +113,19 @@ enum OnboardingText {
 
 /// Copy of the onboarding render scenes only (sample features; the starter registers none).
 enum OnboardingSampleText {
-    static var organizeTitle: String { tr(en: "Everything in one place", de: "Alles an einem Ort") }
+    static var organizeTitle: String { tr(en: "Collect notes", de: "Notizen sammeln") }
     static var organizeDetail: String {
-        tr(en: "Collects what you work on in one list.",
-           de: "Sammelt, woran du arbeitest, in einer Liste.")
+        tr(en: "Saves text from any app in one list, newest first.",
+           de: "Sichert Text aus jeder App in einer Liste, den neuesten zuerst.")
     }
-    static var localTitle: String { tr(en: "Stays on your Mac", de: "Bleibt auf deinem Mac") }
+    static var localTitle: String { tr(en: "No account, no cloud", de: "Kein Konto, keine Cloud") }
     static var localDetail: String {
-        tr(en: "No account, no cloud. Your data never leaves this Mac.",
-           de: "Kein Konto, keine Cloud. Deine Daten verlassen diesen Mac nie.")
+        tr(en: "Notes are stored in one file on this Mac.",
+           de: "Die Notizen liegen in einer Datei auf diesem Mac.")
     }
-    static var quickTitle: String { tr(en: "One shortcut away", de: "Einen Kurzbefehl entfernt") }
+    static var quickTitle: String { tr(en: "Open with ⌃⌥N", de: "Mit ⌃⌥N öffnen") }
     static var quickDetail: String {
-        tr(en: "Open it from any app without switching apps.",
-           de: "Öffne es aus jeder App, ohne die App zu wechseln.")
+        tr(en: "The list opens in front of any app, without switching apps.",
+           de: "Die Liste öffnet sich über jeder App, ohne dass du die App wechselst.")
     }
 }

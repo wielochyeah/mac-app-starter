@@ -38,7 +38,7 @@ enum CommonText {
     static var minimize: String { tr(en: "Minimize", de: "Im Dock ablegen") }
     static var zoom: String { tr(en: "Zoom", de: "Zoomen") }
     static var help: String { tr(en: "Help", de: "Hilfe") }
-    static var systemLanguage: String { tr(en: "System", de: "System") }
+    static var systemLanguage: String { tr(en: "Automatic", de: "Automatisch") }
     static var allLocal: String { tr(en: "All local and offline", de: "Alles lokal und offline") }
     static var nothingLeaves: String { tr(en: "Nothing leaves your Mac", de: "Nichts verlässt deinen Mac") }
 
