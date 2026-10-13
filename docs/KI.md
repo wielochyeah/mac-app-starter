@@ -62,7 +62,7 @@ Noch nicht gebaut: `mlx` läuft nur in Entwickler-Builds aus dem Projekt (`make 
 Was für die Weitergabe fehlt, ist ein Skript `ai-worker/package.sh <Pfad zur .app>`, das `make dmg` aufruft, sobald es existiert:
 
 - ein eigenständiges Python 3.12 (etwa python-build-standalone) mit den festen Versionen aus `ai-worker/requirements.lock` nach `Contents/Resources/python`, die Dateien des Workers nach `Contents/Resources/ai-worker`;
-- jede `.so` und `.dylib` darin signieren, bevor `make dmg` die App signiert; mit Developer ID braucht die Hardened Runtime dann `com.apple.security.cs.disable-library-validation` in `tools/entitlements.plist` und einen Eintrag in `docs/DECISIONS.md`;
+- jede `.so` und `.dylib` darin mit derselben Developer ID signieren wie die App (`make dmg` signiert von innen nach außen). Bibliotheken desselben Teams bestehen die Bibliotheksprüfung der Hardened Runtime ohne Ausnahme. Braucht der Interpreter trotzdem eine (etwa `com.apple.security.cs.disable-library-validation`), bekommt nur er sie: eine eigene Plist unter `tools/` und ein Eintrag in `tools/entitlements-map.json` (`{"Contents/Resources/python/bin/python3*": "tools/python.entitlements.plist"}`), dazu ein Eintrag in `docs/DECISIONS.md`. Die App selbst behält ihre Bibliotheksprüfung; `tools/entitlements.plist` bekommt diese Ausnahme nie;
 - `LSMinimumSystemVersion` an die Mindestversion der Binaries von MLX anpassen (`make dmg` prüft `minos` und bricht sonst ab; MLX 0.32 braucht macOS 26.2).
 
 Bis dahin ist ein DMG mit `mlx` kein Fehler, aber für Empfänger ohne MLX.

@@ -67,17 +67,34 @@ _sign() {
 }
 
 sign_app() {
-  # sign_app <app> <identity> [entitlements]: inside out. Nested bundles and loose Mach-O files
+  # sign_app <app> <identity> [entitlements] [map]: inside out. Nested bundles and loose Mach-O files
   # first (no --deep: it skips code in Resources/ and signs helpers with the wrong options),
   # then the app. Ad hoc ("-") never uses the hardened runtime: it would block nothing and only
   # make debugging harder. A Developer ID always does, with a secure timestamp (notarization needs both).
-  local app="$1" identity="$2" ents="${3:-}" f
-  local -a base
+  # [map] (tools/entitlements-map.json) gives a nested program its own entitlements, matched by a glob relative to
+  # the app; an exception such as disable-library-validation belongs to that program, never to the app itself.
+  local app="$1" identity="$2" ents="${3:-}" map="${4:-}" f rel pattern own
+  local -a base sign_args
+  local -A nested
+  if [[ -n "$map" && -f "$map" ]]; then
+    local lines
+    lines="$(python3 "$ROOT/tools/packaging/pkg.py" entitlement-map "$map")" || return 1
+    while IFS=$'\t' read -r pattern own; do
+      [[ -n "$pattern" ]] && nested[$pattern]="$own"
+    done <<< "$lines"
+  fi
   if [[ "$identity" == "-" ]]; then base=(--force --sign -)
   else base=(--force --options runtime --timestamp --sign "$identity"); fi
   for f in ${(f)"$(macho_files "$app")"} \
            ${(f)"$(find "$app/Contents" -depth \( -name '*.app' -o -name '*.framework' -o -name '*.xpc' -o -name '*.appex' \) -type d 2>/dev/null)"}; do
-    _sign "${base[@]}" "$f" || return 1
+    rel="${f#$app/}"
+    sign_args=("${base[@]}")
+    if [[ "$identity" != "-" ]]; then
+      for pattern in ${(k)nested}; do
+        if [[ "$rel" == ${~pattern} ]]; then sign_args+=(--entitlements "$ROOT/${nested[$pattern]}"); break; fi
+      done
+    fi
+    _sign "${sign_args[@]}" "$f" || return 1
   done
   if [[ -n "$ents" ]]; then base+=(--entitlements "$ents"); fi
   _sign "${base[@]}" "$app" || return 1
