@@ -12,7 +12,7 @@ import SwiftUI
 /// - `MenuBarController.openPanel()` opens the panel from code
 enum MenuBarModule {
     static func register() {
-        Registry.settingsPanes.append(SettingsPane(id: "menubar", group: .settings, order: 300, title: { MenuBarText.paneTitle },
+        Registry.settingsPanes.append(SettingsPane(id: "menubar", group: .settings, order: 250, title: { MenuBarText.paneTitle },
                                                    symbol: "menubar.rectangle", tint: .indigo) { AnyView(MenuBarPane()) })
         Registry.launchHooks.append { MenuBarController.install() }
         Registry.terminateHooks.append { MenuBarController.uninstall() }

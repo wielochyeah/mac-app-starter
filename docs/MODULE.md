@@ -21,7 +21,7 @@ Mindestens `window` oder `menubar` bleibt; ohne beide sind die Einstellungen nic
 
 ## Reihenfolge in der Registry
 
-Jedes Modul hat für seine Einstellungsbereiche und Einrichtungsschritte einen eigenen Bereich von `order`-Werten; zwei Beiträge teilen sich nie einen Wert. Eigene Funktionen des Projekts nehmen die freien Bereiche, in Zehnerschritten.
+Jedes Modul hat für seine Einstellungsbereiche und Einrichtungsschritte einen eigenen Bereich von `order`-Werten; zwei Beiträge teilen sich nie einen Wert (`Registry.problems()` meldet es, im Selbsttest `kit.registry` und in `RegistryTests`). Eigene Funktionen des Projekts nehmen die freien Bereiche, in Zehnerschritten.
 
 | `order` | Einstellungsbereich (Gruppe `.settings`, unter den Inhalten) |
 |---|---|

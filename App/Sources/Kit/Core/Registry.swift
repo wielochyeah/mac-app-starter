@@ -168,6 +168,24 @@ struct SelfTestCheck: Identifiable {
         dupes("render scene", renderScenes.map(\.id))
         dupes("gallery entry", gallery.map(\.id))
         dupes("self-test", selfTests.map(\.id))
+        // the settings sidebar and the setup sort by order, then id: a shared order lets the id pick the place
+        var paneOrders: [String: String] = [:]
+        for pane in settingsPanes.sorted(by: { $0.id < $1.id }) {
+            let key = "\(pane.group).\(pane.order)"
+            if let other = paneOrders[key] {
+                out.append("settings panes \(other) and \(pane.id) share order \(pane.order)")
+            } else {
+                paneOrders[key] = pane.id
+            }
+        }
+        var stepOrders: [Int: String] = [:]
+        for step in onboardingSteps.sorted(by: { $0.id < $1.id }) {
+            if let other = stepOrders[step.order] {
+                out.append("onboarding steps \(other) and \(step.id) share order \(step.order)")
+            } else {
+                stepOrders[step.order] = step.id
+            }
+        }
         for scene in renderScenes where !scene.id.contains(".") {
             out.append("render scene id \(scene.id) needs an area prefix like \"design.\"")
         }

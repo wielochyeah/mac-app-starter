@@ -2,12 +2,13 @@ import SwiftUI
 
 /// The settings window (hub) and its kit panes. Modules add panes with
 ///
-///     Registry.settingsPanes.append(SettingsPane(id: "notes", group: .settings, order: 300,
+///     Registry.settingsPanes.append(SettingsPane(id: "notes", group: .settings, order: 100,
 ///         title: { NotesText.pane }, symbol: "note.text", tint: .yellow) { AnyView(NotesPane()) })
 ///
 /// and open the window with `AppActions.openSettings(pane: "notes")`. Content panes (`.content`)
 /// sit on top of the sidebar, setting panes below the "Settings" label; General is order 0 and
-/// About order 1000 of the settings group, so module panes go in between.
+/// About order 1000 of the settings group. Project features take 100 to 199, each module its own
+/// band (docs/MODULE.md); two panes of a group never share a value (`Registry.problems`).
 enum SettingsKit {
     static func register() {
         AppActions.settingsHandler = { pane in SettingsController.show(pane: pane) }

@@ -16,7 +16,7 @@ enum BackgroundModule {
         // the switches are held in memory: a reset must turn the jobs back on now, and a later
         // switch must not write the old list back
         SettingsReset.didReset.append { BackgroundJobs.shared.reloadSwitches() }
-        Registry.settingsPanes.append(SettingsPane(id: "background", group: .settings, order: 310, title: { BackgroundText.paneTitle },
+        Registry.settingsPanes.append(SettingsPane(id: "background", group: .settings, order: 350, title: { BackgroundText.paneTitle },
                                                    symbol: "clock.arrow.circlepath", tint: .teal) { AnyView(BackgroundPane()) })
         Registry.onboardingSteps.append(OnboardingStep(id: "background.login", order: 900, isIncluded: { LoginItem.isAvailable }) { _ in
             AnyView(LoginItemStep())

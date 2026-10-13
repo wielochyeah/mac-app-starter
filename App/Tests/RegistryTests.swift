@@ -61,6 +61,16 @@ final class RegistryTests: TestSuite {
             }
         }
 
+        test("problems finds settings panes or onboarding steps that share an order") {
+            Registry.withScratch {
+                Registry.settingsPanes = [pane("menubar", .settings, 300), pane("ai", .settings, 300),
+                                          pane("notes", .content, 300), pane("about", .settings, 1000)]
+                Registry.onboardingSteps = [step("ai", 400, true), step("sync", 400, false), step("done", 1000, true)]
+                expectEqual(Registry.problems(), ["settings panes ai and menubar share order 300",
+                                                  "onboarding steps ai and sync share order 400"])
+            }
+        }
+
         test("withScratch restores contributions") {
             let before = Registry.renderScenes.count
             let art = Registry.welcomeArt != nil
