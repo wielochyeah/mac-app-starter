@@ -12,7 +12,7 @@
 
 ## Module, Einstellungen, Berechtigungen
 
-<!-- Neue oder entfernte Module, neue Einstellungsschlüssel mit Standard, neue Berechtigungen mit Erklärtext; sonst „keine“. -->
+<!-- Neue oder entfernte Module, neue Einstellungsschlüssel mit Standard, neue Berechtigungen mit Nutzungsbeschreibung; sonst „keine“. -->
 
 ## Bekannte Schwächen
 

@@ -92,14 +92,14 @@
   "modules": {
     "window": {
       "title": "Fenster-App",
-      "description": "Dock-Symbol und Hauptfenster im Stil von Apple Music: Seitenleiste, Suche in der Symbolleiste, Seitenbausteine (Kopfbereich, Regale, Kacheln, Listen), Hauptmenü.",
+      "description": "Dock-Symbol und Hauptfenster im Stil von Musik: Seitenleiste, Suche in der Werkzeugleiste, Seitenbausteine (Kopfbereich, Regale, Kacheln, Listen), Hauptmenü.",
       "folder": "Window",
       "default": true,
       "paths": ["App/Sources/Modules/Window/**", "App/Tests/Modules/Window/**", ".claude/skills/neue-ansicht/**"]
     },
     "menubar": {
       "title": "Menüleisten-App",
-      "description": "Symbol in der Menüleiste mit Zuständen, Panel und Kontextmenü; ohne Fenster-Modul läuft die App ohne Dock-Symbol.",
+      "description": "Symbol in der Menüleiste mit Zuständen, Statusmenü und Kontextmenü; ohne Fenster-Modul läuft die App ohne Dock-Symbol.",
       "folder": "MenuBar",
       "default": true,
       "paths": ["App/Sources/Modules/MenuBar/**", "App/Tests/Modules/MenuBar/**", ".claude/skills/menueleisten-app/**"]
@@ -118,19 +118,19 @@
       "default": true,
       "paths": ["App/Sources/Modules/Background/**", "App/Tests/Modules/Background/**", ".claude/skills/hintergrund-job/**"],
       "nextSteps": [
-        "Wer einen installierten Build mit Start bei der Anmeldung hatte, entfernt den Eintrag unter Systemeinstellungen > Allgemein > Anmeldeobjekte, bevor der neue Build ihn ersetzt."
+        "Wer einen installierten Build mit Start bei der Anmeldung hatte, entfernt den Eintrag unter Systemeinstellungen > Allgemein > Anmeldeobjekte & Erweiterungen, bevor der neue Build ihn ersetzt."
       ]
     },
     "hotkeys": {
-      "title": "Kurzbefehle",
-      "description": "Systemweite Tastenkürzel mit Aufnahmezeile und Konfliktregeln.",
+      "title": "Tastaturkurzbefehle",
+      "description": "Systemweite Tastaturkurzbefehle mit Aufnahmezeile und Regeln gegen belegte Kombinationen.",
       "folder": "Hotkeys",
       "default": true,
       "paths": ["App/Sources/Modules/Hotkeys/**", "App/Tests/Modules/Hotkeys/**", ".claude/skills/kurzbefehl/**"]
     },
     "ai": {
       "title": "Lokale KI",
-      "description": "Apple Foundation Models auf dem Gerät: Anbieter, Verfügbarkeit, Einstellungsbereich Modelle und Onboarding-Schritt.",
+      "description": "Apple Foundation Models auf dem Gerät: Anbieter, Verfügbarkeit, Einstellungsbereich „Modelle“ und Einrichtungsschritt.",
       "folder": "AI",
       "default": true,
       "paths": ["App/Sources/Modules/AI/**", "App/Tests/Modules/AI/**", ".claude/skills/ki-funktion/**", "docs/KI.md"]

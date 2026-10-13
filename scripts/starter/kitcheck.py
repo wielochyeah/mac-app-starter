@@ -438,7 +438,7 @@ def run(root: Path, env: Optional[Mapping[str, str]] = None) -> Findings:
     if state == "project" and not any(
             p.startswith("App/Sources/Features/") and p.endswith(".swift")
             and "OnboardingFeatures.items.append" in (_read(root, p) or "") for p in files):
-        f.warnings.append("das Onboarding zeigt noch keine Funktionskarte des Projekts (nur die der Module, mit "
+        f.warnings.append("die Einrichtung zeigt noch keine Funktionskarte des Projekts (nur die der Module, mit "
                           "strip-examples keine); eine Karte je Funktion: Skill neues-feature, Schritt 8")
     if state in ("project", "starter", "unknown"):
         config = cfg.read_config(root)

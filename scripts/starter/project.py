@@ -445,7 +445,7 @@ def report(result: InitResult, dry_run: bool, build: bool) -> str:
                  "(commit.name und commit.email des Projekts eintragen, sonst lehnt der Hook commit-msg jeden Commit ab)")
     if result.tagline_cleared:
         lines.append("  starter.json: app.tagline des Starters entfernt; einen eigenen Satz als "
-                     "app.tagline {\"en\": …, \"de\": …} eintragen, sonst zeigt der Willkommensschritt nur den Namen")
+                     "app.tagline {\"en\": …, \"de\": …} eintragen, sonst zeigt der Begrüßungsschritt nur den Namen")
     if result.rules_synced:
         lines.append(f"  make rules: CLAUDE.md Teil A und die Wortlisten der Prüfungen neu geschrieben (Anrede "
                      f"{result.anrede})")
