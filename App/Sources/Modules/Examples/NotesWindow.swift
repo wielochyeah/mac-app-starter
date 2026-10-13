@@ -236,10 +236,8 @@ struct NotesCollectionPage: View {
                     }
                 } content: {
                     if notes.isEmpty {
-                        EmptyState(symbol: collection.symbol, title: NotesText.collectionEmptyTitle,
-                                   message: NotesText.collectionEmptyMessage)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, Space.xxl)
+                        PageEmptyState(symbol: collection.symbol, title: NotesText.collectionEmptyTitle,
+                                       message: NotesText.collectionEmptyMessage)
                     } else if layout.wrappedValue == "list" {
                         NotesList(notes: notes, store: store, showsCollection: false, selection: $selection) { id in
                             navigator.open(id, on: page)
@@ -267,15 +265,15 @@ struct NotesTrashPage: View {
         NotesPageHost(page: NotesPages.trash, store: store, navigator: navigator) {
             PageScaffold(NotesText.trash, subtitle: Self.subtitle) {
                 if store.trashed.isEmpty {
-                    EmptyState(symbol: "trash", title: NotesText.trashEmptyTitle, message: NotesText.trashEmptyMessage)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, Space.xxl)
+                    PageEmptyState(symbol: "trash", title: NotesText.trashEmptyTitle, message: NotesText.trashEmptyMessage)
                 } else {
+                    // like All Notes, the artwork dimmed: these notes are on their way out
                     ItemList(items: store.trashed.map { note in
                         ItemListItem(id: String(note.id), title: note.shownTitle,
                                      secondary: store.collection(note.collectionID)?.name ?? NotesText.noCollection,
-                                     meta: note.trashedAt.map { NotesText.edited($0, now: store.now()) })
-                    }, leading: .none,
+                                     meta: note.trashedAt.map { NotesText.edited($0, now: store.now()) }, seed: note.seed,
+                                     symbol: NotesLook.symbol(note, in: store), dimmed: true)
+                    }, leading: .artwork,
                              columns: ItemListColumns(title: NotesText.columnTitle, secondary: NotesText.columnCollection,
                                                       meta: NotesText.columnTrashed),
                              selection: $selection) { item in

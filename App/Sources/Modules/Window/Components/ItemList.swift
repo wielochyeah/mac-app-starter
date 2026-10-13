@@ -10,14 +10,18 @@ struct ItemListItem: Identifiable {
     /// Artwork seed and glyph for `.artwork` rows (seed defaults to the id).
     var seed: String?
     var symbol: String?
+    /// The artwork is dimmed (an item in the trash, one that is off).
+    var dimmed: Bool
 
-    init(id: String, title: String, secondary: String? = nil, meta: String? = nil, seed: String? = nil, symbol: String? = nil) {
+    init(id: String, title: String, secondary: String? = nil, meta: String? = nil, seed: String? = nil, symbol: String? = nil,
+         dimmed: Bool = false) {
         self.id = id
         self.title = title
         self.secondary = secondary
         self.meta = meta
         self.seed = seed
         self.symbol = symbol
+        self.dimmed = dimmed
     }
 }
 
@@ -35,7 +39,7 @@ struct ItemListColumns {
 }
 
 /// Rows like a Music track list: number or small artwork, title, a secondary column, meta on the
-/// right. Every other row is lightly striped; hover tints a row clearly above the stripe, a click
+/// right, every row 44 pt high (`Metrics.rowMinHeight`). Every other row is lightly striped; hover tints a row clearly above the stripe, a click
 /// selects it (solid accent while the window is active, a soft tint when it is not), a double click
 /// opens it, and `menu` adds a context menu.
 ///
@@ -164,6 +168,7 @@ private struct ItemListRow<Menu: View>: View {
             case .artwork:
                 Artwork(seed: item.seed ?? item.id, symbol: item.symbol)
                     .frame(width: Metrics.Window.listArtwork, height: Metrics.Window.listArtwork)
+                    .opacity(item.dimmed ? Metrics.disabledOpacity : 1)
             case .none:
                 EmptyView()
             }
@@ -186,7 +191,7 @@ private struct ItemListRow<Menu: View>: View {
                 .frame(width: Metrics.Window.listMeta, alignment: .trailing)
         }
         .padding(.horizontal, Space.rowX)
-        .frame(minHeight: leading == .artwork ? Metrics.Window.listRow : Metrics.sidebarRow)
+        .frame(minHeight: Metrics.Window.listRow)
         .background(RoundedRectangle(cornerRadius: Radius.button, style: .continuous).fill(background(t)))
         .contentShape(Rectangle())
         .onHover { hovering = $0 }

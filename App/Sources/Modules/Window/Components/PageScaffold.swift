@@ -10,6 +10,10 @@ private nonisolated struct WindowPageInsetKey: EnvironmentKey {
     static let defaultValue: CGFloat = 0
 }
 
+private nonisolated struct WindowPageRestKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
 extension EnvironmentValues {
     /// What the person typed into the toolbar search of the main window (empty when none). Pages
     /// that registered with `WindowSearch.enable(page:prompt:)` filter their content with it.
@@ -23,6 +27,13 @@ extension EnvironmentValues {
     var windowPageInset: CGFloat {
         get { self[WindowPageInsetKey.self] }
         set { self[WindowPageInsetKey.self] = newValue }
+    }
+
+    /// The visible height left under the page title (0 until measured): `PageEmptyState` centres
+    /// itself in it, like `EmptyPage` in a page without a title.
+    var windowPageRest: CGFloat {
+        get { self[WindowPageRestKey.self] }
+        set { self[WindowPageRestKey.self] = newValue }
     }
 }
 
@@ -42,6 +53,8 @@ struct PageScaffold<Content: View, Accessory: View>: View {
     var showsTitle: Bool
     let accessory: Accessory
     let content: Content
+    @State private var viewport: CGFloat = 0
+    @State private var headerHeight: CGFloat = 0
     @Environment(\.colorScheme) private var scheme
 
     init(_ title: String, subtitle: String? = nil, showsTitle: Bool = true,
@@ -55,16 +68,21 @@ struct PageScaffold<Content: View, Accessory: View>: View {
 
     var body: some View {
         let t = Theme(scheme)
+        let top = showsTitle ? Space.s : Space.m
+        let rest = viewport - top - Space.xxl - (showsTitle ? headerHeight + Space.pageBlock : 0)
         PageScroll {
             VStack(alignment: .leading, spacing: Space.pageBlock) {
-                if showsTitle { header(t) }
-                content
+                if showsTitle {
+                    header(t).onGeometryChange(for: CGFloat.self) { $0.size.height } action: { headerHeight = $0 }
+                }
+                content.environment(\.windowPageRest, max(0, rest))
             }
             .padding(.horizontal, Space.page)
-            .padding(.top, showsTitle ? Space.s : Space.m)
+            .padding(.top, top)
             .padding(.bottom, Space.xxl)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewport = $0 }
         .environment(\.windowPageInset, Space.page)
         .background(t.windowBg)
         .accessibilityElement(children: .contain)
