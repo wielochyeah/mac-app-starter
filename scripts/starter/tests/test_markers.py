@@ -20,6 +20,13 @@ class SwiftFlagTests(unittest.TestCase):
         src = lines("#if MODUL_ISLAND", "useIsland()", "#else", "fallback()", "#endif")
         self.assertEqual(strip_swift_flag(src, "island"), "fallback()")
 
+    def test_a_negated_flag_breaks_the_rule_but_still_resolves(self):
+        from starter.markers import swift_flag_problems
+        problems = swift_flag_problems(lines("#if !MODUL_ISLAND", "x()", "#endif"), "A.swift", ["island"])
+        self.assertEqual(len(problems), 1)
+        self.assertIn("ohne !", problems[0])
+        self.assertIn("#else-Zweig", problems[0])
+
     def test_negated_flag_keeps_its_body_and_drops_the_else(self):
         src = lines("#if !MODUL_ISLAND", "noIsland()", "#else", "island()", "#endif", "end()")
         self.assertEqual(strip_swift_flag(src, "island"), lines("noIsland()", "end()"))

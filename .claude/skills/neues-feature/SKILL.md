@@ -28,7 +28,7 @@ Ein Ordner `App/Sources/Features/<Name>/`, Namen auf Englisch in UpperCamelCase:
 - `<Name>View.swift` und weitere Views: nur Tokens und Bausteine des Kits.
 - `App/Tests/Features/<Name>Tests.swift`: Tests für jede Logik, in `#if TESTING`.
 
-Features nutzen nur das Kit. Braucht ein Feature ein Modul (Insel, Statusmenü, Hintergrund, Kurzbefehle, KI), steht jeder Bezug in einem eigenen `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `||`, `&&`, `!` und `#elseif`. Ein `#else`-Zweig ist erlaubt und bleibt ohne das Modul stehen (etwa: mit Fenster öffnet eine Aktion die Seite, sonst den Einstellungsbereich). Braucht ein Teil zwei Module (eine KI-Spalte auf einer Fensterseite), stehen zwei einfache Blöcke ineinander:
+Features nutzen nur das Kit. Braucht ein Feature ein Modul (Insel, Statusmenü, Hintergrund, Kurzbefehle, KI), steht jeder Bezug in einem eigenen `#if MODUL_<NAME>` … `#endif` (T-03: genau ein Flag je `#if`, ohne `||`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander; ein `#else`-Zweig bleibt beim Entfernen stehen). Der `#else`-Zweig ist der Ort für den Code ohne das Modul (etwa: mit Fenster öffnet eine Aktion die Seite, sonst den Einstellungsbereich). Braucht ein Teil zwei Module (eine KI-Spalte auf einer Fensterseite), stehen zwei einfache Blöcke ineinander:
 
 ```swift
 #if MODUL_AI

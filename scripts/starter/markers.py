@@ -1,10 +1,12 @@
 """Module markers and what removing a module does to a file.
 
-Swift: cross-module code sits in `#if MODUL_<NAME>` … `#endif` (BAUPLAN §2.5). Removing <name> drops
-the block and keeps an `#else` body; `#if !MODUL_<NAME>` keeps its body and drops the `#else` body.
-Other `#if` blocks (TESTING, DEBUG, other modules) stay and are processed inside. Conditions that
-combine a module flag with anything else, and `#elseif` in a module block, are refused: the tool
-cannot decide them, a person must.
+Swift: cross-module code sits in `#if MODUL_<NAME>` … `#endif`, the one rule of T-03: exactly one flag per
+`#if`, without `||`, `&&`, `!` and `#elseif`; code that needs two modules nests two plain blocks; an `#else`
+body stays when the module goes. Removing <name> drops the block and keeps the `#else` body. Other `#if`
+blocks (TESTING, DEBUG, other modules) stay and are processed inside. Conditions that combine a module flag
+with anything else, and `#elseif` in a module block, are refused: the tool cannot decide them, a person must.
+swift_flag_problems (check-kit) reports a negated flag like the rule pack of check_design does; strip still
+resolves an old `#if !MODUL_<NAME>` (keeps its body, drops the `#else` body) so a removal never stops on it.
 
 Every other text file (and Swift, where an `#if` does not fit, e.g. inside an array literal) uses
 comment markers in its own comment syntax (port of app-starter):
@@ -112,8 +114,8 @@ def strip_swift_flag(text: str, module: str, path: str = "") -> str:
 
 
 def swift_flag_problems(text: str, path: str, known: Iterable[str]) -> List[str]:
-    """Checks that module flags are used the way `remove` can handle: plain `#if MODUL_X` /
-    `#if !MODUL_X` with a known module, no `#elseif` in such a block, balanced directives."""
+    """Checks the one rule of T-03: a plain `#if MODUL_X` with a known module (no `!`, `||`, `&&`), no `#elseif`
+    in such a block, balanced directives."""
     known_flags = {flag(m) for m in known}
     problems: List[str] = []
     stack: List[Tuple[bool, int]] = []  # (is module block, line)
@@ -128,7 +130,10 @@ def swift_flag_problems(text: str, path: str, known: Iterable[str]) -> List[str]
             plain = _plain_flag(cond)
             if flags and not plain:
                 problems.append(f"{where}: `#if {cond}` verbindet ein Modul-Flag mit weiteren Bedingungen "
-                                "(erlaubt: ein Flag je #if, verschachteln statt || und &&)")
+                                "(T-03: ein Flag je #if, ohne ||, && und !; zwei Module: zwei Blöcke ineinander)")
+            elif plain and plain[1]:
+                problems.append(f"{where}: `#if {cond}` verneint ein Modul-Flag (T-03: ohne !; der Code ohne das "
+                                "Modul steht im #else-Zweig von `#if {plain[0]}`)")
             if plain and plain[0] not in known_flags:
                 problems.append(f"{where}: {plain[0]} ist kein Modul aus starter.manifest.json")
             stack.append((bool(flags), no))

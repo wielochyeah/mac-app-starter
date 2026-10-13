@@ -28,7 +28,7 @@
     {
       "id": "T-03",
       "schluessel": "module",
-      "text": "Module sind Schalter beim Kompilieren (`-D MODUL_<NAME>`); jedes registriert sich nur über `<Name>Module.register()` in `Kit/Main/Modules.swift`. Modulübergreifender Code steht in `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `||`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander. Jede erlaubte Kombination baut (`make build MODULES=a,b`), `bin/starter remove <modul>` entfernt ein Modul vollständig.",
+      "text": "Module sind Schalter beim Kompilieren (`-D MODUL_<NAME>`); jedes registriert sich nur über `<Name>Module.register()` in `Kit/Main/Modules.swift`. Modulübergreifender Code steht in `#if MODUL_<NAME>` … `#endif`: genau ein Flag je `#if`, ohne `||`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander; ein `#else`-Zweig bleibt beim Entfernen stehen. Jede erlaubte Kombination baut (`make build MODULES=a,b`), `bin/starter remove <modul>` entfernt ein Modul vollständig.",
       "pakete": ["swift-technik"],
       "durchsetzung": [
         "make check-design (Paket swift-technik)",

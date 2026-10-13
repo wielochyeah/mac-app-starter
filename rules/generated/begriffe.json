@@ -990,8 +990,8 @@
         "T-03"
       ],
       "pruefer": "check_design",
-      "label": "Modul-Bedingung, die bin/starter remove nicht auflösen kann",
-      "hinweis": "ein Flag je #if, ohne ||, && und !; braucht Code zwei Module, zwei einfache Blöcke ineinander",
+      "label": "Modul-Bedingung außerhalb von T-03",
+      "hinweis": "genau ein Flag je #if, ohne ||, &&, ! und #elseif; braucht Code zwei Module, zwei einfache Blöcke ineinander; der Code ohne das Modul steht im #else-Zweig",
       "art": "regex",
       "quelle": "#if\\b[^\\n]*\\bMODUL_\\w+[^\\n]*(?:\\|\\||&&)|#if\\b[^\\n]*(?:\\|\\||&&)[^\\n]*\\bMODUL_|#elseif\\b[^\\n]*\\bMODUL_|#if\\s*!\\s*\\(?\\s*MODUL_",
       "flags": "",

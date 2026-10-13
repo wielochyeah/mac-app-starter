@@ -71,7 +71,7 @@ Für jedes wiederkehrende Problem gibt es genau einen Weg. Wer einen zweiten fin
 | gespeicherte Daten | `Database` mit nummerierten Migrationen; Pfade nur über `Paths` |
 | Beitrag zur Oberfläche | `Registry` im `register()` des Features oder Moduls |
 | Fenster öffnen | `AppActions.openSettings(pane:)`, `openOnboarding()`, `openMainWindow(page:)`; eigene Fenster über `WindowHost.show` |
-| Bezug auf ein Modul | ein eigener `#if MODUL_<NAME>` … `#endif` mit genau einem Flag, ohne `\|\|`, `&&` und `!`; für zwei Module zwei einfache Blöcke ineinander |
+| Bezug auf ein Modul | ein eigener `#if MODUL_<NAME>` … `#endif` (T-03): genau ein Flag je `#if`, ohne `\|\|`, `&&`, `!` und `#elseif`; braucht Code zwei Module, stehen zwei einfache Blöcke ineinander; ein `#else`-Zweig bleibt beim Entfernen stehen |
 | Beobachten außerhalb von SwiftUI | `Observing.track(_:while:onChange:)` |
 | Protokoll | `Log.debug`, `info`, `warn`, `error`; nie Inhalte der Nutzerin |
 | Einstellungsbereich | `PaneScaffold` mit `SettingsSection` und den Zeilenmustern |
