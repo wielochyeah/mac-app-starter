@@ -1,5 +1,5 @@
 <!--
-Shown in the app under Settings → About → Third-party notices, for the people using the app.
+Shown in the app under Settings > About > Third-party notices, for the people using the app.
 The developers' list with sources and scope is THIRD_PARTY_NOTICES.md at the repository root.
 Keep both language files in step; every licence text there (``` block) must appear here word for
 word (test "notices: app files carry every licence text"). Fenced blocks are shown verbatim.
@@ -11,7 +11,7 @@ This app contains software by other authors. Their licenses ask that the followi
 
 ## VoiceBud
 
-The design of this app and parts of its code (setup, settings and, where the app has them, the island, shortcuts, menu bar and local AI) are based on VoiceBud, a dictation app for macOS by Anas Riad, published under the MIT License.
+The design of this app and parts of its code (setup, settings and, where the app has them, the island, keyboard shortcuts, menu bar and local AI) are based on VoiceBud, a dictation app for macOS by Anas Riad, published under the MIT License.
 
 ```
 MIT License

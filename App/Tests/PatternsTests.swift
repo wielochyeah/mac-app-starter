@@ -64,14 +64,14 @@ final class PatternsTests: TestSuite {
             let saved = Localizer.shared.forced
             defer { Localizer.shared.forced = saved }
             Localizer.shared.forced = .en
-            expectEqual(ByteText.size(900_000_000), "900\u{00A0}MB")
-            expectEqual(ByteText.size(3_035_000_000), "3.0\u{00A0}GB")
-            expectEqual(ByteText.size(12_000), "12\u{00A0}KB")
-            expectEqual(ByteText.progress(done: 1_400_000_000, total: 3_000_000_000), "1.4 of 3.0\u{00A0}GB")
-            expectEqual(ByteText.progress(done: 90_000_000, total: 230_000_000), "90 of 230\u{00A0}MB")
+            expectEqual(ByteText.size(900_000_000), "900\u{202F}MB")
+            expectEqual(ByteText.size(3_035_000_000), "3.0\u{202F}GB")
+            expectEqual(ByteText.size(12_000), "12\u{202F}KB")
+            expectEqual(ByteText.progress(done: 1_400_000_000, total: 3_000_000_000), "1.4 of 3.0\u{202F}GB")
+            expectEqual(ByteText.progress(done: 90_000_000, total: 230_000_000), "90 of 230\u{202F}MB")
             Localizer.shared.forced = .de
-            expectEqual(ByteText.size(3_035_000_000), "3,0\u{00A0}GB")
-            expectEqual(ByteText.progress(done: 1_400_000_000, total: 3_000_000_000), "1,4 von 3,0\u{00A0}GB")
+            expectEqual(ByteText.size(3_035_000_000), "3,0\u{202F}GB")
+            expectEqual(ByteText.progress(done: 1_400_000_000, total: 3_000_000_000), "1,4 von 3,0\u{202F}GB")
         }
 
         test("progress fraction is clamped and absent when idle") {

@@ -28,7 +28,7 @@ enum IslandText {
     static func style(_ style: IslandStyle) -> String {
         switch style {
         case .auto: tr(en: "Automatic", de: "Automatisch")
-        case .island: tr(en: "Island at the Notch", de: "Insel an der Notch")
+        case .island: tr(en: "Island at the notch", de: "Insel an der Notch")
         case .capsule: tr(en: "Capsule", de: "Kapsel")
         }
     }
@@ -60,10 +60,10 @@ enum IslandText {
         seconds >= IslandTiming.stays ? stays : Format.seconds(seconds)
     }
 
-    static var hoverExpand: String { tr(en: "Expand on hover", de: "Beim Überfahren ausklappen") }
+    static var hoverExpand: String { tr(en: "Expand on hover", de: "Karte unter dem Zeiger aufklappen") }
     static var hoverExpandDetail: String {
-        tr(en: "The card then shows the whole text with Copy and stays open while the pointer is on it. Off: the card stays small and shows only its buttons.",
-           de: "Die Karte zeigt dann den ganzen Text mit Kopieren und bleibt offen, solange der Zeiger darauf ist. Aus: Die Karte bleibt klein und zeigt nur ihre Knöpfe.")
+        tr(en: "The card then shows the whole text with “Copy” and stays open while the pointer is on it. Off: the card stays small and shows only its buttons.",
+           de: "Die Karte zeigt dann den ganzen Text mit „Kopieren“ und bleibt offen, solange der Zeiger darauf ist. Aus: Die Karte bleibt klein und zeigt nur ihre Tasten.")
     }
 
     static var feedback: String { tr(en: "Feedback", de: "Rückmeldung") }
@@ -72,7 +72,7 @@ enum IslandText {
     static var haptics: String { tr(en: "Trackpad feedback", de: "Trackpad-Rückmeldung") }
     static var hapticsDetail: String {
         tr(en: "A light tick on the trackpad when the pointer reaches a card or a button (Force Touch trackpads)",
-           de: "Ein spürbarer Tipp im Trackpad, wenn der Zeiger eine Karte oder einen Knopf erreicht (Force-Touch-Trackpads)")
+           de: "Ein spürbarer Tipp im Trackpad, wenn der Zeiger eine Karte oder eine Taste erreicht (Force-Touch-Trackpads)")
     }
     static var hideInFullscreen: String { tr(en: "Hide in full screen", de: "Im Vollbild ausblenden") }
     static var hideInFullscreenDetail: String {
@@ -136,7 +136,7 @@ enum IslandSampleText {
 
             Two notes are still open: the source for the market figures on page 4, and whether the appendix should list every interview. Both are marked yellow in the slides.
 
-            The export ran at full quality. The PDF is 4.2 MB, the slides 18 MB.
+            The export ran at full quality. The PDF is 4.2\u{202F}MB, the slides 18\u{202F}MB.
 
             Next week the numbers for the third quarter come in. The report then gets a second chart sheet, and the slides move the outlook to the end.
             """,
@@ -147,7 +147,7 @@ enum IslandSampleText {
 
             Zwei Punkte sind noch offen: die Quelle für die Marktzahlen auf Seite 4 und ob der Anhang jedes Interview aufführen soll. Beide sind in den Folien gelb markiert.
 
-            Der Export lief in voller Qualität. Das PDF hat 4,2 MB, die Folien 18 MB.
+            Der Export lief in voller Qualität. Das PDF hat 4,2\u{202F}MB, die Folien 18\u{202F}MB.
 
             Nächste Woche kommen die Zahlen für das dritte Quartal. Der Bericht bekommt dann ein zweites Diagrammblatt, und in den Folien rückt der Ausblick ans Ende.
             """)
@@ -155,6 +155,6 @@ enum IslandSampleText {
     static var showInFinder: String { tr(en: "Show in Finder", de: "Im Finder zeigen") }
     static var noticeInfo: String { tr(en: "Sync continues at 9:00", de: "Abgleich läuft um 9:00 weiter") }
     static var noticeSuccess: String { tr(en: "Copied to the clipboard", de: "In die Zwischenablage kopiert") }
-    static var noticeWarning: String { tr(en: "Less than 2 GB of disk space left", de: "Weniger als 2 GB Speicherplatz frei") }
+    static var noticeWarning: String { tr(en: "Less than 2\u{202F}GB of disk space left", de: "Weniger als 2\u{202F}GB Speicherplatz frei") }
     static var noticeError: String { tr(en: "The file could not be saved", de: "Die Datei konnte nicht gesichert werden") }
 }

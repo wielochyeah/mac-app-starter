@@ -136,16 +136,16 @@ enum ByteText {
         bytes >= 1_000_000_000 ? .gb : bytes >= 1_000_000 ? .mb : .kb
     }
 
-    /// "0.9 GB" / "0,9 GB", "820 MB", "12 KB" (non-breaking space before the unit).
+    /// "0.9 GB" / "0,9 GB", "820 MB", "12 KB" (narrow no-break space before the unit).
     static func size(_ bytes: Int64) -> String {
         let unit = unit(for: bytes)
-        return value(bytes, in: unit) + "\u{00A0}" + name(unit)
+        return value(bytes, in: unit) + "\u{202F}" + name(unit)
     }
 
     /// "1.4 of 3.0 GB" / "1,4 von 3,0 GB": both numbers in the total's unit.
     static func progress(done: Int64, total: Int64) -> String {
         let unit = unit(for: total)
-        return PatternsText.progress(value(done, in: unit), of: value(total, in: unit) + "\u{00A0}" + name(unit))
+        return PatternsText.progress(value(done, in: unit), of: value(total, in: unit) + "\u{202F}" + name(unit))
     }
 
     static func value(_ bytes: Int64, in unit: Unit) -> String {

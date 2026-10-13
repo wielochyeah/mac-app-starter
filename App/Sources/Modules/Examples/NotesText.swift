@@ -38,7 +38,7 @@ enum NotesText {
     static var emptyTitle: String { tr(en: "No notes yet", de: "Noch keine Notizen") }
     static var emptyMessage: String {
         tr(en: "Write a new note, or copy some text and save it from the menu bar.",
-           de: "Schreib eine neue Notiz oder kopiere einen Text und sichere ihn über die Menüleiste.")
+           de: "Schreibe eine neue Notiz oder kopiere einen Text und sichere ihn über die Menüleiste.")
     }
 
     static var collectionEmptyTitle: String { tr(en: "Nothing in here yet", de: "Hier liegt noch nichts") }
@@ -80,7 +80,7 @@ enum NotesText {
     // MARK: Note
     static var pin: String { tr(en: "Pin", de: "Anheften") }
     static var unpin: String { tr(en: "Unpin", de: "Loslösen") }
-    static var moveToTrash: String { tr(en: "Move to Trash", de: "In den Papierkorb") }
+    static var moveToTrash: String { tr(en: "Move to Trash", de: "In den Papierkorb legen") }
     static var titleLabel: String { tr(en: "Title", de: "Titel") }
     static var bodyLabel: String { tr(en: "Text", de: "Text") }
     static var bodyPlaceholder: String { tr(en: "Start writing", de: "Hier schreiben") }
@@ -108,12 +108,12 @@ enum NotesText {
         let time = Format.time(date)
         let when: String
         if cal.isDate(date, inSameDayAs: now) {
-            when = tr(en: "Edited today at \(time)", de: "Bearbeitet heute um \(time)")
+            when = tr(en: "Edited today at \(time)", de: "Heute um \(time) bearbeitet")
         } else if let yesterday = cal.date(byAdding: .day, value: -1, to: now), cal.isDate(date, inSameDayAs: yesterday) {
-            when = tr(en: "Edited yesterday at \(time)", de: "Bearbeitet gestern um \(time)")
+            when = tr(en: "Edited yesterday at \(time)", de: "Gestern um \(time) bearbeitet")
         } else {
             let day = date.formatted(.dateTime.day().month(.wide).locale(Localizer.shared.lang.locale))
-            when = tr(en: "Edited on \(day)", de: "Bearbeitet am \(day)")
+            when = tr(en: "Edited on \(day)", de: "Am \(day) bearbeitet")
         }
         switch note.source {
         case .typed: return when
@@ -126,16 +126,16 @@ enum NotesText {
     static var aiTitle: String { tr(en: "Local AI", de: "Lokale KI") }
     static var aiSubtitle: String { tr(en: "Runs on this Mac, nothing is sent", de: "Läuft auf diesem Mac, nichts wird gesendet") }
     static var openModels: String { tr(en: "Open Models", de: "Modelle öffnen") }
-    static var aiNeedsText: String { tr(en: "Write some text first.", de: "Schreib zuerst etwas Text.") }
+    static var aiNeedsText: String { tr(en: "Write some text first.", de: "Schreibe zuerst etwas Text.") }
     static var summarize: String { tr(en: "Summary", de: "Zusammenfassung") }
     static var summarizeDetail: String { tr(en: "Two or three sentences", de: "Zwei bis drei Sätze") }
     static var summarizeButton: String { tr(en: "Write", de: "Erstellen") }
     static var suggestTitle: String { tr(en: "Title", de: "Titel") }
     static var suggestTitleDetail: String { tr(en: "A short title and tags", de: "Kurzer Titel und Stichwörter") }
     static var suggestButton: String { tr(en: "Suggest", de: "Vorschlagen") }
-    static var stop: String { tr(en: "Stop", de: "Stopp") }
+    static var stop: String { tr(en: "Stop", de: "Stoppen") }
     static var writing: String { tr(en: "Writing", de: "Schreibt") }
-    static var addToNote: String { tr(en: "Add to Note", de: "In die Notiz") }
+    static var addToNote: String { tr(en: "Add to Note", de: "Zur Notiz hinzufügen") }
     static var useTitle: String { tr(en: "Use Title", de: "Übernehmen") }
     static var discard: String { tr(en: "Discard", de: "Verwerfen") }
     static var summarizing: String { tr(en: "Summarizing", de: "Fasst zusammen") }
@@ -151,7 +151,7 @@ enum NotesText {
 
     static var titleInstructions: String {
         tr(en: "Suggest a short title for the note, at most six words, and up to three one-word tags. Use words from the note.",
-           de: "Schlag einen kurzen Titel für die Notiz vor, höchstens sechs Wörter, und bis zu drei Stichwörter aus je einem Wort. Nimm Wörter aus der Notiz.")
+           de: "Schlage einen kurzen Titel für die Notiz vor, höchstens sechs Wörter, und bis zu drei Stichwörter aus je einem Wort. Nimm Wörter aus der Notiz.")
     }
 
     // MARK: Capture, island, status menu
@@ -184,7 +184,7 @@ enum NotesText {
                       de: "Kopiere einen Text und sichere ihn aus jeder App als Notiz.")
         }
         return tr(en: "Copy some text and press \(keys) in any app. It becomes a note.",
-                  de: "Kopiere einen Text und drück in jeder App \(keys). Daraus wird eine Notiz.")
+                  de: "Kopiere einen Text und drücke in jeder App \(keys). Daraus wird eine Notiz.")
     }
 
     static var featureCollectionsTitle: String { tr(en: "Collections", de: "Sammlungen") }
@@ -203,7 +203,7 @@ enum NotesText {
     static var paneTitle: String { tr(en: "Notes", de: "Notizen") }
     static var paneIntro: String {
         tr(en: "The example feature of the starter. Remove it with bin/starter strip-examples.",
-           de: "Das Beispiel-Feature des Starters. Entfernen mit bin/starter strip-examples.")
+           de: "Die Beispielfunktion des Starters. Du entfernst sie mit bin/starter strip-examples.")
     }
     static var notesSection: String { tr(en: "Contents", de: "Inhalt") }
     static var notesCount: String { tr(en: "Notes", de: "Notizen") }
@@ -215,8 +215,8 @@ enum NotesText {
     }
     static var storageSection: String { tr(en: "Storage", de: "Speicherort") }
     static var storageNote: String {
-        tr(en: "Notes are kept in one file on this Mac and never leave it.",
-           de: "Die Notizen liegen in einer Datei auf diesem Mac und verlassen ihn nie.")
+        tr(en: "Notes are stored in one file on this Mac.",
+           de: "Die Notizen liegen in einer Datei auf diesem Mac.")
     }
     static var storageFile: String { tr(en: "Database", de: "Datenbank") }
     static var showInFinder: String { tr(en: "Show in Finder", de: "Im Finder zeigen") }
@@ -256,7 +256,7 @@ enum NotesSampleText {
 
     static var meetingTitle: String { tr(en: "Team meeting on Thursday", de: "Teamrunde am Donnerstag") }
     static var meetingBody: String {
-        tr(en: "Topics: summer holiday plan, the new way we answer customer requests, who covers for Jana in August.\nJana takes the minutes. Room 3.12 is free from 10.",
+        tr(en: "Topics: summer vacation plan, the new way we answer customer requests, who covers for Jana in August.\nJana takes the minutes. Room 3.12 is free from 10.",
            de: "Themen: Urlaubsplan für den Sommer, der neue Ablauf für Kundenanfragen, wer Jana im August vertritt.\nJana schreibt das Protokoll. Raum 3.12 ist ab 10 Uhr frei.")
     }
 
@@ -280,7 +280,7 @@ enum NotesSampleText {
 
     static var soupTitle: String { tr(en: "Red lentil soup", de: "Rote Linsensuppe") }
     static var soupBody: String {
-        tr(en: "250 g red lentils, one onion, two carrots, one litre of stock.\nFry onion and carrots, add the lentils, simmer for 20 minutes.\nSeason with lemon and cumin.",
+        tr(en: "250 g red lentils, one onion, two carrots, one liter of stock.\nFry onion and carrots, add the lentils, simmer for 20 minutes.\nSeason with lemon and cumin.",
            de: "250 g rote Linsen, eine Zwiebel, zwei Möhren, ein Liter Brühe.\nZwiebel und Möhren anbraten, Linsen dazu, 20 Minuten köcheln lassen.\nMit Zitrone und Kreuzkümmel abschmecken.")
     }
 
@@ -290,7 +290,7 @@ enum NotesSampleText {
            de: "Die Bremse hinten quietscht, das Licht vorn flackert. Die Werkstatt in der Bergstraße hat dienstags bis 18 Uhr offen.")
     }
 
-    static var giftsTitle: String { tr(en: "Gift ideas for Mum", de: "Geschenkideen für Mama") }
+    static var giftsTitle: String { tr(en: "Gift ideas for Mom", de: "Geschenkideen für Mama") }
     static var giftsBody: String {
         tr(en: "A cooking class for two, a photo book of last summer, new garden gloves (size 7).",
            de: "Kochkurs für zwei, ein Fotobuch vom letzten Sommer, neue Gartenhandschuhe (Größe 7).")
@@ -317,10 +317,10 @@ enum NotesSampleText {
     /// The text `--demo examples` saves as if it had been copied.
     /// Short enough for one line of the folded card in the setup's welcome art.
     static var welcomeClip: String {
-        tr(en: "Pick up the parcel at the post office by 6 pm.", de: "Paket bis 18 Uhr bei der Post abholen.")
+        tr(en: "Pick up the package at the post office by 6 pm.", de: "Paket bis 18 Uhr bei der Post abholen.")
     }
     static var demoClip: String {
-        tr(en: "Pick up the parcel at the post office, open until 18:00. Bring an ID and the notice card.",
+        tr(en: "Pick up the package at the post office, open until 6 pm. Bring an ID and the notice card.",
            de: "Paket bei der Post abholen, geöffnet bis 18 Uhr. Ausweis und Benachrichtigungskarte mitnehmen.")
     }
 
@@ -328,13 +328,13 @@ enum NotesSampleText {
     static var searchQuery: String { tr(en: "summer", de: "sommer") }
     static var searchNone: String { tr(en: "invoice", de: "Rechnung") }
     static var summaryPartial: String {
-        tr(en: "The team meets on Thursday to plan the summer holidays and the new way",
+        tr(en: "The team meets on Thursday to plan the summer vacation and the new way",
            de: "Das Team plant am Donnerstag den Urlaub im Sommer und den neuen Ablauf")
     }
     static var summaryDone: String {
-        tr(en: "The team meets on Thursday to plan the summer holidays and the new way of answering customer requests. It also decides who covers for Jana in August.",
+        tr(en: "The team meets on Thursday to plan the summer vacation and the new way of answering customer requests. It also decides who covers for Jana in August.",
            de: "Das Team plant am Donnerstag den Urlaub im Sommer und den neuen Ablauf für Kundenanfragen. Außerdem klärt es, wer Jana im August vertritt.")
     }
     static var suggestedTitle: String { tr(en: "Thursday team meeting", de: "Teamrunde: Urlaub und Anfragen") }
-    static var suggestedTags: [String] { [tr(en: "team", de: "Team"), tr(en: "holidays", de: "Urlaub"), tr(en: "requests", de: "Anfragen")] }
+    static var suggestedTags: [String] { [tr(en: "team", de: "Team"), tr(en: "vacation", de: "Urlaub"), tr(en: "requests", de: "Anfragen")] }
 }

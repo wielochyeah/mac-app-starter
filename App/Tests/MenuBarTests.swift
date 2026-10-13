@@ -217,7 +217,7 @@ final class MenuBarTests: TestSuite {
             withLang(.de) {
                 let titles = MenuBarMenu.entries(contributions: [], windowModule: true).compactMap { $0?.title }
                 expect(titles.contains(CommonText.settingsMenu))
-                expect(titles.contains("Einrichtung …"), "\(titles)")
+                expect(titles.contains("Einrichtung erneut zeigen"), "\(titles)")
             }
         }
 

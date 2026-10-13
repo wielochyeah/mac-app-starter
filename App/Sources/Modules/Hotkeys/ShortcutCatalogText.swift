@@ -38,8 +38,8 @@ enum ShortcutCatalogText {
         e(.code(49), [.control, .option], .system, .system) { tr(en: "selects the next input source", de: "wählt die nächste Eingabequelle") },  // ⌃⌥Space
         e(.code(48), [.command], .always, .system) { tr(en: "switches apps", de: "wechselt zwischen Apps") },  // ⌘⇥
         e(.code(48), [.shift, .command], .always, .system) { tr(en: "switches apps backwards", de: "wechselt rückwärts zwischen Apps") },  // ⇧⌘⇥
-        e(.code(50), [.command], .system, .system) { tr(en: "moves focus to the app's next window", de: "wechselt zum nächsten Fenster der App") },  // ⌘< (US ⌘`)
-        e(.code(50), [.shift, .command], .system, .system) { tr(en: "moves focus to the app's previous window", de: "wechselt zum vorigen Fenster der App") },  // ⇧⌘< (US ⇧⌘`)
+        e(.code(50), [.command], .system, .system) { tr(en: "moves focus to the app’s next window", de: "wechselt zum nächsten Fenster der App") },  // ⌘< (US ⌘`)
+        e(.code(50), [.shift, .command], .system, .system) { tr(en: "moves focus to the app’s previous window", de: "wechselt zum vorigen Fenster der App") },  // ⇧⌘< (US ⇧⌘`)
         e(.code(50), [.option, .command], .system, .system) { tr(en: "moves focus to the window drawer", de: "setzt den Fokus auf die Schublade des Fensters") },  // ⌥⌘< (US ⌥⌘`)
         e(.code(20), [.shift, .command], .system, .system) { tr(en: "saves a picture of the screen as a file", de: "sichert ein Bildschirmfoto als Datei") },  // ⇧⌘3
         e(.code(20), [.control, .shift, .command], .system, .system) { tr(en: "copies a picture of the screen to the clipboard", de: "kopiert ein Bildschirmfoto in die Zwischenablage") },  // ⌃⇧⌘3
@@ -53,7 +53,7 @@ enum ShortcutCatalogText {
         e(.code(53), [.command], .system, .system) { tr(en: "opens the Game Overlay (macOS 26)", de: "öffnet die Spielüberlagerung (macOS 26)") },  // ⌘Esc
         e(.code(53), [.option], .system, .system) { tr(en: "speaks the selection", de: "liest die Auswahl vor") },  // ⌥Esc
         e(.code(126), [.control], .system, .system) { tr(en: "opens Mission Control", de: "öffnet Mission Control") },  // ⌃↑
-        e(.code(125), [.control], .system, .system) { tr(en: "shows the app's windows", de: "zeigt alle Fenster der App") },  // ⌃↓
+        e(.code(125), [.control], .system, .system) { tr(en: "shows the app’s windows", de: "zeigt alle Fenster der App") },  // ⌃↓
         e(.code(123), [.control], .system, .system) { tr(en: "moves left a space", de: "wechselt einen Space nach links") },  // ⌃←
         e(.code(124), [.control], .system, .system) { tr(en: "moves right a space", de: "wechselt einen Space nach rechts") },  // ⌃→
         e(.code(18), [.control], .system, .system) { tr(en: "switches to Desktop 1", de: "wechselt zu Schreibtisch 1") },  // ⌃1
@@ -86,7 +86,7 @@ enum ShortcutCatalogText {
         e(.code(2), [.control, .command], .system, .system) { tr(en: "looks up the word in the Dictionary", de: "schlägt das Wort im Lexikon nach") },  // ⌃⌘D
         e(.code(36), [.control], .system, .system) { tr(en: "shows the contextual menu", de: "öffnet das Kontextmenü") },  // ⌃↩
         e(.code(46), [.command], .system, .system) { tr(en: "minimizes the window", de: "legt das Fenster im Dock ab") },  // ⌘M
-        e(.code(46), [.option, .command], .system, .system) { tr(en: "minimizes all of the app's windows", de: "legt alle Fenster der App im Dock ab") },  // ⌥⌘M
+        e(.code(46), [.option, .command], .system, .system) { tr(en: "minimizes all of the app’s windows", de: "legt alle Fenster der App im Dock ab") },  // ⌥⌘M
         e(.code(12), [.control, .command], .always, .system) { tr(en: "locks the screen", de: "sperrt den Bildschirm") },  // ⌃⌘Q
         e(.code(12), [.shift, .command], .always, .system) { tr(en: "logs you out", de: "meldet dich ab") },  // ⇧⌘Q
         e(.code(12), [.option, .shift, .command], .always, .system) { tr(en: "logs you out without asking", de: "meldet dich ohne Rückfrage ab") },  // ⌥⇧⌘Q
@@ -131,7 +131,7 @@ enum ShortcutCatalogText {
         e(.token("8"), [.command], .refuse, .allApps) { tr(en: "selects tab 8 or view 8", de: "wählt Tab 8 oder Darstellung 8") },  // ⌘1
         e(.token("9"), [.command], .refuse, .allApps) { tr(en: "selects tab 9 or view 9", de: "wählt Tab 9 oder Darstellung 9") },  // ⌘1
         e(.token("h"), [.option, .command], .refuse, .allApps) { tr(en: "hides the other apps", de: "blendet die anderen Apps aus") },  // ⌥⌘H
-        e(.token("w"), [.option, .command], .refuse, .allApps) { tr(en: "closes all of the app's windows", de: "schließt alle Fenster der App") },  // ⌥⌘W
+        e(.token("w"), [.option, .command], .refuse, .allApps) { tr(en: "closes all of the app’s windows", de: "schließt alle Fenster der App") },  // ⌥⌘W
         e(.token("s"), [.shift, .command], .refuse, .allApps) { tr(en: "saves as or duplicates", de: "sichert unter neuem Namen oder dupliziert") },  // ⇧⌘S
         e(.token("v"), [.option, .shift, .command], .refuse, .allApps) { tr(en: "pastes and matches style", de: "setzt ein und passt den Stil an") },  // ⌥⇧⌘V
         e(.token("f"), [.control, .command], .refuse, .allApps) { tr(en: "enters full screen", de: "schaltet auf Vollbild") },  // ⌃⌘F
@@ -187,17 +187,17 @@ enum ShortcutCatalogText {
         e(.token("r"), [.shift, .command], .warn, .commonApps) { tr(en: "opens AirDrop in the Finder and Reader in Safari", de: "öffnet im Finder AirDrop und in Safari den Reader") },  // ⇧⌘R
         e(.token("."), [.shift, .command], .warn, .commonApps) { tr(en: "shows hidden files in the Finder", de: "zeigt im Finder versteckte Dateien") },  // ⇧⌘.
         e(.token("l"), [.option, .command], .warn, .commonApps) { tr(en: "opens Downloads in the Finder and Safari", de: "öffnet im Finder und in Safari die Downloads") },  // ⌥⌘L
-        e(.token("l"), [.shift, .command], .warn, .commonApps) { tr(en: "runs Safari's 'Search With Google' service", de: "sucht mit dem Safari-Dienst „Mit Google suchen“") },  // ⇧⌘L
+        e(.token("l"), [.shift, .command], .warn, .commonApps) { tr(en: "runs Safari’s “Search With Google” service", de: "sucht mit dem Safari-Dienst „Mit Google suchen“") },  // ⇧⌘L
         e(.token("y"), [.shift, .command], .warn, .commonApps) { tr(en: "makes a sticky note with the service", de: "erstellt mit dem Dienst einen Notizzettel") },  // ⇧⌘Y
         e(.token("m"), [.shift, .command], .warn, .commonApps) { tr(en: "opens the man page with the Terminal service", de: "öffnet mit dem Terminal-Dienst die man-Seite") },  // ⇧⌘M
-        e(.token("b"), [.shift, .command], .warn, .commonApps) { tr(en: "shows or hides the browser's bookmarks bar", de: "blendet im Browser die Lesezeichenleiste ein oder aus") },  // ⇧⌘B
+        e(.token("b"), [.shift, .command], .warn, .commonApps) { tr(en: "shows or hides the browser’s bookmarks bar", de: "blendet im Browser die Lesezeichenleiste ein oder aus") },  // ⇧⌘B
         e(.token("n"), [.shift, .command], .warn, .commonApps) { tr(en: "makes a new folder in the Finder and opens a private browser window", de: "erstellt im Finder einen neuen Ordner und öffnet im Browser ein privates Fenster") },  // ⇧⌘N
         e(.token("t"), [.shift, .command], .warn, .commonApps) { tr(en: "reopens the last closed browser tab", de: "öffnet im Browser den zuletzt geschlossenen Tab wieder") },  // ⇧⌘T
         e(.token("w"), [.shift, .command], .warn, .commonApps) { tr(en: "closes the whole window in browsers and many apps", de: "schließt in Browsern und vielen Apps das ganze Fenster") },  // ⇧⌘W
         e(.token("v"), [.shift, .command], .warn, .commonApps) { tr(en: "pastes without formatting in many apps", de: "setzt in vielen Apps ohne Formatierung ein") },  // ⇧⌘V
         e(.token("p"), [.shift, .command], .warn, .commonApps) { tr(en: "opens Page Setup", de: "öffnet „Papierformat“") },  // ⇧⌘P
-        e(.token("i"), [.option, .command], .warn, .commonApps) { tr(en: "opens the browser's developer tools", de: "öffnet im Browser die Entwicklerwerkzeuge") },  // ⌥⌘I
-        e(.token("j"), [.option, .command], .warn, .commonApps) { tr(en: "opens the browser's console", de: "öffnet im Browser die Konsole") },  // ⌥⌘J
+        e(.token("i"), [.option, .command], .warn, .commonApps) { tr(en: "opens the browser’s developer tools", de: "öffnet im Browser die Entwicklerwerkzeuge") },  // ⌥⌘I
+        e(.token("j"), [.option, .command], .warn, .commonApps) { tr(en: "opens the browser’s console", de: "öffnet im Browser die Konsole") },  // ⌥⌘J
         e(.token("c"), [.option, .command], .warn, .commonApps) { tr(en: "copies the style in text apps", de: "kopiert in Textprogrammen den Stil") },  // ⌥⌘C
         e(.token("v"), [.option, .command], .warn, .commonApps) { tr(en: "pastes the style in text apps and moves copied files in the Finder", de: "setzt in Textprogrammen den Stil ein und bewegt im Finder kopierte Dateien") },  // ⌥⌘V
         e(.token("s"), [.option, .command], .warn, .commonApps) { tr(en: "shows or hides the Finder sidebar", de: "blendet im Finder die Seitenleiste ein oder aus") },  // ⌥⌘S

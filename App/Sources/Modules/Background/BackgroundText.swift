@@ -25,20 +25,20 @@ enum BackgroundText {
             tr(en: "Only the app itself can open at login, not a bare program file.",
                de: "Beim Anmelden starten kann nur die App selbst, keine einzelne Programmdatei.")
         case .diskImage:
-            tr(en: "\(app) is running from the disk image. Move it to Applications and open it from there.",
-               de: "\(app) läuft noch vom Disk-Image. Zieh die App in den Programme-Ordner und öffne sie dort.")
+            tr(en: "\(app) is running from the disk image. Move it to the Applications folder and open it from there.",
+               de: "\(app) läuft noch vom Disk-Image. Ziehe die App in den Ordner „Programme“ und öffne sie dort.")
         case .translocated:
-            tr(en: "macOS opened \(app) from a temporary place. Move it to Applications and open it again.",
-               de: "macOS hat \(app) an einem vorläufigen Ort geöffnet. Zieh die App in den Programme-Ordner und öffne sie erneut.")
+            tr(en: "macOS opened \(app) from a temporary place. Move it to the Applications folder and open it again.",
+               de: "macOS hat \(app) an einem vorläufigen Ort geöffnet. Ziehe die App in den Ordner „Programme“ und öffne sie erneut.")
         case .notInstalled:
-            tr(en: "Only for the installed app: move \(app) to Applications and open it from there.",
-               de: "Nur für die installierte App: Zieh \(app) in den Programme-Ordner und öffne die App von dort.")
+            tr(en: "Only for the installed app: move \(app) to the Applications folder and open it from there.",
+               de: "Nur für die installierte App: Ziehe \(app) in den Ordner „Programme“ und öffne die App von dort.")
         }
     }
 
     static var needsApproval: String {
-        tr(en: "macOS waits for your approval in System Settings under General > Login Items & Extensions.",
-           de: "macOS wartet auf deine Freigabe in den Systemeinstellungen unter Allgemein > Anmeldeobjekte & Erweiterungen.")
+        tr(en: "The app opens at login once you allow it in System Settings under General > Login Items & Extensions.",
+           de: "Die App startet erst beim Anmelden, wenn du das in den Systemeinstellungen unter Allgemein > Anmeldeobjekte & Erweiterungen erlaubst.")
     }
     static var openLoginItems: String { tr(en: "Open System Settings", de: "Systemeinstellungen öffnen") }
 
@@ -51,7 +51,7 @@ enum BackgroundText {
     static var jobs: String { tr(en: "Tasks", de: "Aufgaben") }
     static var noJobs: String { tr(en: "No tasks", de: "Keine Aufgaben") }
     static var noJobsDetail: String {
-        tr(en: "This app has nothing scheduled right now.", de: "Diese App plant gerade nichts im Hintergrund.")
+        tr(en: "No tasks are scheduled for this app.", de: "Für diese App sind keine Aufgaben geplant.")
     }
     static var runNow: String { tr(en: "Run Now", de: "Jetzt ausführen") }
     static var running: String { tr(en: "Running", de: "Läuft") }
@@ -119,7 +119,7 @@ enum BackgroundText {
            de: "\(AppInfo.displayName) ist da, sobald du dich anmeldest, und wartet still im Hintergrund.")
     }
     static var stepToggleDetail: String {
-        tr(en: "You can change this any time in Settings.", de: "Das kannst du jederzeit in den Einstellungen ändern.")
+        tr(en: "You can change this anytime in Settings.", de: "Das kannst du jederzeit in den Einstellungen ändern.")
     }
     static var stepFootnote: String {
         tr(en: "macOS lists \(AppInfo.displayName) in System Settings under General > Login Items & Extensions.",
@@ -128,7 +128,7 @@ enum BackgroundText {
 
     // MARK: Gallery
 
-    static var galleryJobs: String { tr(en: "Background tasks", de: "Hintergrund-Aufgaben") }
+    static var galleryJobs: String { tr(en: "Background tasks", de: "Hintergrundaufgaben") }
 }
 
 /// Sample jobs of the renders (never registered in the app).
