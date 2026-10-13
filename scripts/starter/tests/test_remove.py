@@ -127,10 +127,17 @@ class RemoveTests(TempDirCase):
         root = self.repo({"docs/screenshots/list.txt": listing,
                           "docs/screenshots/de-dark-island.pane.png": "png",
                           "docs/screenshots/de-light-examples.menubar.png": "png",
-                          "docs/screenshots/de-light-settings.window.png": "png"})
+                          "docs/screenshots/de-light-settings.window.png": "png",
+                          "docs/screenshots/en-dark-island.done.png": "png",
+                          "docs/PROJECT.md": "# Projekt\n\n![Insel](docs/screenshots/en-dark-island.done.png)\n"})
         plan = self.remove(root, "island")
         self.assertEqual(plan.pictures, ["docs/screenshots/de-dark-island.pane.png",
-                                         "docs/screenshots/de-light-examples.menubar.png"])
+                                         "docs/screenshots/de-light-examples.menubar.png",
+                                         "docs/screenshots/en-dark-island.done.png"])
+        self.assertEqual(plan.picture_refs, ["docs/PROJECT.md:3"])
+        from starter.remove import report
+        self.assertIn("Diese Stellen zeigen noch ein gelöschtes Bild, bitte anpassen: docs/PROJECT.md:3",
+                      report(plan, dry_run=False, build=False))
         self.assertEqual(self.read(root, "docs/screenshots/list.txt"),
                          "# Bilder\nde-light/settings.window.png\ntools/icon.png\n")
         self.assertFalse((root / "docs/screenshots/de-dark-island.pane.png").exists())

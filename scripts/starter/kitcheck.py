@@ -100,11 +100,13 @@ def picture_problems(manifest: Manifest, files: Sequence[str], texts: Dict[str, 
             continue
         for no, line in enumerate(texts[path].split("\n"), 1):
             for ref in pics.references(line):
-                if ref not in fileset:
-                    module = pics.module_of(pics.scene_of_picture(ref), manifest.modules)
-                    why = f"Szene des entfernten Moduls {module}" if module and module not in present else \
-                        "make shots und make readme-shots, oder die Zeile anpassen"
-                    problems.append(f"{path}:{no} zeigt {ref}, das es nicht gibt ({why})")
+                module = pics.module_of(pics.scene_of_picture(ref), manifest.modules)
+                if module and module not in present:
+                    problems.append(f"{path}:{no} zeigt {ref}, eine Szene des entfernten Moduls {module}; die Stelle "
+                                    "anpassen")
+                elif ref not in fileset:
+                    problems.append(f"{path}:{no} zeigt {ref}, das es nicht gibt (make shots und make readme-shots, "
+                                    "oder die Zeile anpassen)")
     listing = texts.get(pics.LIST)
     for no, line in enumerate((listing or "").split("\n"), 1):
         entry = pics.entry_of(line)

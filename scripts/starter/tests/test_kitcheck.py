@@ -163,8 +163,13 @@ class ProjectTests(TempDirCase):
         from starter.remove import remove_module
         root = self.project()
         remove_module(root, "island", build=False, check_origin=False)
-        write_files(root, {"docs/screenshots/list.txt": "de-dark/island.pane.png\n"})
-        self.assertIn("nennt die Szene island.pane des entfernten Moduls island", problems_text(kitcheck.run(root)))
+        write_files(root, {"docs/screenshots/list.txt": "de-dark/island.pane.png\n",
+                           "docs/screenshots/de-dark-island.pane.png": "png",
+                           "docs/PROJECT.md": "![x](docs/screenshots/de-dark-island.pane.png)\n"})
+        text = problems_text(kitcheck.run(root))
+        self.assertIn("nennt die Szene island.pane des entfernten Moduls island", text)
+        self.assertIn("docs/PROJECT.md:1 zeigt docs/screenshots/de-dark-island.pane.png, eine Szene des entfernten "
+                      "Moduls island", text)
 
     def test_clean_project(self):
         f = kitcheck.run(self.project())

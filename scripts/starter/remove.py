@@ -35,6 +35,7 @@ class RemovalPlan:
     edited: Dict[str, str] = field(default_factory=dict)       # path -> new text
     emptied: List[str] = field(default_factory=list)           # Swift files with nothing left
     pictures: List[str] = field(default_factory=list)          # README pictures of the module's scenes
+    picture_refs: List[str] = field(default_factory=list)      # guide lines that still show one of them
     dangling: List[str] = field(default_factory=list)
     config: Optional[dict] = None                              # new starter.json
     config_notes: List[str] = field(default_factory=list)
@@ -107,15 +108,20 @@ def plan_removal(root: Path, name: str, manifest: Optional[Manifest] = None,
             if new != text:
                 plan.edited[path] = new
 
+    gone: set = set()
     if pics.LIST in remaining:
         before = remaining[pics.LIST]
         after = pics.drop_module_lines(before, name)
         if after != before:
             remaining[pics.LIST] = plan.edited[pics.LIST] = after
         original = (root / pics.LIST).read_text(encoding="utf-8", errors="replace")
-        gone = set(pics.entries(original)) - set(pics.entries(after))
-        kept = pics.referenced({p: t for p, t in remaining.items() if p.endswith(".md") or p == pics.LIST})
-        plan.pictures = sorted(p for p in (pics.picture(e) for e in gone) if p in files and p not in kept)
+        gone = {pics.picture(e) for e in set(pics.entries(original)) - set(pics.entries(after))}
+    # The pictures of the module's scenes are generated (make readme-shots) and go with it, listed or not.
+    plan.pictures = sorted(p for p in files if p in gone or (
+        p.startswith(pics.FOLDER) and pics.module_of(pics.scene_of_picture(p), [name]) == name))
+    plan.picture_refs = sorted(f"{path}:{no}" for path, text in remaining.items() if path.endswith(".md")
+                               for no, line in enumerate(text.split("\n"), 1)
+                               if any(ref in plan.pictures for ref in pics.references(line)))
     prune_baselines(plan, remaining)
     gone = {p: (root / p).read_text(encoding="utf-8", errors="replace") for p in plan.deleted + plan.emptied
             if p.endswith(".swift")}
@@ -305,6 +311,8 @@ def report(plan: RemovalPlan, dry_run: bool, build: bool) -> str:
              f"  leer geworden und gelöscht: {names(plan.emptied)}",
              f"  Bilder der Szenen des Moduls gelöscht: {names(plan.pictures)}",
              f"  starter.json: {names(plan.config_notes)}"]
+    if plan.picture_refs:
+        lines.append(f"  Diese Stellen zeigen noch ein gelöschtes Bild, bitte anpassen: {names(plan.picture_refs)}")
     if plan.dirty:
         lines.append(f"  Hinweis: {_count(len(plan.dirty), 'Datei hatte', 'Dateien hatten')} schon vorher nicht "
                      f"committete Änderungen ({names(plan.dirty[:5])}{', …' if len(plan.dirty) > 5 else ''}).")
