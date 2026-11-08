@@ -81,7 +81,7 @@ Das Einstellungsfenster ist wie die Systemeinstellungen aufgebaut: oben die Bere
 
 ## Stand
 
-Fassung 1.0.1 vom 13.10.2026, die Änderungen stehen in `CHANGELOG.md`. Die Bauunterlagen (Statusberichte der Stränge und der Integration) liegen unter `docs/bau/`; `bin/starter init` entfernt sie in einem Projekt.
+Fassung 1.0.2 vom 08.11.2026, die Änderungen stehen in `CHANGELOG.md`. Die Bauunterlagen (Statusberichte der Stränge und der Integration) liegen unter `docs/bau/`; `bin/starter init` entfernt sie in einem Projekt.
 
 ## Ein neues Projekt starten
 
