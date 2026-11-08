@@ -25,6 +25,15 @@ final class MenuBarTests: TestSuite {
             expectEqual(SettingKey<String>.menuBarIconStyle.defaultValue, "marks")
         }
 
+        test("appearance reports redraw only on a real change, so a redraw cannot feed itself") {
+            var tracker = MenuBarAppearanceTracker()
+            expect(tracker.report(isDark: true), "the first report draws")
+            for _ in 0..<100 { expect(!tracker.report(isDark: true), "the same appearance again draws nothing") }
+            expect(tracker.report(isDark: false), "light after dark draws")
+            expect(!tracker.report(isDark: false))
+            expect(tracker.report(isDark: true), "dark after light draws")
+        }
+
         test("status: idle clears the message, line falls back to the state's words") {
             let status = MenuBarStatus()
             expectEqual(status.line, MenuBarText.statusLine(.idle))

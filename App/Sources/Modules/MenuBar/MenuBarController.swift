@@ -1,5 +1,18 @@
 import AppKit
 
+/// AppKit sets the status button's appearance on every redraw of the item, so its observer fires
+/// even when nothing changed. A redraw for each report would feed itself and keep one core busy.
+struct MenuBarAppearanceTracker {
+    private(set) var isDark: Bool?
+
+    /// Notes the appearance and says whether the icon has to be drawn again for it.
+    mutating func report(isDark dark: Bool) -> Bool {
+        guard dark != isDark else { return false }
+        isDark = dark
+        return true
+    }
+}
+
 /// Owns the status item. Left click opens the panel; right click, ⌃-click or ⌥-click opens the
 /// menu (`Registry.menuItems`, Open window, Settings…, Setup…, Quit). The icon, the optional status
 /// text and the tooltip follow `MenuBarStatus.shared`, the menu bar settings and the UI language
@@ -14,6 +27,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private var timer: Timer?
     private var frame = 0
     private var appearance: NSKeyValueObservation?
+    private var appearanceTracker = MenuBarAppearanceTracker()
     private var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
 
     static func install() {
@@ -77,6 +91,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
         let item = self.item ?? makeItem()
         guard let button = item.button else { return }
+        _ = appearanceTracker.report(isDark: isDark(button))
         let status = MenuBarStatus.shared
         let style = MenuBarIconStyle(setting: Settings.shared[.menuBarIconStyle])
         if MenuBarIcon.isAnimated(state: status.state, style: style, reduceMotion: reduceMotion) {
@@ -105,7 +120,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             button.sendAction(on: [.leftMouseDown, .rightMouseDown])
             // the menu bar turns light or dark with the wallpaper: drawn colours follow
             appearance = button.observe(\.effectiveAppearance) { [weak self] _, _ in
-                DispatchQueue.main.async { self?.update() }
+                DispatchQueue.main.async { self?.appearanceReported() }
             }
         }
         self.item = item
@@ -120,6 +135,15 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         item = nil
     }
 
+    private func appearanceReported() {
+        guard let button = item?.button, appearanceTracker.report(isDark: isDark(button)) else { return }
+        update()
+    }
+
+    private func isDark(_ button: NSStatusBarButton) -> Bool {
+        button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+    }
+
     /// Label ink of the menu bar's current appearance, the accent (its contrast-tested text
     /// colour: the fill is below 3:1 on a light menu bar) and the alert red (`strike`, the same red
     /// as the panel's status dot).
@@ -130,8 +154,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             // design-ausnahme: resolved for the menu bar's own appearance (VoiceBud MenuBarIcon)
             label = NSColor.labelColor.usingColorSpace(.sRGB) ?? .labelColor
         }
-        let dark = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        return MenuBarIcon.Inks.themed(label: label, Theme(dark ? .dark : .light))
+        return MenuBarIcon.Inks.themed(label: label, Theme(isDark(button) ? .dark : .light))
     }
 
     // MARK: Busy animation (only while busy in style "marks", never under Reduce Motion)

@@ -4,6 +4,16 @@ Jede Fassung des Starters hat einen Tag `v<Version>` und einen Abschnitt hier, m
 
 Ein Projekt führt darunter seine eigenen Fassungen (`app.version` in `starter.json`) mit denselben Abschnitten.
 
+## 1.0.2 (08.11.2026)
+
+### Inhalt
+
+- Modul `menubar`: Das Symbol wird nach einer Meldung zum Erscheinungsbild nur noch neu gezeichnet, wenn die Menüleiste wirklich zwischen hell und dunkel wechselt. Bisher löste jedes Neuzeichnen die nächste Meldung aus, und die App hielt ab dem Start einen CPU-Kern ausgelastet.
+
+### Hinweise für Projekte
+
+- Projekte mit dem Modul `menubar` holen die Korrektur mit `bin/starter sync --ziel v1.0.2`. Sonst ist nichts zu tun.
+
 ## 1.0.1 (13.10.2026)
 
 ### Inhalt
